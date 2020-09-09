@@ -107,6 +107,18 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     <ClCompile Include="TreeCreator.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Submodules\UniEngine\Core\Core.vcxproj">
+      <Project>{105d0cec-d794-48fc-aed7-b4c911a6ff4e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Submodules\UniEngine\Entities\Entities.vcxproj">
+      <Project>{6eefcfb9-6499-4a25-8b47-497ad00822bd}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Submodules\UniEngine\EntityEditor\EntityEditor.vcxproj">
+      <Project>{12a68164-4dcb-40ac-b4e4-0fc8f0f78954}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Submodules\UniEngine\TreeUtilities\TreeUtilities.vcxproj">
+      <Project>{e0c6f70b-f996-43a3-ad08-11725c1d01d8}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Submodules\UniEngine\UniEngine\UniEngine.vcxproj">
       <Project>{324d4482-9924-4f0b-aba0-e6e9ba51b02f}</Project>
     </ProjectReference>

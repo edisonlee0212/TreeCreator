@@ -7,6 +7,7 @@ using namespace UniEngine;
 
 int main()
 {
+	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
 	Application::Run();
 }
