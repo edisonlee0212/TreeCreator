@@ -27,7 +27,7 @@ float pcssScale = 1.0f;
 
 int main()
 {
-	FileIO::SetResourcePath("../Resources/");
+	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	glm::inverse(glm::mat4(0.0f));
 #pragma region Global light settings
 	LightingManager::SetDirectionalLightResolution(2048);
