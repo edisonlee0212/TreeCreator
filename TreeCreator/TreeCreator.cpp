@@ -11,7 +11,6 @@
 using namespace UniEngine;
 using namespace TreeUtilities;
 void InitGround();
-void InitSpaceColonizationTreeSystem();
 void InitPlantSimulationSystem();
 void LightSettingMenu();
 
