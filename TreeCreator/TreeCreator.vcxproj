@@ -73,7 +73,7 @@
 xcopy /y /d "..\Submodules\UniEngine\Entities\$(IntDir)Entities.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\EntityEditor\$(IntDir)EntityEditor.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\UniEngine\$(IntDir)UniEngine.dll" "$(OutDir)"
-xcopy /y /d "..\Submodules\UniEngine\TreeUtilities\$(IntDir)TreeUtilities.dll" "$(OutDir)"
+xcopy /y /d "..\TreeUtilities\$(IntDir)TreeUtilities.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mtd.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -101,7 +101,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mtd.d
 xcopy /y /d "..\Submodules\UniEngine\Entities\$(IntDir)Entities.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\EntityEditor\$(IntDir)EntityEditor.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\UniEngine\$(IntDir)UniEngine.dll" "$(OutDir)"
-xcopy /y /d "..\Submodules\UniEngine\TreeUtilities\$(IntDir)TreeUtilities.dll" "$(OutDir)"
+xcopy /y /d "..\TreeUtilities\$(IntDir)TreeUtilities.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dll" "$(OutDir)" </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -118,11 +118,11 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     <ProjectReference Include="..\Submodules\UniEngine\EntityEditor\EntityEditor.vcxproj">
       <Project>{12a68164-4dcb-40ac-b4e4-0fc8f0f78954}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\Submodules\UniEngine\TreeUtilities\TreeUtilities.vcxproj">
-      <Project>{e0c6f70b-f996-43a3-ad08-11725c1d01d8}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\Submodules\UniEngine\UniEngine\UniEngine.vcxproj">
       <Project>{324d4482-9924-4f0b-aba0-e6e9ba51b02f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\TreeUtilities\TreeUtilities.vcxproj">
+      <Project>{e0c6f70b-f996-43a3-ad08-11725c1d01d8}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
