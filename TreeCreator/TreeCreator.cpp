@@ -16,18 +16,13 @@ void LightSettingMenu();
 
 float lightAngle0 = 60;
 float lightAngle1 = 0;
-float lightAngle2 = 0;
-float lightAngle3 = 0;
-float lightAngle4 = 0.8f;
-float lightAngle5 = 0.0f;
-float lightSize = 0.5;
-float lightBleedControl = 0.0;
+float lightDiffuse = 0.8f;
+float lightSpecular = 0.4f;
+float lightSize = 1.2f;
 float pcssScale = 1.0f;
 
 int main()
 {
-	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
-	glm::inverse(glm::mat4(0.0f));
 #pragma region Global light settings
 	LightingManager::SetDirectionalLightResolution(2048);
 	LightingManager::SetStableFit(true);
@@ -37,17 +32,14 @@ int main()
 	LightingManager::SetEVSMExponent(80.0f);
 	LightingManager::SetSplitRatio(0.2f, 0.4f, 0.7f, 1.0f);
 #pragma endregion
+	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
 #pragma region Lights
 	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Light", Translation(), Rotation(), Scale(), LocalToWorld());
 	DirectionalLightComponent* dlc = new DirectionalLightComponent();
-	dlc->diffuse = glm::vec3(255, 0, 0);
-	dlc->specular = glm::vec3(1, 1, 1);
 	Entity dle = EntityManager::CreateEntity(lightArchetype);
 	EntityManager::SetSharedComponent<DirectionalLightComponent>(dle, dlc);
-	DirectionalLightComponent* dlc2 = new DirectionalLightComponent();
-	Entity dle2 = EntityManager::CreateEntity(lightArchetype);
-	EntityManager::SetSharedComponent<DirectionalLightComponent>(dle2, dlc2);
+	
 #pragma endregion
 #pragma region Preparations
 	Application::SetTimeStep(0.016f);
@@ -108,23 +100,9 @@ int main()
 				glm::cos(glm::radians(lightAngle0)) * glm::cos(glm::radians(lightAngle1))))
 			, glm::vec3(0, 1, 0));
 		EntityManager::SetComponentData<Rotation>(dle, r);
-
-		r.Value = glm::quatLookAt(
-			glm::normalize(glm::vec3(
-				glm::cos(glm::radians(lightAngle2)) * glm::sin(glm::radians(lightAngle3)),
-				glm::sin(glm::radians(lightAngle2)),
-				glm::cos(glm::radians(lightAngle2)) * glm::cos(glm::radians(lightAngle3))))
-			, glm::vec3(0, 1, 0));
-		EntityManager::SetComponentData<Rotation>(dle2, r);
-
-		dlc->specular = glm::vec3(lightAngle4);
-		dlc->diffuse = glm::vec3(lightAngle4);
-		dlc2->specular = glm::vec3(lightAngle5);
-		dlc2->diffuse = glm::vec3(lightAngle5);
-
-		
+		dlc->specular = glm::vec3(255, 255, 255) * lightSpecular / 256.0f;
+		dlc->diffuse = glm::vec3(255, 255, 251) * lightDiffuse / 256.0f;
 		dlc->lightSize = lightSize;
-		LightingManager::SetLightBleedControlFactor(lightBleedControl);
 		LightingManager::SetPCSSScaleFactor(pcssScale);
 #pragma endregion
 		Application::Update();
@@ -203,7 +181,7 @@ void InitPlantSimulationSystem() {
 	mmc2->_Material = treeSurfaceMaterial2;
 	//Multiple tree growth.
 	Entity tree1 = psSys->CreateTree(mmc1, tps, treeColor, glm::vec3(-1.5, 0, 0), true);
-	//Entity tree2 = psSys->CreateExampleTree(mmc2, treeColor, glm::vec3(1.5, 0, 0), 1);
+	Entity tree2 = psSys->CreateExampleTree(mmc2, treeColor, glm::vec3(1.5, 0, 0), 1);
 }
 void InitGround() {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());
@@ -211,7 +189,7 @@ void InitGround() {
 	Translation translation = Translation();
 	translation.Value = glm::vec3(0.0f, 0.0f, 0.0f);
 	Scale scale = Scale();
-	scale.Value = glm::vec3(15.0f);
+	scale.Value = glm::vec3(50.0f);
 	EntityManager::SetComponentData<Translation>(entity, translation);
 	EntityManager::SetComponentData<Scale>(entity, scale);
 
@@ -230,14 +208,11 @@ void InitGround() {
 }
 void LightSettingMenu() {
 	ImGui::Begin("Light Angle Controller");
-	ImGui::SliderFloat("Soft light angle", &lightAngle0, 0.0f, 89.0f);
-	ImGui::SliderFloat("Soft light circle", &lightAngle1, 0.0f, 360.0f);
-	ImGui::SliderFloat("Hard light angle", &lightAngle2, 0.0f, 89.0f);
-	ImGui::SliderFloat("Hard light circle", &lightAngle3, 0.0f, 360.0f);
-	ImGui::SliderFloat("Soft Light brightness", &lightAngle4, 0.0f, 2.0f);
-	ImGui::SliderFloat("Hard light brightness", &lightAngle5, 0.0f, 2.0f);
-	ImGui::SliderFloat("Light Bleed Control", &lightBleedControl, 0.0f, 1.0f);
-	ImGui::SliderFloat("PCSS Scale", &pcssScale, 0.0f, 2.0f);
-	ImGui::SliderFloat("Directional Light Size", &lightSize, 0.0f, 1.0f);
+	ImGui::SliderFloat("Angle", &lightAngle0, 0.0f, 89.0f);
+	ImGui::SliderFloat("Circle", &lightAngle1, 0.0f, 360.0f);
+	ImGui::SliderFloat("Diffuse", &lightDiffuse, 0.0f, 2.0f);
+	ImGui::SliderFloat("Specular", &lightSpecular, 0.0f, 2.0f);
+	ImGui::SliderFloat("PCSS Scale", &pcssScale, 0.0f, 3.0f);
+	ImGui::SliderFloat("Light Size", &lightSize, 0.0f, 5.0f);
 	ImGui::End();
 }
