@@ -184,7 +184,6 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& tree)
 		treeInfo.CurrentSeed = glm::linearRand(0.0f, 1.0f) * INT_MAX;
 	}
 	treeInfo.MaxBranchingDepth = 3;
-	treeInfo.Height = 0;
 	treeInfo.ActiveLength = 0;
 	int timeOff = 4;
 	treeInfo.ApicalDominanceTimeVal->resize(treeParameters.Age + timeOff);
@@ -280,7 +279,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters()
 	_NewTreeParameters.ApicalControlLevelFactor = 1.0000000000000000;
 	_NewTreeParameters.Phototropism = 0.42445109999999999;
 	_NewTreeParameters.GravitropismBase = 0.239603199999999998;
-	_NewTreeParameters.PruningFactor = 0.43430900000000000;
+	_NewTreeParameters.PruningFactor = 0.05f;
 	_NewTreeParameters.LowBranchPruningFactor = 0.63922599999999996;
 	_NewTreeParameters.GravityBendingStrength = 0.2f;
 	_NewTreeParameters.Age = 14;
@@ -688,6 +687,7 @@ void TreeUtilities::PlantSimulationSystem::PruneBranchNode(Entity& branchNode, T
 			PruneBranchNode(child, treeInfo);
 		}
 	);
+	EntityManager::SetComponentData(branchNode, branchNodeInfo);
 }
 
 void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo)
@@ -705,25 +705,40 @@ void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& branchNode, T
 	float normalL = branchNodeInfo.AccmulatedLength / treeParameters.InternodeLengthBase;
 	float ratioScale = 1;
 	float factor = ratioScale / glm::sqrt(branchNodeInfo.AccmulatedLength);
-	factor *= branchNodeInfo.AccmulatedLight;
+	//factor *= branchNodeInfo.AccmulatedLight;
 	if (factor < treeParameters.PruningFactor) {
 		PruneBranchNode(branchNode, treeInfo);
+		return;
 	}
-	EntityManager::SetComponentData(branchNode, branchNodeInfo);
+	EntityManager::ForEachChild(branchNode, [this, &treeParameters, &treeAge, &treeInfo](Entity child)
+		{
+			EvaluatePruning(child, treeParameters, treeAge, treeInfo);
+		}
+	);
 }
 
 void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntity)
 {
 	glm::mat4 treeTransform = EntityManager::GetComponentData<LocalToWorld>(treeEntity).Value;
 	auto treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity).Value;
+	auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
+	std::mutex heightMutex;
+	float treeHeight = 0.0f;
 	EntityManager::ForEach<TreeIndex, LocalToWorld, BranchNodeInfo>(_BranchNodeQuery,
-		[treeTransform, treeIndex](int i, Entity branchNode, TreeIndex* index, LocalToWorld* ltw, BranchNodeInfo* info)
+		[treeTransform, treeIndex, &treeHeight, &heightMutex](int i, Entity branchNode, TreeIndex* index, LocalToWorld* ltw, BranchNodeInfo* info)
 		{
 			if (index->Value == treeIndex) {
-				ltw->Value = treeTransform * info->GlobalTransform;
+				auto nltw = treeTransform * info->GlobalTransform;
+				ltw->Value = nltw;
+				if (nltw[3].y > treeHeight) {
+					std::lock_guard<std::mutex> lock(heightMutex);
+					treeHeight = nltw[3].y;
+				}
 			}
 		}
 	);
+	treeInfo.Height = treeHeight;
+	EntityManager::SetComponentData(treeEntity, treeInfo);
 }
 
 void TreeUtilities::PlantSimulationSystem::CalculateDirectGravityForce(Entity& treeEntity, float gravity)
@@ -759,7 +774,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeResource(Entity& bran
 	}
 
 	Illumination branchNodeIllumination = EntityManager::GetComponentData<Illumination>(branchNode);
-	branchNodeInfo.AccmulatedLight = branchNodeIllumination.Value;
+	branchNodeInfo.AccmulatedLight = branchNodeIllumination.Value / TreeManager::GetLightEstimator()->GetMaxIllumination();
 	branchNodeInfo.AccmulatedLength = branchNodeInfo.DistanceToParent;
 	branchNodeInfo.AccmulatedActivatedBudsAmount = branchNodeInfo.ActivatedBudsAmount;
 	branchNodeInfo.BranchEndNodeAmount = EntityManager::GetChildrenAmount(branchNode) == 0 ? 1 : 0;

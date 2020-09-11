@@ -27,7 +27,6 @@ bool TreeUtilities::TreeManager::_Ready;
 void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution)
 {
 	BranchNodeInfo info = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
-	if (info.Pruned) return;
 	glm::vec3 newNormalDir = normal;
 	//glm::vec3 dir = info.DesiredGlobalRotation * glm::vec3(0.0f, 0.0f, -1.0f);
 	//newNormalDir = glm::cross(glm::cross(dir, newNormalDir), dir);
