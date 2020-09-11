@@ -104,7 +104,7 @@ void TreeUtilities::TreeSystem::DrawGUI()
 			}
 		}
 		ImGui::Separator();
-		title = "Bud Hierarchy:##";
+		title = "BranchNode Hierarchy:##";
 		title += std::to_string(index.Value);
 		ImGui::Text(title.c_str());
 		Entity rootNode = EntityManager::GetChildren(_SelectedTreeEntity).at(0);
@@ -115,7 +115,6 @@ void TreeUtilities::TreeSystem::DrawGUI()
 }
 void TreeUtilities::TreeSystem::OnCreate()
 {
-	_LeafQuery = TreeManager::GetLeafQuery();
 	_TreeQuery = TreeManager::GetTreeQuery();
 
 

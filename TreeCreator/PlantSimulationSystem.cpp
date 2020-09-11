@@ -177,6 +177,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& tree)
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
 	TreeIndex treeIndex = EntityManager::GetComponentData<TreeIndex>(tree);
 	LocalToWorld treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(tree);
+	Rotation treeRotation = EntityManager::GetComponentData<Rotation>(tree);
 #pragma endregion
 	if (treeAge.Value >= treeParameters.Age) {
 		return false;
@@ -601,12 +602,13 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, TreeIn
 					glm::quat globalRawRotation = prevBranchNodeRotation * newBranchNodeInfo.DesiredLocalRotation;
 					glm::vec3 rawFront = globalRawRotation * glm::vec3(0, 0, -1.05f);
 					glm::vec3 rawUp = globalRawRotation * glm::vec3(0, 1.05f, 0);
-					rawFront += glm::vec3(0, -1, 0) * gravitropism;
+					glm::vec3 gravityDir = glm::vec3(0, -1, 0);
+					rawFront += gravityDir * gravitropism;
 					if (branchNodeIllumination.Value > 0) {
 						rawFront += glm::normalize(-branchNodeIllumination.LightDir) * treeParameters.Phototropism;
 					}
 					rawFront = glm::normalize(rawFront);
-					rawUp = glm::cross(glm::cross(rawFront, rawUp), rawFront);
+					rawUp = glm::normalize(glm::cross(glm::cross(rawFront, rawUp), rawFront));
 					globalRawRotation = glm::quatLookAt(rawFront, rawUp);
 					newBranchNodeInfo.DesiredLocalRotation = glm::inverse(prevBranchNodeRotation) * globalRawRotation;
 					newBranchNodeInfo.DesiredGlobalRotation = globalRawRotation;
@@ -830,7 +832,6 @@ void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeResourceAllocation(En
 void TreeUtilities::PlantSimulationSystem::OnCreate()
 {
 	_TreeQuery = TreeManager::GetTreeQuery();
-	_LeafQuery = TreeManager::GetLeafQuery();
 	_BranchNodeQuery = TreeManager::GetBranchNodeQuery();
 	_Gravity = 0;
 	for (int i = 0; i < 256; i++) {
@@ -854,7 +855,7 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	textureNormal2->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"), "");
 	_DefaultTreeSurfaceMaterial2->Textures2Ds()->push_back(textureDiffuse2);
 	_DefaultTreeSurfaceMaterial2->Textures2Ds()->push_back(textureNormal2);
-
+	_Gravity = 1.0f;
 	_NewTreeColor.Color = glm::vec4(1.0f);
 	LoadDefaultTreeParameters(1);
 	Enable();

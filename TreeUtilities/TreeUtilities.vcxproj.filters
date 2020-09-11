@@ -48,9 +48,6 @@
     <ClInclude Include="TreeManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LeafSystem.h">
-      <Filter>Header Files\Systems</Filter>
-    </ClInclude>
     <ClInclude Include="TreeSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
@@ -82,9 +79,6 @@
     </ClCompile>
     <ClCompile Include="TreeManager.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="LeafSystem.cpp">
-      <Filter>Source Files\Systems</Filter>
     </ClCompile>
     <ClCompile Include="TreeSystem.cpp">
       <Filter>Source Files\Systems</Filter>

@@ -174,7 +174,6 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     <ClInclude Include="BranchSystem.h" />
     <ClInclude Include="Curve.h" />
     <ClInclude Include="framework.h" />
-    <ClInclude Include="LeafSystem.h" />
     <ClInclude Include="LightEstimator.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="RingMesh.h" />
@@ -189,7 +188,6 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     <ClCompile Include="BranchSystem.cpp" />
     <ClCompile Include="Curve.cpp" />
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="LeafSystem.cpp" />
     <ClCompile Include="LightEstimator.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

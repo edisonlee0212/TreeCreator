@@ -3,7 +3,6 @@
 #include "TreeSystem.h"
 #include "BranchSystem.h"
 #include "BranchNodeSystem.h"
-#include "LeafSystem.h"
 #include "LightEstimator.h"
 
 #include "RingMesh.h"
@@ -18,24 +17,7 @@ namespace TreeUtilities {
         }
     };    
 #pragma endregion
-#pragma region Leaf
-    struct TREEUTILITIES_API LeafIndex : ComponentBase {
-        unsigned Value;
-        bool operator ==(const LeafIndex& other) const {
-            return other.Value == Value;
-        }
-    };
-    struct TREEUTILITIES_API LeafInfo : ComponentBase {
-        float Illumination;
-        glm::vec3 WeightedLightDirection;
-    };
-    struct TREEUTILITIES_API LeafAlive : ComponentBase {
-        bool Value;
-        bool operator ==(const LeafAlive& other) const {
-            return other.Value == Value;
-        }
-    };
-#pragma endregion
+
 #pragma region BranchNode
     struct BranchNodeRingList : ComponentBase {
         std::vector<RingMesh>* Rings;
@@ -53,9 +35,7 @@ namespace TreeUtilities {
         float Value;
         glm::vec3 LightDir;
     };
-    struct TREEUTILITIES_API BaseBudEntity : ComponentBase {
-        Entity Value;
-    };
+
 
     struct TREEUTILITIES_API Bud {
         bool IsActive;
@@ -219,6 +199,7 @@ namespace TreeUtilities {
         int MaxBranchingDepth;
         size_t LateralBudsCount;
         bool MeshGenerated;
+        bool FoliageGenerated;
         std::vector<float>* ApicalDominanceTimeVal;
         std::vector<float>* GravitropismLevelVal;
         std::vector<float>* ApicalControlTimeVal;
@@ -235,20 +216,15 @@ namespace TreeUtilities {
 
         static TreeSystem* _TreeSystem;
         static BranchNodeSystem* _BranchNodeSystem;
-        static LeafSystem* _LeafSystem;
         
-
-        static EntityArchetype _LeafArchetype;
         static EntityArchetype _BranchNodeArchetype;
         static EntityArchetype _TreeArchetype;
 
         static EntityQuery _TreeQuery;
         static EntityQuery _BranchNodeQuery;
-        static EntityQuery _LeafQuery;
 
         static TreeIndex _TreeIndex;
         static BranchNodeIndex _BranchNodeIndex;
-        static LeafIndex _LeafIndex;
 
         static bool _Ready;
         
@@ -261,11 +237,9 @@ namespace TreeUtilities {
 
         static EntityQuery GetBranchNodeQuery();
         static EntityQuery GetTreeQuery();
-        static EntityQuery GetLeafQuery();
 
         static BranchNodeSystem* GetBranchNodeSystem();
         static TreeSystem* GetTreeSystem();
-        static LeafSystem* GetLeafSystem();
 
         static void GetAllTrees(std::vector<Entity>* container);
         
@@ -279,7 +253,6 @@ namespace TreeUtilities {
 
         static Entity CreateTree(Material* treeSurfaceMaterial);
         static Entity CreateBranchNode(TreeIndex treeIndex, Entity parentEntity);
-        static Entity CreateLeaf(TreeIndex treeIndex, Entity parentEntity);
 
         static void ExportMeshToOBJ(Entity treeEntity, std::string filename);
 

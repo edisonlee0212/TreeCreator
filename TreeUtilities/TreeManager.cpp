@@ -8,19 +8,15 @@ LightEstimator* TreeUtilities::TreeManager::_LightEstimator;
 
 TreeSystem* TreeUtilities::TreeManager::_TreeSystem;
 BranchNodeSystem* TreeUtilities::TreeManager::_BranchNodeSystem;
-LeafSystem* TreeUtilities::TreeManager::_LeafSystem;
 
 EntityArchetype TreeUtilities::TreeManager::_BranchNodeArchetype;
-EntityArchetype TreeUtilities::TreeManager::_LeafArchetype;
 EntityArchetype TreeUtilities::TreeManager::_TreeArchetype;
 
 EntityQuery TreeUtilities::TreeManager::_TreeQuery;
 EntityQuery TreeUtilities::TreeManager::_BranchNodeQuery;
-EntityQuery TreeUtilities::TreeManager::_LeafQuery;
 
 TreeIndex TreeUtilities::TreeManager::_TreeIndex;
 BranchNodeIndex TreeUtilities::TreeManager::_BranchNodeIndex;
-LeafIndex TreeUtilities::TreeManager::_LeafIndex;
 
 bool TreeUtilities::TreeManager::_Ready;
 #pragma region Helpers
@@ -128,11 +124,6 @@ void TreeUtilities::TreeManager::BranchNodeCleaner(Entity branchEntity)
 }
 void TreeUtilities::TreeManager::Init()
 {
-	_LeafArchetype = EntityManager::CreateEntityArchetype(
-		"Leaf",
-		Translation(), Rotation(), Scale(), LocalToWorld(),
-		Connection(), TreeIndex(),
-		LeafIndex(), LeafInfo());
 	_BranchNodeArchetype = EntityManager::CreateEntityArchetype(
 		"BranchNode",
 		LocalToWorld(), Connection(),
@@ -148,8 +139,6 @@ void TreeUtilities::TreeManager::Init()
 		TreeLeafPruningFactor()
 		);
 
-	_LeafQuery = EntityManager::CreateEntityQuery();
-	EntityManager::SetEntityQueryAllFilters(_LeafQuery, LeafInfo());
 	_BranchNodeQuery = EntityManager::CreateEntityQuery();
 	EntityManager::SetEntityQueryAllFilters(_BranchNodeQuery, BranchNodeInfo());
 	_TreeQuery = EntityManager::CreateEntityQuery();
@@ -157,12 +146,10 @@ void TreeUtilities::TreeManager::Init()
 
 	_TreeSystem = Application::GetWorld()->CreateSystem<TreeSystem>(SystemGroup::SimulationSystemGroup);
 	_BranchNodeSystem = Application::GetWorld()->CreateSystem<BranchNodeSystem>(SystemGroup::SimulationSystemGroup);
-	_LeafSystem = Application::GetWorld()->CreateSystem<LeafSystem>(SystemGroup::SimulationSystemGroup);
 
 
 
 	_TreeIndex.Value = 0;
-	_LeafIndex.Value = 0;
 	_BranchNodeIndex.Value = 0;
 
 	_LightEstimator = new LightEstimator();
@@ -175,11 +162,6 @@ bool TreeUtilities::TreeManager::IsReady()
 	return _Ready;
 }
 
-EntityQuery TreeUtilities::TreeManager::GetLeafQuery()
-{
-	return _LeafQuery;
-}
-
 EntityQuery TreeUtilities::TreeManager::GetBranchNodeQuery()
 {
 	return _BranchNodeQuery;
@@ -188,11 +170,6 @@ EntityQuery TreeUtilities::TreeManager::GetBranchNodeQuery()
 EntityQuery TreeUtilities::TreeManager::GetTreeQuery()
 {
 	return _TreeQuery;
-}
-
-LeafSystem* TreeUtilities::TreeManager::GetLeafSystem()
-{
-	return _LeafSystem;
 }
 
 BranchNodeSystem* TreeUtilities::TreeManager::GetBranchNodeSystem()
@@ -215,32 +192,7 @@ void TreeUtilities::TreeManager::GetAllTrees(std::vector<Entity>* container)
 	}
 	return _TreeQuery.ToEntityArray(container);
 }
-/*
-void TreeUtilities::TreeManager::GenerateLeavesForTree(Entity treeEntity)
-{
-	TreeIndex treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity);
-#pragma region Create leaves for all branchNodes
-	std::vector<Entity> buds;
-	_BudQuery.ToEntityArray(treeIndex, &buds);
-	for (Entity bud : buds) {
-		//Clear all leafs
-		auto children = EntityManager::GetChildren(bud);
-		for (auto i : children) {
-			if (EntityManager::HasComponentData<LeafInfo>(i)) EntityManager::DeleteEntity(i);
-		}
-		auto budInfo = EntityManager::GetComponentData<BudInfo>(bud);
-		//Generate leaves
-		for (int i = 0; i < budInfo.LeafAmount; i++) {
-			Entity leaf = CreateLeaf(treeIndex, bud);
-			//TODO: Set Component Data for leaf.
-			EntityManager::SetComponentData(leaf, treeIndex);
-			LeafGenerationHelper(budInfo, leaf, bud, i);
-		}
-	}
-#pragma endregion
 
-}
-*/
 void TreeUtilities::TreeManager::CalculateBranchNodeIllumination()
 {
 	std::vector<Entity> branchNodes;
@@ -364,19 +316,6 @@ Entity TreeUtilities::TreeManager::CreateBranchNode(TreeIndex treeIndex, Entity 
 	BranchNodeInfo branchInfo;
 	branchInfo.MaxActivatedChildLevel = 0;
 	EntityManager::SetComponentData(entity, branchInfo);
-	return entity;
-}
-
-Entity TreeUtilities::TreeManager::CreateLeaf(TreeIndex treeIndex, Entity parentEntity)
-{
-	auto entity = EntityManager::CreateEntity(_LeafArchetype);
-	LeafAlive alive;
-	alive.Value = true;
-	EntityManager::SetComponentData(entity, alive);
-	EntityManager::SetComponentData(entity, treeIndex);
-	EntityManager::SetParent(entity, parentEntity);
-	EntityManager::SetComponentData(entity, _LeafIndex);
-	_LeafIndex.Value++;
 	return entity;
 }
 
