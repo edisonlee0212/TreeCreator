@@ -3,7 +3,7 @@
 #include "TreeManager.h"
 void TreeUtilities::LeafSystem::DrawGUI()
 {
-	ImGui::Begin("TreeUtilities");
+	ImGui::Begin("Tree Utilities");
 	if (ImGui::CollapsingHeader("Leaf System", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::Text("Leaf Amount: %d ", _LeafEntities.size());
 		ImGui::Separator();

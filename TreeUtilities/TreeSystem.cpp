@@ -21,7 +21,7 @@ void TreeUtilities::TreeSystem::BranchNodeListHelper(Entity branchNode)
 }
 void TreeUtilities::TreeSystem::DrawGUI()
 {
-	ImGui::Begin("TreeUtilities");
+	ImGui::Begin("Tree Utilities");
 	if (ImGui::CollapsingHeader("Tree System", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::Text("Tree Amount: %d ", _TreeEntities.size());
 		ImGui::Separator();
@@ -44,12 +44,6 @@ void TreeUtilities::TreeSystem::DrawGUI()
 		if (opened) {
 			color = EntityManager::GetComponentData<TreeColor>(tree);
 			bool enabled = tree.Enabled();
-			bool setEnabled = enabled;
-			title = "Enable##";
-			title += std::to_string(index.Value);
-			ImGui::Checkbox(title.c_str(), &setEnabled);
-			if (setEnabled != enabled)tree.SetEnabled(setEnabled);
-
 			title = "Delete##";
 			title += std::to_string(index.Value);
 			if (ImGui::Button(title.c_str())) {
@@ -71,6 +65,14 @@ void TreeUtilities::TreeSystem::DrawGUI()
 		std::string title = "Tree ";
 		title += std::to_string(index.Value);
 		ImGui::Text(title.c_str());
+		ImGui::InputFloat("Mesh resolution", &_MeshGenerationResolution, 0.0f, 0.0f, "%.5f");
+		if (ImGui::Button("Regenerate mesh")) {
+			TreeManager::GenerateSimpleMeshForTree(_SelectedTreeEntity, _MeshGenerationResolution);
+		}
+		ImGui::InputText("File name", _MeshOBJFileName, 255);
+		if(ImGui::Button(("Export mesh as " + std::string(_MeshOBJFileName) + ".obj").c_str())) {
+			TreeManager::ExportMeshToOBJ(_SelectedTreeEntity, _MeshOBJFileName);
+		}
 		ImGui::Separator();
 		ImGui::SliderFloat("Pruning", &_PruningFactor, 0, 25);
 		ImGui::Separator();
@@ -97,15 +99,6 @@ void TreeUtilities::TreeSystem::DrawGUI()
 			title = "Tree Color##";
 			title += std::to_string(index.Value);
 			ImGui::ColorEdit3(title.c_str(), (float*)&newColor.Color);
-			title = "Bud Color##";
-			title += std::to_string(index.Value);
-			ImGui::ColorEdit3(title.c_str(), (float*)&newColor.BudColor);
-			title = "Leaf Color##";
-			title += std::to_string(index.Value);
-			ImGui::ColorEdit3(title.c_str(), (float*)&newColor.LeafColor);
-			title = "Connection Color##";
-			title += std::to_string(index.Value);
-			ImGui::ColorEdit3(title.c_str(), (float*)&newColor.ConnectionColor);
 			if (!(newColor == color)) {
 				EntityManager::SetComponentData(_SelectedTreeEntity, newColor);
 			}

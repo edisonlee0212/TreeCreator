@@ -24,13 +24,18 @@ LeafIndex TreeUtilities::TreeManager::_LeafIndex;
 
 bool TreeUtilities::TreeManager::_Ready;
 #pragma region Helpers
-void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, float resolution)
+void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution)
 {
 	BranchNodeInfo info = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
 	if (info.Pruned) return;
-
+	glm::vec3 newNormalDir = normal;
+	//glm::vec3 dir = info.DesiredGlobalRotation * glm::vec3(0.0f, 0.0f, -1.0f);
+	//newNormalDir = glm::cross(glm::cross(dir, newNormalDir), dir);
+	
 	auto list = EntityManager::GetComponentData<BranchNodeRingList>(branchNode);
 	auto rings = list.Rings;
+	list.NormalDir = newNormalDir;
+	EntityManager::SetComponentData(branchNode, list);
 	int step = (rings->front().StartRadius / resolution);
 	if (step < 4) step = 4;
 	if (step % 2 != 0) step++;
@@ -39,7 +44,7 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 	Vertex archetype;
 	float textureXstep = 1.0f / step * 4.0f;
 	for (int i = 0; i < step; i++) {
-		archetype.Position = rings->at(0).GetPoint(list.NormalDir, angleStep * i, true);
+		archetype.Position = rings->at(0).GetPoint(newNormalDir, angleStep * i, true);
 		float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
 		archetype.TexCoords0 = glm::vec2(x, 0.0f);
 		vertices.push_back(archetype);
@@ -48,7 +53,7 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 	float textureYstep = 1.0f / ringSize * 2.0f;
 	for (int ringIndex = 0; ringIndex < ringSize; ringIndex++) {
 		for (int i = 0; i < step; i++) {
-			archetype.Position = rings->at(ringIndex).GetPoint(list.NormalDir, angleStep * i, false);
+			archetype.Position = rings->at(ringIndex).GetPoint(newNormalDir, angleStep * i, false);
 			float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
 			float y = ringIndex < (ringSize / 2) ? (ringIndex + 1) * textureYstep : (ringSize - ringIndex - 1) * textureYstep;
 			archetype.TexCoords0 = glm::vec2(x, y);
@@ -74,9 +79,9 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 		indices.push_back(vertexIndex + ringIndex * step);
 	}
 	
-	EntityManager::ForEachChild(branchNode, [&vertices, &indices, resolution](Entity child)
+	EntityManager::ForEachChild(branchNode, [&vertices, &indices, &newNormalDir, resolution](Entity child)
 		{
-			SimpleMeshGenerator(child, vertices, indices, resolution);
+			SimpleMeshGenerator(child, vertices, indices, newNormalDir, resolution);
 		}
 	);
 }
@@ -305,7 +310,7 @@ void TreeUtilities::TreeManager::GenerateLeavesForAllTrees()
 }
 */
 
-Entity TreeUtilities::TreeManager::CreateTree(MeshMaterialComponent* treeSurfaceMaterial)
+Entity TreeUtilities::TreeManager::CreateTree(Material* treeSurfaceMaterial)
 {
 	auto entity = EntityManager::CreateEntity(_TreeArchetype);
 	TreeInfo treeInfo;
@@ -317,7 +322,10 @@ Entity TreeUtilities::TreeManager::CreateTree(MeshMaterialComponent* treeSurface
 	treeInfo.Indices = new std::vector<unsigned>();
 	EntityManager::SetComponentData(entity, treeInfo);
 	EntityManager::SetComponentData(entity, _TreeIndex);
-	EntityManager::SetSharedComponent(entity, treeSurfaceMaterial);
+	MeshMaterialComponent* mmc = new MeshMaterialComponent();
+	mmc->_Material = treeSurfaceMaterial;
+	mmc->_Mesh = nullptr;
+	EntityManager::SetSharedComponent(entity, mmc);
 	_TreeIndex.Value++;
 	return entity;
 }
@@ -331,6 +339,10 @@ void TreeUtilities::TreeManager::DeleteTree(Entity treeEntity)
 	if (treeInfo.ApicalControlTimeLevelVal != nullptr) delete treeInfo.ApicalControlTimeLevelVal;
 	if (treeInfo.Vertices != nullptr) delete treeInfo.Vertices;
 	if (treeInfo.Indices != nullptr) delete treeInfo.Indices;
+	auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(treeEntity);
+	delete mmc->_Mesh;
+	delete mmc;
+
 	if (EntityManager::HasComponentData<BranchNodeInfo>(EntityManager::GetChildren(treeEntity).at(0))) {
 		BranchNodeCleaner(EntityManager::GetChildren(treeEntity).at(0));
 	}
@@ -367,6 +379,50 @@ Entity TreeUtilities::TreeManager::CreateLeaf(TreeIndex treeIndex, Entity parent
 	EntityManager::SetComponentData(entity, _LeafIndex);
 	_LeafIndex.Value++;
 	return entity;
+}
+
+void TreeUtilities::TreeManager::ExportMeshToOBJ(Entity treeEntity, std::string filename)
+{
+	TreeInfo info = EntityManager::GetComponentData<TreeInfo>(treeEntity);
+
+	auto vertices = info.Vertices;
+	auto indices = info.Indices;
+
+	if (vertices->size() == 0) {
+		Debug::Log("Mesh not generated!");
+		return;
+	}
+
+	std::ofstream of;
+	of.open((filename + ".obj").c_str(), std::ofstream::out | std::ofstream::trunc);
+	if (of.is_open())
+	{
+		std::string data = "";
+#pragma region Data collection
+		data += "# List of geometric vertices, with (x, y, z).\n";
+		for (const auto& vertex : *vertices) {
+			data += "v " + std::to_string(vertex.Position.x)
+				+ " " + std::to_string(vertex.Position.y)
+				+ " " + std::to_string(vertex.Position.z)
+				+ "\n";
+		}
+		data += "# List of indices for faces vertices, with (x, y, z).\n";
+		for (int i = 0; i < indices->size() / 3; i++) {
+			data += "f " + std::to_string(indices->at(i * 3) + 1)
+				+ " " + std::to_string(indices->at(i * 3 + 1) + 1)
+				+ " " + std::to_string(indices->at(i * 3 + 2) + 1)
+				+ "\n";
+		}
+#pragma endregion
+		of.write(data.c_str(), data.size());
+		of.flush();
+		of.close();
+		Debug::Log("Model saved as " + filename + ".obj");
+	}
+	else
+	{
+		Debug::Error("Can't open file!");
+	}
 }
 
 LightEstimator* TreeUtilities::TreeManager::GetLightEstimator()
@@ -423,7 +479,8 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			glm::vec3 parentDir = parentRotation * glm::vec3(0, 0, -1);
 			glm::vec3 dir = rotation * glm::vec3(0, 0, -1);
 			glm::vec3 mainChildDir = info->MainChildRotation * glm::vec3(0, 0, -1);
-			glm::vec3 fromDir = info->IsMainChild ? (parentDir + dir) / 2.0f : parentDir;
+			glm::vec3 parentMainChildDir = EntityManager::GetComponentData<BranchNodeInfo>(EntityManager::GetParent(branchNode)).MainChildRotation * glm::vec3(0, 0, -1);
+			glm::vec3 fromDir = (parentDir + parentMainChildDir) / 2.0f;
 			dir = (dir + mainChildDir) / 2.0f;
 #pragma region Subdivision branch here.
 			auto distance = glm::distance(parentTranslation, translation);
@@ -434,7 +491,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			glm::vec3 dirStep = (dir - fromDir) / (float)amount;
 			float radiusStep = (info->Thickness - parentThickness) / (float)amount;
 
-			list->NormalDir = fromDir == dir ? glm::cross(dir, glm::vec3(0, 0, 1)) : glm::cross(fromDir, dir);
+			//list->NormalDir = fromDir == dir ? glm::cross(dir, glm::vec3(0, 0, 1)) : glm::cross(fromDir, dir);
 
 			for (int i = 1; i < amount; i++) {
 				rings->push_back(RingMesh(
@@ -454,9 +511,10 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	treeInfo.Indices->clear();
 
 	auto branchNode = EntityManager::GetChildren(treeEntity).at(0);
-	//TODO: Finish mesh generation here.
 	
-	SimpleMeshGenerator(EntityManager::GetChildren(branchNode).at(0), *treeInfo.Vertices, *treeInfo.Indices, resolution);
+
+
+	SimpleMeshGenerator(EntityManager::GetChildren(branchNode).at(0), *treeInfo.Vertices, *treeInfo.Indices, glm::vec3(1, 0, 0), resolution);
 	if (mmc->_Mesh != nullptr) delete mmc->_Mesh;
 	mmc->_Mesh = new Mesh();
 	mmc->_Mesh->SetVertices(17, *treeInfo.Vertices, *treeInfo.Indices);

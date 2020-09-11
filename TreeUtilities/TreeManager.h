@@ -134,6 +134,8 @@ namespace TreeUtilities {
 #pragma endregion
 #pragma region Tree
     struct TREEUTILITIES_API TreeParameters : ComponentBase {
+        int Seed;
+
 #pragma region Geometric
         int LateralBudNumber;
 
@@ -185,7 +187,7 @@ namespace TreeUtilities {
         float GravityBackPropageteFixedCoefficient;
 #pragma endregion
 
-        size_t Age;
+        int Age;
         float EndNodeThickness = 0.01f;
         float ThicknessControlFactor = 1.0f;
     };
@@ -205,17 +207,12 @@ namespace TreeUtilities {
 
     struct TREEUTILITIES_API TreeColor : ComponentBase {
         glm::vec4 Color;
-        glm::vec4 BudColor;
-        glm::vec4 ConnectionColor;
-        glm::vec4 LeafColor;
         bool operator ==(const TreeColor& other) const {
-            return other.Color == Color
-                && other.BudColor == BudColor
-                && other.ConnectionColor == ConnectionColor
-                && other.LeafColor == LeafColor;
+            return other.Color == Color;
         }
     };
     struct TREEUTILITIES_API TreeInfo : ComponentBase {
+        int CurrentSeed;
         float Height;
         float ActiveLength;
         int MaxBranchingDepth;
@@ -254,7 +251,7 @@ namespace TreeUtilities {
         static bool _Ready;
         
         //static void LeafGenerationHelper(BudInfo& info, Entity& leaf, Entity& bud, int index);
-        static void SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, float resolution);
+        static void SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution);
         static void BranchNodeCleaner(Entity branchEntity);
     public:
         static void Init();
@@ -278,9 +275,11 @@ namespace TreeUtilities {
         static void GenerateSimpleMeshForTree(Entity treeEntity, float resolution);
         static void DeleteTree(Entity treeEntity);
 
-        static Entity CreateTree(MeshMaterialComponent* treeSurfaceMaterial);
+        static Entity CreateTree(Material* treeSurfaceMaterial);
         static Entity CreateBranchNode(TreeIndex treeIndex, Entity parentEntity);
         static Entity CreateLeaf(TreeIndex treeIndex, Entity parentEntity);
+
+        static void ExportMeshToOBJ(Entity treeEntity, std::string filename);
 
         static LightEstimator* GetLightEstimator();
 

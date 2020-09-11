@@ -12,16 +12,27 @@ namespace TreeUtilities {
     class PlantSimulationSystem :
         public SystemBase
     {
+#pragma region GUI Related
+        bool _GuiMenuEnabled = true;
+        bool _DisplayFullParam = true;
+        char _TempFilePath[256];
+        TreeParameters _NewTreeParameters;
+        glm::vec3 _NewTreePosition = glm::vec3(0);
+        TreeColor _NewTreeColor;
+        Material* _DefaultTreeSurfaceMaterial1;
+        Material* _DefaultTreeSurfaceMaterial2;
+#pragma endregion
+
+        int _GrowIterationCount;
+
         unsigned int _ConfigFlags = 0;
         float _Gravity;
         bool _Growing = false;
         EntityQuery _LeafQuery;
         EntityQuery _TreeQuery;
         EntityQuery _BranchNodeQuery;
+        
         std::queue<Entity> _MeshGenerationQueue;
-
-        void WriteToFile(std::string path, std::ios_base::openmode mode);
-        void ExportOBJ(std::vector<Vertex>& vertices, std::vector<unsigned>& indices);
 
         float GetApicalControl(TreeInfo& treeInfo, BranchNodeInfo& branchNodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level);
         void DrawGUI();
@@ -39,7 +50,9 @@ namespace TreeUtilities {
         void ApplyLocalTransform(Entity& treeEntity);
         void CalculateDirectGravityForce(Entity& treeEntity, float gravity);
         void BackPropagateForce(Entity& branchNode, float fixedPropagationCoefficient);
+
     public:
+        void LoadDefaultTreeParameters();
         void TryGrowAllTrees(std::vector<Entity>& trees);
         bool GrowTree(Entity& treeEntity);
         void CalculatePhysics(std::vector<Entity>& trees);
@@ -47,7 +60,7 @@ namespace TreeUtilities {
         void OnDestroy();
         void Update();
         void FixedUpdate();
-        Entity CreateTree(MeshMaterialComponent* treeSurfaceMaterial, TreeParameters parameters, TreeColor color, glm::vec3 position, bool enabled = false);
-        Entity CreateExampleTree(MeshMaterialComponent* treeSurfaceMaterial, TreeColor color, glm::vec3 position, int index, bool enabled = false);
+        Entity CreateTree(Material* treeSurfaceMaterial, TreeParameters parameters, TreeColor color, glm::vec3 position, bool enabled = false);
+        Entity CreateExampleTree(Material* treeSurfaceMaterial, TreeColor color, glm::vec3 position, int index, bool enabled = false);
     };
 }

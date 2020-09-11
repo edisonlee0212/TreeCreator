@@ -4,23 +4,160 @@
 
 void TreeUtilities::PlantSimulationSystem::DrawGUI()
 {
-	ImGui::Begin("Plant Simulation System");
-	ImGui::SliderFloat("Gravity", &_Gravity, 0.0f, 20.0f);
+	if (ImGui::BeginMainMenuBar()) {
+		if (ImGui::BeginMenu("Plant Simulation")) {
+			if (ImGui::Button("Create...")) {
+				ImGui::OpenPopup("New tree wizard");
+
+			}
+			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+			if (ImGui::BeginPopupModal("New tree wizard", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+				ImGui::BeginChild("ChildL", ImVec2(300, 200), true, ImGuiWindowFlags_None | ImGuiWindowFlags_MenuBar);
+				if (ImGui::BeginMenuBar())
+				{
+					if (ImGui::BeginMenu("Settings"))
+					{
+						
+					}
+					ImGui::EndMenuBar();
+				}
+				ImGui::Columns(1);
+				ImGui::PushItemWidth(200);
+				ImGui::InputFloat3("Position", &_NewTreePosition.x);
+				ImGui::PopItemWidth();
+				ImGui::NextColumn();
+				ImGui::ColorEdit4("Tree Color", &_NewTreeColor.Color.x);
+				ImGui::EndChild();
+				ImGui::PopStyleVar();
+				ImGui::SameLine();
+				ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
+				ImGui::BeginChild("ChildR", ImVec2(400, 200), true, ImGuiWindowFlags_None | ImGuiWindowFlags_MenuBar);
+				if (ImGui::BeginMenuBar())
+				{
+					if (ImGui::BeginMenu("Tree parameters")) {
+						ImGui::Checkbox("Show full parameters", &_DisplayFullParam);
+						ImGui::EndMenu();
+					}
+					if (ImGui::BeginMenu("Load from..."))
+					{
+						if (ImGui::Button("Load default tree paremeters")) {
+							LoadDefaultTreeParameters();
+						}
+						ImGui::Text("Path: /Resources/TreeParameters/");
+						ImGui::SameLine();
+						ImGui::InputText("", _TempFilePath, 256);
+						if (ImGui::Button("Load paremeters")) {
+							//TODO: Load and apply parameters
+						}
+						ImGui::EndMenu();
+					}
+					ImGui::EndMenuBar();
+				}
+				ImGui::Columns(1);
+				ImGui::PushItemWidth(200);
+				if (_DisplayFullParam) {
+					ImGui::InputInt("Seed", &_NewTreeParameters.Seed);
+#pragma region Show params
+					ImGui::InputInt("Lateral Bud Number", &_NewTreeParameters.LateralBudNumber);
+					ImGui::NextColumn();
+					ImGui::InputFloat("Apical Angle Var", &_NewTreeParameters.VarianceApicalAngle);
+					ImGui::NextColumn();
+					ImGui::InputFloat2("Branching Angle M/Var", &_NewTreeParameters.MeanBranchingAngle);
+					ImGui::NextColumn();
+					ImGui::InputFloat2("Roll Angle M/Var", &_NewTreeParameters.MeanRollAngle);
+					ImGui::NextColumn();
+					ImGui::InputFloat2("Extintion Prob A/L", &_NewTreeParameters.ApicalBudExtintionRate);
+					ImGui::NextColumn();
+					ImGui::InputFloat3("AD Base/Dis/Age", &_NewTreeParameters.ApicalDominanceBase);
+					ImGui::NextColumn();
+					ImGui::InputFloat("Growth Rate", &_NewTreeParameters.GrowthRate);
+					ImGui::NextColumn();
+					ImGui::InputFloat2("Node Len Base/Age", &_NewTreeParameters.InternodeLengthBase);
+					ImGui::NextColumn();
+					ImGui::InputFloat4("AC Base/Age/Lvl/Dist", &_NewTreeParameters.ApicalControl);
+					ImGui::NextColumn();
+					ImGui::InputInt("Max Bud Age", &_NewTreeParameters.MaxBudAge);
+					ImGui::NextColumn();
+					ImGui::InputFloat("Phototropism", &_NewTreeParameters.Phototropism);
+					ImGui::NextColumn();
+					ImGui::InputFloat2("Gravitropism Base/Age", &_NewTreeParameters.GravitropismBase);
+					ImGui::NextColumn();
+					ImGui::InputFloat("PruningFactor", &_NewTreeParameters.PruningFactor);
+					ImGui::NextColumn();
+					ImGui::InputFloat("LowBranchPruningFactor", &_NewTreeParameters.LowBranchPruningFactor);
+					ImGui::NextColumn();
+					ImGui::InputFloat("GravityBendingStrength", &_NewTreeParameters.GravityBendingStrength);
+					ImGui::NextColumn();
+					ImGui::InputFloat2("Lighting Factor A/L", &_NewTreeParameters.ApicalBudLightingFactor);
+					ImGui::NextColumn();
+					ImGui::InputFloat2("Gravity Base/BPCo", &_NewTreeParameters.GravityFactor);
+					ImGui::NextColumn();
+					ImGui::InputInt("Age", &_NewTreeParameters.Age);
+					ImGui::NextColumn();
+					ImGui::InputFloat2("Thickness End/Fac", &_NewTreeParameters.EndNodeThickness);
+					ImGui::NextColumn();
+#pragma endregion
+					
+				}
+				else {
+
+				}
+				ImGui::PopItemWidth();
+
+				ImGui::EndChild();
+				ImGui::PopStyleVar();
+
+				ImGui::Separator();
+
+
+				if (ImGui::Button("OK", ImVec2(120, 0))) {
+					//Create tree here.
+					CreateTree(_DefaultTreeSurfaceMaterial1, _NewTreeParameters, _NewTreeColor, _NewTreePosition, true);
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::SetItemDefaultFocus();
+				ImGui::SameLine();
+				if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+				ImGui::EndPopup();
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	}
+	ImGui::Begin("Tree Utilities");
+	if (ImGui::CollapsingHeader("Tree Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
+		static int iterations;
+		ImGui::InputInt("Iteration", &iterations);
+		ImGui::SameLine();
+		if (ImGui::Button("Push iterations") && iterations > 0) {
+			_GrowIterationCount += iterations;
+		}
+		ImGui::Text(("Current iteration left: " + std::to_string(_GrowIterationCount)).c_str());
+		ImGui::SliderFloat("Gravity", &_Gravity, 0.0f, 20.0f);
+	}
+	
 	ImGui::End();
+
 }
 
 void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
 	auto trees = std::vector<Entity>();
 	_TreeQuery.ToEntityArray(&trees);
-	TryGrowAllTrees(trees);
+	if (_GrowIterationCount > 0) {
+		_GrowIterationCount--;
+		TryGrowAllTrees(trees);
+	}
 	CalculatePhysics(trees);
 
 	while (!_MeshGenerationQueue.empty()) {
 		Entity targetTree = _MeshGenerationQueue.front();
 		TreeManager::GenerateSimpleMeshForTree(targetTree, 0.01f);
 		TreeInfo treeInfo = EntityManager::GetComponentData<TreeInfo>(targetTree);
-		ExportOBJ(*treeInfo.Vertices, *treeInfo.Indices);
 		_MeshGenerationQueue.pop();
 	}
 }
@@ -38,6 +175,14 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& tree)
 		return false;
 	}
 #pragma region Prepare info
+	if (treeAge.Value == 0) {
+		treeInfo.CurrentSeed = treeParameters.Seed;
+		srand(treeInfo.CurrentSeed);
+	}
+	else {
+		srand(treeInfo.CurrentSeed);
+		treeInfo.CurrentSeed = glm::linearRand(0.0f, 1.0f) * INT_MAX;
+	}
 	treeInfo.MaxBranchingDepth = 3;
 	treeInfo.Height = 0;
 	treeInfo.ActiveLength = 0;
@@ -108,6 +253,47 @@ void TreeUtilities::PlantSimulationSystem::CalculatePhysics(std::vector<Entity>&
 	}
 }
 
+void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters()
+{
+#pragma region Set default tree param
+	_NewTreeParameters.Seed = 1;
+	_NewTreeParameters.VarianceApicalAngle = 0.42990970562500003;
+	_NewTreeParameters.LateralBudNumber = 2;
+	_NewTreeParameters.MeanBranchingAngle = 27.198200000000000;
+	_NewTreeParameters.VarianceBranchingAngle = 0.037388089600000000;
+	_NewTreeParameters.MeanRollAngle = 113.11000000000000;
+	_NewTreeParameters.VarianceRollAngle = 13.090141080900001;
+
+	_NewTreeParameters.ApicalBudExtintionRate = 0.99903945880000000;
+	_NewTreeParameters.LateralBudEntintionRate = 0.0062681600000000001;
+	_NewTreeParameters.ApicalBudLightingFactor = 1.0;// 0.099225700000000000;
+	_NewTreeParameters.LateralBudLightingFactor = 1.0005922199999999;
+	_NewTreeParameters.ApicalDominanceBase = 5.0524730000000000;
+	_NewTreeParameters.ApicalDominanceDistanceFactor = 0.37777800000000000;
+	_NewTreeParameters.ApicalDominanceAgeFactor = 0.44704700000000003;
+	_NewTreeParameters.GrowthRate = 1.3069500000000001;
+	_NewTreeParameters.InternodeLengthBase = 0.92382719999999996;
+	_NewTreeParameters.InternodeLengthAgeFactor = 0.95584000000000002;
+
+	_NewTreeParameters.ApicalControl = 0.93576000000000004;
+	_NewTreeParameters.ApicalControlAgeDescFactor = 0.91815700000000000;
+	_NewTreeParameters.ApicalControlLevelFactor = 1.0000000000000000;
+	_NewTreeParameters.Phototropism = 0.42445109999999999;
+	_NewTreeParameters.GravitropismBase = 0.239603199999999998;
+	_NewTreeParameters.PruningFactor = 0.43430900000000000;
+	_NewTreeParameters.LowBranchPruningFactor = 0.63922599999999996;
+	_NewTreeParameters.GravityBendingStrength = 0.2f;
+	_NewTreeParameters.Age = 14;
+	_NewTreeParameters.GravityFactor = 0.050594199999999999;
+	_NewTreeParameters.MaxBudAge = 10;
+
+	_NewTreeParameters.EndNodeThickness = 0.02f;
+	_NewTreeParameters.ThicknessControlFactor = 0.75f;
+	_NewTreeParameters.GravityBackPropageteFixedCoefficient = 0.5f;
+#pragma endregion
+
+}
+
 void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& trees)
 {
 	bool growed = false;
@@ -132,43 +318,6 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 	}
 }
 
-void TreeUtilities::PlantSimulationSystem::WriteToFile(std::string path, std::ios_base::openmode mode)
-{
-}
-
-void TreeUtilities::PlantSimulationSystem::ExportOBJ(std::vector<Vertex>& vertices, std::vector<unsigned>& indices)
-{
-	std::ofstream of;
-	of.open("tree.obj", std::ofstream::out | std::ofstream::trunc);
-	if (of.is_open())
-	{
-		std::string data = "";
-#pragma region Data collection
-		data += "# List of geometric vertices, with (x, y, z).\n";
-		for (const auto& vertex : vertices) {
-			data += "v " + std::to_string(vertex.Position.x) 
-				+ " " + std::to_string(vertex.Position.y) 
-				+ " " + std::to_string(vertex.Position.z) 
-				+ "\n";
-		}
-		data += "# List of indices for faces vertices, with (x, y, z).\n";
-		for (int i = 0; i < indices.size() / 3; i++) {
-			data += "f " + std::to_string(indices[i * 3] + 1)
-				+ " " + std::to_string(indices[i * 3 + 1] + 1)
-				+ " " + std::to_string(indices[i * 3 + 2] + 1)
-				+ "\n";
-		}
-#pragma endregion
-		of.write(data.c_str(), data.size());
-		of.flush();
-		of.close();
-		Debug::Log("Model saved.");
-	}
-	else
-	{
-		Debug::Error("Can't open file!");
-	}
-}
 
 inline float TreeUtilities::PlantSimulationSystem::GetApicalControl(TreeInfo& treeInfo, BranchNodeInfo& branchNodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level)
 {
@@ -290,12 +439,12 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& branchNo
 {
 	BranchNodeInfo branchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
 	glm::quat actualLocalRotation = branchNodeInfo.DesiredLocalRotation;
-	
+
 	glm::vec3 scale;
 	glm::vec3 skew;
 	glm::vec4 perspective;
 	glm::decompose(parentLTW, scale, branchNodeInfo.ParentRotation, branchNodeInfo.ParentTranslation, skew, perspective);
-	
+
 #pragma region Apply force here.
 	glm::quat newGlobalRotation = treeRotation * branchNodeInfo.ParentRotation * branchNodeInfo.DesiredLocalRotation;
 	glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
@@ -307,11 +456,11 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& branchNo
 	newGlobalRotation = glm::quatLookAt(front, up);
 	actualLocalRotation = glm::inverse(branchNodeInfo.ParentRotation) * glm::inverse(treeRotation) * newGlobalRotation;
 #pragma endregion
-	
+
 	branchNodeInfo.LocalTransform = glm::translate(glm::mat4(1.0f), actualLocalRotation * glm::vec3(0, 0, -1)
 		* branchNodeInfo.DistanceToParent) * glm::mat4_cast(actualLocalRotation)
 		* glm::scale(glm::vec3(1.0f));
-	
+
 	branchNodeInfo.GlobalTransform = parentLTW * branchNodeInfo.LocalTransform;
 	float mainChildThickness = 0;
 	BranchNodeInfo mainChildInfo;
@@ -567,7 +716,7 @@ void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntit
 {
 	glm::mat4 treeTransform = EntityManager::GetComponentData<LocalToWorld>(treeEntity).Value;
 	auto treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity).Value;
-	EntityManager::ForEach<TreeIndex, LocalToWorld, BranchNodeInfo>(_BranchNodeQuery, 
+	EntityManager::ForEach<TreeIndex, LocalToWorld, BranchNodeInfo>(_BranchNodeQuery,
 		[treeTransform, treeIndex](int i, Entity branchNode, TreeIndex* index, LocalToWorld* ltw, BranchNodeInfo* info)
 		{
 			if (index->Value == treeIndex) {
@@ -608,7 +757,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeResource(Entity& bran
 	else {
 		branchNodeInfo.Thickness = 0;
 	}
-	
+
 	Illumination branchNodeIllumination = EntityManager::GetComponentData<Illumination>(branchNode);
 	branchNodeInfo.AccmulatedLight = branchNodeIllumination.Value;
 	branchNodeInfo.AccmulatedLength = branchNodeInfo.DistanceToParent;
@@ -646,6 +795,30 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_LeafQuery = TreeManager::GetLeafQuery();
 	_BranchNodeQuery = TreeManager::GetBranchNodeQuery();
 	_Gravity = 0;
+	for (int i = 0; i < 256; i++) {
+		_TempFilePath[i] = 0;
+	}
+
+	_DefaultTreeSurfaceMaterial1 = new Material();
+	_DefaultTreeSurfaceMaterial1->Programs()->push_back(Default::GLPrograms::StandardProgram);
+	auto textureDiffuse1 = new Texture2D(TextureType::DIFFUSE);
+	textureDiffuse1->LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), "");
+	auto textureNormal1 = new Texture2D(TextureType::NORMAL);
+	textureNormal1->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_normal.jpg"), "");
+	_DefaultTreeSurfaceMaterial1->Textures2Ds()->push_back(textureDiffuse1);
+	_DefaultTreeSurfaceMaterial1->Textures2Ds()->push_back(textureNormal1);
+
+	_DefaultTreeSurfaceMaterial2 = new Material();
+	_DefaultTreeSurfaceMaterial2->Programs()->push_back(Default::GLPrograms::StandardProgram);
+	auto textureDiffuse2 = new Texture2D(TextureType::DIFFUSE);
+	textureDiffuse2->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"), "");
+	auto textureNormal2 = new Texture2D(TextureType::NORMAL);
+	textureNormal2->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"), "");
+	_DefaultTreeSurfaceMaterial2->Textures2Ds()->push_back(textureDiffuse2);
+	_DefaultTreeSurfaceMaterial2->Textures2Ds()->push_back(textureNormal2);
+
+	_NewTreeColor.Color = glm::vec4(1.0f);
+	LoadDefaultTreeParameters();
 	Enable();
 }
 
@@ -660,7 +833,7 @@ void TreeUtilities::PlantSimulationSystem::Update()
 
 
 
-Entity TreeUtilities::PlantSimulationSystem::CreateTree(MeshMaterialComponent* treeSurfaceMaterial, TreeParameters treeParameters, TreeColor color, glm::vec3 position, bool enabled)
+Entity TreeUtilities::PlantSimulationSystem::CreateTree(Material* treeSurfaceMaterial, TreeParameters treeParameters, TreeColor color, glm::vec3 position, bool enabled)
 {
 	auto treeEntity = TreeManager::CreateTree(treeSurfaceMaterial);
 	Entity branchNodeEntity = TreeManager::CreateBranchNode(EntityManager::GetComponentData<TreeIndex>(treeEntity), treeEntity);
@@ -715,7 +888,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(MeshMaterialComponent* t
 	return treeEntity;
 }
 
-Entity TreeUtilities::PlantSimulationSystem::CreateExampleTree(MeshMaterialComponent* treeSurfaceMaterial, TreeColor color, glm::vec3 position, int index, bool enabled)
+Entity TreeUtilities::PlantSimulationSystem::CreateExampleTree(Material* treeSurfaceMaterial, TreeColor color, glm::vec3 position, int index, bool enabled)
 {
 	TreeParameters tps = TreeParameters();
 	switch (index)

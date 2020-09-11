@@ -6,7 +6,7 @@
 
 void TreeUtilities::BranchNodeSystem::DrawGUI()
 {
-	ImGui::Begin("TreeUtilities");
+	ImGui::Begin("Tree Utilities");
 	if (ImGui::CollapsingHeader("Branch Node System", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::Text("Branch Nodes Amount: %d ", _BranchNodeQuery.GetEntityAmount());
 		ImGui::Separator();

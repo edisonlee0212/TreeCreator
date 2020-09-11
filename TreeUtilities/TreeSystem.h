@@ -10,6 +10,12 @@ namespace TreeUtilities {
     class TreeSystem :
         public SystemBase
     {
+#pragma region GUI related
+        float _MeshGenerationResolution = 0.01f;
+        char _MeshOBJFileName[256];
+#pragma endregion
+
+
         unsigned int _ConfigFlags = 0;
         EntityQuery _LeafQuery;
         EntityQuery _TreeQuery;
