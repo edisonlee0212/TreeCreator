@@ -517,4 +517,6 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	if (mmc->_Mesh != nullptr) delete mmc->_Mesh;
 	mmc->_Mesh = new Mesh();
 	mmc->_Mesh->SetVertices(17, *treeInfo.Vertices, *treeInfo.Indices);
+	treeInfo.MeshGenerated = true;
+	EntityManager::SetComponentData(treeEntity, treeInfo);
 }

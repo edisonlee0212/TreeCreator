@@ -116,8 +116,6 @@ int main()
 }
 void InitPlantSimulationSystem() {
 	auto psSys = Application::GetWorld()->CreateSystem<PlantSimulationSystem>(SystemGroup::SimulationSystemGroup);
-	TreeColor treeColor;
-	treeColor.Color = glm::vec4(1, 1, 1, 1);
 }
 void InitGround() {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());

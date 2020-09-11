@@ -22,7 +22,7 @@ namespace TreeUtilities {
         Material* _DefaultTreeSurfaceMaterial1;
         Material* _DefaultTreeSurfaceMaterial2;
 #pragma endregion
-
+         
         int _GrowIterationCount;
 
         unsigned int _ConfigFlags = 0;
@@ -38,8 +38,6 @@ namespace TreeUtilities {
         void DrawGUI();
         void UpdateBranchNodeLength(Entity& branchNode);
         void UpdateBranchNodeActivatedLevel(Entity& branchNode);
-        void UpdateBranchNodeLevel(Entity& branchNode);
-        void UpdateBranchNodeMeanData(Entity& branchNode, unsigned treeAge);
         void UpdateLocalTransform(Entity& branchNode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation);
         void UpdateBranchNodeResource(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge);
         void UpdateBranchNodeResourceAllocation(Entity& branchNode); 
@@ -52,7 +50,7 @@ namespace TreeUtilities {
         void BackPropagateForce(Entity& branchNode, float fixedPropagationCoefficient);
 
     public:
-        void LoadDefaultTreeParameters();
+        void LoadDefaultTreeParameters(int preset);
         void TryGrowAllTrees(std::vector<Entity>& trees);
         bool GrowTree(Entity& treeEntity);
         void CalculatePhysics(std::vector<Entity>& trees);
@@ -61,6 +59,5 @@ namespace TreeUtilities {
         void Update();
         void FixedUpdate();
         Entity CreateTree(Material* treeSurfaceMaterial, TreeParameters parameters, TreeColor color, glm::vec3 position, bool enabled = false);
-        Entity CreateExampleTree(Material* treeSurfaceMaterial, TreeColor color, glm::vec3 position, int index, bool enabled = false);
     };
 }

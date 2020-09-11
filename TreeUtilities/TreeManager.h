@@ -83,6 +83,7 @@ namespace TreeUtilities {
 #pragma region General
         int Level = 0;
         float DistanceToParent = 0;
+        //The distance to 
         float DistanceToBranchEnd = 0;
         float TotalDistanceToBranchEnd = 0;
         float DistanceToBranchStart = 0;
@@ -217,6 +218,7 @@ namespace TreeUtilities {
         float ActiveLength;
         int MaxBranchingDepth;
         size_t LateralBudsCount;
+        bool MeshGenerated;
         std::vector<float>* ApicalDominanceTimeVal;
         std::vector<float>* GravitropismLevelVal;
         std::vector<float>* ApicalControlTimeVal;

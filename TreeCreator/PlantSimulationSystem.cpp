@@ -44,14 +44,21 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 					}
 					if (ImGui::BeginMenu("Load from..."))
 					{
-						if (ImGui::Button("Load default tree paremeters")) {
-							LoadDefaultTreeParameters();
+						if (ImGui::Button("Load preset 1")) {
+							LoadDefaultTreeParameters(1);
 						}
+						if (ImGui::Button("Load preset 2")) {
+							LoadDefaultTreeParameters(2);
+						}
+
 						ImGui::Text("Path: /Resources/TreeParameters/");
 						ImGui::SameLine();
 						ImGui::InputText("", _TempFilePath, 256);
 						if (ImGui::Button("Load paremeters")) {
 							//TODO: Load and apply parameters
+						}
+						if (ImGui::Button("Save paremeters")) {
+							//TODO: Save parameters
 						}
 						ImGui::EndMenu();
 					}
@@ -223,16 +230,13 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& tree)
 	UpdateBranchNodeActivatedLevel(rootBranchNode);
 #pragma endregion
 	bool growed = GrowShoots(rootBranchNode, treeInfo, treeAge, treeParameters, treeIndex);
-	UpdateBranchNodeMeanData(rootBranchNode, treeAge.Value);
 	treeAge.Value++;
 	EntityManager::SetComponentData(tree, treeAge);
-	EntityManager::SetComponentData(tree, treeInfo);
 	if (growed) {
-		UpdateBranchNodeLevel(rootBranchNode);
 		UpdateBranchNodeResource(rootBranchNode, treeParameters, treeAge);
 		EvaluatePruning(rootBranchNode, treeParameters, treeAge, treeInfo);
-		EntityManager::SetComponentData(tree, treeInfo);
 	}
+	EntityManager::SetComponentData(tree, treeInfo);
 	return growed;
 }
 
@@ -252,44 +256,85 @@ void TreeUtilities::PlantSimulationSystem::CalculatePhysics(std::vector<Entity>&
 	}
 }
 
-void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters()
+void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset)
 {
+	switch (preset)
+	{
+	case 1:
 #pragma region Set default tree param
-	_NewTreeParameters.Seed = 1;
-	_NewTreeParameters.VarianceApicalAngle = 0.42990970562500003;
-	_NewTreeParameters.LateralBudNumber = 2;
-	_NewTreeParameters.MeanBranchingAngle = 27.198200000000000;
-	_NewTreeParameters.VarianceBranchingAngle = 0.037388089600000000;
-	_NewTreeParameters.MeanRollAngle = 113.11000000000000;
-	_NewTreeParameters.VarianceRollAngle = 13.090141080900001;
+		_NewTreeParameters.Seed = 1;
+		_NewTreeParameters.VarianceApicalAngle = 0.42990970562500003;
+		_NewTreeParameters.LateralBudNumber = 2;
+		_NewTreeParameters.MeanBranchingAngle = 27.198200000000000;
+		_NewTreeParameters.VarianceBranchingAngle = 0.037388089600000000;
+		_NewTreeParameters.MeanRollAngle = 113.11000000000000;
+		_NewTreeParameters.VarianceRollAngle = 13.090141080900001;
 
-	_NewTreeParameters.ApicalBudExtintionRate = 0.99903945880000000;
-	_NewTreeParameters.LateralBudEntintionRate = 0.0062681600000000001;
-	_NewTreeParameters.ApicalBudLightingFactor = 1.0;// 0.099225700000000000;
-	_NewTreeParameters.LateralBudLightingFactor = 1.0005922199999999;
-	_NewTreeParameters.ApicalDominanceBase = 5.0524730000000000;
-	_NewTreeParameters.ApicalDominanceDistanceFactor = 0.37777800000000000;
-	_NewTreeParameters.ApicalDominanceAgeFactor = 0.44704700000000003;
-	_NewTreeParameters.GrowthRate = 1.3069500000000001;
-	_NewTreeParameters.InternodeLengthBase = 0.92382719999999996;
-	_NewTreeParameters.InternodeLengthAgeFactor = 0.95584000000000002;
+		_NewTreeParameters.ApicalBudExtintionRate = 0.99903945880000000;
+		_NewTreeParameters.LateralBudEntintionRate = 0.0062681600000000001;
+		_NewTreeParameters.ApicalBudLightingFactor = 1.0;// 0.099225700000000000;
+		_NewTreeParameters.LateralBudLightingFactor = 1.0005922199999999;
+		_NewTreeParameters.ApicalDominanceBase = 5.0524730000000000;
+		_NewTreeParameters.ApicalDominanceDistanceFactor = 0.37777800000000000;
+		_NewTreeParameters.ApicalDominanceAgeFactor = 0.44704700000000003;
+		_NewTreeParameters.GrowthRate = 1.3069500000000001;
+		_NewTreeParameters.InternodeLengthBase = 0.92382719999999996;
+		_NewTreeParameters.InternodeLengthAgeFactor = 0.95584000000000002;
 
-	_NewTreeParameters.ApicalControl = 0.93576000000000004;
-	_NewTreeParameters.ApicalControlAgeDescFactor = 0.91815700000000000;
-	_NewTreeParameters.ApicalControlLevelFactor = 1.0000000000000000;
-	_NewTreeParameters.Phototropism = 0.42445109999999999;
-	_NewTreeParameters.GravitropismBase = 0.239603199999999998;
-	_NewTreeParameters.PruningFactor = 0.05f;
-	_NewTreeParameters.LowBranchPruningFactor = 0.63922599999999996;
-	_NewTreeParameters.GravityBendingStrength = 0.2f;
-	_NewTreeParameters.Age = 14;
-	_NewTreeParameters.GravityFactor = 0.050594199999999999;
-	_NewTreeParameters.MaxBudAge = 10;
+		_NewTreeParameters.ApicalControl = 0.93576000000000004;
+		_NewTreeParameters.ApicalControlAgeDescFactor = 0.91815700000000000;
+		_NewTreeParameters.ApicalControlLevelFactor = 1.0000000000000000;
+		_NewTreeParameters.Phototropism = 0.42445109999999999;
+		_NewTreeParameters.GravitropismBase = 0.239603199999999998;
+		_NewTreeParameters.PruningFactor = 0.05f;
+		_NewTreeParameters.LowBranchPruningFactor = 0.63922599999999996;
+		_NewTreeParameters.GravityBendingStrength = 0.2f;
+		_NewTreeParameters.Age = 14;
+		_NewTreeParameters.GravityFactor = 0.050594199999999999;
+		_NewTreeParameters.MaxBudAge = 10;
 
-	_NewTreeParameters.EndNodeThickness = 0.02f;
-	_NewTreeParameters.ThicknessControlFactor = 0.75f;
-	_NewTreeParameters.GravityBackPropageteFixedCoefficient = 0.5f;
+		_NewTreeParameters.EndNodeThickness = 0.02f;
+		_NewTreeParameters.ThicknessControlFactor = 0.75f;
+		_NewTreeParameters.GravityBackPropageteFixedCoefficient = 0.5f;
 #pragma endregion
+		break;
+	case 2:
+		_NewTreeParameters.Seed = 1;
+		_NewTreeParameters.VarianceApicalAngle = 38;
+		_NewTreeParameters.LateralBudNumber = 4;
+		_NewTreeParameters.MeanBranchingAngle = 38;
+		_NewTreeParameters.VarianceBranchingAngle = 2;
+		_NewTreeParameters.MeanRollAngle = 91;
+		_NewTreeParameters.VarianceRollAngle = 1;
+
+		_NewTreeParameters.ApicalBudExtintionRate = 0;
+		_NewTreeParameters.LateralBudEntintionRate = 0.21f;
+		_NewTreeParameters.ApicalBudLightingFactor = 0.39f;
+		_NewTreeParameters.LateralBudLightingFactor = 1.13f;
+		_NewTreeParameters.ApicalDominanceBase = 3.13f;
+		_NewTreeParameters.ApicalDominanceDistanceFactor = 0.13f;
+		_NewTreeParameters.ApicalDominanceAgeFactor = 0.82;
+		_NewTreeParameters.GrowthRate = 0.98f;
+		_NewTreeParameters.InternodeLengthBase = 1.02f;
+		_NewTreeParameters.InternodeLengthAgeFactor = 0.97f;
+
+		_NewTreeParameters.ApicalControl = 2.4f;
+		_NewTreeParameters.ApicalControlAgeDescFactor = 0.85f;
+		_NewTreeParameters.ApicalControlLevelFactor = 1.0f;
+		_NewTreeParameters.Phototropism = 0.29f;
+		_NewTreeParameters.GravitropismBase = 0.061f;
+		_NewTreeParameters.PruningFactor = 0.05;
+		_NewTreeParameters.LowBranchPruningFactor = 1.3f;
+		_NewTreeParameters.GravityBendingStrength = 0.73f;
+		_NewTreeParameters.Age = 14;
+		_NewTreeParameters.GravityFactor = 0.050594199999999999;
+		_NewTreeParameters.MaxBudAge = 8;
+		_NewTreeParameters.EndNodeThickness = 0.02f;
+		_NewTreeParameters.ThicknessControlFactor = 0.6f;
+		_NewTreeParameters.GravityBackPropageteFixedCoefficient = 0.5f;
+		break;
+	}
+
 
 }
 
@@ -299,6 +344,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 	if (_Growing) {
 		TreeManager::CalculateBranchNodeIllumination();
 		for (auto& tree : trees) {
+			
 			Rotation rotation = EntityManager::GetComponentData<Rotation>(tree);
 			LocalToWorld ltw = EntityManager::GetComponentData<LocalToWorld>(tree);
 			TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
@@ -308,7 +354,10 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 				growed = true;
 			}
 			else {
-				_MeshGenerationQueue.push(tree);
+				TreeInfo treeInfo = EntityManager::GetComponentData<TreeInfo>(tree);
+				if (!treeInfo.MeshGenerated) {
+					_MeshGenerationQueue.push(tree);
+				}
 			}
 		}
 	}
@@ -338,8 +387,6 @@ void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeLength(Entity& branch
 	branchNodeInfo.DistanceToBranchEnd = 0;
 	branchNodeInfo.TotalDistanceToBranchEnd = 0;
 	if (branchNodeInfo.Pruned) EntityManager::SetComponentData(branchNode, branchNodeInfo);
-	float totalChildW = 0;
-	float totalChildWSq = 0;
 	EntityManager::ForEachChild(branchNode, [this, &branchNodeInfo](Entity child) {
 		UpdateBranchNodeLength(child);
 		BranchNodeInfo childNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(child);
@@ -392,46 +439,6 @@ void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeActivatedLevel(Entity
 		EntityManager::SetComponentData(maxChild, childNodeInfo);
 		UpdateBranchNodeActivatedLevel(maxChild);
 	}
-}
-
-void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeLevel(Entity& branchNode)
-{
-	BranchNodeInfo branchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
-	EntityManager::ForEachChild(branchNode, [this, &branchNodeInfo](Entity child)
-		{
-			BranchNodeInfo childNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(child);
-			if (branchNodeInfo.MaxChildLevel < childNodeInfo.MaxChildLevel) {
-				branchNodeInfo.MaxChildLevel = childNodeInfo.MaxChildLevel;
-			}
-			else if (branchNodeInfo.MaxChildLevel < childNodeInfo.Level) {
-				branchNodeInfo.MaxChildLevel = childNodeInfo.Level;
-			}
-		}
-	);
-	EntityManager::SetComponentData(branchNode, branchNodeInfo);
-}
-
-void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeMeanData(Entity& branchNode, unsigned treeAge)
-{
-	BranchNodeInfo branchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
-	branchNodeInfo.DistanceToBranchEnd = 0;
-	branchNodeInfo.NumValidChild = 0;
-	EntityManager::SetComponentData(branchNode, branchNodeInfo);
-	if (branchNodeInfo.Pruned) return;
-	float totalChildW = 0;
-	float totalChildWSq = 0;
-	EntityManager::ForEachChild(branchNode, [this, treeAge, &branchNodeInfo, &totalChildW, &totalChildWSq](Entity child)
-		{
-			UpdateBranchNodeMeanData(child, treeAge);
-			BranchNodeInfo childNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(child);
-			float d = childNodeInfo.DistanceToBranchEnd + childNodeInfo.DistanceToParent;
-			if (d > branchNodeInfo.DistanceToBranchEnd)branchNodeInfo.DistanceToBranchEnd = d;
-			float cL = childNodeInfo.DistanceToParent;
-			branchNodeInfo.NumValidChild += 1;
-		});
-	float nodeWFactor = 1;
-	float locW = 1.0f + glm::max((int)treeAge - branchNodeInfo.Level, 0);
-	EntityManager::SetComponentData(branchNode, branchNodeInfo);
 }
 
 void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& branchNode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation)
@@ -768,6 +775,10 @@ void TreeUtilities::PlantSimulationSystem::BackPropagateForce(Entity& branchNode
 void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeResource(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge)
 {
 	BranchNodeInfo branchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
+
+	branchNodeInfo.DistanceToBranchEnd = 0;
+	branchNodeInfo.NumValidChild = 0;
+
 	if (EntityManager::GetChildrenAmount(branchNode) == 0) branchNodeInfo.Thickness = treeParameters.EndNodeThickness;
 	else {
 		branchNodeInfo.Thickness = 0;
@@ -784,6 +795,18 @@ void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeResource(Entity& bran
 		{
 			UpdateBranchNodeResource(child, treeParameters, treeAge);
 			BranchNodeInfo childNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(child);
+
+			if (branchNodeInfo.MaxChildLevel < childNodeInfo.MaxChildLevel) {
+				branchNodeInfo.MaxChildLevel = childNodeInfo.MaxChildLevel;
+			}
+			else if (branchNodeInfo.MaxChildLevel < childNodeInfo.Level) {
+				branchNodeInfo.MaxChildLevel = childNodeInfo.Level;
+			}
+			float d = childNodeInfo.DistanceToBranchEnd + childNodeInfo.DistanceToParent;
+			if (d > branchNodeInfo.DistanceToBranchEnd)branchNodeInfo.DistanceToBranchEnd = d;
+			float cL = childNodeInfo.DistanceToParent;
+			branchNodeInfo.NumValidChild += 1;
+
 			branchNodeInfo.BranchEndNodeAmount += childNodeInfo.BranchEndNodeAmount;
 			branchNodeInfo.Thickness += treeParameters.ThicknessControlFactor * childNodeInfo.Thickness;
 			if (childNodeInfo.Thickness > mainChildThickness) {
@@ -833,7 +856,7 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultTreeSurfaceMaterial2->Textures2Ds()->push_back(textureNormal2);
 
 	_NewTreeColor.Color = glm::vec4(1.0f);
-	LoadDefaultTreeParameters();
+	LoadDefaultTreeParameters(1);
 	Enable();
 }
 
@@ -891,7 +914,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(Material* treeSurfaceMat
 	branchNodeInfo.DesiredGlobalRotation = glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
 	branchNodeInfo.DesiredLocalRotation = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
 	TreeInfo treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
-
+	treeInfo.MeshGenerated = false;
 	glm::mat4 transform = glm::identity<glm::mat4>();
 	UpdateLocalTransform(branchNodeEntity, treeParameters, transform, r.Value);
 
@@ -901,270 +924,6 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(Material* treeSurfaceMat
 	EntityManager::SetComponentData(treeEntity, age);
 	_Growing = true;
 	return treeEntity;
-}
-
-Entity TreeUtilities::PlantSimulationSystem::CreateExampleTree(Material* treeSurfaceMaterial, TreeColor color, glm::vec3 position, int index, bool enabled)
-{
-	TreeParameters tps = TreeParameters();
-	switch (index)
-	{
-	case 1:
-		tps.VarianceApicalAngle = 38;
-		tps.LateralBudNumber = 4;
-		tps.MeanBranchingAngle = 38;
-		tps.VarianceBranchingAngle = 2;
-		tps.MeanRollAngle = 91;
-		tps.VarianceRollAngle = 1;
-
-		tps.ApicalBudExtintionRate = 0;
-		tps.LateralBudEntintionRate = 0.21f;
-		tps.ApicalBudLightingFactor = 0.39f;
-		tps.LateralBudLightingFactor = 1.13f;
-		tps.ApicalDominanceBase = 3.13f;
-		tps.ApicalDominanceDistanceFactor = 0.13f;
-		tps.ApicalDominanceAgeFactor = 0.82;
-		tps.GrowthRate = 0.98f;
-		tps.InternodeLengthBase = 1.02f;
-		tps.InternodeLengthAgeFactor = 0.97f;
-
-		tps.ApicalControl = 2.4f;
-		tps.ApicalControlAgeDescFactor = 0.85f;
-		tps.ApicalControlLevelFactor = 1.0f;
-		tps.Phototropism = 0.29f;
-		tps.GravitropismBase = 0.061f;
-		tps.PruningFactor = 0.05;
-		tps.LowBranchPruningFactor = 1.3f;
-		tps.GravityBendingStrength = 0.73f;
-		tps.Age = 14;
-		tps.GravityFactor = 0.050594199999999999;
-		tps.MaxBudAge = 8;
-		tps.EndNodeThickness = 0.02f;
-		tps.ThicknessControlFactor = 0.6f;
-		tps.GravityBackPropageteFixedCoefficient = 0.5f;
-		break;
-	case 2:
-		tps.VarianceApicalAngle = 0.42990970562500003;
-		tps.LateralBudNumber = 2;
-		tps.MeanBranchingAngle = 27.198200000000000;
-		tps.VarianceBranchingAngle = 0.037388089600000000;
-		tps.MeanRollAngle = 113.11000000000000;
-		tps.VarianceRollAngle = 13.090141080900001;
-
-		tps.ApicalBudExtintionRate = 0.99903945880000000;
-		tps.LateralBudEntintionRate = 0.0062681600000000001;
-		tps.ApicalBudLightingFactor = 0.099225700000000000;
-		tps.LateralBudLightingFactor = 1.0005922199999999;
-		tps.ApicalDominanceBase = 5.0524730000000000;
-		tps.ApicalDominanceDistanceFactor = 0.37777800000000000;
-		tps.ApicalDominanceAgeFactor = 0.44704700000000003;
-		tps.GrowthRate = 1.3069500000000001;
-		tps.InternodeLengthBase = 0.92382719999999996;
-		tps.InternodeLengthAgeFactor = 0.95584000000000002;
-
-		tps.ApicalControl = 0.93576000000000004;
-		tps.ApicalControlAgeDescFactor = 0.91815700000000000;
-		tps.ApicalControlLevelFactor = 1.0000000000000000;
-		tps.Phototropism = 0.22445109999999999;
-		tps.GravitropismBase = 0.039603199999999998;
-		tps.PruningFactor = 0.43430900000000000;
-		tps.LowBranchPruningFactor = 0.63922599999999996;
-		tps.GravityBendingStrength = 0.2f;
-		tps.Age = 14;
-		tps.GravityFactor = 0.050594199999999999;
-		tps.MaxBudAge = 8;
-		tps.EndNodeThickness = 0.02f;
-		tps.ThicknessControlFactor = 0.8f;
-		tps.GravityBackPropageteFixedCoefficient = 0.5f;
-		break;
-	default:
-		tps.VarianceApicalAngle = 0.42990970562500003;
-		tps.LateralBudNumber = 2;
-		tps.MeanBranchingAngle = 27.198200000000000;
-		tps.VarianceBranchingAngle = 0.037388089600000000;
-		tps.MeanRollAngle = 113.11000000000000;
-		tps.VarianceRollAngle = 13.090141080900001;
-
-		tps.ApicalBudExtintionRate = 0.99903945880000000;
-		tps.LateralBudEntintionRate = 0.0062681600000000001;
-		tps.ApicalBudLightingFactor = 0.099225700000000000;
-		tps.LateralBudLightingFactor = 1.0005922199999999;
-		tps.ApicalDominanceBase = 5.0524730000000000;
-		tps.ApicalDominanceDistanceFactor = 0.37777800000000000;
-		tps.ApicalDominanceAgeFactor = 0.44704700000000003;
-		tps.GrowthRate = 1.3069500000000001;
-		tps.InternodeLengthBase = 0.92382719999999996;
-		tps.InternodeLengthAgeFactor = 0.95584000000000002;
-
-		tps.ApicalControl = 0.93576000000000004;
-		tps.ApicalControlAgeDescFactor = 0.91815700000000000;
-		tps.ApicalControlLevelFactor = 1.0000000000000000;
-		tps.Phototropism = 0.22445109999999999;
-		tps.GravitropismBase = 0.039603199999999998;
-		tps.PruningFactor = 0.43430900000000000;
-		tps.LowBranchPruningFactor = 0.63922599999999996;
-		tps.GravityBendingStrength = 0.2f;
-		tps.Age = 14;
-		tps.GravityFactor = 0.050594199999999999;
-		tps.MaxBudAge = 8;
-		tps.EndNodeThickness = 0.02f;
-		tps.ThicknessControlFactor = 0.8f;
-		tps.GravityBackPropageteFixedCoefficient = 0.5f;
-		break;
-	}
-	/*case 2:
-		tps.VarianceApicalAngle = 0;
-		tps.LateralBudNumber = 2;
-		tps.MeanBranchingAngle = 41;
-		tps.VarianceBranchingAngle = 3;
-		tps.MeanRollAngle = 87;
-		tps.VarianceRollAngle = 2;
-
-		tps.ApicalBudExtintionRate = 0;
-		tps.LateralBudEntintionRate = 0.21f;
-		tps.ApicalBudLightingFactor = 0.37f;
-		tps.LateralBudLightingFactor = 1.05f;
-		tps.ApicalDominanceBase = 0.37f;
-		tps.ApicalDominanceDistanceFactor = 0.31f;
-		tps.ApicalDominanceAgeFactor = 0.9;
-		tps.GrowthRate = 1.9f;
-		tps.InternodeLengthBase = 0.49f;
-		tps.InternodeLengthAgeFactor = 0.98f;
-
-		tps.ApicalControl = 0.27f;
-		tps.ApicalControlAgeDescFactor = 0.9f;
-		tps.ApicalControlLevelFactor = 0.9f;
-		tps.Phototropism = 0.15f;
-		tps.GravitropismBase = 0.17f;
-		tps.PruningFactor = 0.82;
-		tps.LowBranchPruningFactor = 2.83f;
-		tps.GravityBendingStrength = 0.195f;
-		tps.GravityBendingAngleFactor = 0.14f;
-		tps.Age = 6;
-		break;
-	case 3:
-		tps.VarianceApicalAngle = 10;
-		tps.LateralBudNumber = 2;
-		tps.MeanBranchingAngle = 51;
-		tps.VarianceBranchingAngle = 4;
-		tps.MeanRollAngle = 100;
-		tps.VarianceRollAngle = 30;
-
-		tps.ApicalBudExtintionRate = 0;
-		tps.LateralBudEntintionRate = 0.015f;
-		tps.ApicalBudLightingFactor = 0.36f;
-		tps.LateralBudLightingFactor = 0.65f;
-		tps.ApicalDominanceBase = 6.29f;
-		tps.ApicalDominanceDistanceFactor = 0.9f;
-		tps.ApicalDominanceAgeFactor = 0.87;
-		tps.GrowthRate = 3.26f;
-		tps.InternodeLengthBase = 0.4f;
-		tps.InternodeLengthAgeFactor = 0.96f;
-
-		tps.ApicalControl = 6.2f;
-		tps.ApicalControlAgeDescFactor = 0.9f;
-		tps.ApicalControlLevelFactor = 1.0f;
-		tps.Phototropism = 0.42f;
-		tps.GravitropismBase = 0.43f;
-		tps.PruningFactor = 0.12;
-		tps.LowBranchPruningFactor = 1.25f;
-		tps.GravityBendingStrength = 0.94f;
-		tps.GravityBendingAngleFactor = 0.52f;
-		tps.Age = 14;
-		break;
-	case 4:
-		tps.VarianceApicalAngle = 5;
-		tps.LateralBudNumber = 1;
-		tps.MeanBranchingAngle = 45;
-		tps.VarianceBranchingAngle = 5;
-		tps.MeanRollAngle = 130;
-		tps.VarianceRollAngle = 3;
-
-		tps.ApicalBudExtintionRate = 0;
-		tps.LateralBudEntintionRate = 0.01;
-		tps.ApicalBudLightingFactor = 0.5;
-		tps.LateralBudLightingFactor = 0.03f;
-		tps.ApicalDominanceBase = 5.59f;
-		tps.ApicalDominanceDistanceFactor = 0.5f;
-		tps.ApicalDominanceAgeFactor = 0.979;
-		tps.GrowthRate = 4.25f;
-		tps.InternodeLengthBase = 0.55f;
-		tps.InternodeLengthAgeFactor = 0.95f;
-
-		tps.ApicalControl = 5.5f;
-		tps.ApicalControlAgeDescFactor = 0.91f;
-		tps.ApicalControlLevelFactor = 1.0f;
-		tps.Phototropism = 0.05f;
-		tps.GravitropismBase = -0.01f;
-		tps.PruningFactor = 0.48;
-		tps.LowBranchPruningFactor = 5.5f;
-		tps.GravityBendingStrength = 0.09f;
-		tps.GravityBendingAngleFactor = 0.89f;
-		tps.Age = 28;
-		break;
-	case 5:
-		tps.VarianceApicalAngle = 2;
-		tps.LateralBudNumber = 6;
-		tps.MeanBranchingAngle = 3;
-		tps.VarianceBranchingAngle = 130;
-		tps.MeanRollAngle = 10;
-		tps.VarianceRollAngle = 0;
-
-		tps.ApicalBudExtintionRate = 0.018;
-		tps.LateralBudEntintionRate = 0.03;
-		tps.ApicalBudLightingFactor = 0.21;
-		tps.LateralBudLightingFactor = 0.5f;
-		tps.ApicalDominanceBase = 0.55f;
-		tps.ApicalDominanceDistanceFactor = 0.91f;
-		tps.ApicalDominanceAgeFactor = 2.4;
-		tps.GrowthRate = 0.7f;
-		tps.InternodeLengthBase = 0.97f;
-		tps.InternodeLengthAgeFactor = 5.5f;
-
-		tps.ApicalControl = 0.92f;
-		tps.ApicalControlAgeDescFactor = 0.05f;
-		tps.ApicalControlLevelFactor = 1.0;
-		tps.Phototropism = 0.15f;
-		tps.GravitropismBase = 0.22f;
-		tps.PruningFactor = 1.11;
-		tps.LowBranchPruningFactor = 0.32f;
-		tps.GravityBendingStrength = 0.12f;
-		tps.GravityBendingAngleFactor = 0.78f;
-		tps.Age = 4;
-		break;
-	case 6:
-		break;
-	case 7:
-		tps.VarianceApicalAngle = 0;
-		tps.LateralBudNumber = 6;
-		tps.MeanBranchingAngle = 30;
-		tps.VarianceBranchingAngle = 0;
-		tps.MeanRollAngle = 60;
-		tps.VarianceRollAngle = 0;
-
-		tps.ApicalBudExtintionRate = 0;
-		tps.LateralBudEntintionRate = 0;
-		tps.ApicalBudLightingFactor = 0.5;
-		tps.LateralBudLightingFactor = 0.03f;
-		tps.ApicalDominanceBase = 6.0f;
-		tps.ApicalDominanceDistanceFactor = 0.5f;
-		tps.ApicalDominanceAgeFactor = 0.1;
-		tps.GrowthRate = 4.0f;
-		tps.InternodeLengthBase = 1.0f;
-		tps.InternodeLengthAgeFactor = 0.50f;
-
-		tps.ApicalControl = 5.5f;
-		tps.ApicalControlAgeDescFactor = 0.8f;
-		tps.ApicalControlLevelFactor = 0.8f;
-		tps.Phototropism = 0.05f;
-		tps.GravitropismBase = 0.48f;
-		tps.PruningFactor = 0.05;
-		tps.LowBranchPruningFactor = 5.5f;
-		tps.GravityBendingStrength = 0.73f;
-		tps.GravityBendingAngleFactor = 0.05f;
-		tps.Age = 6;
-		break;
-		*/
-	return CreateTree(treeSurfaceMaterial, tps, color, position);
 }
 
 #pragma endregion
