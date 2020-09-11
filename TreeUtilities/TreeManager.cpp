@@ -502,6 +502,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			else rings->push_back(RingMesh(parentTranslation, translation, fromDir, dir, parentThickness, info->Thickness));
 #pragma endregion
 		}
+
 	);
 
 	MeshMaterialComponent* mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(treeEntity);
