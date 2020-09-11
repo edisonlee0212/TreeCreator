@@ -493,7 +493,16 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& branchNo
 		}
 	);
 	if (EntityManager::GetChildrenAmount(branchNode) == 0) branchNodeInfo.MainChildRotation = glm::inverse(treeRotation) * newGlobalRotation;
-	else EntityManager::SetComponentData(mainChildEntityIndex, mainChildInfo);
+	else {
+		EntityManager::SetComponentData(mainChildEntityIndex, mainChildInfo);
+	}
+	EntityManager::ForEachChild(branchNode, [this, &branchNodeInfo](Entity child)
+		{
+			BranchNodeInfo childNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(child);
+			childNodeInfo.ParentMainChildRotation = branchNodeInfo.MainChildRotation;
+			EntityManager::SetComponentData(child, childNodeInfo);
+		}
+	);
 	EntityManager::SetComponentData(branchNode, branchNodeInfo);
 }
 

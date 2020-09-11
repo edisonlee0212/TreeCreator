@@ -20,7 +20,7 @@ BranchNodeIndex TreeUtilities::TreeManager::_BranchNodeIndex;
 
 bool TreeUtilities::TreeManager::_Ready;
 #pragma region Helpers
-void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution)
+void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep)
 {
 	BranchNodeInfo info = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
 	glm::vec3 newNormalDir = normal;
@@ -29,54 +29,115 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 	
 	auto list = EntityManager::GetComponentData<BranchNodeRingList>(branchNode);
 	auto rings = list.Rings;
+	auto step = list.step;
+	//For stitching
+	int pStep = parentStep > 0 ? parentStep : step;
+
 	list.NormalDir = newNormalDir;
 	EntityManager::SetComponentData(branchNode, list);
-	int step = (rings->front().StartRadius / resolution);
-	if (step < 4) step = 4;
-	if (step % 2 != 0) step++;
-	float angleStep = 360.0f / (float)(step);
+	float angleStep = 360.0f / (float)(pStep);
 	int vertexIndex = vertices.size();
 	Vertex archetype;
-	float textureXstep = 1.0f / step * 4.0f;
-	for (int i = 0; i < step; i++) {
+	float textureXstep = 1.0f / pStep * 4.0f;
+	for (int i = 0; i < pStep; i++) {
 		archetype.Position = rings->at(0).GetPoint(newNormalDir, angleStep * i, true);
-		float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
+		float x = i < (pStep / 2) ? i * textureXstep : (pStep - i) * textureXstep;
 		archetype.TexCoords0 = glm::vec2(x, 0.0f);
 		vertices.push_back(archetype);
 	}
+	//TODO: stitch here.
+	std::vector<float> angles;
+	angles.resize(step);
+	std::vector<float> pAngles;
+	pAngles.resize(pStep);
+
+	for (int i = 0; i < pStep; i++) {
+		pAngles[i] = angleStep * i;
+	}
+	angleStep = 360.0f / (float)(step);
+	for (int i = 0; i < step; i++) {
+		angles[i] = angleStep * i;
+	}
+
+	std::vector<unsigned> pTarget;
+	std::vector<unsigned> target;
+	pTarget.resize(pStep);
+	target.resize(step);
+	for (int i = 0; i < pStep; i++) {
+		//First we allocate nearest vertices for parent.
+		float minAngleDiff = 360.0f;
+		for (int j = 0; j < step; j++) {
+			float diff = glm::abs(pAngles[i] - angles[j]);
+			if (diff < minAngleDiff) {
+				minAngleDiff = diff;
+				pTarget[i] = j;
+			}
+		}
+	}
+	for (int i = 0; i < step; i++) {
+		//Second we allocate nearest vertices for child
+		float minAngleDiff = 360.0f;
+		for (int j = 0; j < pStep; j++) {
+			float diff = glm::abs(angles[i] - pAngles[j]);
+			if (diff < minAngleDiff) {
+				minAngleDiff = diff;
+				target[i] = j;
+			}
+		}
+	}
+	for (int i = 0; i < pStep; i++) {
+		if (pTarget[i] == pTarget[i == pStep - 1 ? 0 : i + 1]) {
+			indices.push_back(vertexIndex + i);
+			indices.push_back(vertexIndex + (i == pStep - 1 ? 0 : i + 1));
+			indices.push_back(vertexIndex + pStep + pTarget[i]);
+		}
+		else {
+			indices.push_back(vertexIndex + i);
+			indices.push_back(vertexIndex + (i == pStep - 1 ? 0 : i + 1));
+			indices.push_back(vertexIndex + pStep + pTarget[i]);
+
+			indices.push_back(vertexIndex + pStep + pTarget[i == pStep - 1 ? 0 : i + 1]);
+			indices.push_back(vertexIndex + pStep + pTarget[i]);
+			indices.push_back(vertexIndex + (i == pStep - 1 ? 0 : i + 1));
+		}
+	}
+
+	vertexIndex += pStep;
+	textureXstep = 1.0f / step * 4.0f;
 	int ringSize = rings->size();
-	float textureYstep = 1.0f / ringSize * 2.0f;
 	for (int ringIndex = 0; ringIndex < ringSize; ringIndex++) {
 		for (int i = 0; i < step; i++) {
 			archetype.Position = rings->at(ringIndex).GetPoint(newNormalDir, angleStep * i, false);
 			float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
-			float y = ringIndex < (ringSize / 2) ? (ringIndex + 1) * textureYstep : (ringSize - ringIndex - 1) * textureYstep;
+			float y = ringIndex % 2 == 0 ? 1.0f : 0.0f;
 			archetype.TexCoords0 = glm::vec2(x, y);
 			vertices.push_back(archetype);
 		}
-		for (int i = 0; i < step - 1; i++) {
+		if (ringIndex != 0) {
+			for (int i = 0; i < step - 1; i++) {
+				//Down triangle
+				indices.push_back(vertexIndex + (ringIndex - 1) * step + i);
+				indices.push_back(vertexIndex + (ringIndex - 1) * step + i + 1);
+				indices.push_back(vertexIndex + (ringIndex) * step + i);
+				//Up triangle
+				indices.push_back(vertexIndex + (ringIndex) * step + i + 1);
+				indices.push_back(vertexIndex + (ringIndex) * step + i);
+				indices.push_back(vertexIndex + (ringIndex - 1) * step + i + 1);
+			}
 			//Down triangle
-			indices.push_back(vertexIndex + ringIndex * step + i);
-			indices.push_back(vertexIndex + ringIndex * step + i + 1);
-			indices.push_back(vertexIndex + (ringIndex + 1) * step + i);
+			indices.push_back(vertexIndex + (ringIndex - 1) * step + step - 1);
+			indices.push_back(vertexIndex + (ringIndex - 1) * step);
+			indices.push_back(vertexIndex + (ringIndex) * step + step - 1);
 			//Up triangle
-			indices.push_back(vertexIndex + (ringIndex + 1) * step + i + 1);
-			indices.push_back(vertexIndex + (ringIndex + 1) * step + i);
-			indices.push_back(vertexIndex + ringIndex * step + i + 1);
+			indices.push_back(vertexIndex + (ringIndex) * step);
+			indices.push_back(vertexIndex + (ringIndex) * step + step - 1);
+			indices.push_back(vertexIndex + (ringIndex - 1) * step);
 		}
-		//Down triangle
-		indices.push_back(vertexIndex + ringIndex * step + step - 1);
-		indices.push_back(vertexIndex + ringIndex * step);
-		indices.push_back(vertexIndex + (ringIndex + 1) * step + step - 1);
-		//Up triangle
-		indices.push_back(vertexIndex + (ringIndex + 1) * step);
-		indices.push_back(vertexIndex + (ringIndex + 1) * step + step - 1);
-		indices.push_back(vertexIndex + ringIndex * step);
 	}
 	
-	EntityManager::ForEachChild(branchNode, [&vertices, &indices, &newNormalDir, resolution](Entity child)
+	EntityManager::ForEachChild(branchNode, [&vertices, &indices, &newNormalDir, resolution, step](Entity child)
 		{
-			SimpleMeshGenerator(child, vertices, indices, newNormalDir, resolution);
+			SimpleMeshGenerator(child, vertices, indices, newNormalDir, resolution, step);
 		}
 	);
 }
@@ -417,12 +478,17 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			glm::vec3 parentDir = parentRotation * glm::vec3(0, 0, -1);
 			glm::vec3 dir = rotation * glm::vec3(0, 0, -1);
 			glm::vec3 mainChildDir = info->MainChildRotation * glm::vec3(0, 0, -1);
-			glm::vec3 parentMainChildDir = EntityManager::GetComponentData<BranchNodeInfo>(EntityManager::GetParent(branchNode)).MainChildRotation * glm::vec3(0, 0, -1);
+			glm::vec3 parentMainChildDir = info->ParentMainChildRotation * glm::vec3(0, 0, -1);
 			glm::vec3 fromDir = (parentDir + parentMainChildDir) / 2.0f;
 			dir = (dir + mainChildDir) / 2.0f;
 #pragma region Subdivision branch here.
 			auto distance = glm::distance(parentTranslation, translation);
-			int amount = distance / ((info->Thickness + parentThickness) * resolution * glm::pi<float>() * glm::pi<float>()); //distance / ((fromRadius + radius) / 2.0f);
+
+			int step = (parentThickness / resolution);
+			if (step < 4) step = 4;
+			if (step % 2 != 0) step++;
+			list->step = step;
+			int amount = distance / ((info->Thickness + parentThickness) / 2.0f) + 0.5f;
 			if (amount % 2 != 0) amount++;
 			BezierCurve curve = BezierCurve(parentTranslation, parentTranslation + distance / 3.0f * fromDir, translation - distance / 3.0f * dir, translation);
 			float posStep = 1.0f / (float)amount;

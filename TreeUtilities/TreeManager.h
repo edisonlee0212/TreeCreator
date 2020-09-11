@@ -22,6 +22,7 @@ namespace TreeUtilities {
     struct BranchNodeRingList : ComponentBase {
         std::vector<RingMesh>* Rings;
         glm::vec3 NormalDir;
+        int step;
     };
 
     struct TREEUTILITIES_API Connection : ComponentBase {
@@ -108,6 +109,7 @@ namespace TreeUtilities {
         glm::quat ParentRotation;
         float ParentThickness;
         glm::quat MainChildRotation;
+        glm::quat ParentMainChildRotation;
         bool IsMainChild = false;
 #pragma endregion
 
@@ -229,7 +231,7 @@ namespace TreeUtilities {
         static bool _Ready;
         
         //static void LeafGenerationHelper(BudInfo& info, Entity& leaf, Entity& bud, int index);
-        static void SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution);
+        static void SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep = -1);
         static void BranchNodeCleaner(Entity branchEntity);
     public:
         static void Init();
