@@ -5,13 +5,15 @@
 #include "PlantSimulationSystem.h"
 #include "TreeManager.h"
 #include "EntityEditorSystem.h"
-
+#include "SorghumReconstructionSystem.h"
 #include "EntityEditorSystem.h"
 
 using namespace UniEngine;
 using namespace TreeUtilities;
+using namespace SorghumRecon;
 void InitGround();
 void InitPlantSimulationSystem();
+SorghumReconstructionSystem* InitSorghumResonstructionSystem();
 void LightSettingMenu();
 
 float lightAngle0 = 60;
@@ -36,7 +38,7 @@ int main()
 	Application::Init();
 #pragma region Lights
 	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Light", Translation(), Rotation(), Scale(), LocalToWorld());
-	DirectionalLightComponent* dlc = new DirectionalLightComponent();
+	auto dlc = new DirectionalLightComponent();
 	Entity dle = EntityManager::CreateEntity(lightArchetype);
 	EntityManager::SetSharedComponent<DirectionalLightComponent>(dle, dlc);
 	
@@ -55,9 +57,10 @@ int main()
 	InitGround();
 #pragma endregion
 	TreeManager::Init();
+	
+#pragma region Light estimator setup
 	//The smaller the branch node's size, the more branching for tree.
 	TreeManager::GetLightEstimator()->SetBranchNodeSize(0.7f);
-#pragma region Light estimator setup
 	TreeManager::GetLightEstimator()->ResetCenterDistance(60);
 	TreeManager::GetLightEstimator()->ResetSnapShotWidth(30);
 	//From top
@@ -83,6 +86,26 @@ int main()
 	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(-tilt, -1, 0), 0.1f);
 #pragma endregion
 	InitPlantSimulationSystem();
+	/*
+	auto srSys = InitSorghumResonstructionSystem();
+	Entity plant1 = srSys->CreatePlant("skeleton_procedural_1.txt", 0.01f);
+	Entity plant2 = srSys->CreatePlant("skeleton_procedural_2.txt", 0.01f);
+	Translation t1;
+	Translation t2;
+	Rotation r1;
+	Rotation r2;
+	t1.Value = glm::vec3(-2.5, 2.0, 0);
+	t2.Value = glm::vec3(2.5, 2.0, 0);
+	r1.Value = glm::quat(glm::vec3(glm::radians(-90.0f), 0, 0));
+	r2.Value = glm::quat(glm::vec3(glm::radians(-90.0f), 0, 0));
+
+	EntityManager::SetComponentData(plant1, t1);
+	EntityManager::SetComponentData(plant1, r2);
+
+	EntityManager::SetComponentData(plant2, t2);
+	EntityManager::SetComponentData(plant2, r2);
+	*/
+
 #pragma region Engine Loop
 	bool loopable = true;
 	//Start engine. Here since we need to inject procedures to the main engine loop we need to manually loop by our self.
@@ -116,6 +139,10 @@ int main()
 }
 void InitPlantSimulationSystem() {
 	auto psSys = Application::GetWorld()->CreateSystem<PlantSimulationSystem>(SystemGroup::SimulationSystemGroup);
+}
+SorghumReconstructionSystem* InitSorghumResonstructionSystem()
+{
+	return Application::GetWorld()->CreateSystem<SorghumReconstructionSystem>(SystemGroup::SimulationSystemGroup);
 }
 void InitGround() {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());

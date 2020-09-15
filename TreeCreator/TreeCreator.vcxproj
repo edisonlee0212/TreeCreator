@@ -106,12 +106,14 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
   <ItemGroup>
     <ClCompile Include="PlantSimulationSystem.cpp" />
     <ClCompile Include="NetworkSystem.cpp" />
+    <ClCompile Include="SorghumReconstructionSystem.cpp" />
     <ClCompile Include="TreeCreator.cpp" />
     <ClCompile Include="TreeMesh.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkSystem.h" />
     <ClInclude Include="PlantSimulationSystem.h" />
+    <ClInclude Include="SorghumReconstructionSystem.h" />
     <ClInclude Include="TreeMesh.h" />
   </ItemGroup>
   <ItemGroup>

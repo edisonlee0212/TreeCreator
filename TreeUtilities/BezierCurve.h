@@ -8,8 +8,9 @@ namespace TreeUtilities {
 	public:
 		BezierCurve(glm::vec3 cp0, glm::vec3 cp1, glm::vec3 cp2, glm::vec3 cp3);
 		glm::vec3 GetPoint(float t);
-	private:
-		glm::vec3 _CP0, _CP1, _CP2, _CP3;
-		std::vector<glm::vec3> _Points;
+		glm::vec3 GetStartAxis();
+		glm::vec3 GetEndAxis();
+		glm::vec3 Evaluate(float u);
+		glm::vec3 CP0, CP1, CP2, CP3;
 	};
 }

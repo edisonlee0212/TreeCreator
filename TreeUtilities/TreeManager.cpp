@@ -27,7 +27,7 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 	//glm::vec3 dir = info.DesiredGlobalRotation * glm::vec3(0.0f, 0.0f, -1.0f);
 	//newNormalDir = glm::cross(glm::cross(dir, newNormalDir), dir);
 	
-	auto list = EntityManager::GetComponentData<BranchNodeRingList>(branchNode);
+	auto list = EntityManager::GetComponentData<RingMeshList>(branchNode);
 	auto rings = list.Rings;
 	auto step = list.step;
 	//For stitching
@@ -176,7 +176,7 @@ void TreeUtilities::TreeManager::BranchNodeCleaner(Entity branchEntity)
 {
 	BudList ob = EntityManager::GetComponentData<BudList>(branchEntity);
 	delete ob.Buds;
-	BranchNodeRingList rml = EntityManager::GetComponentData<BranchNodeRingList>(branchEntity);
+	RingMeshList rml = EntityManager::GetComponentData<RingMeshList>(branchEntity);
 	delete rml.Rings;
 
 	EntityManager::ForEachChild(branchEntity, [](Entity child) {
@@ -188,7 +188,7 @@ void TreeUtilities::TreeManager::Init()
 	_BranchNodeArchetype = EntityManager::CreateEntityArchetype(
 		"BranchNode",
 		LocalToWorld(), Connection(),
-		Illumination(), Gravity(), BranchNodeRingList(),
+		Illumination(), Gravity(), RingMeshList(),
 		BranchNodeIndex(), BranchNodeInfo(), TreeIndex(), BudList()
 	);
 	_TreeArchetype = EntityManager::CreateEntityArchetype(
@@ -366,7 +366,7 @@ Entity TreeUtilities::TreeManager::CreateBranchNode(TreeIndex treeIndex, Entity 
 	auto entity = EntityManager::CreateEntity(_BranchNodeArchetype);
 	BudList ob = BudList();
 	ob.Buds = new std::vector<Bud>();
-	BranchNodeRingList rml = BranchNodeRingList();
+	RingMeshList rml = RingMeshList();
 	rml.Rings = new std::vector<RingMesh>();
 	EntityManager::SetComponentData(entity, treeIndex);
 	EntityManager::SetParent(entity, parentEntity);
@@ -459,7 +459,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 		return;
 	}
 	//Prepare ring mesh.
-	EntityManager::ForEach<BranchNodeInfo, BranchNodeRingList>(_BranchNodeQuery, [resolution](int i, Entity branchNode, BranchNodeInfo* info, BranchNodeRingList* list) 
+	EntityManager::ForEach<BranchNodeInfo, RingMeshList>(_BranchNodeQuery, [resolution](int i, Entity branchNode, BranchNodeInfo* info, RingMeshList* list) 
 		{
 			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(branchNode))) return;
 			std::vector<RingMesh>* rings = list->Rings;

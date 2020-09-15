@@ -19,7 +19,7 @@ namespace TreeUtilities {
 #pragma endregion
 
 #pragma region BranchNode
-    struct BranchNodeRingList : ComponentBase {
+    struct RingMeshList : ComponentBase {
         std::vector<RingMesh>* Rings;
         glm::vec3 NormalDir;
         int step;
@@ -120,32 +120,31 @@ namespace TreeUtilities {
         int Seed;
 
 #pragma region Geometric
-        int LateralBudNumber;
+        int LateralBudPerNode;
 
         float VarianceApicalAngle; // Training target
 
-        float MeanBranchingAngle; // Training target
-        float VarianceBranchingAngle; // Training target
+        float BranchingAngleMean; // Training target
+        float BranchingAngleVariance; // Training target
 
-        float MeanRollAngle; // Training target
-        float VarianceRollAngle; // Training target
+        float RollAngleMean; // Training target
+        float RollAngleVariance; // Training target
 #pragma endregion
 #pragma region Bud fate
-        float ApicalBudExtintionRate; // Useless.
-        float LateralBudEntintionRate; //Useless.
+        float ApicalBudKillProbability; // Useless.
+        float LateralBudKillProbability; //Useless.
 
-        float ApicalDominanceBase; // Training target
         float ApicalDominanceDistanceFactor; // Training target
         float ApicalDominanceAgeFactor; // Training target
 
         float GrowthRate;
 
-        float InternodeLengthBase; //Fixed
-        float InternodeLengthAgeFactor; // Training target
+        float BranchNodeLengthBase; //Fixed
+        float BranchNodeLengthAgeFactor; // Training target
 
 
-        float ApicalControl; // Training target
-        float ApicalControlAgeDescFactor; // Training target
+        float ApicalControlBase; // Training target
+        float ApicalControlAgeFactor; // Training target
         float ApicalControlLevelFactor; // Training target
         float ApicalControlDistanceFactor; // Training target
 
@@ -166,13 +165,13 @@ namespace TreeUtilities {
 #pragma endregion
 
 #pragma region Sagging
-        float GravityFactor;
-        float GravityBackPropageteFixedCoefficient;
+        float SaggingFactor;
+        float SaggingForceBackPropagateFixedCoefficient;
 #pragma endregion
 
         int Age;
-        float EndNodeThickness = 0.01f;
-        float ThicknessControlFactor = 1.0f;
+        float EndNodeThickness;
+        float ThicknessControlFactor;
     };
     
     struct TREEUTILITIES_API TreeLeafPruningFactor : ComponentBase {
