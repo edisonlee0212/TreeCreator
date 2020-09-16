@@ -9,8 +9,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Core", "Submodules\UniEngin
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Entities", "Submodules\UniEngine\Entities\Entities.vcxproj", "{6EEFCFB9-6499-4A25-8B47-497AD00822BD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EntityEditor", "Submodules\UniEngine\EntityEditor\EntityEditor.vcxproj", "{12A68164-4DCB-40AC-B4E4-0FC8F0F78954}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TreeUtilities", "TreeUtilities\TreeUtilities.vcxproj", "{E0C6F70B-F996-43A3-AD08-11725C1D01D8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TreeCreator", "TreeCreator\TreeCreator.vcxproj", "{80518F9A-9C15-4067-99FB-2B25B3BADB57}"
@@ -33,10 +31,6 @@ Global
 		{6EEFCFB9-6499-4A25-8B47-497AD00822BD}.Debug|x64.Build.0 = Debug|x64
 		{6EEFCFB9-6499-4A25-8B47-497AD00822BD}.Release|x64.ActiveCfg = Release|x64
 		{6EEFCFB9-6499-4A25-8B47-497AD00822BD}.Release|x64.Build.0 = Release|x64
-		{12A68164-4DCB-40AC-B4E4-0FC8F0F78954}.Debug|x64.ActiveCfg = Debug|x64
-		{12A68164-4DCB-40AC-B4E4-0FC8F0F78954}.Debug|x64.Build.0 = Debug|x64
-		{12A68164-4DCB-40AC-B4E4-0FC8F0F78954}.Release|x64.ActiveCfg = Release|x64
-		{12A68164-4DCB-40AC-B4E4-0FC8F0F78954}.Release|x64.Build.0 = Release|x64
 		{E0C6F70B-F996-43A3-AD08-11725C1D01D8}.Debug|x64.ActiveCfg = Debug|x64
 		{E0C6F70B-F996-43A3-AD08-11725C1D01D8}.Debug|x64.Build.0 = Debug|x64
 		{E0C6F70B-F996-43A3-AD08-11725C1D01D8}.Release|x64.ActiveCfg = Release|x64

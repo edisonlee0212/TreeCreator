@@ -4,7 +4,6 @@
 #include "CameraControlSystem.h"
 #include "PlantSimulationSystem.h"
 #include "TreeManager.h"
-#include "EntityEditorSystem.h"
 #include "SorghumReconstructionSystem.h"
 #include "EntityEditorSystem.h"
 
@@ -47,7 +46,6 @@ int main()
 	Application::SetTimeStep(0.016f);
 	World* world = Application::GetWorld();
 	WorldTime* time = world->Time();
-	EntityEditorSystem* editorSystem = world->CreateSystem<EntityEditorSystem>(SystemGroup::PresentationSystemGroup);
 
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());
 	CameraControlSystem* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);

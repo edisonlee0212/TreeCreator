@@ -273,7 +273,7 @@ void TreeUtilities::TreeManager::CalculateBranchNodeIllumination()
 		std::mutex writeMutex;
 		std::mutex maxIlluminationMutex;
 		for (size_t i = 0; i < resolution; i++) {
-			futures.push_back(_ThreadPool->Push([i, shot, resolution, &writeMutex, &maxIlluminationMutex, &maxIllumination](int id)
+			futures.push_back(_World->GetThreadPool()->Push([i, shot, resolution, &writeMutex, &maxIlluminationMutex, &maxIllumination](int id)
 				{
 					float localMaxIllumination = 0;
 					for (size_t j = 0; j < resolution; j++) {
