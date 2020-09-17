@@ -18,6 +18,7 @@ namespace TreeUtilities {
         char _CurrentWorkingDir[256] = {};
         char _TempImportFilePath[256] = {};
         char _TempExportFilePath[256] = {};
+        float _MeshGenerationResolution = 0.01f;
         TreeParameters _NewTreeParameters = TreeParameters();
         glm::vec3 _NewTreePosition = glm::vec3(0);
         TreeColor _NewTreeColor = {};

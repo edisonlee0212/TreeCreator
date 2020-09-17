@@ -1,5 +1,5 @@
 #include "PlantSimulationSystem.h"
-
+#include "TreeScene.h"
 #include <gtx/matrix_decompose.hpp>
 #include <direct.h>
 void TreeUtilities::PlantSimulationSystem::DrawGUI()
@@ -152,8 +152,24 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 			_Growing = !_Growing;
 		}
 		ImGui::SliderFloat("Gravity", &_Gravity, 0.0f, 20.0f);
+		ImGui::InputFloat("Mesh resolution", &_MeshGenerationResolution, 0.0f, 0.0f, "%.5f");
+		if (ImGui::Button("Generate mesh for all trees")) {
+			auto trees = std::vector<Entity>();
+			_TreeQuery.ToEntityArray(&trees);
+			for(auto& tree : trees)
+			{
+				TreeManager::GenerateSimpleMeshForTree(tree, _MeshGenerationResolution);
+			}
+			
+		}
 	}
-
+	if (ImGui::CollapsingHeader("I/O", ImGuiTreeNodeFlags_DefaultOpen)) {
+		static char sceneOutputName[256] = {};
+		ImGui::InputText("File name", sceneOutputName, 255);
+		if (ImGui::Button(("Export scene as " + std::string(sceneOutputName) + ".obj").c_str())) {
+			TreeScene::ExportSceneAsOBJ(sceneOutputName);
+		}
+	}
 	ImGui::End();
 
 }

@@ -319,31 +319,7 @@ void TreeUtilities::TreeManager::CalculateBranchNodeIllumination()
 	}
 	_LightEstimator->SetMaxIllumination(maxIllumination);
 }
-/*
-void TreeUtilities::TreeManager::GenerateLeavesForAllTrees()
-{
-#pragma region Create leaves for all branchNodes
-	std::vector<Entity> buds;
-	//_BudQuery.ToEntityArray(&buds);
-	for (int budIndex = 0; budIndex < buds.size(); budIndex++) {
-		auto& bud = buds.at(budIndex);
-		//Clear all leafs
-		auto children = EntityManager::GetChildren(bud);
-		for (auto i : children) {
-			if (EntityManager::HasComponentData<LeafInfo>(i)) EntityManager::DeleteEntity(i);
-		}
-		auto budInfo = EntityManager::GetComponentData<BudInfo>(bud);
-		//Generate leaves
-		for (int i = 0; i < budInfo.LeafAmount; i++) {
-			Entity leaf = CreateLeaf(EntityManager::GetComponentData<TreeIndex>(bud), bud);
-			EntityManager::SetComponentData(leaf, EntityManager::GetComponentData<TreeIndex>(bud));
-			//TODO: Set Component Data for leaf.
-			LeafGenerationHelper(budInfo, leaf, bud, i);
-		}
-	}
-#pragma endregion
-}
-*/
+
 
 Entity TreeUtilities::TreeManager::CreateTree(Material* treeSurfaceMaterial)
 {
