@@ -25,41 +25,33 @@ void TreeUtilities::TreeSystem::DrawGUI()
 	if (ImGui::CollapsingHeader("Tree System", ImGuiTreeNodeFlags_DefaultOpen)) {
 		ImGui::Text("Tree Amount: %d ", _TreeEntities.size());
 		ImGui::Separator();
-
 	}
 	ImGui::End();
-
+	
 	ImGui::Begin("Tree Manager");
 	TreeIndex index;
 	TreeColor color;
-	
+	auto _SelectedTreeEntity = EntityEditorSystem::GetSelectedEntity();
 	for (auto tree : _TreeEntities) {
 		index = EntityManager::GetComponentData<TreeIndex>(tree);
 		std::string title = "Tree ";
 		title += std::to_string(index.Value);
 		bool opened = ImGui::TreeNodeEx(title.c_str(), ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_NoAutoOpenOnLog | (_SelectedTreeEntity == tree ? ImGuiTreeNodeFlags_Framed : ImGuiTreeNodeFlags_FramePadding));
-		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0)) {
-			_PruningFactor = EntityManager::GetComponentData<TreeLeafPruningFactor>(tree).Value;
-			_SelectedTreeEntity = tree;
-		}
 		if (opened) {
 			color = EntityManager::GetComponentData<TreeColor>(tree);
 			bool enabled = tree.Enabled();
 			title = "Delete##";
 			title += std::to_string(index.Value);
 			if (ImGui::Button(title.c_str())) {
-				if (_SelectedTreeEntity == tree) _SelectedTreeEntity.Index = 0;
 				TreeManager::DeleteTree(tree);
-				_TreeEntities.clear();
-				_TreeQuery.ToEntityArray(&_TreeEntities);
 			}
 		}
-		
 	}
 	ImGui::End();
-
+	
 	ImGui::Begin("Tree Inspector");
-	if (!_SelectedTreeEntity.IsNull()) {
+	
+	if (!_SelectedTreeEntity.IsNull() && EntityManager::HasComponentData<TreeInfo>(_SelectedTreeEntity)) {
 		index = EntityManager::GetComponentData<TreeIndex>(_SelectedTreeEntity);
 		color = EntityManager::GetComponentData<TreeColor>(_SelectedTreeEntity);
 		TreeParameters tps = EntityManager::GetComponentData<TreeParameters>(_SelectedTreeEntity);
@@ -74,8 +66,6 @@ void TreeUtilities::TreeSystem::DrawGUI()
 		if(ImGui::Button(("Export mesh as " + std::string(_MeshOBJFileName) + ".obj").c_str())) {
 			TreeManager::ExportMeshToOBJ(_SelectedTreeEntity, _MeshOBJFileName);
 		}
-		ImGui::Separator();
-		ImGui::SliderFloat("Pruning", &_PruningFactor, 0, 25);
 		ImGui::Separator();
 		title = "Rewards Estimation##";
 		title += std::to_string(index.Value);
@@ -119,7 +109,6 @@ void TreeUtilities::TreeSystem::OnCreate()
 	_TreeQuery = TreeManager::GetTreeQuery();
 
 
-	_SelectedTreeEntity.Version = _SelectedTreeEntity.Index = 0;
 	_ConfigFlags = 0;
 	_ConfigFlags += TreeSystem_DrawTrees;
 	_ConfigFlags += TreeSystem_DrawTreeMeshes;
@@ -140,13 +129,6 @@ void TreeUtilities::TreeSystem::Update()
 
 void TreeUtilities::TreeSystem::FixedUpdate()
 {
-	if (!_SelectedTreeEntity.IsNull()) {
-		auto pruningFactor = EntityManager::GetComponentData<TreeLeafPruningFactor>(_SelectedTreeEntity);
-		if (_PruningFactor != pruningFactor.Value) {
-			pruningFactor.Value = _PruningFactor;
-			EntityManager::SetComponentData(_SelectedTreeEntity, pruningFactor);
-		}
-	}
 	
 }
 

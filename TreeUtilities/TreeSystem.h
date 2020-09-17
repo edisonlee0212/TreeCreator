@@ -12,7 +12,7 @@ namespace TreeUtilities {
     {
 #pragma region GUI related
         float _MeshGenerationResolution = 0.01f;
-        char _MeshOBJFileName[256];
+        char _MeshOBJFileName[256] = {};
 #pragma endregion
 
 
@@ -22,15 +22,13 @@ namespace TreeUtilities {
 
         std::vector<Entity> _TreeEntities;
 
-        Entity _SelectedTreeEntity;
-        float _PruningFactor;
         void BranchNodeListHelper(Entity budEntity);
         void DrawGUI();
     public:
-        void OnCreate();
-        void OnDestroy();
-        void Update();
-        void FixedUpdate();
+        void OnCreate() override;
+        void OnDestroy() override;
+        void Update() override;
+        void FixedUpdate() override;
         TREEUTILITIES_API std::vector<Entity>* GetTreeEntities();
     };
 }

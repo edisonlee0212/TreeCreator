@@ -169,13 +169,8 @@ namespace TreeUtilities {
         float SaggingForceBackPropagateFixedCoefficient;
 #pragma endregion
 
-        //int Age;
         float EndNodeThickness;
         float ThicknessControlFactor;
-    };
-    
-    struct TREEUTILITIES_API TreeLeafPruningFactor : ComponentBase {
-        float Value = 0.0f;
     };
 
     struct TREEUTILITIES_API RewardEstimation : ComponentBase {
@@ -199,7 +194,7 @@ namespace TreeUtilities {
         float Height;
         float ActiveLength;
         int MaxBranchingDepth;
-        size_t LateralBudsCount;
+        int LateralBudsCount;
         bool MeshGenerated;
         bool FoliageGenerated;
         std::vector<float>* ApicalDominanceTimeVal;

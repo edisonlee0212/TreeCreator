@@ -166,8 +166,7 @@ void TreeUtilities::TreeManager::Init()
 		Translation(), Rotation(), Scale(), LocalToWorld(),
 		TreeIndex(), TreeInfo(), TreeColor(), TreeAge(),
 		TreeParameters(),
-		RewardEstimation(),
-		TreeLeafPruningFactor()
+		RewardEstimation()
 		);
 
 	_BranchNodeQuery = EntityManager::CreateEntityQuery();
@@ -185,8 +184,7 @@ void TreeUtilities::TreeManager::Init()
 
 	_LightEstimator = new LightEstimator();
 
-	auto ees = _World->GetSystem<EntityEditorSystem>();
-	ees->AddComponentInspector(typeof<TreeAge>(), 
+	EntityEditorSystem::AddComponentInspector<TreeAge>(
 		[](ComponentBase* data)
 		{
 			ImGui::Text(("Current age: " + std::to_string(*(int*)data)).c_str());
@@ -194,61 +192,49 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 
-	ees->AddComponentInspector(typeof<TreeIndex>(),
+	EntityEditorSystem::AddComponentInspector<TreeIndex>(
 		[](ComponentBase* data)
 		{
 			ImGui::Text(("Value: " + std::to_string(*(int*)data)).c_str());
 		}
 	);
 
-	ees->AddComponentInspector(typeof<TreeParameters>(),
+	EntityEditorSystem::AddComponentInspector<TreeParameters>(
 		[](ComponentBase* data)
 		{
-			TreeParameters* tps = static_cast<TreeParameters*>(data);
+			auto tps = static_cast<TreeParameters*>(data);
 			ImGui::InputInt("Seed", &tps->Seed);
-
 			ImGui::InputInt("Lateral Bud Number", &tps->LateralBudPerNode);
-
 			ImGui::InputFloat("Apical Angle Var", &tps->VarianceApicalAngle);
-
 			ImGui::InputFloat2("Branching Angle M/Var", &tps->BranchingAngleMean);
-
 			ImGui::InputFloat2("Roll Angle M/Var", &tps->RollAngleMean);
-
 			ImGui::InputFloat2("Extinction Prob A/L", &tps->ApicalBudKillProbability);
-
 			ImGui::InputFloat3("AD Dis/Age", &tps->ApicalControlDistanceFactor);
-
 			ImGui::InputFloat("Growth Rate", &tps->GrowthRate);
-
 			ImGui::InputFloat2("Node Len Base/Age", &tps->BranchNodeLengthBase);
-
 			ImGui::InputFloat4("AC Base/Age/Lvl/Dist", &tps->ApicalControlBase);
-
 			ImGui::InputInt("Max Bud Age", &tps->MaxBudAge);
-
 			ImGui::InputFloat("Phototropism", &tps->Phototropism);
-
 			ImGui::InputFloat2("Gravitropism Base/Age", &tps->GravitropismBase);
-
 			ImGui::InputFloat("PruningFactor", &tps->PruningFactor);
-
 			ImGui::InputFloat("LowBranchPruningFactor", &tps->LowBranchPruningFactor);
-
 			ImGui::InputFloat("GravityBendingStrength", &tps->GravityBendingStrength);
-
 			ImGui::InputFloat2("Lighting Factor A/L", &tps->ApicalBudLightingFactor);
-
 			ImGui::InputFloat2("Gravity Base/BPCo", &tps->SaggingFactor);
-
 			ImGui::InputFloat2("Thickness End/Fac", &tps->EndNodeThickness);
 		}
 	);
 
-	ees->AddComponentInspector(typeof<TreeInfo>(),
+	EntityEditorSystem::AddComponentInspector<TreeInfo>(
 		[](ComponentBase* data)
 		{
-			
+			auto info = static_cast<TreeInfo*>(data);
+			ImGui::Text(("Height: " + std::to_string(info->Height)).c_str());
+			ImGui::Text(("Active Length: " + std::to_string(info->ActiveLength)).c_str());
+			ImGui::Text(("Max Branching Depth: " + std::to_string(info->MaxBranchingDepth)).c_str());
+			ImGui::Text(("Lateral Buds Count: " + std::to_string(info->LateralBudsCount)).c_str());
+			ImGui::Text(("Mesh Generated: " + std::to_string(info->MeshGenerated)).c_str());
+			ImGui::Text(("Foliage Generated: " + std::to_string(info->FoliageGenerated)).c_str());
 		}
 	);
 	
@@ -381,14 +367,14 @@ Entity TreeUtilities::TreeManager::CreateTree(Material* treeSurfaceMaterial)
 
 void TreeUtilities::TreeManager::DeleteTree(Entity treeEntity)
 {
-	TreeInfo treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
-	if (treeInfo.GravitropismLevelVal != nullptr) delete treeInfo.GravitropismLevelVal;
-	if (treeInfo.ApicalDominanceTimeVal != nullptr) delete treeInfo.ApicalDominanceTimeVal;
-	if (treeInfo.ApicalControlTimeVal != nullptr) delete treeInfo.ApicalControlTimeVal;
-	if (treeInfo.ApicalControlTimeLevelVal != nullptr) delete treeInfo.ApicalControlTimeLevelVal;
-	if (treeInfo.Vertices != nullptr) delete treeInfo.Vertices;
-	if (treeInfo.Indices != nullptr) delete treeInfo.Indices;
-	auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(treeEntity);
+	auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
+	delete treeInfo.GravitropismLevelVal;
+	delete treeInfo.ApicalDominanceTimeVal;
+	delete treeInfo.ApicalControlTimeVal;
+	delete treeInfo.ApicalControlTimeLevelVal;
+	delete treeInfo.Vertices;
+	delete treeInfo.Indices;
+	auto* mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(treeEntity);
 	delete mmc->_Mesh;
 	delete mmc;
 
