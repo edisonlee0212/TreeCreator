@@ -540,12 +540,14 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 
 	auto branchNode = EntityManager::GetChildren(treeEntity).at(0);
 	
+	if(EntityManager::GetChildrenAmount(branchNode) != 0){
+		SimpleMeshGenerator(EntityManager::GetChildren(branchNode).at(0), *treeInfo.Vertices, *treeInfo.Indices, glm::vec3(1, 0, 0), resolution);
+		if (mmc->_Mesh != nullptr) delete mmc->_Mesh;
+		mmc->_Mesh = new Mesh();
+		mmc->_Mesh->SetVertices(17, *treeInfo.Vertices, *treeInfo.Indices);
+		treeInfo.MeshGenerated = true;
+	}
 
-
-	SimpleMeshGenerator(EntityManager::GetChildren(branchNode).at(0), *treeInfo.Vertices, *treeInfo.Indices, glm::vec3(1, 0, 0), resolution);
-	if (mmc->_Mesh != nullptr) delete mmc->_Mesh;
-	mmc->_Mesh = new Mesh();
-	mmc->_Mesh->SetVertices(17, *treeInfo.Vertices, *treeInfo.Indices);
-	treeInfo.MeshGenerated = true;
+	
 	EntityManager::SetComponentData(treeEntity, treeInfo);
 }
