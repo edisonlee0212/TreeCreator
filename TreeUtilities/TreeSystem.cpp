@@ -32,6 +32,7 @@ void TreeUtilities::TreeSystem::DrawGUI()
 	ImGui::Begin("Tree Manager");
 	TreeIndex index;
 	TreeColor color;
+	
 	for (auto tree : _TreeEntities) {
 		index = EntityManager::GetComponentData<TreeIndex>(tree);
 		std::string title = "Tree ";

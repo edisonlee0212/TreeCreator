@@ -141,37 +141,7 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 		}
 	);
 }
-/*
-inline void TreeUtilities::TreeManager::LeafGenerationHelper(BudInfo& info, Entity& leaf, Entity& bud, int index)
-{
-	Translation t = EntityManager::GetComponentData<Translation>(bud);
-	Scale s;
-	Rotation r;
-	s.Value = glm::vec3(info.LeafWidth, info.LeafThickness, info.LeafLength);
-	BranchNodeOwner owner = EntityManager::GetComponentData<BranchNodeOwner>(bud);
-	glm::vec3 budDirection;
-	if (owner.Value.Version == 0) {
-		budDirection = EntityManager::GetComponentData<Rotation>(bud).Value * glm::vec3(0, 0, -1);
-	}
-	else {
-		budDirection = EntityManager::GetComponentData<Rotation>(owner.Value).Value * glm::vec3(0, 0, -1);
-	}
-	glm::vec3 front = glm::normalize(glm::cross(glm::cross(budDirection, glm::vec3(0, 1, 0)), glm::vec3(0, 1, 0)));
-	front = glm::rotate(front, glm::radians(info.CircleDegreeStart + index * info.CircleDegreeAddition), glm::vec3(0, 1, 0));
-	front = glm::rotate(front, glm::radians(info.BendDegrees), glm::cross(front, glm::vec3(0, 1, 0)));
-	r.Value = glm::quatLookAt(front, glm::vec3(0, 1, 0));
-	if (glm::any(glm::isnan(r.Value))) {
-		float random = glm::radians(glm::linearRand(0.0f, 360.0f));
-		front = glm::vec3(glm::sin(random), 0, glm::cos(random));
-		front = glm::rotate(front, glm::radians(info.CircleDegreeStart + index * info.CircleDegreeAddition), glm::vec3(0, 1, 0));
-		front = glm::rotate(front, glm::radians(info.BendDegrees), glm::cross(front, glm::vec3(0, 1, 0)));
-		r.Value = glm::quatLookAt(front, glm::vec3(0, 1, 0));
-	}
-	EntityManager::SetComponentData(leaf, t);
-	EntityManager::SetComponentData(leaf, s);
-	EntityManager::SetComponentData(leaf, r);
-}
-*/
+
 void TreeUtilities::TreeManager::BranchNodeCleaner(Entity branchEntity)
 {
 	BudList ob = EntityManager::GetComponentData<BudList>(branchEntity);
@@ -215,6 +185,73 @@ void TreeUtilities::TreeManager::Init()
 
 	_LightEstimator = new LightEstimator();
 
+	auto ees = _World->GetSystem<EntityEditorSystem>();
+	ees->AddComponentInspector(typeof<TreeAge>(), 
+		[](ComponentBase* data)
+		{
+			ImGui::Text(("Current age: " + std::to_string(*(int*)data)).c_str());
+			ImGui::InputInt("Iterations left", (int*)((char*)data + sizeof(int)));
+		}
+	);
+
+	ees->AddComponentInspector(typeof<TreeIndex>(),
+		[](ComponentBase* data)
+		{
+			ImGui::Text(("Value: " + std::to_string(*(int*)data)).c_str());
+		}
+	);
+
+	ees->AddComponentInspector(typeof<TreeParameters>(),
+		[](ComponentBase* data)
+		{
+			TreeParameters* tps = static_cast<TreeParameters*>(data);
+			ImGui::InputInt("Seed", &tps->Seed);
+
+			ImGui::InputInt("Lateral Bud Number", &tps->LateralBudPerNode);
+
+			ImGui::InputFloat("Apical Angle Var", &tps->VarianceApicalAngle);
+
+			ImGui::InputFloat2("Branching Angle M/Var", &tps->BranchingAngleMean);
+
+			ImGui::InputFloat2("Roll Angle M/Var", &tps->RollAngleMean);
+
+			ImGui::InputFloat2("Extinction Prob A/L", &tps->ApicalBudKillProbability);
+
+			ImGui::InputFloat3("AD Dis/Age", &tps->ApicalControlDistanceFactor);
+
+			ImGui::InputFloat("Growth Rate", &tps->GrowthRate);
+
+			ImGui::InputFloat2("Node Len Base/Age", &tps->BranchNodeLengthBase);
+
+			ImGui::InputFloat4("AC Base/Age/Lvl/Dist", &tps->ApicalControlBase);
+
+			ImGui::InputInt("Max Bud Age", &tps->MaxBudAge);
+
+			ImGui::InputFloat("Phototropism", &tps->Phototropism);
+
+			ImGui::InputFloat2("Gravitropism Base/Age", &tps->GravitropismBase);
+
+			ImGui::InputFloat("PruningFactor", &tps->PruningFactor);
+
+			ImGui::InputFloat("LowBranchPruningFactor", &tps->LowBranchPruningFactor);
+
+			ImGui::InputFloat("GravityBendingStrength", &tps->GravityBendingStrength);
+
+			ImGui::InputFloat2("Lighting Factor A/L", &tps->ApicalBudLightingFactor);
+
+			ImGui::InputFloat2("Gravity Base/BPCo", &tps->SaggingFactor);
+
+			ImGui::InputFloat2("Thickness End/Fac", &tps->EndNodeThickness);
+		}
+	);
+
+	ees->AddComponentInspector(typeof<TreeInfo>(),
+		[](ComponentBase* data)
+		{
+			
+		}
+	);
+	
 	_Ready = true;
 }
 

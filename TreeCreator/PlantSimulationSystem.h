@@ -24,8 +24,6 @@ namespace TreeUtilities {
         Material* _DefaultTreeSurfaceMaterial1 = nullptr;
         Material* _DefaultTreeSurfaceMaterial2 = nullptr;
 #pragma endregion
-         
-        int _GrowIterationCount = 0;
 
         unsigned int _ConfigFlags = 0;
         float _Gravity = 0;

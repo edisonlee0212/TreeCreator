@@ -68,10 +68,10 @@ namespace TreeUtilities {
         float DistanceToBranchEnd = 0;
         float TotalDistanceToBranchEnd = 0;
         float DistanceToBranchStart = 0;
-        float AccmulatedLength = 0;
-        float AccmulatedLight = 0;
-        float AccmulatedActivatedBudsAmount = 0;
-        float AccmulatedGravity = 0;
+        float AccumulatedLength = 0;
+        float AccumulatedLight = 0;
+        float AccumulatedActivatedBudsAmount = 0;
+        float AccumulatedGravity = 0;
         unsigned NumValidChild;
 #pragma endregion
 #pragma region Growth
@@ -169,7 +169,7 @@ namespace TreeUtilities {
         float SaggingForceBackPropagateFixedCoefficient;
 #pragma endregion
 
-        int Age;
+        //int Age;
         float EndNodeThickness;
         float ThicknessControlFactor;
     };
@@ -183,7 +183,8 @@ namespace TreeUtilities {
     };
 
     struct TREEUTILITIES_API TreeAge : ComponentBase {
-        unsigned Value;
+        int Value;
+        int ToGrowIteration;
         bool Enable;
     };
 
@@ -229,7 +230,6 @@ namespace TreeUtilities {
 
         static bool _Ready;
         
-        //static void LeafGenerationHelper(BudInfo& info, Entity& leaf, Entity& bud, int index);
         static void SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep = -1);
         static void BranchNodeCleaner(Entity branchEntity);
     public:
@@ -244,9 +244,7 @@ namespace TreeUtilities {
 
         static void GetAllTrees(std::vector<Entity>* container);
         
-        //static void GenerateLeavesForTree(Entity treeEntity);
         static void CalculateBranchNodeIllumination();
-        //static void GenerateLeavesForAllTrees();
 
         static Mesh* GetMeshForTree(Entity treeEntity);
         static void GenerateSimpleMeshForTree(Entity treeEntity, float resolution);

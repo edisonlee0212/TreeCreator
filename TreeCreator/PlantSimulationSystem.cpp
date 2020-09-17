@@ -79,46 +79,45 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 				ImGui::Columns(1);
 				ImGui::PushItemWidth(200);
 				if (_DisplayFullParam) {
-					ImGui::InputInt("Seed", &_NewTreeParameters.Seed);
 #pragma region Show params
+					ImGui::InputInt("Seed", &_NewTreeParameters.Seed);
+					
 					ImGui::InputInt("Lateral Bud Number", &_NewTreeParameters.LateralBudPerNode);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat("Apical Angle Var", &_NewTreeParameters.VarianceApicalAngle);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat2("Branching Angle M/Var", &_NewTreeParameters.BranchingAngleMean);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat2("Roll Angle M/Var", &_NewTreeParameters.RollAngleMean);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat2("Extinction Prob A/L", &_NewTreeParameters.ApicalBudKillProbability);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat3("AD Dis/Age", &_NewTreeParameters.ApicalControlDistanceFactor);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat("Growth Rate", &_NewTreeParameters.GrowthRate);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat2("Node Len Base/Age", &_NewTreeParameters.BranchNodeLengthBase);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat4("AC Base/Age/Lvl/Dist", &_NewTreeParameters.ApicalControlBase);
-					ImGui::NextColumn();
+					
 					ImGui::InputInt("Max Bud Age", &_NewTreeParameters.MaxBudAge);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat("Phototropism", &_NewTreeParameters.Phototropism);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat2("Gravitropism Base/Age", &_NewTreeParameters.GravitropismBase);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat("PruningFactor", &_NewTreeParameters.PruningFactor);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat("LowBranchPruningFactor", &_NewTreeParameters.LowBranchPruningFactor);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat("GravityBendingStrength", &_NewTreeParameters.GravityBendingStrength);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat2("Lighting Factor A/L", &_NewTreeParameters.ApicalBudLightingFactor);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat2("Gravity Base/BPCo", &_NewTreeParameters.SaggingFactor);
-					ImGui::NextColumn();
-					ImGui::InputInt("Age", &_NewTreeParameters.Age);
-					ImGui::NextColumn();
+					
 					ImGui::InputFloat2("Thickness End/Fac", &_NewTreeParameters.EndNodeThickness);
-					ImGui::NextColumn();
+					
 #pragma endregion
 
 				}
@@ -149,13 +148,9 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 	}
 	ImGui::Begin("Tree Utilities");
 	if (ImGui::CollapsingHeader("Tree Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
-		static int iterations;
-		ImGui::InputInt("Iteration", &iterations);
-		ImGui::SameLine();
-		if (ImGui::Button("Push iterations") && iterations > 0) {
-			_GrowIterationCount += iterations;
+		if (ImGui::Button(_Growing ? "Pause growing" : "Resume growing")) {
+			_Growing = !_Growing;
 		}
-		ImGui::Text(("Current iteration left: " + std::to_string(_GrowIterationCount)).c_str());
 		ImGui::SliderFloat("Gravity", &_Gravity, 0.0f, 20.0f);
 	}
 
@@ -167,10 +162,9 @@ void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
 	auto trees = std::vector<Entity>();
 	_TreeQuery.ToEntityArray(&trees);
-	if (_GrowIterationCount > 0) {
-		_GrowIterationCount--;
-		TryGrowAllTrees(trees);
-	}
+
+	TryGrowAllTrees(trees);
+	
 	CalculatePhysics(trees);
 
 	while (!_MeshGenerationQueue.empty()) {
@@ -191,9 +185,10 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	LocalToWorld treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(treeEntity);
 	Rotation treeRotation = EntityManager::GetComponentData<Rotation>(treeEntity);
 #pragma endregion
-	if (treeAge.Value >= treeParameters.Age) {
+	if (treeAge.ToGrowIteration == 0) {
 		return false;
 	}
+	
 #pragma region Prepare info
 	if (treeAge.Value == 0) {
 		treeInfo.CurrentSeed = treeParameters.Seed;
@@ -205,22 +200,22 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	}
 	treeInfo.MaxBranchingDepth = 3;
 	treeInfo.ActiveLength = 0;
-	int timeOff = 4;
-	treeInfo.ApicalDominanceTimeVal->resize(treeParameters.Age + timeOff);
-	treeInfo.GravitropismLevelVal->resize(treeParameters.Age + timeOff);
-	treeInfo.GravitropismLevelVal->resize(treeParameters.Age + timeOff);
-	treeInfo.ApicalControlTimeVal->resize(treeParameters.Age + timeOff);
-	treeInfo.ApicalControlTimeLevelVal->resize(treeParameters.Age + timeOff);
-	for (size_t t = 0; t < treeParameters.Age + timeOff; t++) {
+	const auto timeOff = treeAge.Value + treeAge.ToGrowIteration + 4;
+	treeInfo.ApicalDominanceTimeVal->resize(timeOff);
+	treeInfo.GravitropismLevelVal->resize(timeOff);
+	treeInfo.GravitropismLevelVal->resize(timeOff);
+	treeInfo.ApicalControlTimeVal->resize(timeOff);
+	treeInfo.ApicalControlTimeLevelVal->resize(timeOff);
+	for (auto t = 0; t < timeOff; t++) {
 		treeInfo.ApicalDominanceTimeVal->at(t) = glm::pow(treeParameters.ApicalDominanceAgeFactor, t);
 		treeInfo.GravitropismLevelVal->at(t) = treeParameters.GravitropismBase + t * treeParameters.GravitropismLevelFactor;
 		treeInfo.ApicalControlTimeVal->at(t) = treeParameters.ApicalControlBase * glm::pow(treeParameters.ApicalControlAgeFactor, t);
 
-		treeInfo.ApicalControlTimeLevelVal->at(t).resize(treeParameters.Age + timeOff);
+		treeInfo.ApicalControlTimeLevelVal->at(t).resize(timeOff);
 		float baseApicalControlVal = treeInfo.ApicalControlTimeVal->at(t);
 		treeInfo.ApicalControlTimeLevelVal->at(t).at(0) = 1.0f;
 		float currentVal = 1;
-		for (size_t level = 1; level < treeParameters.Age + timeOff; level++) {
+		for (auto level = 1; level < timeOff; level++) {
 			if (baseApicalControlVal >= 1) {
 				currentVal *= 1.0f + (baseApicalControlVal - 1.0f) * glm::pow(treeParameters.ApicalControlLevelFactor, level);
 				treeInfo.ApicalControlTimeLevelVal->at(t).at(level) = 1.0f / currentVal;
@@ -244,6 +239,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 #pragma endregion
 	bool growed = GrowShoots(rootBranchNode, treeInfo, treeAge, treeParameters, treeIndex);
 	treeAge.Value++;
+	treeAge.ToGrowIteration--;
 	EntityManager::SetComponentData(treeEntity, treeAge);
 	if (growed) {
 		UpdateBranchNodeResource(rootBranchNode, treeParameters, treeAge);
@@ -301,7 +297,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset)
 		_NewTreeParameters.PruningFactor = 0.05f;
 		_NewTreeParameters.LowBranchPruningFactor = 0.639226f;
 		_NewTreeParameters.GravityBendingStrength = 0.2f;
-		_NewTreeParameters.Age = 14;
+		//_NewTreeParameters.Age = 14;
 		_NewTreeParameters.SaggingFactor = 0.0506f;
 		_NewTreeParameters.MaxBudAge = 10;
 
@@ -337,7 +333,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset)
 		_NewTreeParameters.PruningFactor = 0.05f;
 		_NewTreeParameters.LowBranchPruningFactor = 1.3f;
 		_NewTreeParameters.GravityBendingStrength = 0.73f;
-		_NewTreeParameters.Age = 14;
+		//_NewTreeParameters.Age = 14;
 		_NewTreeParameters.SaggingFactor = 0.0506f;
 		_NewTreeParameters.MaxBudAge = 8;
 		_NewTreeParameters.EndNodeThickness = 0.02f;
@@ -363,12 +359,6 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 
 			if (GrowTree(tree)) {
 				growed = true;
-			}
-			else {
-				TreeInfo treeInfo = EntityManager::GetComponentData<TreeInfo>(tree);
-				if (!treeInfo.MeshGenerated) {
-					_MeshGenerationQueue.push(tree);
-				}
 			}
 		}
 	}
@@ -462,7 +452,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& branchNo
 	glm::quat newGlobalRotation = treeRotation * branchNodeInfo.ParentRotation * branchNodeInfo.DesiredLocalRotation;
 	glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
 	glm::vec3 up = newGlobalRotation * glm::vec3(0, 1, 0);
-	float gravityBending = treeParameters.GravityBendingStrength * branchNodeInfo.AccmulatedGravity;
+	float gravityBending = treeParameters.GravityBendingStrength * branchNodeInfo.AccumulatedGravity;
 	front += gravityBending * glm::vec3(0, -1, 0);
 	front = glm::normalize(front);
 	up = glm::cross(glm::cross(front, up), front);
@@ -725,10 +715,10 @@ void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& branchNode, T
 			return;
 		}
 	}
-	float normalL = branchNodeInfo.AccmulatedLength / treeParameters.BranchNodeLengthBase;
+	float normalL = branchNodeInfo.AccumulatedLength / treeParameters.BranchNodeLengthBase;
 	float ratioScale = 1;
-	float factor = ratioScale / glm::sqrt(branchNodeInfo.AccmulatedLength);
-	//factor *= branchNodeInfo.AccmulatedLight;
+	float factor = ratioScale / glm::sqrt(branchNodeInfo.AccumulatedLength);
+	//factor *= branchNodeInfo.AccumulatedLight;
 	if (factor < treeParameters.PruningFactor) {
 		PruneBranchNode(branchNode, treeInfo);
 		return;
@@ -778,12 +768,12 @@ void TreeUtilities::PlantSimulationSystem::BackPropagateForce(Entity& branchNode
 {
 	BranchNodeInfo branchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
 	float gfs = EntityManager::GetComponentData<Gravity>(branchNode).Value;
-	branchNodeInfo.AccmulatedGravity = gfs;
+	branchNodeInfo.AccumulatedGravity = gfs;
 	EntityManager::ForEachChild(branchNode, [this, &branchNodeInfo, fixedPropagationCoefficient](Entity child)
 		{
 			BackPropagateForce(child, fixedPropagationCoefficient);
 			auto childNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(child);
-			branchNodeInfo.AccmulatedGravity += fixedPropagationCoefficient * childNodeInfo.AccmulatedGravity * childNodeInfo.Thickness / branchNodeInfo.Thickness;
+			branchNodeInfo.AccumulatedGravity += fixedPropagationCoefficient * childNodeInfo.AccumulatedGravity * childNodeInfo.Thickness / branchNodeInfo.Thickness;
 		});
 	EntityManager::SetComponentData(branchNode, branchNodeInfo);
 }
@@ -847,7 +837,7 @@ TreeParameters PlantSimulationSystem::ImportTreeParameters(const std::string& pa
 		ifs >> temp; ifs >> ret.SaggingForceBackPropagateFixedCoefficient;
 #pragma endregion
 
-		ifs >> temp; ifs >> ret.Age;
+		//ifs >> temp; ifs >> ret.Age;
 		ifs >> temp; ifs >> ret.EndNodeThickness;
 		ifs >> temp; ifs >> ret.ThicknessControlFactor;
 	}else
@@ -901,7 +891,7 @@ void PlantSimulationSystem::ExportTreeParameters(const std::string& path, TreePa
 		output += "\nSaggingFactor\n"; output += std::to_string(treeParameters.SaggingFactor);
 		output += "\nSaggingForceBackPropagateFixedCoefficient\n"; output += std::to_string(treeParameters.SaggingForceBackPropagateFixedCoefficient);
 #pragma endregion
-		output += "\nAge\n"; output += std::to_string(treeParameters.Age);
+		//output += "\nAge\n"; output += std::to_string(treeParameters.Age);
 		output += "\nEndNodeThickness\n"; output += std::to_string(treeParameters.EndNodeThickness);
 		output += "\nThicknessControlFactor\n"; output += std::to_string(treeParameters.ThicknessControlFactor);
 		of.write(output.c_str(), output.size());
@@ -928,9 +918,9 @@ void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeResource(Entity& bran
 	}
 
 	Illumination branchNodeIllumination = EntityManager::GetComponentData<Illumination>(branchNode);
-	branchNodeInfo.AccmulatedLight = branchNodeIllumination.Value / TreeManager::GetLightEstimator()->GetMaxIllumination();
-	branchNodeInfo.AccmulatedLength = branchNodeInfo.DistanceToParent;
-	branchNodeInfo.AccmulatedActivatedBudsAmount = branchNodeInfo.ActivatedBudsAmount;
+	branchNodeInfo.AccumulatedLight = branchNodeIllumination.Value / TreeManager::GetLightEstimator()->GetMaxIllumination();
+	branchNodeInfo.AccumulatedLength = branchNodeInfo.DistanceToParent;
+	branchNodeInfo.AccumulatedActivatedBudsAmount = branchNodeInfo.ActivatedBudsAmount;
 	branchNodeInfo.BranchEndNodeAmount = EntityManager::GetChildrenAmount(branchNode) == 0 ? 1 : 0;
 
 	float mainChildThickness = 0.0f;
@@ -956,9 +946,9 @@ void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeResource(Entity& bran
 				mainChildThickness = childNodeInfo.Thickness;
 			}
 			if (childNodeInfo.Pruned) return;
-			branchNodeInfo.AccmulatedLight += childNodeInfo.AccmulatedLight;
-			branchNodeInfo.AccmulatedActivatedBudsAmount += childNodeInfo.AccmulatedActivatedBudsAmount;
-			branchNodeInfo.AccmulatedLength += childNodeInfo.AccmulatedLength;
+			branchNodeInfo.AccumulatedLight += childNodeInfo.AccumulatedLight;
+			branchNodeInfo.AccumulatedActivatedBudsAmount += childNodeInfo.AccumulatedActivatedBudsAmount;
+			branchNodeInfo.AccumulatedLength += childNodeInfo.AccumulatedLength;
 		}
 	);
 	if (mainChildThickness > branchNodeInfo.Thickness) branchNodeInfo.Thickness = mainChildThickness;
@@ -1029,6 +1019,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(Material* treeSurfaceMat
 #pragma endregion
 	TreeAge age;
 	age.Value = 0;
+	age.ToGrowIteration = 0;
 	age.Enable = enabled;
 
 	Bud bud;
