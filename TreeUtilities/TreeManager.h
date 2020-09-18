@@ -122,38 +122,39 @@ namespace TreeUtilities {
 #pragma region Geometric
         int LateralBudPerNode;
 
-        float VarianceApicalAngle; // Training target
+        float VarianceApicalAngle; 
 
-        float BranchingAngleMean; // Training target
-        float BranchingAngleVariance; // Training target
+        float BranchingAngleMean;
+        float BranchingAngleVariance;
 
-        float RollAngleMean; // Training target
-        float RollAngleVariance; // Training target
+        float RollAngleMean;
+        float RollAngleVariance;
 #pragma endregion
 #pragma region Bud fate
-        float ApicalBudKillProbability; // Useless.
-        float LateralBudKillProbability; //Useless.
+        float ApicalBudKillProbability;
+        float LateralBudKillProbability;
 
-        float ApicalDominanceDistanceFactor; // Training target
-        float ApicalDominanceAgeFactor; // Training target
+        float ApicalDominanceBase;
+        float ApicalDominanceDistanceFactor;
+        float ApicalDominanceAgeFactor;
 
         float GrowthRate;
 
-        float BranchNodeLengthBase; //Fixed
-        float BranchNodeLengthAgeFactor; // Training target
+        float BranchNodeLengthBase;
+        float BranchNodeLengthAgeFactor;
 
 
-        float ApicalControlBase; // Training target
-        float ApicalControlAgeFactor; // Training target
-        float ApicalControlLevelFactor; // Training target
-        float ApicalControlDistanceFactor; // Training target
+        float ApicalControlBase;
+        float ApicalControlAgeFactor;
+        float ApicalControlLevelFactor;
+        float ApicalControlDistanceFactor;
 
         int MaxBudAge;
 #pragma endregion
 #pragma region Environmental
-        float Phototropism; // Based on tree leaf properties.
-        float GravitropismBase; //Based on tree material properties.
-        float GravitropismLevelFactor;  //Based on tree material properties.
+        float Phototropism;
+        float GravitropismBase;
+        float GravitropismLevelFactor;
 
         float PruningFactor; 
         float LowBranchPruningFactor;

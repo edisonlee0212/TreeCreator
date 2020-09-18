@@ -103,6 +103,24 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 							if (ImGui::Button("Load preset 2")) {
 								LoadDefaultTreeParameters(2, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);
 							}
+							if (ImGui::Button("Load preset F6a")) {
+								LoadDefaultTreeParameters(3, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);
+							}
+							if (ImGui::Button("Load preset F6b")) {
+								LoadDefaultTreeParameters(4, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);
+							}
+							if (ImGui::Button("Load preset F6c")) {
+								LoadDefaultTreeParameters(5, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);
+							}
+							if (ImGui::Button("Load preset F6d")) {
+								LoadDefaultTreeParameters(6, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);
+							}
+							if (ImGui::Button("Load preset F6e")) {
+								LoadDefaultTreeParameters(7, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);
+							}
+							if (ImGui::Button("Load preset F6f")) {
+								LoadDefaultTreeParameters(8, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);
+							}
 
 							ImGui::Text((std::string(_CurrentWorkingDir) + "\\").c_str());
 							ImGui::SameLine();
@@ -135,7 +153,7 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 
 					ImGui::InputFloat2("Extinction Prob A/L", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].ApicalBudKillProbability);
 
-					ImGui::InputFloat3("AD Dis/Age", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].ApicalControlDistanceFactor);
+					ImGui::InputFloat3("AD Base/Dis/Age", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].ApicalDominanceBase);
 
 					ImGui::InputFloat("Growth Rate", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].GrowthRate);
 
@@ -281,6 +299,7 @@ void TreeUtilities::PlantSimulationSystem::ExportSettings(const std::string& pat
 #pragma region Bud fate
 			output += "\nApicalBudKillProbability\n"; output += std::to_string(_NewTreeParameters[i].ApicalBudKillProbability);
 			output += "\nLateralBudKillProbability\n"; output += std::to_string(_NewTreeParameters[i].LateralBudKillProbability);
+			output += "\nApicalDominanceBase\n";  output += std::to_string(_NewTreeParameters[i].ApicalDominanceBase);
 			output += "\nApicalDominanceDistanceFactor\n";  output += std::to_string(_NewTreeParameters[i].ApicalDominanceDistanceFactor);
 			output += "\nApicalDominanceAgeFactor\n";  output += std::to_string(_NewTreeParameters[i].ApicalDominanceAgeFactor);
 			output += "\nGrowthRate\n"; output += std::to_string(_NewTreeParameters[i].GrowthRate);
@@ -351,6 +370,7 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 			ifs >> temp; ifs >> _NewTreeParameters[i].ApicalBudKillProbability; // Useless.
 			ifs >> temp; ifs >> _NewTreeParameters[i].LateralBudKillProbability; //Useless.
 
+			ifs >> temp; ifs >> _NewTreeParameters[i].ApicalDominanceBase;
 			ifs >> temp; ifs >> _NewTreeParameters[i].ApicalDominanceDistanceFactor; // Training target
 			ifs >> temp; ifs >> _NewTreeParameters[i].ApicalDominanceAgeFactor; // Training target
 
@@ -517,6 +537,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.LateralBudKillProbability = 0.006269f;
 		tps.ApicalBudLightingFactor = 1.0;
 		tps.LateralBudLightingFactor = 1.0006f;
+		tps.ApicalDominanceBase = 1.0f;
 		tps.ApicalDominanceDistanceFactor = 0.377778f;
 		tps.ApicalDominanceAgeFactor = 0.447047f;
 		tps.GrowthRate = 1.307f;
@@ -528,6 +549,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.ApicalControlLevelFactor = 1.0f;
 		tps.Phototropism = 0.4244511f;
 		tps.GravitropismBase = 0.2396032f;
+		tps.GravitropismLevelFactor = 0.0f;
 		tps.PruningFactor = 0.05f;
 		tps.LowBranchPruningFactor = 0.639226f;
 		tps.GravityBendingStrength = 0.2f;
@@ -552,6 +574,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.LateralBudKillProbability = 0.21f;
 		tps.ApicalBudLightingFactor = 0.39f;
 		tps.LateralBudLightingFactor = 1.13f;
+		tps.ApicalDominanceBase = 1.0f;
 		tps.ApicalDominanceDistanceFactor = 0.13f;
 		tps.ApicalDominanceAgeFactor = 0.82f;
 		tps.GrowthRate = 0.98f;
@@ -563,9 +586,227 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.ApicalControlLevelFactor = 1.0f;
 		tps.Phototropism = 0.29f;
 		tps.GravitropismBase = 0.061f;
+		tps.GravitropismLevelFactor = 0.0f;
 		tps.PruningFactor = 0.05f;
 		tps.LowBranchPruningFactor = 1.3f;
 		tps.GravityBendingStrength = 0.73f;
+		tps.SaggingFactor = 0.0506f;
+		tps.MaxBudAge = 8;
+		tps.EndNodeThickness = 0.02f;
+		tps.ThicknessControlFactor = 0.6f;
+		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		break;
+	case 3:
+		//F6a
+		tps.Seed = 1;
+		tps.VarianceApicalAngle = 38;
+		tps.LateralBudPerNode = 2;
+		tps.BranchingAngleMean = 38;
+		tps.BranchingAngleVariance = 2;
+		tps.RollAngleMean = 91;
+		tps.RollAngleVariance = 1;
+
+		tps.ApicalBudKillProbability = 0;
+		tps.LateralBudKillProbability = 0.21f;
+		tps.ApicalBudLightingFactor = 0.39f;
+		tps.LateralBudLightingFactor = 1.13f;
+		tps.ApicalDominanceBase = 3.13f;
+		tps.ApicalDominanceDistanceFactor = 0.13f;
+		tps.ApicalDominanceAgeFactor = 0.82f;
+		tps.GrowthRate = 2.98f;
+		tps.BranchNodeLengthBase = 0.55f;
+		tps.BranchNodeLengthAgeFactor = 0.97f;
+
+		tps.ApicalControlBase = 2.2f;
+		tps.ApicalControlAgeFactor = 0.5f;
+		tps.ApicalControlLevelFactor = 1.0f;
+		tps.Phototropism = 0.29f;
+		tps.GravitropismBase = -0.41f;
+		tps.GravitropismLevelFactor = 0.15f;
+		tps.PruningFactor = 0.7f;
+		tps.LowBranchPruningFactor = 1.3f;
+		tps.GravityBendingStrength = 0.73f;
+		tps.SaggingFactor = 0.0506f;
+		tps.MaxBudAge = 8;
+		tps.EndNodeThickness = 0.02f;
+		tps.ThicknessControlFactor = 0.6f;
+		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		break;
+	case 4:
+		//F6b
+		tps.Seed = 1;
+		tps.VarianceApicalAngle = 0;
+		tps.LateralBudPerNode = 2;
+		tps.BranchingAngleMean = 41;
+		tps.BranchingAngleVariance = 3;
+		tps.RollAngleMean = 87;
+		tps.RollAngleVariance = 2;
+
+		tps.ApicalBudKillProbability = 0;
+		tps.LateralBudKillProbability = 0.21f;
+		tps.ApicalBudLightingFactor = 1.05f;
+		tps.LateralBudLightingFactor = 0.37f;
+		tps.ApicalDominanceBase = 0.37f;
+		tps.ApicalDominanceDistanceFactor = 0.31f;
+		tps.ApicalDominanceAgeFactor = 0.9f;
+		tps.GrowthRate = 1.9f;
+		tps.BranchNodeLengthBase = 0.49f;
+		tps.BranchNodeLengthAgeFactor = 0.98f;
+
+		tps.ApicalControlBase = 2.27f;
+		tps.ApicalControlAgeFactor = 0.9f;
+		tps.ApicalControlLevelFactor = 1.0f;
+		tps.Phototropism = 0.15f;
+		tps.GravitropismBase = -0.47f;//-0.41f;
+		tps.GravitropismLevelFactor = 0.14f;
+		tps.PruningFactor = 0.82f;
+		tps.LowBranchPruningFactor = 2.83f;
+		tps.GravityBendingStrength = 0.795f;
+		tps.SaggingFactor = 0.0506f;
+		tps.MaxBudAge = 8;
+		tps.EndNodeThickness = 0.02f;
+		tps.ThicknessControlFactor = 0.6f;
+		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		break;
+	
+	case 5:
+		//F6c
+		tps.Seed = 1;
+		tps.VarianceApicalAngle = 10;
+		tps.LateralBudPerNode = 3;
+		tps.BranchingAngleMean = 51;
+		tps.BranchingAngleVariance = 4;
+		tps.RollAngleMean = 100;
+		tps.RollAngleVariance = 30;
+
+		tps.ApicalBudKillProbability = 0;
+		tps.LateralBudKillProbability = 0.015f;
+		tps.ApicalBudLightingFactor = 0.36f;
+		tps.LateralBudLightingFactor = 0.65f;
+		tps.ApicalDominanceBase = 6.29f;
+		tps.ApicalDominanceDistanceFactor = 0.9f;
+		tps.ApicalDominanceAgeFactor = 0.87f;
+		tps.GrowthRate = 3.26f;
+		tps.BranchNodeLengthBase = 0.4f;
+		tps.BranchNodeLengthAgeFactor = 0.96f;
+
+		tps.ApicalControlBase = 6.2f;
+		tps.ApicalControlAgeFactor = 0.9f;
+		tps.ApicalControlLevelFactor = 1.0f;
+		tps.Phototropism = 0.42f;
+		tps.GravitropismBase = -0.43f;//-0.43f;
+		tps.GravitropismLevelFactor = 0.73f;
+		tps.PruningFactor = 0.12f;
+		tps.LowBranchPruningFactor = 1.25f;
+		tps.GravityBendingStrength = 0.73f;
+		tps.SaggingFactor = 0.0506f;
+		tps.MaxBudAge = 8;
+		tps.EndNodeThickness = 0.02f;
+		tps.ThicknessControlFactor = 0.6f;
+		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		break;
+	case 6:
+		//F6d
+		tps.Seed = 1;
+		tps.VarianceApicalAngle = 5;
+		tps.LateralBudPerNode = 1;
+		tps.BranchingAngleMean = 55;
+		tps.BranchingAngleVariance = 5;
+		tps.RollAngleMean = 130;
+		tps.RollAngleVariance = 30;
+
+		tps.ApicalBudKillProbability = 0;
+		tps.LateralBudKillProbability = 0.01f;
+		tps.ApicalBudLightingFactor = 0.5f;
+		tps.LateralBudLightingFactor = 0.03f;
+		tps.ApicalDominanceBase = 5.59f;
+		tps.ApicalDominanceDistanceFactor = 0.979f;
+		tps.ApicalDominanceAgeFactor = 0.5f;
+		tps.GrowthRate = 4.25f;
+		tps.BranchNodeLengthBase = 0.55f;
+		tps.BranchNodeLengthAgeFactor = 0.95f;
+
+		tps.ApicalControlBase = 5.5f;
+		tps.ApicalControlAgeFactor = 0.91f;
+		tps.ApicalControlLevelFactor = 1.0f;
+		tps.Phototropism = 0.32f;
+		tps.GravitropismBase = -0.21f;//-0.43f;
+		tps.GravitropismLevelFactor = 0.15f;
+		tps.PruningFactor = 0.48f;
+		tps.LowBranchPruningFactor = 5.5f;
+		tps.GravityBendingStrength = 0.79f;
+		tps.SaggingFactor = 0.0506f;
+		tps.MaxBudAge = 8;
+		tps.EndNodeThickness = 0.02f;
+		tps.ThicknessControlFactor = 0.6f;
+		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		break;
+	case 7:
+		//F6e
+		tps.Seed = 1;
+		tps.VarianceApicalAngle = 2;
+		tps.LateralBudPerNode = 2;
+		tps.BranchingAngleMean = 60;
+		tps.BranchingAngleVariance = 3;
+		tps.RollAngleMean = 130;
+		tps.RollAngleVariance = 10;
+
+		tps.ApicalBudKillProbability = 0;
+		tps.LateralBudKillProbability = 0.18f;
+		tps.ApicalBudLightingFactor = 0.03f;
+		tps.LateralBudLightingFactor = 0.21f;
+		tps.ApicalDominanceBase = 6.5f;
+		tps.ApicalDominanceDistanceFactor = 0.91f;
+		tps.ApicalDominanceAgeFactor = 0.55f;
+		tps.GrowthRate = 2.4f;
+		tps.BranchNodeLengthBase = 0.4f;
+		tps.BranchNodeLengthAgeFactor = 0.97f;
+
+		tps.ApicalControlBase = 5.5f;
+		tps.ApicalControlAgeFactor = 0.92f;
+		tps.ApicalControlLevelFactor = 1.0f;
+		tps.Phototropism = 0.05f;
+		tps.GravitropismBase = -0.15f;//-0.43f;
+		tps.GravitropismLevelFactor = 0.12f;
+		tps.PruningFactor = 0.22f;
+		tps.LowBranchPruningFactor = 1.11f;
+		tps.GravityBendingStrength = 0.78f;
+		tps.SaggingFactor = 0.0506f;
+		tps.MaxBudAge = 8;
+		tps.EndNodeThickness = 0.02f;
+		tps.ThicknessControlFactor = 0.6f;
+		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		break;
+	case 8:
+		//F6f
+		tps.Seed = 1;
+		tps.VarianceApicalAngle = 12;
+		tps.LateralBudPerNode = 2;
+		tps.BranchingAngleMean = 43;
+		tps.BranchingAngleVariance = 3;
+		tps.RollAngleMean = 80;
+		tps.RollAngleVariance = 4;
+
+		tps.ApicalBudKillProbability = 0;
+		tps.LateralBudKillProbability = 0.21f;
+		tps.ApicalBudLightingFactor = 0.36f;
+		tps.LateralBudLightingFactor = 1.05f;
+		tps.ApicalDominanceBase = 0.38f;
+		tps.ApicalDominanceDistanceFactor = 0.9f;
+		tps.ApicalDominanceAgeFactor = 0.31f;
+		tps.GrowthRate = 1.9f;
+		tps.BranchNodeLengthBase = 0.51f;
+		tps.BranchNodeLengthAgeFactor = 0.98f;
+
+		tps.ApicalControlBase = 3.25f;
+		tps.ApicalControlAgeFactor = 0.7f;
+		tps.ApicalControlLevelFactor = 1.0f;
+		tps.Phototropism = 0.15f;
+		tps.GravitropismBase = -0.13f;//-0.43f;
+		tps.GravitropismLevelFactor = 0.14f;
+		tps.PruningFactor = 0.8f;
+		tps.LowBranchPruningFactor = 2.9f;
+		tps.GravityBendingStrength = 0.19f;
 		tps.SaggingFactor = 0.0506f;
 		tps.MaxBudAge = 8;
 		tps.EndNodeThickness = 0.02f;
@@ -789,15 +1030,16 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, TreeIn
 			int level = branchNodeInfo.Level;
 			if (isLateral) level++;
 			float apicalControl = GetApicalControl(treeInfo, branchNodeInfo, treeParameters, treeAge, level);
-			int internodesToGrow = glm::floor(treeParameters.GrowthRate * apicalControl + 0.5f);
-			if (internodesToGrow != 0) {
+			float distanceToGrow = treeParameters.GrowthRate * apicalControl;
+			int branchNodesToGrow = glm::floor(distanceToGrow + 0.5f);
+			if (branchNodesToGrow != 0) {
 				growSucceed = true;
 			}
 #pragma endregion
 #pragma region Grow new shoot
 			if (growSucceed) {
-				float internodeLength = 1.0f;
-				internodeLength *= treeParameters.BranchNodeLengthBase * glm::pow(treeParameters.BranchNodeLengthAgeFactor, treeAge.Value);
+				float branchNodeLength = distanceToGrow / static_cast<float>(branchNodesToGrow);
+				branchNodeLength *= treeParameters.BranchNodeLengthBase * glm::pow(treeParameters.BranchNodeLengthAgeFactor, treeAge.Value);
 				int level = branchNodeInfo.Level;
 				if (!bud.IsApical) {
 					level++;
@@ -808,14 +1050,14 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, TreeIn
 				glm::quat prevBranchNodeRotation;
 				prevBranchNodeRotation = branchNodeInfo.DesiredGlobalRotation;
 #pragma region Create branch nodes
-				for (int selectedNewNodeIndex = 0; selectedNewNodeIndex < internodesToGrow; selectedNewNodeIndex++) {
+				for (int selectedNewNodeIndex = 0; selectedNewNodeIndex < branchNodesToGrow; selectedNewNodeIndex++) {
 #pragma region Setup branch node
 					Entity newBranchNode = TreeManager::CreateBranchNode(treeIndex, prevBranchNode);
 					BudList newBranchNodeBudList = EntityManager::GetComponentData<BudList>(newBranchNode);
 					BranchNodeInfo newBranchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(newBranchNode);
 					newBranchNodeInfo.ApicalBudExist = true;
 					newBranchNodeInfo.ActivatedBudsAmount = treeParameters.LateralBudPerNode + 1;
-					newBranchNodeInfo.DistanceToParent = internodeLength;
+					newBranchNodeInfo.DistanceToParent = branchNodeLength;
 					newBranchNodeInfo.Level = level;
 					newBranchNodeInfo.Pruned = false;
 					newBranchNodeInfo.IsApical = prevBranchNodeInfo.IsApical;
@@ -835,9 +1077,9 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, TreeIn
 #pragma region Apply phototropism and gravitropism
 					float gravitropism = treeInfo.GravitropismLevelVal->at(newBranchNodeInfo.Level);
 					glm::quat globalRawRotation = prevBranchNodeRotation * newBranchNodeInfo.DesiredLocalRotation;
-					glm::vec3 rawFront = globalRawRotation * glm::vec3(0, 0, -1.05f);
-					glm::vec3 rawUp = globalRawRotation * glm::vec3(0, 1.05f, 0);
-					glm::vec3 gravityDir = glm::vec3(0, -1, 0);
+					glm::vec3 rawFront = globalRawRotation * glm::vec3(0.0f, 0.0f, -1.05f);
+					glm::vec3 rawUp = globalRawRotation * glm::vec3(0.0f, 1.05f, 0.0f);
+					glm::vec3 gravityDir = glm::vec3(0.0f, -1.0f, 0.0f);
 					rawFront += gravityDir * gravitropism;
 					if (branchNodeIllumination.Value > 0) {
 						rawFront += glm::normalize(-branchNodeIllumination.LightDir) * treeParameters.Phototropism;
@@ -883,9 +1125,9 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, TreeIn
 				DeactivateBud(branchNodeInfo, bud);
 #pragma region Add inhibitor to this branchnode.
 				float localInhibitor = 0;
-				if (treeAge.Value <= 1) localInhibitor += 1.0f;
+				if (treeAge.Value <= 1) localInhibitor += treeParameters.ApicalDominanceBase;
 				else {
-					localInhibitor += 1.0f * treeInfo.ApicalDominanceTimeVal->at(treeAge.Value);
+					localInhibitor += treeParameters.ApicalDominanceBase * treeInfo.ApicalDominanceTimeVal->at(treeAge.Value);
 				}
 				if (bud.IsApical) {
 					branchNodeInfo.Inhibitor += localInhibitor;
@@ -1033,6 +1275,7 @@ TreeParameters PlantSimulationSystem::ImportTreeParameters(const std::string& pa
 		ifs >> temp; ifs >> ret.ApicalBudKillProbability; // Useless.
 		ifs >> temp; ifs >> ret.LateralBudKillProbability; //Useless.
 
+		ifs >> temp; ifs >> ret.ApicalDominanceBase;
 		ifs >> temp; ifs >> ret.ApicalDominanceDistanceFactor; // Training target
 		ifs >> temp; ifs >> ret.ApicalDominanceAgeFactor; // Training target
 
@@ -1098,6 +1341,7 @@ void PlantSimulationSystem::ExportTreeParameters(const std::string& path, TreePa
 #pragma region Bud fate
 		output += "\nApicalBudKillProbability\n"; output += std::to_string(treeParameters.ApicalBudKillProbability);
 		output += "\nLateralBudKillProbability\n"; output += std::to_string(treeParameters.LateralBudKillProbability);
+		output += "\nApicalDominanceBase\n";  output += std::to_string(treeParameters.ApicalDominanceBase);
 		output += "\nApicalDominanceDistanceFactor\n";  output += std::to_string(treeParameters.ApicalDominanceDistanceFactor);
 		output += "\nApicalDominanceAgeFactor\n";  output += std::to_string(treeParameters.ApicalDominanceAgeFactor);
 		output += "\nGrowthRate\n"; output += std::to_string(treeParameters.GrowthRate);
@@ -1263,6 +1507,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(Material* treeSurfaceMat
 	list.Buds->push_back(bud);
 
 	BranchNodeInfo branchNodeInfo;
+	branchNodeInfo.IsApical = true;
 	branchNodeInfo.ApicalBudExist = true;
 	branchNodeInfo.Level = 0;
 	branchNodeInfo.MaxActivatedChildLevel = 0;

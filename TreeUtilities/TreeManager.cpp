@@ -352,12 +352,11 @@ void TreeUtilities::TreeManager::DeleteTree(Entity treeEntity)
 	delete treeInfo.Indices;
 	auto* mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(treeEntity);
 	delete mmc->_Mesh;
-	delete mmc;
-
 	if (EntityManager::HasComponentData<BranchNodeInfo>(EntityManager::GetChildren(treeEntity).at(0))) {
 		BranchNodeCleaner(EntityManager::GetChildren(treeEntity).at(0));
 	}
 	EntityManager::DeleteEntity(treeEntity);
+	delete mmc;
 }
 
 void TreeManager::DeleteAllTrees()

@@ -56,7 +56,7 @@ namespace TreeUtilities {
         void ImportSettings(const std::string& path);
         void LoadDefaultTreeParameters(int preset, TreeParameters& tps);
         void TryGrowAllTrees(std::vector<Entity>& trees);
-        bool GrowTree(Entity& treeEntity);
+        bool GrowTree (Entity& treeEntity);
         void CalculatePhysics(std::vector<Entity>& trees);
         void OnCreate() override;
         void OnDestroy() override;

@@ -16,6 +16,8 @@ ApicalBudKillProbability
 0.000000
 LateralBudKillProbability
 0.000000
+ApicalDominanceBase
+1.000000
 ApicalDominanceDistanceFactor
 0.377778
 ApicalDominanceAgeFactor
