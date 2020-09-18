@@ -12,6 +12,7 @@ namespace TreeUtilities {
     {
 #pragma region GUI related
         float _MeshGenerationResolution = 0.01f;
+        float _MeshGenerationSubdivision = 1.0f;
         char _MeshOBJFileName[256] = {};
 #pragma endregion
 

@@ -13,7 +13,6 @@ void TreeUtilities::TreeSystem::DrawGUI()
 	
 	ImGui::Begin("Tree Manager");
 	TreeIndex index;
-	TreeColor color;
 	auto _SelectedTreeEntity = EntityEditorSystem::GetSelectedEntity();
 	for (auto tree : _TreeEntities) {
 		index = EntityManager::GetComponentData<TreeIndex>(tree);
@@ -21,7 +20,6 @@ void TreeUtilities::TreeSystem::DrawGUI()
 		title += std::to_string(index.Value);
 		bool opened = ImGui::TreeNodeEx(title.c_str(), ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_NoAutoOpenOnLog | (_SelectedTreeEntity == tree ? ImGuiTreeNodeFlags_Framed : ImGuiTreeNodeFlags_FramePadding));
 		if (opened) {
-			color = EntityManager::GetComponentData<TreeColor>(tree);
 			bool enabled = tree.Enabled();
 			title = "Delete##";
 			title += std::to_string(index.Value);
@@ -37,14 +35,14 @@ void TreeUtilities::TreeSystem::DrawGUI()
 	
 	if (!_SelectedTreeEntity.IsNull() && EntityManager::HasComponentData<TreeInfo>(_SelectedTreeEntity)) {
 		index = EntityManager::GetComponentData<TreeIndex>(_SelectedTreeEntity);
-		color = EntityManager::GetComponentData<TreeColor>(_SelectedTreeEntity);
 		TreeParameters tps = EntityManager::GetComponentData<TreeParameters>(_SelectedTreeEntity);
 		std::string title = "Tree ";
 		title += std::to_string(index.Value);
 		ImGui::Text(title.c_str());
 		ImGui::InputFloat("Mesh resolution", &_MeshGenerationResolution, 0.0f, 0.0f, "%.5f");
+		ImGui::InputFloat("Branch subdivision", &_MeshGenerationSubdivision, 0.0f, 0.0f, "%.5f");
 		if (ImGui::Button("Regenerate mesh")) {
-			TreeManager::GenerateSimpleMeshForTree(_SelectedTreeEntity, _MeshGenerationResolution);
+			TreeManager::GenerateSimpleMeshForTree(_SelectedTreeEntity, _MeshGenerationResolution, _MeshGenerationSubdivision);
 		}
 		ImGui::InputText("File name", _MeshOBJFileName, 255);
 		if(ImGui::Button(("Export mesh as " + std::string(_MeshOBJFileName) + ".obj").c_str())) {
@@ -67,15 +65,6 @@ void TreeUtilities::TreeSystem::DrawGUI()
 			auto* ss = TreeManager::GetLightEstimator()->GetSnapShots();
 			for (auto i : *ss) {
 				ImGui::Image((ImTextureID)i->SnapShotTexture()->ID(), ImVec2(500, 500));
-			}
-		}
-		if (ImGui::CollapsingHeader("Color Settings")) {
-			auto newColor = color;
-			title = "Tree Color##";
-			title += std::to_string(index.Value);
-			ImGui::ColorEdit3(title.c_str(), (float*)&newColor.Color);
-			if (!(newColor == color)) {
-				EntityManager::SetComponentData(_SelectedTreeEntity, newColor);
 			}
 		}
 		ImGui::Separator();

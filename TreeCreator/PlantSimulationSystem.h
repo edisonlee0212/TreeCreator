@@ -13,17 +13,18 @@ namespace TreeUtilities {
         public SystemBase
     {
 #pragma region GUI Related
+        bool _GravityChanged = false;
         bool _DisplayFullParam = true;
         char _CurrentWorkingDir[256] = {};
         char _TempImportFilePath[256] = {};
         char _TempExportFilePath[256] = {};
         int _NewPushIteration = 0;
         float _MeshGenerationResolution = 0.01f;
-
+        float _MeshGenerationSubdivision = 1.0f;
         int _NewTreeAmount = 1;
-        TreeParameters _NewTreeParameters = TreeParameters();
-        std::vector<glm::vec3> _NewTreePosition;
-        std::vector<TreeColor> _NewTreeColor;
+        int _CurrentFocusedNewTreeIndex = 0;
+        std::vector<TreeParameters> _NewTreeParameters;
+        std::vector<glm::vec3> _NewTreePositions;
         Material* _DefaultTreeSurfaceMaterial1 = nullptr;
         Material* _DefaultTreeSurfaceMaterial2 = nullptr;
 #pragma endregion
@@ -33,8 +34,6 @@ namespace TreeUtilities {
         bool _Growing = false;
         EntityQuery _TreeQuery;
         EntityQuery _BranchNodeQuery;
-        
-        std::queue<Entity> _MeshGenerationQueue;
 
         float GetApicalControl(TreeInfo& treeInfo, BranchNodeInfo& branchNodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
         void DrawGUI();
@@ -53,7 +52,9 @@ namespace TreeUtilities {
     public:
         static TreeParameters ImportTreeParameters(const std::string& path);
         static void ExportTreeParameters(const std::string& path, TreeParameters& treeParameters);
-        void LoadDefaultTreeParameters(int preset);
+        void ExportSettings(const std::string& path);
+        void ImportSettings(const std::string& path);
+        void LoadDefaultTreeParameters(int preset, TreeParameters& tps);
         void TryGrowAllTrees(std::vector<Entity>& trees);
         bool GrowTree(Entity& treeEntity);
         void CalculatePhysics(std::vector<Entity>& trees);
@@ -61,6 +62,6 @@ namespace TreeUtilities {
         void OnDestroy() override;
         void Update() override;
         void FixedUpdate() override;
-        Entity CreateTree(Material* treeSurfaceMaterial, TreeParameters parameters, TreeColor color, glm::vec3 position, bool enabled = false);
+        Entity CreateTree(Material* treeSurfaceMaterial, TreeParameters parameters, glm::vec3 position, bool enabled = false);
     };
 }

@@ -164,7 +164,7 @@ void TreeUtilities::TreeManager::Init()
 	_TreeArchetype = EntityManager::CreateEntityArchetype(
 		"Tree",
 		Translation(), Rotation(), Scale(), LocalToWorld(),
-		TreeIndex(), TreeInfo(), TreeColor(), TreeAge(),
+		TreeIndex(), TreeInfo(), TreeAge(),
 		TreeParameters(),
 		RewardEstimation()
 		);
@@ -457,7 +457,7 @@ Mesh* TreeUtilities::TreeManager::GetMeshForTree(Entity treeEntity)
 #pragma endregion
 
 
-void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, float resolution)
+void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, float resolution, float subdivision)
 {
 	if (resolution <= 0.0f) {
 		Debug::Error("TreeManager: Resolution must be larger than 0!");
@@ -468,7 +468,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 		return;
 	}
 	//Prepare ring mesh.
-	EntityManager::ForEach<BranchNodeInfo, RingMeshList>(_BranchNodeQuery, [resolution](int i, Entity branchNode, BranchNodeInfo* info, RingMeshList* list) 
+	EntityManager::ForEach<BranchNodeInfo, RingMeshList>(_BranchNodeQuery, [resolution, subdivision](int i, Entity branchNode, BranchNodeInfo* info, RingMeshList* list) 
 		{
 			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(branchNode))) return;
 			std::vector<RingMesh>* rings = list->Rings;
@@ -497,7 +497,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			if (step < 4) step = 4;
 			if (step % 2 != 0) step++;
 			list->step = step;
-			int amount = distance / ((info->Thickness + parentThickness) / 2.0f) + 0.5f;
+			int amount = (int)(0.5f + distance / ((info->Thickness + parentThickness) / 2.0f) * subdivision);
 			if (amount % 2 != 0) amount++;
 			BezierCurve curve = BezierCurve(parentTranslation, parentTranslation + distance / 3.0f * fromDir, translation - distance / 3.0f * dir, translation);
 			float posStep = 1.0f / (float)amount;

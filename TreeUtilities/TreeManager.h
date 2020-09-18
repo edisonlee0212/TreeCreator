@@ -182,13 +182,7 @@ namespace TreeUtilities {
         int ToGrowIteration;
         bool Enable;
     };
-
-    struct TREEUTILITIES_API TreeColor : ComponentBase {
-        glm::vec3 Color;
-        bool operator ==(const TreeColor& other) const {
-            return other.Color == Color;
-        }
-    };
+	
     struct TREEUTILITIES_API TreeInfo : ComponentBase {
         int CurrentSeed;
         float Height;
@@ -242,7 +236,7 @@ namespace TreeUtilities {
         static void CalculateBranchNodeIllumination();
 
         static Mesh* GetMeshForTree(Entity treeEntity);
-        static void GenerateSimpleMeshForTree(Entity treeEntity, float resolution);
+        static void GenerateSimpleMeshForTree(Entity treeEntity, float resolution, float subdivision = 1.0f);
         static void DeleteTree(Entity treeEntity);
         static void DeleteAllTrees();
         static Entity CreateTree(Material* treeSurfaceMaterial);

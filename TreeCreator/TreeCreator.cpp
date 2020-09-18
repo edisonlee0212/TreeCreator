@@ -127,7 +127,7 @@ int main()
 		LightingManager::SetPCSSScaleFactor(pcssScale);
 #pragma endregion
 
-		ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 		Application::Update();
 		loopable = Application::LateUpdate();
 	}
