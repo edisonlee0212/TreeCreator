@@ -13,15 +13,17 @@ namespace TreeUtilities {
         public SystemBase
     {
 #pragma region GUI Related
-        bool _GuiMenuEnabled = true;
         bool _DisplayFullParam = true;
         char _CurrentWorkingDir[256] = {};
         char _TempImportFilePath[256] = {};
         char _TempExportFilePath[256] = {};
+        int _NewPushIteration = 0;
         float _MeshGenerationResolution = 0.01f;
+
+        int _NewTreeAmount = 1;
         TreeParameters _NewTreeParameters = TreeParameters();
-        glm::vec3 _NewTreePosition = glm::vec3(0);
-        TreeColor _NewTreeColor = {};
+        std::vector<glm::vec3> _NewTreePosition;
+        std::vector<TreeColor> _NewTreeColor;
         Material* _DefaultTreeSurfaceMaterial1 = nullptr;
         Material* _DefaultTreeSurfaceMaterial2 = nullptr;
 #pragma endregion

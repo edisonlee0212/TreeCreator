@@ -22,7 +22,6 @@ namespace TreeUtilities {
 
         std::vector<Entity> _TreeEntities;
 
-        void BranchNodeListHelper(Entity budEntity);
         void DrawGUI();
     public:
         void OnCreate() override;

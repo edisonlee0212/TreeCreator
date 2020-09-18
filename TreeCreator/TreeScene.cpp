@@ -33,7 +33,7 @@ void TreeScene::ExportSceneAsOBJ(std::string filename)
 				+ "]" + "\n";
 				of.write(o.c_str(), o.size());
 				of.flush();
-				std::string data = "";
+				std::string data;
 #pragma region Data collection
 				
 				for (const auto& vertex : *info.Vertices) {

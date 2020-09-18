@@ -360,6 +360,16 @@ void TreeUtilities::TreeManager::DeleteTree(Entity treeEntity)
 	EntityManager::DeleteEntity(treeEntity);
 }
 
+void TreeManager::DeleteAllTrees()
+{
+	std::vector<Entity> trees;
+	_TreeQuery.ToEntityArray(&trees);
+	for(auto& tree : trees)
+	{
+		DeleteTree(tree);
+	}
+}
+
 Entity TreeUtilities::TreeManager::CreateBranchNode(TreeIndex treeIndex, Entity parentEntity)
 {
 	auto entity = EntityManager::CreateEntity(_BranchNodeArchetype);

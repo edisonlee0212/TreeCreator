@@ -184,7 +184,7 @@ namespace TreeUtilities {
     };
 
     struct TREEUTILITIES_API TreeColor : ComponentBase {
-        glm::vec4 Color;
+        glm::vec3 Color;
         bool operator ==(const TreeColor& other) const {
             return other.Color == Color;
         }
@@ -244,7 +244,7 @@ namespace TreeUtilities {
         static Mesh* GetMeshForTree(Entity treeEntity);
         static void GenerateSimpleMeshForTree(Entity treeEntity, float resolution);
         static void DeleteTree(Entity treeEntity);
-
+        static void DeleteAllTrees();
         static Entity CreateTree(Material* treeSurfaceMaterial);
         static Entity CreateBranchNode(TreeIndex treeIndex, Entity parentEntity);
 

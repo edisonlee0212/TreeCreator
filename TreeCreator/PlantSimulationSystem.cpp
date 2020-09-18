@@ -8,7 +8,6 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 		if (ImGui::BeginMenu("Plant Simulation")) {
 			if (ImGui::Button("Create...")) {
 				ImGui::OpenPopup("New tree wizard");
-
 			}
 			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -16,26 +15,34 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 			if (ImGui::BeginPopupModal("New tree wizard", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			{
 				ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-				ImGui::BeginChild("ChildL", ImVec2(300, 200), true, ImGuiWindowFlags_None | ImGuiWindowFlags_MenuBar);
+				ImGui::BeginChild("ChildL", ImVec2(300, 400), true, ImGuiWindowFlags_None | ImGuiWindowFlags_MenuBar);
 				if (ImGui::BeginMenuBar())
 				{
 					if (ImGui::BeginMenu("Settings"))
 					{
-
+						ImGui::InputInt("New Tree Amount", &_NewTreeAmount);
+						if (_NewTreeAmount < 1) _NewTreeAmount = 1;
+						ImGui::EndMenu();
 					}
 					ImGui::EndMenuBar();
 				}
 				ImGui::Columns(1);
-				ImGui::PushItemWidth(200);
-				ImGui::InputFloat3("Position", &_NewTreePosition.x);
-				ImGui::PopItemWidth();
-				ImGui::NextColumn();
-				ImGui::ColorEdit4("Tree Color", &_NewTreeColor.Color.x);
+				if (_NewTreePosition.size() < _NewTreeAmount) {
+					_NewTreePosition.resize(_NewTreeAmount);
+					_NewTreeColor.resize(_NewTreeAmount);
+				}
+				for (auto i = 0; i < _NewTreeAmount; i++)
+				{
+					ImGui::InputFloat3(("Position" + std::to_string(i)).c_str(), &_NewTreePosition[i].x);
+					ImGui::NextColumn();
+					ImGui::ColorEdit3(("Tree Color" + std::to_string(i)).c_str(), &_NewTreeColor[i].Color.x);
+				}
+
 				ImGui::EndChild();
 				ImGui::PopStyleVar();
 				ImGui::SameLine();
 				ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-				ImGui::BeginChild("ChildR", ImVec2(400, 200), true, ImGuiWindowFlags_None | ImGuiWindowFlags_MenuBar);
+				ImGui::BeginChild("ChildR", ImVec2(400, 400), true, ImGuiWindowFlags_None | ImGuiWindowFlags_MenuBar);
 				if (ImGui::BeginMenuBar())
 				{
 					if (ImGui::BeginMenu("Tree parameters")) {
@@ -70,10 +77,10 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 							}
 							ImGui::EndMenu();
 						}
-						
+
 						ImGui::EndMenu();
 					}
-					
+
 					ImGui::EndMenuBar();
 				}
 				ImGui::Columns(1);
@@ -81,43 +88,43 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 				if (_DisplayFullParam) {
 #pragma region Show params
 					ImGui::InputInt("Seed", &_NewTreeParameters.Seed);
-					
+
 					ImGui::InputInt("Lateral Bud Number", &_NewTreeParameters.LateralBudPerNode);
-					
+
 					ImGui::InputFloat("Apical Angle Var", &_NewTreeParameters.VarianceApicalAngle);
-					
+
 					ImGui::InputFloat2("Branching Angle M/Var", &_NewTreeParameters.BranchingAngleMean);
-					
+
 					ImGui::InputFloat2("Roll Angle M/Var", &_NewTreeParameters.RollAngleMean);
-					
+
 					ImGui::InputFloat2("Extinction Prob A/L", &_NewTreeParameters.ApicalBudKillProbability);
-					
+
 					ImGui::InputFloat3("AD Dis/Age", &_NewTreeParameters.ApicalControlDistanceFactor);
-					
+
 					ImGui::InputFloat("Growth Rate", &_NewTreeParameters.GrowthRate);
-					
+
 					ImGui::InputFloat2("Node Len Base/Age", &_NewTreeParameters.BranchNodeLengthBase);
-					
+
 					ImGui::InputFloat4("AC Base/Age/Lvl/Dist", &_NewTreeParameters.ApicalControlBase);
-					
+
 					ImGui::InputInt("Max Bud Age", &_NewTreeParameters.MaxBudAge);
-					
+
 					ImGui::InputFloat("Phototropism", &_NewTreeParameters.Phototropism);
-					
+
 					ImGui::InputFloat2("Gravitropism Base/Age", &_NewTreeParameters.GravitropismBase);
-					
+
 					ImGui::InputFloat("PruningFactor", &_NewTreeParameters.PruningFactor);
-					
+
 					ImGui::InputFloat("LowBranchPruningFactor", &_NewTreeParameters.LowBranchPruningFactor);
-					
+
 					ImGui::InputFloat("GravityBendingStrength", &_NewTreeParameters.GravityBendingStrength);
-					
+
 					ImGui::InputFloat2("Lighting Factor A/L", &_NewTreeParameters.ApicalBudLightingFactor);
-					
+
 					ImGui::InputFloat2("Gravity Base/BPCo", &_NewTreeParameters.SaggingFactor);
-					
+
 					ImGui::InputFloat2("Thickness End/Fac", &_NewTreeParameters.EndNodeThickness);
-					
+
 #pragma endregion
 
 				}
@@ -134,7 +141,9 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 
 				if (ImGui::Button("OK", ImVec2(120, 0))) {
 					//Create tree here.
-					CreateTree(_DefaultTreeSurfaceMaterial1, _NewTreeParameters, _NewTreeColor, _NewTreePosition, true);
+					for (auto i = 0; i < _NewTreeAmount; i++) {
+						CreateTree(_DefaultTreeSurfaceMaterial1, _NewTreeParameters, _NewTreeColor[i], _NewTreePosition[i], true);
+					}
 					ImGui::CloseCurrentPopup();
 				}
 				ImGui::SetItemDefaultFocus();
@@ -156,13 +165,43 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 		if (ImGui::Button("Generate mesh for all trees")) {
 			auto trees = std::vector<Entity>();
 			_TreeQuery.ToEntityArray(&trees);
-			for(auto& tree : trees)
+			for (auto& tree : trees)
 			{
 				TreeManager::GenerateSimpleMeshForTree(tree, _MeshGenerationResolution);
 			}
-			
+
+		}
+		ImGui::Separator();
+		ImGui::InputInt("Iterations", &_NewPushIteration);
+		if (ImGui::Button("Push iterations to all trees"))
+		{
+			EntityManager::ForEach<TreeAge>(_TreeQuery, [this](int i, Entity tree, TreeAge* age)
+				{
+					age->ToGrowIteration += _NewPushIteration;
+				});
+		}
+		ImGui::Separator();
+		if (ImGui::Button("Delete all trees")) {
+			ImGui::OpenPopup("Delete Warning");
+		}
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+		if (ImGui::BeginPopupModal("Delete Warning", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::Text("Are you sure? All trees will be removed!");
+			if (ImGui::Button("Yes, delete all!", ImVec2(120, 0))) {
+				TreeManager::DeleteAllTrees();
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::SetItemDefaultFocus();
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+			ImGui::EndPopup();
 		}
 	}
+	ImGui::Separator();
+	ImGui::Spacing();
 	if (ImGui::CollapsingHeader("I/O", ImGuiTreeNodeFlags_DefaultOpen)) {
 		static char sceneOutputName[256] = {};
 		ImGui::InputText("File name", sceneOutputName, 255);
@@ -180,7 +219,7 @@ void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 	_TreeQuery.ToEntityArray(&trees);
 
 	TryGrowAllTrees(trees);
-	
+
 	CalculatePhysics(trees);
 
 	while (!_MeshGenerationQueue.empty()) {
@@ -204,7 +243,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	if (treeAge.ToGrowIteration == 0) {
 		return false;
 	}
-	
+
 #pragma region Prepare info
 	if (treeAge.Value == 0) {
 		treeInfo.CurrentSeed = treeParameters.Seed;
@@ -799,7 +838,7 @@ TreeParameters PlantSimulationSystem::ImportTreeParameters(const std::string& pa
 	TreeParameters ret;
 	std::ifstream ifs;
 	ifs.open((path + ".tps").c_str());
-	if(ifs.is_open())
+	if (ifs.is_open())
 	{
 		std::string temp;
 		ifs >> temp; ifs >> ret.Seed;
@@ -856,7 +895,8 @@ TreeParameters PlantSimulationSystem::ImportTreeParameters(const std::string& pa
 		//ifs >> temp; ifs >> ret.Age;
 		ifs >> temp; ifs >> ret.EndNodeThickness;
 		ifs >> temp; ifs >> ret.ThicknessControlFactor;
-	}else
+	}
+	else
 	{
 		Debug::Error("Can't open file!");
 	}
@@ -999,7 +1039,7 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultTreeSurfaceMaterial2->Textures2Ds()->push_back(textureDiffuse2);
 	_DefaultTreeSurfaceMaterial2->Textures2Ds()->push_back(textureNormal2);
 	_Gravity = 1.0f;
-	_NewTreeColor.Color = glm::vec4(1.0f);
+
 	LoadDefaultTreeParameters(1);
 	Enable();
 }

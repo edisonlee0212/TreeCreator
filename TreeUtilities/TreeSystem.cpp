@@ -1,24 +1,7 @@
 #include "pch.h"
 #include "TreeSystem.h"
 #include "TreeManager.h"
-void TreeUtilities::TreeSystem::BranchNodeListHelper(Entity branchNode)
-{
-	BranchNodeIndex index = EntityManager::GetComponentData<BranchNodeIndex>(branchNode);
-	std::string title = "Bud ";
-	title += std::to_string(index.Value);
-	if (ImGui::TreeNodeEx(title.c_str(), (ImGuiTreeNodeFlags)ImGuiTreeNodeFlags_NoTreePushOnOpen)) {
-		auto childList = EntityManager::GetChildren(branchNode);
-		if (childList.size() > 1) {
-			ImGui::TreePush();
-		}
-		for (auto child : childList) {
-			BranchNodeListHelper(child);
-		}
-		if (childList.size() > 1) {
-			ImGui::TreePop();
-		}
-	}
-}
+
 void TreeUtilities::TreeSystem::DrawGUI()
 {
 	ImGui::Begin("Tree Utilities");
@@ -47,6 +30,7 @@ void TreeUtilities::TreeSystem::DrawGUI()
 			}
 		}
 	}
+	
 	ImGui::End();
 	
 	ImGui::Begin("Tree Inspector");
@@ -80,7 +64,7 @@ void TreeUtilities::TreeSystem::DrawGUI()
 			auto estimation = EntityManager::GetComponentData<RewardEstimation>(_SelectedTreeEntity);
 			title = "Light Rewards: " + std::to_string(estimation.LightEstimationResult);
 			ImGui::Text(title.c_str());
-			auto ss = TreeManager::GetLightEstimator()->GetSnapShots();
+			auto* ss = TreeManager::GetLightEstimator()->GetSnapShots();
 			for (auto i : *ss) {
 				ImGui::Image((ImTextureID)i->SnapShotTexture()->ID(), ImVec2(500, 500));
 			}
@@ -94,12 +78,6 @@ void TreeUtilities::TreeSystem::DrawGUI()
 				EntityManager::SetComponentData(_SelectedTreeEntity, newColor);
 			}
 		}
-		ImGui::Separator();
-		title = "BranchNode Hierarchy:##";
-		title += std::to_string(index.Value);
-		ImGui::Text(title.c_str());
-		Entity rootNode = EntityManager::GetChildren(_SelectedTreeEntity).at(0);
-		BranchNodeListHelper(rootNode);
 		ImGui::Separator();
 	}
 	ImGui::End();
