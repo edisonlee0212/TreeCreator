@@ -48,7 +48,7 @@ namespace TreeUtilities {
         void ApplyLocalTransform(Entity& treeEntity);
         void CalculateDirectGravityForce(Entity& treeEntity, float gravity);
         void BackPropagateForce(Entity& branchNode, float fixedPropagationCoefficient);
-
+        void CalculateCrownShyness(float radius);
     public:
         static TreeParameters ImportTreeParameters(const std::string& path);
         static void ExportTreeParameters(const std::string& path, TreeParameters& treeParameters);
