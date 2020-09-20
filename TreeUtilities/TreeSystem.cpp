@@ -90,7 +90,7 @@ void TreeUtilities::TreeSystem::OnDestroy()
 void TreeUtilities::TreeSystem::Update()
 {
 	_TreeEntities.clear();
-	_TreeQuery.ToEntityArray(&_TreeEntities);
+	_TreeQuery.ToEntityArray(_TreeEntities);
 	DrawGUI();
 }
 

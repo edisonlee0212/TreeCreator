@@ -8,7 +8,7 @@ void TreeScene::ExportSceneAsOBJ(std::string filename)
 	{
 		auto treeQuery = TreeManager::GetTreeQuery();
 		std::vector<Entity> trees;
-		treeQuery.ToEntityArray(&trees);
+		treeQuery.ToEntityArray(trees);
 		std::string start = "# Tree Collection, by Bosheng Li";
 		start += "\n";
 		of.write(start.c_str(), start.size());

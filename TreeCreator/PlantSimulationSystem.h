@@ -13,6 +13,8 @@ namespace TreeUtilities {
 		public SystemBase
 	{
 #pragma region GUI Related
+		bool _DisplayConvexHull;
+		
 		bool _GravityChanged = false;
 		bool _DisplayFullParam = true;
 		char _CurrentWorkingDir[256] = {};
@@ -48,7 +50,7 @@ namespace TreeUtilities {
 		void CalculateDirectGravityForce(Entity& treeEntity, float gravity);
 		void BackPropagateForce(Entity& branchNode, float fixedPropagationCoefficient);
 		void CalculateCrownShyness(float radius);
-		inline void PruneBranchNode(Entity& branchNode, BranchNodeInfo* branchNodeInfo) const;
+		inline void PruneBranchNode(Entity& branchNode, BranchNodeInfo* branchNodeInfo);
 
 		void BuildConvexHullForTree(Entity& tree);
 	public:
@@ -64,6 +66,7 @@ namespace TreeUtilities {
 		void OnDestroy() override;
 		void Update() override;
 		void FixedUpdate() override;
-		Entity CreateTree(Material* treeSurfaceMaterial, TreeParameters parameters, glm::vec3 position, bool enabled = false);
+		Entity CreateTree(Material* treeSurfaceMaterial, TreeParameters parameters, glm::vec3 position, bool enabled = true);
+		void CreateDefaultTree();
 	};
 }

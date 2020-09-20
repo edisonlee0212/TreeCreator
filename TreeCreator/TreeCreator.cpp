@@ -11,7 +11,7 @@ using namespace UniEngine;
 using namespace TreeUtilities;
 using namespace SorghumRecon;
 void InitGround();
-void InitPlantSimulationSystem();
+PlantSimulationSystem* InitPlantSimulationSystem();
 SorghumReconstructionSystem* InitSorghumResonstructionSystem();
 void LightSettingMenu();
 
@@ -83,7 +83,7 @@ int main()
 	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(tilt, -1, 0), 0.1f);
 	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(-tilt, -1, 0), 0.1f);
 #pragma endregion
-	InitPlantSimulationSystem();
+	auto pss = InitPlantSimulationSystem();
 	/*
 	auto srSys = InitSorghumResonstructionSystem();
 	Entity plant1 = srSys->CreatePlant("skeleton_procedural_1.txt", 0.01f);
@@ -135,8 +135,8 @@ int main()
 	Application::End();
 	return 0; 
 }
-void InitPlantSimulationSystem() {
-	auto psSys = Application::GetWorld()->CreateSystem<PlantSimulationSystem>(SystemGroup::SimulationSystemGroup);
+PlantSimulationSystem* InitPlantSimulationSystem() {
+	return Application::GetWorld()->CreateSystem<PlantSimulationSystem>(SystemGroup::SimulationSystemGroup);
 }
 SorghumReconstructionSystem* InitSorghumResonstructionSystem()
 {

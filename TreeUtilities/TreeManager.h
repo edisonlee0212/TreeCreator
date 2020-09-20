@@ -195,9 +195,8 @@ namespace TreeUtilities {
         std::vector<float>* ApicalDominanceTimeVal;
         std::vector<float>* GravitropismLevelVal;
         std::vector<float>* ApicalControlTimeVal;
-        std::vector<Vertex>* Vertices;
-        std::vector<unsigned>* Indices;
         std::vector<std::vector<float>>* ApicalControlTimeLevelVal;
+        Mesh* ConvexHull;
         float ResourceToGrow;
     };
 #pragma endregion
@@ -232,7 +231,7 @@ namespace TreeUtilities {
         static BranchNodeSystem* GetBranchNodeSystem();
         static TreeSystem* GetTreeSystem();
 
-        static void GetAllTrees(std::vector<Entity>* container);
+        static void GetAllTrees(std::vector<Entity>& container);
         
         static void CalculateBranchNodeIllumination();
 

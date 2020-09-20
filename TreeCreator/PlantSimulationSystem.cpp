@@ -225,13 +225,26 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 		ImGui::InputFloat("Branch subdivision", &_MeshGenerationSubdivision, 0.0f, 0.0f, "%.5f");
 		if (ImGui::Button("Generate mesh for all trees")) {
 			auto trees = std::vector<Entity>();
-			_TreeQuery.ToEntityArray(&trees);
+			_TreeQuery.ToEntityArray(trees);
 			for (auto& tree : trees)
 			{
 				TreeManager::GenerateSimpleMeshForTree(tree, _MeshGenerationResolution, _MeshGenerationSubdivision);
 			}
 
 		}
+		ImGui::Separator();
+
+		ImGui::Checkbox("Display convex hulls", &_DisplayConvexHull);
+		if(ImGui::Button("Generate Convex Hull for all trees"))
+		{
+			std::vector<Entity> trees;
+			_TreeQuery.ToEntityArray(trees);
+			for(auto& tree : trees)
+			{
+				BuildConvexHullForTree(tree);
+			}
+		}
+		
 		ImGui::Separator();
 		ImGui::InputInt("Iterations", &_NewPushIteration);
 		if (ImGui::Button("Push iterations to all trees"))
@@ -421,7 +434,7 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
 	auto trees = std::vector<Entity>();
-	_TreeQuery.ToEntityArray(&trees);
+	_TreeQuery.ToEntityArray(trees);
 	
 	TryGrowAllTrees(trees);
 
@@ -1014,7 +1027,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 			if (GrowTree(tree)) {
 				growed = true;
 				CalculatePhysics(trees);
-				CalculateCrownShyness(1.0f);
+				CalculateCrownShyness(1.5f);
 			}
 		}
 	}
@@ -1254,8 +1267,8 @@ void PlantSimulationSystem::CalculateCrownShyness(float radius)
 {
 	std::vector<LocalToWorld> branchNodesLTWs;
 	std::vector<TreeIndex> branchNodesTreeIndices;
-	_BranchNodeQuery.ToComponentDataArray(&branchNodesLTWs);
-	_BranchNodeQuery.ToComponentDataArray(&branchNodesTreeIndices);
+	_BranchNodeQuery.ToComponentDataArray(branchNodesLTWs);
+	_BranchNodeQuery.ToComponentDataArray(branchNodesTreeIndices);
 
 	EntityManager::ForEach<LocalToWorld, BranchNodeInfo, TreeIndex>(_BranchNodeQuery, [radius, &branchNodesLTWs, &branchNodesTreeIndices, this](int i, Entity branchNode, LocalToWorld* ltw, BranchNodeInfo* info, TreeIndex* index)
 		{
@@ -1278,11 +1291,11 @@ void PlantSimulationSystem::CalculateCrownShyness(float radius)
 	);
 }
 
-inline void PlantSimulationSystem::PruneBranchNode(Entity& branchNode, BranchNodeInfo* branchNodeInfo) const
+inline void PlantSimulationSystem::PruneBranchNode(Entity& branchNode, BranchNodeInfo* branchNodeInfo)
 {
 	branchNodeInfo->Pruned = true;
 	branchNodeInfo->IsActivatedEndNode = false;
-	EntityManager::SetComponentData(branchNode, branchNodeInfo);
+	EntityManager::SetComponentData(branchNode, *branchNodeInfo);
 }
 
 void PlantSimulationSystem::BuildConvexHullForTree(Entity& tree)
@@ -1290,16 +1303,17 @@ void PlantSimulationSystem::BuildConvexHullForTree(Entity& tree)
 	std::vector<LocalToWorld> branchNodesLTWs;
 	std::vector<BranchNodeInfo> branchNodesTreeInfos;
 	const auto treeIndex = EntityManager::GetComponentData<TreeIndex>(tree);
-	_BranchNodeQuery.ToComponentDataArray(treeIndex, &branchNodesLTWs);
-	_BranchNodeQuery.ToComponentDataArray(treeIndex, &branchNodesTreeInfos);
+	_BranchNodeQuery.ToComponentDataArray(treeIndex, branchNodesLTWs);
+	_BranchNodeQuery.ToComponentDataArray(treeIndex, branchNodesTreeInfos);
 
 	quickhull::QuickHull<float> qh; // Could be double as well
 	std::vector<quickhull::Vector3<float>> pointCloud;
 	for(size_t i = 0; i < branchNodesLTWs.size(); i++)
 	{
-		if(branchNodesTreeInfos[i].IsActivatedEndNode)
+		//if(branchNodesTreeInfos[i].IsActivatedEndNode)
 		{
-			pointCloud.push_back(quickhull::Vector3<float>(branchNodesLTWs[i].Value[3].x, branchNodesLTWs[i].Value[3].y, branchNodesLTWs[i].Value[3].z));
+			const auto transform = branchNodesTreeInfos[i].GlobalTransform;
+			pointCloud.emplace_back(transform[3].x, transform[3].y, transform[3].z);
 		}
 	}
 	auto hull = qh.getConvexHull(pointCloud, true, false);
@@ -1321,6 +1335,12 @@ void PlantSimulationSystem::BuildConvexHullForTree(Entity& tree)
 		vertices[i].Position = glm::vec3(v.x, v.y, v.z);
 		vertices[i].TexCoords0 = glm::vec2(0, 0);
 	}
+	auto treeInfo = EntityManager::GetComponentData<TreeInfo>(tree);
+	delete treeInfo.ConvexHull;
+	treeInfo.ConvexHull = new Mesh();
+	treeInfo.ConvexHull->SetVertices(17, vertices, indices, true);
+
+	EntityManager::SetComponentData(tree, treeInfo);
 }
 
 TreeParameters PlantSimulationSystem::ImportTreeParameters(const std::string& path)
@@ -1542,6 +1562,22 @@ void TreeUtilities::PlantSimulationSystem::OnDestroy()
 
 void TreeUtilities::PlantSimulationSystem::Update()
 {
+	if(_DisplayConvexHull)
+	{
+		std::vector<LocalToWorld> ltws;
+		std::vector<TreeInfo> infos;
+
+		_TreeQuery.ToComponentDataArray(ltws);
+		_TreeQuery.ToComponentDataArray(infos);
+		
+		for(size_t i = 0; i < ltws.size(); i++)
+		{
+			if (infos[i].ConvexHull != nullptr) {
+				RenderManager::DrawGizmoMesh(infos[i].ConvexHull, glm::vec4(0.5, 0.5, 0.5, 1.0), Application::GetMainCameraComponent()->Value, ltws[i].Value);
+			}
+		}
+		
+	}
 	DrawGUI();
 }
 
@@ -1579,6 +1615,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(Material* treeSurfaceMat
 	list.Buds->push_back(bud);
 
 	BranchNodeInfo branchNodeInfo;
+	branchNodeInfo.IsActivatedEndNode = false;
 	branchNodeInfo.IsApical = true;
 	branchNodeInfo.ApicalBudExist = true;
 	branchNodeInfo.Level = 0;
@@ -1599,6 +1636,13 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(Material* treeSurfaceMat
 	EntityManager::SetComponentData(treeEntity, age);
 	_Growing = true;
 	return treeEntity;
+}
+
+void PlantSimulationSystem::CreateDefaultTree()
+{
+	TreeParameters tps;
+	LoadDefaultTreeParameters(1, tps);
+	CreateTree(_DefaultTreeSurfaceMaterial1, tps, glm::vec3(0.0f), true);
 }
 
 #pragma endregion

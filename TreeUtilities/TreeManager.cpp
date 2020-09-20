@@ -267,7 +267,7 @@ TreeSystem* TreeUtilities::TreeManager::GetTreeSystem()
 
 
 
-void TreeUtilities::TreeManager::GetAllTrees(std::vector<Entity>* container)
+void TreeUtilities::TreeManager::GetAllTrees(std::vector<Entity>& container)
 {
 	if (!_Ready) {
 		Debug::Error("TreeManager: Not initialized!");
@@ -279,7 +279,7 @@ void TreeUtilities::TreeManager::GetAllTrees(std::vector<Entity>* container)
 void TreeUtilities::TreeManager::CalculateBranchNodeIllumination()
 {
 	std::vector<Entity> branchNodes;
-	_BranchNodeQuery.ToEntityArray(&branchNodes);
+	_BranchNodeQuery.ToEntityArray(branchNodes);
 	GetLightEstimator()->TakeSnapShot(true);
 	EntityManager::ForEach<Illumination, TreeIndex>(_BranchNodeQuery, [](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index) 
 		{
@@ -328,8 +328,7 @@ Entity TreeUtilities::TreeManager::CreateTree(Material* treeSurfaceMaterial)
 	treeInfo.ApicalDominanceTimeVal = new std::vector<float>();
 	treeInfo.ApicalControlTimeVal = new std::vector<float>();
 	treeInfo.ApicalControlTimeLevelVal = new std::vector<std::vector<float>>();
-	treeInfo.Vertices = new std::vector<Vertex>();
-	treeInfo.Indices = new std::vector<unsigned>();
+	treeInfo.ConvexHull = nullptr;
 	EntityManager::SetComponentData(entity, treeInfo);
 	EntityManager::SetComponentData(entity, _TreeIndex);
 	MeshMaterialComponent* mmc = new MeshMaterialComponent();
@@ -347,8 +346,6 @@ void TreeUtilities::TreeManager::DeleteTree(Entity treeEntity)
 	delete treeInfo.ApicalDominanceTimeVal;
 	delete treeInfo.ApicalControlTimeVal;
 	delete treeInfo.ApicalControlTimeLevelVal;
-	delete treeInfo.Vertices;
-	delete treeInfo.Indices;
 	auto* mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(treeEntity);
 	delete mmc->_Mesh;
 	if (EntityManager::HasComponentData<BranchNodeInfo>(EntityManager::GetChildren(treeEntity).at(0))) {
@@ -361,7 +358,7 @@ void TreeUtilities::TreeManager::DeleteTree(Entity treeEntity)
 void TreeManager::DeleteAllTrees()
 {
 	std::vector<Entity> trees;
-	_TreeQuery.ToEntityArray(&trees);
+	_TreeQuery.ToEntityArray(trees);
 	for(auto& tree : trees)
 	{
 		DeleteTree(tree);
@@ -518,18 +515,18 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 
 	);
 
-	MeshMaterialComponent* mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(treeEntity);
+	auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(treeEntity);
 	TreeInfo treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
-	treeInfo.Vertices->clear();
-	treeInfo.Indices->clear();
+	std::vector<Vertex> vertices;
+	std::vector<unsigned> indices;
 
 	auto branchNode = EntityManager::GetChildren(treeEntity).at(0);
 	
 	if(EntityManager::GetChildrenAmount(branchNode) != 0){
-		SimpleMeshGenerator(EntityManager::GetChildren(branchNode).at(0), *treeInfo.Vertices, *treeInfo.Indices, glm::vec3(1, 0, 0), resolution);
-		if (mmc->_Mesh != nullptr) delete mmc->_Mesh;
+		SimpleMeshGenerator(EntityManager::GetChildren(branchNode).at(0), vertices, indices, glm::vec3(1, 0, 0), resolution);
+		delete mmc->_Mesh;
 		mmc->_Mesh = new Mesh();
-		mmc->_Mesh->SetVertices(17, *treeInfo.Vertices, *treeInfo.Indices, true);
+		mmc->_Mesh->SetVertices(17, vertices, indices, true);
 		treeInfo.MeshGenerated = true;
 	}
 
