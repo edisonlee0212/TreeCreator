@@ -84,6 +84,7 @@ namespace TreeUtilities {
         bool Pruned;
         bool IsApical;
         bool ApicalBudExist = false;
+        bool IsActivatedEndNode;
 #pragma endregion
 #pragma region Geometric
         float Length;
@@ -187,7 +188,6 @@ namespace TreeUtilities {
     struct TREEUTILITIES_API TreeInfo : ComponentBase {
         int CurrentSeed;
         float Height;
-        float ActiveLength;
         int MaxBranchingDepth;
         int LateralBudsCount;
         bool MeshGenerated;

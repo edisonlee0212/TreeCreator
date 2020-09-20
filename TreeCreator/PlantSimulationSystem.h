@@ -43,12 +43,12 @@ namespace TreeUtilities {
         void UpdateBranchNodeResource(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge);
         bool GrowShoots(Entity& branchNode, TreeInfo& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
         void DeactivateBud(BranchNodeInfo& branchNodeInfo, Bud& bud);
-        void PruneBranchNode(Entity& branchNode, TreeInfo& treeInfo);
         void EvaluatePruning(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
         void ApplyLocalTransform(Entity& treeEntity);
         void CalculateDirectGravityForce(Entity& treeEntity, float gravity);
         void BackPropagateForce(Entity& branchNode, float fixedPropagationCoefficient);
         void CalculateCrownShyness(float radius);
+        inline void PruneBranchNode(Entity& branchNode, BranchNodeInfo* branchNodeInfo) const;
     public:
         static TreeParameters ImportTreeParameters(const std::string& path);
         static void ExportTreeParameters(const std::string& path, TreeParameters& treeParameters);

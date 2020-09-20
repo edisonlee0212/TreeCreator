@@ -453,7 +453,6 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 		treeInfo.CurrentSeed = glm::linearRand(0.0f, 1.0f) * INT_MAX;
 	}
 	treeInfo.MaxBranchingDepth = 3;
-	treeInfo.ActiveLength = 0;
 	const auto timeOff = treeAge.Value + treeAge.ToGrowIteration + 4;
 	treeInfo.ApicalDominanceTimeVal->resize(timeOff);
 	treeInfo.GravitropismLevelVal->resize(timeOff);
@@ -621,7 +620,6 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, TreeIn
 					prevBranchNodeRotation = globalRawRotation;
 #pragma endregion
 #pragma endregion
-					treeInfo.ActiveLength += newBranchNodeInfo.DistanceToParent;
 #pragma region Create Apical Bud
 					Bud newApicalBud;
 					newApicalBud.EulerAngles = glm::vec3(glm::gaussRand(glm::vec2(0.0f), glm::vec2(glm::radians(treeParameters.VarianceApicalAngle / 2.0f))), 0.0f);
@@ -1165,28 +1163,23 @@ void TreeUtilities::PlantSimulationSystem::DeactivateBud(BranchNodeInfo& branchN
 	if (bud.IsApical) branchNodeInfo.ApicalBudExist = false;
 }
 
-void TreeUtilities::PlantSimulationSystem::PruneBranchNode(Entity& branchNode, TreeInfo& treeInfo)
-{
-	BranchNodeInfo branchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
-	branchNodeInfo.Pruned = true;
-	treeInfo.ActiveLength -= branchNodeInfo.DistanceToParent;
-	EntityManager::ForEachChild(branchNode, [this, &treeInfo](Entity child)
-		{
-			PruneBranchNode(child, treeInfo);
-		}
-	);
-	EntityManager::SetComponentData(branchNode, branchNodeInfo);
-}
 
 void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo)
 {
 	BranchNodeInfo branchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
-	if (branchNodeInfo.Pruned) return;
+	if (EntityManager::GetChildrenAmount(branchNode) == 0)
+	{
+		branchNodeInfo.IsActivatedEndNode = true;
+		EntityManager::SetComponentData(branchNode, branchNodeInfo);
+	}
+	if (branchNodeInfo.Pruned) {
+		return;
+	}
 	if (branchNodeInfo.Level == 0 && treeAge.Value < 3) return;
 	if (branchNodeInfo.Level == 1 && !branchNodeInfo.IsApical) {
 		float height = EntityManager::GetComponentData<LocalToWorld>(branchNode).Value[3].y;
 		if (height < treeParameters.LowBranchPruningFactor && height < treeInfo.Height) {
-			PruneBranchNode(branchNode, treeInfo);
+			PruneBranchNode(branchNode, &branchNodeInfo);
 			return;
 		}
 	}
@@ -1195,9 +1188,10 @@ void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& branchNode, T
 	float factor = ratioScale / glm::sqrt(branchNodeInfo.AccumulatedLength);
 	//factor *= branchNodeInfo.AccumulatedLight;
 	if (factor < treeParameters.PruningFactor) {
-		PruneBranchNode(branchNode, treeInfo);
+		PruneBranchNode(branchNode, &branchNodeInfo);
 		return;
 	}
+	
 	EntityManager::ForEachChild(branchNode, [this, &treeParameters, &treeAge, &treeInfo](Entity child)
 		{
 			EvaluatePruning(child, treeParameters, treeAge, treeInfo);
@@ -1260,22 +1254,32 @@ void PlantSimulationSystem::CalculateCrownShyness(float radius)
 	_BranchNodeQuery.ToComponentDataArray(&branchNodesLTWs);
 	_BranchNodeQuery.ToComponentDataArray(&branchNodesTreeIndices);
 
-	EntityManager::ForEach<LocalToWorld, BranchNodeInfo, TreeIndex>(_BranchNodeQuery, [radius, &branchNodesLTWs, &branchNodesTreeIndices](int i, Entity branchNode, LocalToWorld* ltw, BranchNodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<LocalToWorld, BranchNodeInfo, TreeIndex>(_BranchNodeQuery, [radius, &branchNodesLTWs, &branchNodesTreeIndices, this](int i, Entity branchNode, LocalToWorld* ltw, BranchNodeInfo* info, TreeIndex* index)
 		{
-			for(size_t i = 0; i < branchNodesLTWs.size(); i++)
+			if (info->Pruned) return;
+			//if (!info->IsActivatedEndNode) return;
+			for(size_t bi = 0; bi < branchNodesLTWs.size(); bi++)
 			{
-				if(branchNodesTreeIndices[i].Value != index->Value)
+				if(branchNodesTreeIndices[bi].Value != index->Value)
 				{
 					auto position1 = glm::vec2(ltw->Value[3].x, ltw->Value[3].z);
-					auto position2 = glm::vec2(branchNodesLTWs[i].Value[3].x, branchNodesLTWs[i].Value[3].z);
+					auto position2 = glm::vec2(branchNodesLTWs[bi].Value[3].x, branchNodesLTWs[bi].Value[3].z);
 					if(glm::distance(position1, position2) < radius)
 					{
 						info->Pruned = true;
+						info->IsActivatedEndNode = false;
 					}
 				}
 			}
 		}
 	);
+}
+
+inline void PlantSimulationSystem::PruneBranchNode(Entity& branchNode, BranchNodeInfo* branchNodeInfo) const
+{
+	branchNodeInfo->Pruned = true;
+	branchNodeInfo->IsActivatedEndNode = false;
+	EntityManager::SetComponentData(branchNode, branchNodeInfo);
 }
 
 TreeParameters PlantSimulationSystem::ImportTreeParameters(const std::string& path)

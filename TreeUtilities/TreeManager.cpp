@@ -230,7 +230,6 @@ void TreeUtilities::TreeManager::Init()
 		{
 			auto info = static_cast<TreeInfo*>(data);
 			ImGui::Text(("Height: " + std::to_string(info->Height)).c_str());
-			ImGui::Text(("Active Length: " + std::to_string(info->ActiveLength)).c_str());
 			ImGui::Text(("Max Branching Depth: " + std::to_string(info->MaxBranchingDepth)).c_str());
 			ImGui::Text(("Lateral Buds Count: " + std::to_string(info->LateralBudsCount)).c_str());
 			ImGui::Text(("Mesh Generated: " + std::to_string(info->MeshGenerated)).c_str());
@@ -383,6 +382,7 @@ Entity TreeUtilities::TreeManager::CreateBranchNode(TreeIndex treeIndex, Entity 
 	EntityManager::SetComponentData(entity, rml);
 	_BranchNodeIndex.Value++;
 	BranchNodeInfo branchInfo;
+	branchInfo.IsActivatedEndNode = false;
 	branchInfo.MaxActivatedChildLevel = 0;
 	EntityManager::SetComponentData(entity, branchInfo);
 	return entity;
