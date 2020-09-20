@@ -280,7 +280,7 @@ void TreeUtilities::TreeManager::CalculateBranchNodeIllumination()
 {
 	std::vector<Entity> branchNodes;
 	_BranchNodeQuery.ToEntityArray(&branchNodes);
-	TreeManager::GetLightEstimator()->TakeSnapShot(true);
+	GetLightEstimator()->TakeSnapShot(true);
 	EntityManager::ForEach<Illumination, TreeIndex>(_BranchNodeQuery, [](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index) 
 		{
 			illumination->LightDir = glm::vec3(0);
@@ -390,10 +390,10 @@ Entity TreeUtilities::TreeManager::CreateBranchNode(TreeIndex treeIndex, Entity 
 
 void TreeUtilities::TreeManager::ExportMeshToOBJ(Entity treeEntity, std::string filename)
 {
-	TreeInfo info = EntityManager::GetComponentData<TreeInfo>(treeEntity);
-
-	auto vertices = info.Vertices;
-	auto indices = info.Indices;
+	//TreeInfo info = EntityManager::GetComponentData<TreeInfo>(treeEntity);
+	auto mesh = GetMeshForTree(treeEntity);
+	auto vertices = mesh->GetVerticesUnsafe();
+	auto indices = mesh->GetIndicesUnsafe();
 
 	if (vertices->size() == 0) {
 		Debug::Log("Mesh not generated!");
@@ -529,7 +529,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 		SimpleMeshGenerator(EntityManager::GetChildren(branchNode).at(0), *treeInfo.Vertices, *treeInfo.Indices, glm::vec3(1, 0, 0), resolution);
 		if (mmc->_Mesh != nullptr) delete mmc->_Mesh;
 		mmc->_Mesh = new Mesh();
-		mmc->_Mesh->SetVertices(17, *treeInfo.Vertices, *treeInfo.Indices);
+		mmc->_Mesh->SetVertices(17, *treeInfo.Vertices, *treeInfo.Indices, true);
 		treeInfo.MeshGenerated = true;
 	}
 

@@ -106,6 +106,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
   <ItemGroup>
     <ClCompile Include="PlantSimulationSystem.cpp" />
     <ClCompile Include="NetworkSystem.cpp" />
+    <ClCompile Include="quickhull\QuickHull.cpp" />
     <ClCompile Include="SorghumReconstructionSystem.cpp" />
     <ClCompile Include="TreeCreator.cpp" />
     <ClCompile Include="TreeScene.cpp" />
@@ -113,6 +114,16 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
   <ItemGroup>
     <ClInclude Include="NetworkSystem.h" />
     <ClInclude Include="PlantSimulationSystem.h" />
+    <ClInclude Include="quickhull\ConvexHull.hpp" />
+    <ClInclude Include="quickhull\HalfEdgeMesh.hpp" />
+    <ClInclude Include="quickhull\MathUtils.hpp" />
+    <ClInclude Include="quickhull\QuickHull.hpp" />
+    <ClInclude Include="quickhull\Structs\Mesh.hpp" />
+    <ClInclude Include="quickhull\Structs\Plane.hpp" />
+    <ClInclude Include="quickhull\Structs\Pool.hpp" />
+    <ClInclude Include="quickhull\Structs\Ray.hpp" />
+    <ClInclude Include="quickhull\Structs\Vector3.hpp" />
+    <ClInclude Include="quickhull\Structs\VertexDataSource.hpp" />
     <ClInclude Include="SorghumReconstructionSystem.h" />
     <ClInclude Include="TreeScene.h" />
   </ItemGroup>

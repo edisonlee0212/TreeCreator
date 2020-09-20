@@ -1,5 +1,8 @@
 #include "PlantSimulationSystem.h"
 #include "TreeScene.h"
+
+#include "quickhull/quickhull.hpp"
+
 #include <gtx/matrix_decompose.hpp>
 #include <direct.h>
 void TreeUtilities::PlantSimulationSystem::DrawGUI()
@@ -1280,6 +1283,44 @@ inline void PlantSimulationSystem::PruneBranchNode(Entity& branchNode, BranchNod
 	branchNodeInfo->Pruned = true;
 	branchNodeInfo->IsActivatedEndNode = false;
 	EntityManager::SetComponentData(branchNode, branchNodeInfo);
+}
+
+void PlantSimulationSystem::BuildConvexHullForTree(Entity& tree)
+{
+	std::vector<LocalToWorld> branchNodesLTWs;
+	std::vector<BranchNodeInfo> branchNodesTreeInfos;
+	const auto treeIndex = EntityManager::GetComponentData<TreeIndex>(tree);
+	_BranchNodeQuery.ToComponentDataArray(treeIndex, &branchNodesLTWs);
+	_BranchNodeQuery.ToComponentDataArray(treeIndex, &branchNodesTreeInfos);
+
+	quickhull::QuickHull<float> qh; // Could be double as well
+	std::vector<quickhull::Vector3<float>> pointCloud;
+	for(size_t i = 0; i < branchNodesLTWs.size(); i++)
+	{
+		if(branchNodesTreeInfos[i].IsActivatedEndNode)
+		{
+			pointCloud.push_back(quickhull::Vector3<float>(branchNodesLTWs[i].Value[3].x, branchNodesLTWs[i].Value[3].y, branchNodesLTWs[i].Value[3].z));
+		}
+	}
+	auto hull = qh.getConvexHull(pointCloud, true, false);
+	const auto& indexBuffer = hull.getIndexBuffer();
+	const auto& vertexBuffer = hull.getVertexBuffer();
+	std::vector<Vertex> vertices;
+	std::vector<unsigned> indices;
+	indices.resize(indexBuffer.size());
+	vertices.resize(vertexBuffer.size());
+
+	for(size_t i = 0; i < indexBuffer.size(); i++)
+	{
+		indices[i] = indexBuffer[i];
+	}
+
+	for (size_t i = 0; i < vertexBuffer.size(); i++)
+	{
+		const auto v = vertexBuffer[i];
+		vertices[i].Position = glm::vec3(v.x, v.y, v.z);
+		vertices[i].TexCoords0 = glm::vec2(0, 0);
+	}
 }
 
 TreeParameters PlantSimulationSystem::ImportTreeParameters(const std::string& path)
