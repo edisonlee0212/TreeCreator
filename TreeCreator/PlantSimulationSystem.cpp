@@ -1562,15 +1562,17 @@ void TreeUtilities::PlantSimulationSystem::Update()
 	if(_DisplayConvexHull)
 	{
 		std::vector<LocalToWorld> ltws;
-		std::vector<TreeData> infos;
+		std::vector<Entity> trees;
 
 		_TreeQuery.ToComponentDataArray(ltws);
-		_TreeQuery.ToComponentDataArray(infos);
+		_TreeQuery.ToEntityArray(trees);
+
 		
-		for(size_t i = 0; i < ltws.size(); i++)
+		for(size_t i = 0; i < trees.size(); i++)
 		{
-			if (infos[i].ConvexHull != nullptr) {
-				RenderManager::DrawGizmoMesh(infos[i].ConvexHull.get(), glm::vec4(0.5, 0.5, 0.5, 1.0), Application::GetMainCameraComponent()->Value.get(), ltws[i].Value);
+			auto data = EntityManager::GetSharedComponent<TreeData>(trees[i]);
+			if (data->ConvexHull != nullptr) {
+				RenderManager::DrawGizmoMesh(data->ConvexHull.get(), glm::vec4(0.5, 0.5, 0.5, 1.0), Application::GetMainCameraComponent()->Value.get(), ltws[i].Value);
 			}
 		}
 		
