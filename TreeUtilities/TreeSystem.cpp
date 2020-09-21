@@ -10,31 +10,12 @@ void TreeUtilities::TreeSystem::DrawGUI()
 		ImGui::Separator();
 	}
 	ImGui::End();
-	
-	ImGui::Begin("Tree Manager");
-	TreeIndex index;
 	auto _SelectedTreeEntity = EntityEditorSystem::GetSelectedEntity();
-	for (auto tree : _TreeEntities) {
-		index = EntityManager::GetComponentData<TreeIndex>(tree);
-		std::string title = "Tree ";
-		title += std::to_string(index.Value);
-		bool opened = ImGui::TreeNodeEx(title.c_str(), ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_NoAutoOpenOnLog | (_SelectedTreeEntity == tree ? ImGuiTreeNodeFlags_Framed : ImGuiTreeNodeFlags_FramePadding));
-		if (opened) {
-			bool enabled = tree.Enabled();
-			title = "Delete##";
-			title += std::to_string(index.Value);
-			if (ImGui::Button(title.c_str())) {
-				TreeManager::DeleteTree(tree);
-			}
-		}
-	}
-	
-	ImGui::End();
-	
+
 	ImGui::Begin("Tree Inspector");
 	
-	if (!_SelectedTreeEntity.IsNull() && EntityManager::HasComponentData<TreeInfo>(_SelectedTreeEntity)) {
-		index = EntityManager::GetComponentData<TreeIndex>(_SelectedTreeEntity);
+	if (!_SelectedTreeEntity.IsNull() && EntityManager::HasComponentData<TreeData>(_SelectedTreeEntity)) {
+		TreeIndex index = EntityManager::GetComponentData<TreeIndex>(_SelectedTreeEntity);
 		TreeParameters tps = EntityManager::GetComponentData<TreeParameters>(_SelectedTreeEntity);
 		std::string title = "Tree ";
 		title += std::to_string(index.Value);

@@ -19,10 +19,12 @@ namespace TreeUtilities {
 #pragma endregion
 
 #pragma region BranchNode
-    struct RingMeshList : ComponentBase {
+    class TREEUTILITIES_API RingMeshList : public SharedComponentBase {
+    public:
         std::vector<RingMesh>* Rings;
         glm::vec3 NormalDir;
         int step;
+        std::size_t GetHashCode() override;
     };
 
     struct TREEUTILITIES_API Connection : ComponentBase {
@@ -184,8 +186,14 @@ namespace TreeUtilities {
         int ToGrowIteration;
         bool Enable;
     };
+
+    struct TREEUTILITIES_API TreeInfo : ComponentType
+    {
+	    
+    };
 	
-    struct TREEUTILITIES_API TreeInfo : ComponentBase {
+    class TREEUTILITIES_API TreeData : public SharedComponentBase {
+    public:
         int CurrentSeed;
         float Height;
         int MaxBranchingDepth;
@@ -198,6 +206,7 @@ namespace TreeUtilities {
         std::vector<std::vector<float>>* ApicalControlTimeLevelVal;
         Mesh* ConvexHull;
         float ResourceToGrow;
+        std::size_t GetHashCode() override;
     };
 #pragma endregion
     class TREEUTILITIES_API TreeManager :
@@ -220,7 +229,6 @@ namespace TreeUtilities {
         static bool _Ready;
         
         static void SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep = -1);
-        static void BranchNodeCleaner(Entity branchEntity);
     public:
         static void Init();
         static bool IsReady();
@@ -235,11 +243,10 @@ namespace TreeUtilities {
         
         static void CalculateBranchNodeIllumination();
 
-        static Mesh* GetMeshForTree(Entity treeEntity);
+        static std::shared_ptr<Mesh> GetMeshForTree(Entity treeEntity);
         static void GenerateSimpleMeshForTree(Entity treeEntity, float resolution, float subdivision = 1.0f);
-        static void DeleteTree(Entity treeEntity);
         static void DeleteAllTrees();
-        static Entity CreateTree(Material* treeSurfaceMaterial);
+        static Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial);
         static Entity CreateBranchNode(TreeIndex treeIndex, Entity parentEntity);
 
         static void ExportMeshToOBJ(Entity treeEntity, std::string filename);

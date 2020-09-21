@@ -1,76 +1,52 @@
 #include "SorghumReconstructionSystem.h"
 
 
-void SorghumRecon::SorghumReconstructionSystem::DeleteTruck(Entity& truckEntity)
-{
-	auto spline = EntityManager::GetComponentData<Spline>(truckEntity);
-	delete spline.Curves;
-	delete spline.Vertices;
-	delete spline.Indices;
-	auto rml = EntityManager::GetComponentData<RingMeshList>(truckEntity);
-	delete rml.Rings;
-	MeshMaterialComponent* mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(truckEntity);
-	if (mmc->_Mesh != nullptr) delete mmc->_Mesh;
-	EntityManager::ForEachChild(truckEntity, [](Entity child) {
-		auto childSpline = EntityManager::GetComponentData<Spline>(child);
-		delete childSpline.Curves;
-		delete childSpline.Vertices;
-		delete childSpline.Indices;
-		auto rml = EntityManager::GetComponentData<RingMeshList>(child);
-		delete rml.Rings;
-		MeshMaterialComponent* mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(child);
-		if (mmc->_Mesh != nullptr) delete mmc->_Mesh;
-		});
-	EntityManager::DeleteEntity(truckEntity);
-}
-
-Entity SorghumRecon::SorghumReconstructionSystem::CreateTruck()
+Entity SorghumRecon::SorghumReconstructionSystem::CreateTruck() const
 {
 	Entity ret = EntityManager::CreateEntity(_TruckArchetype);
 	Scale s;
 	s.Value = glm::vec3(1.0f);
-	Spline spline;
-	spline.Curves = new std::vector<BezierCurve>();
-	spline.Vertices = new std::vector<Vertex>();
-	spline.Indices = new std::vector<unsigned>();
-	RingMeshList rml;
-	rml.Rings = new std::vector<RingMesh>();
-	EntityManager::SetComponentData(ret, rml);
-	EntityManager::SetComponentData(ret, spline);
+	auto spline = std::make_shared<Spline>();
+	spline->Curves = new std::vector<BezierCurve>();
+	spline->Vertices = new std::vector<Vertex>();
+	spline->Indices = new std::vector<unsigned>();
+	auto rml = std::make_shared<RingMeshList>();
+	rml->Rings = new std::vector<RingMesh>();
+	EntityManager::SetSharedComponent(ret, rml);
+	EntityManager::SetSharedComponent(ret, spline);
 	EntityManager::SetComponentData(ret, s);
-	MeshMaterialComponent* mmc = new MeshMaterialComponent();
-	mmc->_Material = _TruckMaterial;
-	mmc->_Mesh = nullptr;
+	auto mmc = std::make_shared<MeshMaterialComponent>();
+	mmc->Material = _TruckMaterial;
 	EntityManager::SetSharedComponent(ret, mmc);
-
+	
 	return ret;
 }
 
-Entity SorghumRecon::SorghumReconstructionSystem::CreateLeafForTruck(Entity& truckEntity)
+Entity SorghumRecon::SorghumReconstructionSystem::CreateLeafForTruck(Entity& truckEntity) const
 {
 	Entity ret = EntityManager::CreateEntity(_LeafArchetype);
 	EntityManager::SetParent(ret, truckEntity);
 	LocalScale ls;
 	ls.Value = glm::vec3(1.0f);
-	Spline spline;
-	spline.Curves = new std::vector<BezierCurve>();
-	spline.Vertices = new std::vector<Vertex>();
-	spline.Indices = new std::vector<unsigned>();
-	RingMeshList rml;
-	rml.Rings = new std::vector<RingMesh>();
-	EntityManager::SetComponentData(ret, rml);
-	EntityManager::SetComponentData(ret, spline);
+	auto spline = std::make_shared<Spline>();
+	spline->Curves = new std::vector<BezierCurve>();
+	spline->Vertices = new std::vector<Vertex>();
+	spline->Indices = new std::vector<unsigned>();
+	auto rml = std::make_shared<RingMeshList>();
+	rml->Rings = new std::vector<RingMesh>();
+	EntityManager::SetSharedComponent(ret, rml);
+	EntityManager::SetSharedComponent(ret, spline);
 	EntityManager::SetComponentData(ret, ls);
 
-	MeshMaterialComponent* mmc = new MeshMaterialComponent();
-	mmc->_Material = _LeafMaterial;
-	mmc->_Mesh = nullptr;
+	auto mmc = std::make_shared<MeshMaterialComponent>();
+	mmc->Material = _LeafMaterial;
+	mmc->Mesh = nullptr;
 	EntityManager::SetSharedComponent(ret, mmc);
 
 	return ret;
 }
 
-Entity SorghumRecon::SorghumReconstructionSystem::CreatePlant(std::string path, float resolution)
+Entity SorghumRecon::SorghumReconstructionSystem::CreatePlant(std::string path, float resolution) const
 {
 	std::ifstream file(path, std::fstream::in);
 	if (!file.is_open())
@@ -82,40 +58,40 @@ Entity SorghumRecon::SorghumReconstructionSystem::CreatePlant(std::string path, 
 	int leafCount;
 	file >> leafCount;
 	Entity truck = CreateTruck();
-	Spline truckSpline = EntityManager::GetComponentData<Spline>(truck);
+	auto truckSpline = EntityManager::GetSharedComponent<Spline>(truck);
 	
 
 
-	truckSpline.StartingPoint = -1;
-	truckSpline.Import(file);
+	truckSpline->StartingPoint = -1;
+	truckSpline->Import(file);
 
 	//Recenter plant:
 	glm::vec3 posSum = glm::vec3(0.0f);
 	int pointAmount = 0;
-	for (auto& curve : *truckSpline.Curves) {
+	for (auto& curve : *truckSpline->Curves) {
 		pointAmount += 2;
 		posSum += curve.CP0;
 		posSum += curve.CP3;
 	}
 	posSum /= pointAmount;
-	for (auto& curve : *truckSpline.Curves) {
+	for (auto& curve : *truckSpline->Curves) {
 		curve.CP0 -= posSum;
 		curve.CP1 -= posSum;
 		curve.CP2 -= posSum;
 		curve.CP3 -= posSum;
 	}
 
-	EntityManager::SetComponentData(truck, truckSpline);
+	EntityManager::SetSharedComponent(truck, truckSpline);
 	for (int i = 0; i < leafCount; i++) {
 		Entity leaf = CreateLeafForTruck(truck);
-		Spline leafSpline = EntityManager::GetComponentData<Spline>(leaf);
+		auto leafSpline = EntityManager::GetSharedComponent<Spline>(leaf);
 		float startingPoint;
 		file >> startingPoint;
-		leafSpline.StartingPoint = startingPoint;
-		leafSpline.Import(file);
-		EntityManager::SetComponentData(leaf, leafSpline);
+		leafSpline->StartingPoint = startingPoint;
+		leafSpline->Import(file);
+		EntityManager::SetSharedComponent(leaf, leafSpline);
 
-		const float splineU = glm::clamp(startingPoint, 0.0f, 1.0f) * float(truckSpline.Curves->size());
+		const float splineU = glm::clamp(startingPoint, 0.0f, 1.0f) * float(truckSpline->Curves->size());
 
 		// Decompose the global u coordinate on the spline
 		float integerPart;
@@ -125,7 +101,7 @@ Entity SorghumRecon::SorghumReconstructionSystem::CreatePlant(std::string path, 
 		auto curveU = fractionalPart;
 
 		// If evaluating the very last point on the spline
-		if (curveIndex == truckSpline.Curves->size() && curveU <= 0.0f)
+		if (curveIndex == truckSpline->Curves->size() && curveU <= 0.0f)
 		{
 			// Flip to the end of the last patch
 			curveIndex--;
@@ -133,10 +109,10 @@ Entity SorghumRecon::SorghumReconstructionSystem::CreatePlant(std::string path, 
 		}
 
 		LocalTranslation lt;
-		lt.Value = truckSpline.Curves->at(curveIndex).Evaluate(curveU);
+		lt.Value = truckSpline->Curves->at(curveIndex).Evaluate(curveU);
 		EntityManager::SetComponentData(leaf, lt);
 	}
-
+	//TODO: fix this
 	EntityManager::ForEach<Spline, RingMeshList>(_SplineQuery, [resolution]
 	(int index, Entity entity, Spline* spline, RingMeshList* rml)
 		{
@@ -256,20 +232,19 @@ Entity SorghumRecon::SorghumReconstructionSystem::CreatePlant(std::string path, 
 			}
 		}
 	);
-	MeshMaterialComponent* mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(truck);
-	truckSpline = EntityManager::GetComponentData<Spline>(truck);
-	if (mmc->_Mesh != nullptr) delete mmc->_Mesh;
-	mmc->_Mesh = new Mesh();
-	mmc->_Mesh->SetVertices(17, *truckSpline.Vertices, *truckSpline.Indices);
+	auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(truck);
+	truckSpline = EntityManager::GetSharedComponent<Spline>(truck);
+	
+	mmc->Mesh = std::make_shared<Mesh>();
+	mmc->Mesh->SetVertices(17, *truckSpline->Vertices, *truckSpline->Indices);
 	EntityManager::SetComponentData(truck, truckSpline);
 
 	EntityManager::ForEachChild(truck, [](Entity child) 
 		{
-			MeshMaterialComponent* mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(child);
+			auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(child);
 			auto childSpline = EntityManager::GetComponentData<Spline>(child);
-			if (mmc->_Mesh != nullptr) delete mmc->_Mesh;
-			mmc->_Mesh = new Mesh();
-			mmc->_Mesh->SetVertices(17, *childSpline.Vertices, *childSpline.Indices);
+			mmc->Mesh = std::make_shared<Mesh>();
+			mmc->Mesh->SetVertices(17, *childSpline.Vertices, *childSpline.Indices);
 			EntityManager::SetComponentData(child, childSpline);
 		}
 	);
@@ -279,17 +254,17 @@ Entity SorghumRecon::SorghumReconstructionSystem::CreatePlant(std::string path, 
 void SorghumRecon::SorghumReconstructionSystem::OnCreate()
 {
 	_TruckArchetype = EntityManager::CreateEntityArchetype("Truck",
-		TruckInfo(), Spline(), RingMeshList(),
+		TruckInfo(), 
 		Translation(), Rotation(), Scale(), LocalToWorld(), MeshMaterialComponent()
 	);
 	_LeafArchetype = EntityManager::CreateEntityArchetype("Leaf",
-		LeafInfo(), Spline(), RingMeshList(),
+		LeafInfo(), 
 		LocalTranslation(), LocalRotation(), LocalScale(), LocalToParent(), LocalToWorld(), MeshMaterialComponent()
 	);
 	_SplineQuery = EntityManager::CreateEntityQuery();
 	EntityManager::SetEntityQueryAllFilters(_SplineQuery, Spline());
 
-	_TruckMaterial = new Material();
+	_TruckMaterial = std::make_shared<Material>();
 	_TruckMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto textureDiffuseTruck = new Texture2D(TextureType::DIFFUSE);
 	textureDiffuseTruck->LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), "");
@@ -298,7 +273,7 @@ void SorghumRecon::SorghumReconstructionSystem::OnCreate()
 	_TruckMaterial->Textures2Ds()->push_back(textureDiffuseTruck);
 	_TruckMaterial->Textures2Ds()->push_back(textureNormalTruck);
 
-	_LeafMaterial = new Material();
+	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto textureLeaf = new Texture2D(TextureType::DIFFUSE);
 	textureLeaf->LoadTexture(FileIO::GetResourcePath("Textures/green.png"), "");

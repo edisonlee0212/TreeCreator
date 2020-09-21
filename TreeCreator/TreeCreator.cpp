@@ -12,7 +12,7 @@ using namespace TreeUtilities;
 using namespace SorghumRecon;
 void InitGround();
 PlantSimulationSystem* InitPlantSimulationSystem();
-SorghumReconstructionSystem* InitSorghumResonstructionSystem();
+SorghumReconstructionSystem* InitSorghumReconstructionSystem();
 void LightSettingMenu();
 
 float lightAngle0 = 60;
@@ -36,9 +36,9 @@ int main()
 	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
 #pragma region Lights
-	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Light", Translation(), Rotation(), Scale(), LocalToWorld());
-	auto dlc = new DirectionalLightComponent();
-	Entity dle = EntityManager::CreateEntity(lightArchetype);
+	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Light", Translation(), Rotation(), LocalToWorld());
+	auto dlc = std::make_shared<DirectionalLightComponent>();
+	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
 	EntityManager::SetSharedComponent<DirectionalLightComponent>(dle, dlc);
 	
 #pragma endregion
@@ -84,25 +84,27 @@ int main()
 	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(-tilt, -1, 0), 0.1f);
 #pragma endregion
 	auto pss = InitPlantSimulationSystem();
-	/*
-	auto srSys = InitSorghumResonstructionSystem();
-	Entity plant1 = srSys->CreatePlant("skeleton_procedural_1.txt", 0.01f);
-	Entity plant2 = srSys->CreatePlant("skeleton_procedural_2.txt", 0.01f);
-	Translation t1;
-	Translation t2;
-	Rotation r1;
-	Rotation r2;
-	t1.Value = glm::vec3(-2.5, 2.0, 0);
-	t2.Value = glm::vec3(2.5, 2.0, 0);
-	r1.Value = glm::quat(glm::vec3(glm::radians(-90.0f), 0, 0));
-	r2.Value = glm::quat(glm::vec3(glm::radians(-90.0f), 0, 0));
 
-	EntityManager::SetComponentData(plant1, t1);
-	EntityManager::SetComponentData(plant1, r2);
+	const bool enableSorghumRecon = false;
+	if (enableSorghumRecon) {
+		auto srSys = InitSorghumReconstructionSystem();
+		Entity plant1 = srSys->CreatePlant("skeleton_procedural_1.txt", 0.01f);
+		Entity plant2 = srSys->CreatePlant("skeleton_procedural_2.txt", 0.01f);
+		Translation t1;
+		Translation t2;
+		Rotation r1;
+		Rotation r2;
+		t1.Value = glm::vec3(-2.5, 2.0, 0);
+		t2.Value = glm::vec3(2.5, 2.0, 0);
+		r1.Value = glm::quat(glm::vec3(glm::radians(-90.0f), 0, 0));
+		r2.Value = glm::quat(glm::vec3(glm::radians(-90.0f), 0, 0));
 
-	EntityManager::SetComponentData(plant2, t2);
-	EntityManager::SetComponentData(plant2, r2);
-	*/
+		EntityManager::SetComponentData(plant1, t1);
+		EntityManager::SetComponentData(plant1, r2);
+
+		EntityManager::SetComponentData(plant2, t2);
+		EntityManager::SetComponentData(plant2, r2);
+	}
 
 #pragma region Engine Loop
 	bool loopable = true;
@@ -138,13 +140,13 @@ int main()
 PlantSimulationSystem* InitPlantSimulationSystem() {
 	return Application::GetWorld()->CreateSystem<PlantSimulationSystem>(SystemGroup::SimulationSystemGroup);
 }
-SorghumReconstructionSystem* InitSorghumResonstructionSystem()
+SorghumReconstructionSystem* InitSorghumReconstructionSystem()
 {
 	return Application::GetWorld()->CreateSystem<SorghumReconstructionSystem>(SystemGroup::SimulationSystemGroup);
 }
 void InitGround() {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());
-	auto entity = EntityManager::CreateEntity(archetype);
+	auto entity = EntityManager::CreateEntity(archetype, "Floor");
 	Translation translation = Translation();
 	translation.Value = glm::vec3(0.0f, 0.0f, 0.0f);
 	Scale scale = Scale();
@@ -153,15 +155,15 @@ void InitGround() {
 	EntityManager::SetComponentData<Scale>(entity, scale);
 
 
-	auto mat = new Material();
+	auto mat = std::make_shared<Material>();
 	mat->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto texture = new Texture2D(TextureType::DIFFUSE);
 	texture->LoadTexture(FileIO::GetResourcePath("Textures/white.png"), "");
 	mat->Textures2Ds()->push_back(texture);
 	mat->SetMaterialProperty("material.shininess", 32.0f);
-	MeshMaterialComponent* meshMaterial = new MeshMaterialComponent();
-	meshMaterial->_Mesh = Default::Primitives::Quad;
-	meshMaterial->_Material = mat;
+	auto meshMaterial = std::make_shared<MeshMaterialComponent>();
+	meshMaterial->Mesh = Default::Primitives::Quad;
+	meshMaterial->Material = mat;
 	EntityManager::SetSharedComponent<MeshMaterialComponent>(entity, meshMaterial);
 
 }

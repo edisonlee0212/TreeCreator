@@ -39,12 +39,12 @@ void TreeUtilities::BranchNodeSystem::Update()
 	_BranchNodeLTWList.clear();
 	if (_ConfigFlags & BranchNodeSystem_DrawBranchNodes) {
 		_BranchNodeQuery.ToComponentDataArray(_BranchNodeLTWList);
-		if (_BranchNodeLTWList.size() != 0)RenderManager::DrawGizmoCubeInstanced(glm::vec4(0, 0, 1, 1), (glm::mat4*)_BranchNodeLTWList.data(), _BranchNodeLTWList.size(), Application::GetMainCameraComponent()->Value, glm::mat4(1.0f), 0.02f);
+		if (_BranchNodeLTWList.size() != 0)RenderManager::DrawGizmoCubeInstanced(glm::vec4(0, 0, 1, 1), (glm::mat4*)_BranchNodeLTWList.data(), _BranchNodeLTWList.size(), Application::GetMainCameraComponent()->Value.get(), glm::mat4(1.0f), 0.02f);
 	}
 	if (_ConfigFlags & BranchNodeSystem_DrawConnections) {
 		_ConnectionList.clear();
 		_BranchNodeQuery.ToComponentDataArray(_ConnectionList);
-		if (_ConnectionList.size() != 0)RenderManager::DrawGizmoMeshInstanced(Default::Primitives::Cylinder, glm::vec4(0.6f, 0.3f, 0, 1), (glm::mat4*)_ConnectionList.data(), _ConnectionList.size(), Application::GetMainCameraComponent()->Value, glm::mat4(1.0f), 1.0f);
+		if (_ConnectionList.size() != 0)RenderManager::DrawGizmoMeshInstanced(Default::Primitives::Cylinder.get(), glm::vec4(0.6f, 0.3f, 0, 1), (glm::mat4*)_ConnectionList.data(), _ConnectionList.size(), Application::GetMainCameraComponent()->Value.get(), glm::mat4(1.0f), 1.0f);
 	}
 	DrawGUI();
 }
@@ -64,7 +64,7 @@ void TreeUtilities::BranchNodeSystem::RefreshConnections()
 		glm::vec3 up;
 		rotation *= glm::quat(glm::vec3(glm::radians(90.0f), 0.0f, 0.0f));
 		glm::mat4 rotationMat = glm::mat4_cast(rotation);
-		if(EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(entity))) c->Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(0.0f));
+		if(EntityManager::HasComponentData<TreeData>(EntityManager::GetParent(entity))) c->Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(0.0f));
 		else c->Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(info->Thickness * lineWidth, glm::distance(translation, parentTranslation) / 2.0f, info->Thickness * lineWidth));
 		});
 }

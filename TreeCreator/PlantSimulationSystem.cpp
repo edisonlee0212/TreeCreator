@@ -448,7 +448,7 @@ void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 {
 #pragma region Collect tree data
-	TreeInfo treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
+	auto treeData = EntityManager::GetSharedComponent<TreeData>(treeEntity);
 	TreeAge treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
 	TreeIndex treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity);
@@ -461,37 +461,37 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 
 #pragma region Prepare info
 	if (treeAge.Value == 0) {
-		treeInfo.CurrentSeed = treeParameters.Seed;
-		srand(treeInfo.CurrentSeed);
+		treeData->CurrentSeed = treeParameters.Seed;
+		srand(treeData->CurrentSeed);
 	}
 	else {
-		srand(treeInfo.CurrentSeed);
-		treeInfo.CurrentSeed = glm::linearRand(0.0f, 1.0f) * INT_MAX;
+		srand(treeData->CurrentSeed);
+		treeData->CurrentSeed = glm::linearRand(0.0f, 1.0f) * INT_MAX;
 	}
-	treeInfo.MaxBranchingDepth = 3;
+	treeData->MaxBranchingDepth = 3;
 	const auto timeOff = treeAge.Value + treeAge.ToGrowIteration + 4;
-	treeInfo.ApicalDominanceTimeVal->resize(timeOff);
-	treeInfo.GravitropismLevelVal->resize(timeOff);
-	treeInfo.GravitropismLevelVal->resize(timeOff);
-	treeInfo.ApicalControlTimeVal->resize(timeOff);
-	treeInfo.ApicalControlTimeLevelVal->resize(timeOff);
+	treeData->ApicalDominanceTimeVal->resize(timeOff);
+	treeData->GravitropismLevelVal->resize(timeOff);
+	treeData->GravitropismLevelVal->resize(timeOff);
+	treeData->ApicalControlTimeVal->resize(timeOff);
+	treeData->ApicalControlTimeLevelVal->resize(timeOff);
 	for (auto t = 0; t < timeOff; t++) {
-		treeInfo.ApicalDominanceTimeVal->at(t) = glm::pow(treeParameters.ApicalDominanceAgeFactor, t);
-		treeInfo.GravitropismLevelVal->at(t) = treeParameters.GravitropismBase + t * treeParameters.GravitropismLevelFactor;
-		treeInfo.ApicalControlTimeVal->at(t) = treeParameters.ApicalControlBase * glm::pow(treeParameters.ApicalControlAgeFactor, t);
+		treeData->ApicalDominanceTimeVal->at(t) = glm::pow(treeParameters.ApicalDominanceAgeFactor, t);
+		treeData->GravitropismLevelVal->at(t) = treeParameters.GravitropismBase + t * treeParameters.GravitropismLevelFactor;
+		treeData->ApicalControlTimeVal->at(t) = treeParameters.ApicalControlBase * glm::pow(treeParameters.ApicalControlAgeFactor, t);
 
-		treeInfo.ApicalControlTimeLevelVal->at(t).resize(timeOff);
-		float baseApicalControlVal = treeInfo.ApicalControlTimeVal->at(t);
-		treeInfo.ApicalControlTimeLevelVal->at(t).at(0) = 1.0f;
+		treeData->ApicalControlTimeLevelVal->at(t).resize(timeOff);
+		float baseApicalControlVal = treeData->ApicalControlTimeVal->at(t);
+		treeData->ApicalControlTimeLevelVal->at(t).at(0) = 1.0f;
 		float currentVal = 1;
 		for (auto level = 1; level < timeOff; level++) {
 			if (baseApicalControlVal >= 1) {
 				currentVal *= 1.0f + (baseApicalControlVal - 1.0f) * glm::pow(treeParameters.ApicalControlLevelFactor, level);
-				treeInfo.ApicalControlTimeLevelVal->at(t).at(level) = 1.0f / currentVal;
+				treeData->ApicalControlTimeLevelVal->at(t).at(level) = 1.0f / currentVal;
 			}
 			else {
 				currentVal *= 1.0f - (1.0f - baseApicalControlVal) * glm::pow(treeParameters.ApicalControlLevelFactor, level);
-				treeInfo.ApicalControlTimeLevelVal->at(t).at(level) = currentVal;
+				treeData->ApicalControlTimeLevelVal->at(t).at(level) = currentVal;
 			}
 		}
 	}
@@ -506,19 +506,18 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	EntityManager::SetComponentData(rootBranchNode, tempBNInfo);
 	UpdateBranchNodeActivatedLevel(rootBranchNode);
 #pragma endregion
-	bool growed = GrowShoots(rootBranchNode, treeInfo, treeAge, treeParameters, treeIndex);
+	bool growed = GrowShoots(rootBranchNode, treeData, treeAge, treeParameters, treeIndex);
 	treeAge.Value++;
 	treeAge.ToGrowIteration--;
 	EntityManager::SetComponentData(treeEntity, treeAge);
 	if (growed) {
 		UpdateBranchNodeResource(rootBranchNode, treeParameters, treeAge);
-		EvaluatePruning(rootBranchNode, treeParameters, treeAge, treeInfo);
+		EvaluatePruning(rootBranchNode, treeParameters, treeAge, treeData);
 	}
-	EntityManager::SetComponentData(treeEntity, treeInfo);
 	return growed;
 }
 
-bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, TreeInfo& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex)
+bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex)
 {
 	BranchNodeInfo branchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
 	if (branchNodeInfo.Pruned) return false;
@@ -543,7 +542,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, TreeIn
 #pragma region Bud kill probability
 		float budKillProbability = 0;
 		if (bud.IsApical) {
-			budKillProbability = EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(branchNode)) ? 0 : treeParameters.ApicalBudKillProbability;
+			budKillProbability = EntityManager::HasComponentData<TreeData>(EntityManager::GetParent(branchNode)) ? 0 : treeParameters.ApicalBudKillProbability;
 		}
 		else {
 			budKillProbability = treeParameters.LateralBudKillProbability;
@@ -619,7 +618,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, TreeIn
 #pragma endregion
 
 #pragma region Apply phototropism and gravitropism
-					float gravitropism = treeInfo.GravitropismLevelVal->at(newBranchNodeInfo.Level);
+					float gravitropism = treeInfo->GravitropismLevelVal->at(newBranchNodeInfo.Level);
 					glm::quat globalRawRotation = prevBranchNodeRotation * newBranchNodeInfo.DesiredLocalRotation;
 					glm::vec3 rawFront = globalRawRotation * glm::vec3(0.0f, 0.0f, -1.05f);
 					glm::vec3 rawUp = globalRawRotation * glm::vec3(0.0f, 1.05f, 0.0f);
@@ -670,7 +669,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, TreeIn
 				float localInhibitor = 0;
 				if (treeAge.Value <= 1) localInhibitor += treeParameters.ApicalDominanceBase;
 				else {
-					localInhibitor += treeParameters.ApicalDominanceBase * treeInfo.ApicalDominanceTimeVal->at(treeAge.Value);
+					localInhibitor += treeParameters.ApicalDominanceBase * treeInfo->ApicalDominanceTimeVal->at(treeAge.Value);
 				}
 				if (bud.IsApical) {
 					branchNodeInfo.Inhibitor += localInhibitor;
@@ -1037,14 +1036,14 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 }
 
 
-inline float TreeUtilities::PlantSimulationSystem::GetApicalControl(TreeInfo& treeInfo, BranchNodeInfo& branchNodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const
+inline float TreeUtilities::PlantSimulationSystem::GetApicalControl(std::shared_ptr<TreeData>& treeInfo, BranchNodeInfo& branchNodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const
 {
 	float apicalControl = treeParameters.ApicalControlBase * glm::pow(treeParameters.ApicalControlAgeFactor, treeAge.Value);
-	if (treeInfo.ApicalControlTimeVal->at(treeAge.Value) < 1.0f) {
+	if (treeInfo->ApicalControlTimeVal->at(treeAge.Value) < 1.0f) {
 		int reversedLevel = branchNodeInfo.MaxActivatedChildLevel - level + 1;
-		return treeInfo.ApicalControlTimeLevelVal->at(treeAge.Value)[reversedLevel];
+		return treeInfo->ApicalControlTimeLevelVal->at(treeAge.Value)[reversedLevel];
 	}
-	return treeInfo.ApicalControlTimeLevelVal->at(treeAge.Value)[level];
+	return treeInfo->ApicalControlTimeLevelVal->at(treeAge.Value)[level];
 }
 
 void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeLength(Entity& branchNode)
@@ -1180,7 +1179,7 @@ void TreeUtilities::PlantSimulationSystem::DeactivateBud(BranchNodeInfo& branchN
 }
 
 
-void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo)
+void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge, std::shared_ptr<TreeData>& treeInfo)
 {
 	BranchNodeInfo branchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
 	if (EntityManager::GetChildrenAmount(branchNode) == 0)
@@ -1194,7 +1193,7 @@ void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& branchNode, T
 	if (branchNodeInfo.Level == 0 && treeAge.Value < 3) return;
 	if (branchNodeInfo.Level == 1 && !branchNodeInfo.IsApical) {
 		float height = EntityManager::GetComponentData<LocalToWorld>(branchNode).Value[3].y;
-		if (height < treeParameters.LowBranchPruningFactor && height < treeInfo.Height) {
+		if (height < treeParameters.LowBranchPruningFactor && height < treeInfo->Height) {
 			PruneBranchNode(branchNode, &branchNodeInfo);
 			return;
 		}
@@ -1219,7 +1218,7 @@ void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntit
 {
 	glm::mat4 treeTransform = EntityManager::GetComponentData<LocalToWorld>(treeEntity).Value;
 	auto treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity).Value;
-	auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
+	auto treeInfo = EntityManager::GetSharedComponent<TreeData>(treeEntity);
 	std::mutex heightMutex;
 	float treeHeight = 0.0f;
 	EntityManager::ForEach<TreeIndex, LocalToWorld, BranchNodeInfo>(_BranchNodeQuery,
@@ -1235,8 +1234,7 @@ void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntit
 			}
 		}
 	);
-	treeInfo.Height = treeHeight;
-	EntityManager::SetComponentData(treeEntity, treeInfo);
+	treeInfo->Height = treeHeight;
 }
 
 void TreeUtilities::PlantSimulationSystem::CalculateDirectGravityForce(Entity& treeEntity, float gravity)
@@ -1301,18 +1299,18 @@ inline void PlantSimulationSystem::PruneBranchNode(Entity& branchNode, BranchNod
 void PlantSimulationSystem::BuildConvexHullForTree(Entity& tree)
 {
 	std::vector<LocalToWorld> branchNodesLTWs;
-	std::vector<BranchNodeInfo> branchNodesTreeInfos;
+	std::vector<BranchNodeInfo> branchNodeInfos;
 	const auto treeIndex = EntityManager::GetComponentData<TreeIndex>(tree);
 	_BranchNodeQuery.ToComponentDataArray(treeIndex, branchNodesLTWs);
-	_BranchNodeQuery.ToComponentDataArray(treeIndex, branchNodesTreeInfos);
+	_BranchNodeQuery.ToComponentDataArray(treeIndex, branchNodeInfos);
 
 	quickhull::QuickHull<float> qh; // Could be double as well
 	std::vector<quickhull::Vector3<float>> pointCloud;
 	for(size_t i = 0; i < branchNodesLTWs.size(); i++)
 	{
-		//if(branchNodesTreeInfos[i].IsActivatedEndNode)
+		//if(branchNodesInfos[i].IsActivatedEndNode)
 		{
-			const auto transform = branchNodesTreeInfos[i].GlobalTransform;
+			const auto transform = branchNodeInfos[i].GlobalTransform;
 			pointCloud.emplace_back(transform[3].x, transform[3].y, transform[3].z);
 		}
 	}
@@ -1335,12 +1333,10 @@ void PlantSimulationSystem::BuildConvexHullForTree(Entity& tree)
 		vertices[i].Position = glm::vec3(v.x, v.y, v.z);
 		vertices[i].TexCoords0 = glm::vec2(0, 0);
 	}
-	auto treeInfo = EntityManager::GetComponentData<TreeInfo>(tree);
-	delete treeInfo.ConvexHull;
-	treeInfo.ConvexHull = new Mesh();
-	treeInfo.ConvexHull->SetVertices(17, vertices, indices, true);
-
-	EntityManager::SetComponentData(tree, treeInfo);
+	auto treeInfo = EntityManager::GetSharedComponent<TreeData>(tree);
+	delete treeInfo->ConvexHull;
+	treeInfo->ConvexHull = new Mesh();
+	treeInfo->ConvexHull->SetVertices(17, vertices, indices, true);
 }
 
 TreeParameters PlantSimulationSystem::ImportTreeParameters(const std::string& path)
@@ -1533,7 +1529,7 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 		_TempImportFilePath[i] = 0;
 	}
 
-	_DefaultTreeSurfaceMaterial1 = new Material();
+	_DefaultTreeSurfaceMaterial1 = std::make_shared<Material>();
 	_DefaultTreeSurfaceMaterial1->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto textureDiffuse1 = new Texture2D(TextureType::DIFFUSE);
 	textureDiffuse1->LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), "");
@@ -1542,7 +1538,7 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultTreeSurfaceMaterial1->Textures2Ds()->push_back(textureDiffuse1);
 	_DefaultTreeSurfaceMaterial1->Textures2Ds()->push_back(textureNormal1);
 
-	_DefaultTreeSurfaceMaterial2 = new Material();
+	_DefaultTreeSurfaceMaterial2 = std::make_shared<Material>();
 	_DefaultTreeSurfaceMaterial2->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto textureDiffuse2 = new Texture2D(TextureType::DIFFUSE);
 	textureDiffuse2->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"), "");
@@ -1565,7 +1561,7 @@ void TreeUtilities::PlantSimulationSystem::Update()
 	if(_DisplayConvexHull)
 	{
 		std::vector<LocalToWorld> ltws;
-		std::vector<TreeInfo> infos;
+		std::vector<TreeData> infos;
 
 		_TreeQuery.ToComponentDataArray(ltws);
 		_TreeQuery.ToComponentDataArray(infos);
@@ -1573,7 +1569,7 @@ void TreeUtilities::PlantSimulationSystem::Update()
 		for(size_t i = 0; i < ltws.size(); i++)
 		{
 			if (infos[i].ConvexHull != nullptr) {
-				RenderManager::DrawGizmoMesh(infos[i].ConvexHull, glm::vec4(0.5, 0.5, 0.5, 1.0), Application::GetMainCameraComponent()->Value, ltws[i].Value);
+				RenderManager::DrawGizmoMesh(infos[i].ConvexHull, glm::vec4(0.5, 0.5, 0.5, 1.0), Application::GetMainCameraComponent()->Value.get(), ltws[i].Value);
 			}
 		}
 		
@@ -1581,7 +1577,7 @@ void TreeUtilities::PlantSimulationSystem::Update()
 	DrawGUI();
 }
 
-Entity TreeUtilities::PlantSimulationSystem::CreateTree(Material* treeSurfaceMaterial, TreeParameters treeParameters, glm::vec3 position, bool enabled)
+Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters treeParameters, glm::vec3 position, bool enabled)
 {
 	auto treeEntity = TreeManager::CreateTree(treeSurfaceMaterial);
 	Entity branchNodeEntity = TreeManager::CreateBranchNode(EntityManager::GetComponentData<TreeIndex>(treeEntity), treeEntity);
@@ -1625,14 +1621,13 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(Material* treeSurfaceMat
 	branchNodeInfo.DistanceToParent = 0;
 	branchNodeInfo.DesiredGlobalRotation = glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
 	branchNodeInfo.DesiredLocalRotation = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
-	TreeInfo treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
-	treeInfo.MeshGenerated = false;
+	auto treeInfo = EntityManager::GetSharedComponent<TreeData>(treeEntity);
+	treeInfo->MeshGenerated = false;
 	glm::mat4 transform = glm::identity<glm::mat4>();
 	UpdateLocalTransform(branchNodeEntity, treeParameters, transform, r.Value);
 
 	EntityManager::SetComponentData(branchNodeEntity, branchNodeInfo);
 	EntityManager::SetComponentData(treeEntity, treeParameters);
-	EntityManager::SetComponentData(treeEntity, treeInfo);
 	EntityManager::SetComponentData(treeEntity, age);
 	_Growing = true;
 	return treeEntity;

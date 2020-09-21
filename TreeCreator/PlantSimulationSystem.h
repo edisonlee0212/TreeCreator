@@ -27,8 +27,8 @@ namespace TreeUtilities {
 		int _CurrentFocusedNewTreeIndex = 0;
 		std::vector<TreeParameters> _NewTreeParameters;
 		std::vector<glm::vec3> _NewTreePositions;
-		Material* _DefaultTreeSurfaceMaterial1 = nullptr;
-		Material* _DefaultTreeSurfaceMaterial2 = nullptr;
+		std::shared_ptr<Material> _DefaultTreeSurfaceMaterial1;
+		std::shared_ptr<Material> _DefaultTreeSurfaceMaterial2;
 #pragma endregion
 
 		unsigned int _ConfigFlags = 0;
@@ -37,15 +37,15 @@ namespace TreeUtilities {
 		EntityQuery _TreeQuery;
 		EntityQuery _BranchNodeQuery;
 
-		float GetApicalControl(TreeInfo& treeInfo, BranchNodeInfo& branchNodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
+		float GetApicalControl(std::shared_ptr<TreeData>& treeInfo, BranchNodeInfo& branchNodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
 		void DrawGUI();
 		void UpdateBranchNodeLength(Entity& branchNode);
 		void UpdateBranchNodeActivatedLevel(Entity& branchNode);
 		void UpdateLocalTransform(Entity& branchNode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation);
 		void UpdateBranchNodeResource(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge);
-		bool GrowShoots(Entity& branchNode, TreeInfo& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
+		bool GrowShoots(Entity& branchNode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
 		void DeactivateBud(BranchNodeInfo& branchNodeInfo, Bud& bud);
-		void EvaluatePruning(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
+		void EvaluatePruning(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge, std::shared_ptr<TreeData>& treeInfo);
 		void ApplyLocalTransform(Entity& treeEntity);
 		void CalculateDirectGravityForce(Entity& treeEntity, float gravity);
 		void BackPropagateForce(Entity& branchNode, float fixedPropagationCoefficient);
@@ -66,7 +66,7 @@ namespace TreeUtilities {
 		void OnDestroy() override;
 		void Update() override;
 		void FixedUpdate() override;
-		Entity CreateTree(Material* treeSurfaceMaterial, TreeParameters parameters, glm::vec3 position, bool enabled = true);
+		Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters parameters, glm::vec3 position, bool enabled = true);
 		void CreateDefaultTree();
 	};
 }

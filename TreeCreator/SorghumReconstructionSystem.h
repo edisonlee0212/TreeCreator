@@ -10,13 +10,21 @@ namespace SorghumRecon {
 	struct LeafInfo : ComponentBase {
 	};
 
-	struct Spline : ComponentBase {
+	class Spline : public SharedComponentBase {
+	public:
 		float StartingPoint;
 		std::vector<BezierCurve>* Curves;
 		std::vector<Vertex>* Vertices;
 		std::vector<unsigned>* Indices;
 		void Import(std::ifstream& stream);
+
+		size_t GetHashCode() override;
 	};
+
+	inline size_t Spline::GetHashCode()
+	{
+		return (size_t)this;
+	}
 
 
 	class SorghumReconstructionSystem :
@@ -26,21 +34,19 @@ namespace SorghumRecon {
 		EntityArchetype _LeafArchetype;
 		EntityQuery _SplineQuery;
 
-		Material* _TruckMaterial;
-		Material* _LeafMaterial;
+		std::shared_ptr<Material> _TruckMaterial;
+		std::shared_ptr<Material> _LeafMaterial;
 
-		void DeleteTruck(Entity& truckEntity);
-
-		Entity CreateTruck();
-		Entity CreateLeafForTruck(Entity& truckEntity);
+		Entity CreateTruck() const;
+		Entity CreateLeafForTruck(Entity& truckEntity) const;
 	public:
 
-		Entity CreatePlant(std::string path, float resolution);
+		Entity CreatePlant(std::string path, float resolution) const;
 
-		void OnCreate();
-		void OnDestroy();
-		void Update();
-		void FixedUpdate();
+		void OnCreate() override;
+		void OnDestroy() override;
+		void Update() override;
+		void FixedUpdate() override;
 	};
 
 }
