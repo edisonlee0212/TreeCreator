@@ -39,7 +39,7 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 	//newNormalDir = glm::cross(glm::cross(dir, newNormalDir), dir);
 	
 	auto list = EntityManager::GetSharedComponent<RingMeshList>(branchNode);
-	auto rings = list->Rings;
+	//auto rings = list->Rings;
 	auto step = list->step;
 	//For stitching
 	int pStep = parentStep > 0 ? parentStep : step;
@@ -50,7 +50,7 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 	Vertex archetype;
 	float textureXstep = 1.0f / pStep * 4.0f;
 	for (int i = 0; i < pStep; i++) {
-		archetype.Position = rings->at(0).GetPoint(newNormalDir, angleStep * i, true);
+		archetype.Position = list->Rings.at(0).GetPoint(newNormalDir, angleStep * i, true);
 		float x = i < (pStep / 2) ? i * textureXstep : (pStep - i) * textureXstep;
 		archetype.TexCoords0 = glm::vec2(x, 0.0f);
 		vertices.push_back(archetype);
@@ -114,10 +114,10 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 
 	vertexIndex += pStep;
 	textureXstep = 1.0f / step * 4.0f;
-	int ringSize = rings->size();
+	int ringSize = list->Rings.size();
 	for (int ringIndex = 0; ringIndex < ringSize; ringIndex++) {
 		for (int i = 0; i < step; i++) {
-			archetype.Position = rings->at(ringIndex).GetPoint(newNormalDir, angleStep * i, false);
+			archetype.Position = list->Rings.at(ringIndex).GetPoint(newNormalDir, angleStep * i, false);
 			float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
 			float y = ringIndex % 2 == 0 ? 1.0f : 0.0f;
 			archetype.TexCoords0 = glm::vec2(x, y);
@@ -311,11 +311,6 @@ Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurf
 {
 	auto entity = EntityManager::CreateEntity(_TreeArchetype);
 	std::shared_ptr<TreeData> treeData = std::make_shared<TreeData>();
-	treeData->GravitropismLevelVal = new std::vector<float>();
-	treeData->ApicalDominanceTimeVal = new std::vector<float>();
-	treeData->ApicalControlTimeVal = new std::vector<float>();
-	treeData->ApicalControlTimeLevelVal = new std::vector<std::vector<float>>();
-	treeData->ConvexHull = nullptr;
 	EntityManager::SetSharedComponent(entity, treeData);
 	EntityManager::SetComponentData(entity, _TreeIndex);
 	auto mmc = std::make_shared<MeshMaterialComponent>();
@@ -343,7 +338,6 @@ Entity TreeUtilities::TreeManager::CreateBranchNode(TreeIndex treeIndex, Entity 
 	BudList ob = BudList();
 	ob.Buds = new std::vector<Bud>();
 	std::shared_ptr<RingMeshList> rml = std::make_shared<RingMeshList>();
-	rml->Rings = new std::vector<RingMesh>();
 	EntityManager::SetComponentData(entity, treeIndex);
 	EntityManager::SetParent(entity, parentEntity);
 	EntityManager::SetComponentData(entity, _BranchNodeIndex);
@@ -441,8 +435,8 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			if (EntityManager::HasComponentData<TreeData>(EntityManager::GetParent(branchNode))) return;
 
 			auto list = EntityManager::GetSharedComponent<RingMeshList>(branchNode);
-			std::vector<RingMesh>* rings = list->Rings;
-			rings->clear();
+			//std::vector<RingMesh> rings = list->Rings;
+			list->Rings.clear();
 			glm::quat parentRotation = info->ParentRotation;
 			glm::vec3 parentTranslation = info->ParentTranslation;
 			float parentThickness = info->ParentThickness;
@@ -477,13 +471,13 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			//list->NormalDir = fromDir == dir ? glm::cross(dir, glm::vec3(0, 0, 1)) : glm::cross(fromDir, dir);
 
 			for (int i = 1; i < amount; i++) {
-				rings->push_back(RingMesh(
+				list->Rings.emplace_back(
 					curve.GetPoint(posStep * (i - 1)), curve.GetPoint(posStep * i),
 					fromDir + (float)(i - 1) * dirStep, fromDir + (float)i * dirStep,
-					parentThickness + (float)(i - 1) * radiusStep, parentThickness + (float)i * radiusStep));
+					parentThickness + (float)(i - 1) * radiusStep, parentThickness + (float)i * radiusStep);
 			}
-			if (amount > 1)rings->push_back(RingMesh(curve.GetPoint(1.0f - posStep), translation, dir - dirStep, dir, info->Thickness - radiusStep, info->Thickness));
-			else rings->push_back(RingMesh(parentTranslation, translation, fromDir, dir, parentThickness, info->Thickness));
+			if (amount > 1)list->Rings.emplace_back(curve.GetPoint(1.0f - posStep), translation, dir - dirStep, dir, info->Thickness - radiusStep, info->Thickness);
+			else list->Rings.emplace_back(parentTranslation, translation, fromDir, dir, parentThickness, info->Thickness);
 #pragma endregion
 		}
 

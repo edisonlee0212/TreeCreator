@@ -13,9 +13,9 @@ namespace SorghumRecon {
 	class Spline : public SharedComponentBase {
 	public:
 		float StartingPoint;
-		std::vector<BezierCurve>* Curves;
-		std::vector<Vertex>* Vertices;
-		std::vector<unsigned>* Indices;
+		std::vector<BezierCurve> Curves;
+		std::vector<Vertex> Vertices;
+		std::vector<unsigned> Indices;
 		void Import(std::ifstream& stream);
 
 		size_t GetHashCode() override;

@@ -21,7 +21,7 @@ namespace TreeUtilities {
 #pragma region BranchNode
     class TREEUTILITIES_API RingMeshList : public SharedComponentBase {
     public:
-        std::vector<RingMesh>* Rings;
+        std::vector<RingMesh> Rings;
         glm::vec3 NormalDir;
         int step;
         std::size_t GetHashCode() override;
@@ -200,11 +200,11 @@ namespace TreeUtilities {
         int LateralBudsCount;
         bool MeshGenerated;
         bool FoliageGenerated;
-        std::vector<float>* ApicalDominanceTimeVal;
-        std::vector<float>* GravitropismLevelVal;
-        std::vector<float>* ApicalControlTimeVal;
-        std::vector<std::vector<float>>* ApicalControlTimeLevelVal;
-        Mesh* ConvexHull;
+        std::vector<float> ApicalDominanceTimeVal;
+        std::vector<float> GravitropismLevelVal;
+        std::vector<float> ApicalControlTimeVal;
+        std::vector<std::vector<float>> ApicalControlTimeLevelVal;
+        std::shared_ptr<Mesh> ConvexHull;
         float ResourceToGrow;
         std::size_t GetHashCode() override;
     };

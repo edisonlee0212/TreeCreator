@@ -85,7 +85,7 @@ int main()
 #pragma endregion
 	auto pss = InitPlantSimulationSystem();
 
-	const bool enableSorghumRecon = false;
+	const bool enableSorghumRecon = true;
 	if (enableSorghumRecon) {
 		auto srSys = InitSorghumReconstructionSystem();
 		Entity plant1 = srSys->CreatePlant("skeleton_procedural_1.txt", 0.01f);
