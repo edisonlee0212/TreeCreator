@@ -51,8 +51,10 @@ namespace TreeUtilities {
         float Value;
     };
 
-    struct TREEUTILITIES_API BudList : ComponentBase {
-        std::vector<Bud>* Buds;
+    class TREEUTILITIES_API BudList : public SharedComponentBase {
+    public:
+	    size_t GetHashCode() override;
+	    std::vector<Bud> Buds;
     };
 
 

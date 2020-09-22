@@ -534,10 +534,10 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, std::s
 	if (branchNodeInfo.ActivatedBudsAmount == 0) return ret;
 #pragma endregion
 	auto branchNodeIllumination = EntityManager::GetComponentData<Illumination>(branchNode);
-	auto budsList = EntityManager::GetComponentData<BudList>(branchNode);
+	auto budsList = EntityManager::GetSharedComponent<BudList>(branchNode);
 	auto branchNodeIndex = EntityManager::GetComponentData<BranchNodeIndex>(branchNode);
 	float lateralInhibitorToAdd = 0;
-	for (auto& bud : *budsList.Buds) {
+	for (auto& bud : budsList->Buds) {
 		if (!bud.IsActive) continue;
 #pragma region Bud kill probability
 		float budKillProbability = 0;
@@ -596,7 +596,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, std::s
 				for (int selectedNewNodeIndex = 0; selectedNewNodeIndex < branchNodesToGrow; selectedNewNodeIndex++) {
 #pragma region Setup branch node
 					Entity newBranchNode = TreeManager::CreateBranchNode(treeIndex, prevBranchNode);
-					BudList newBranchNodeBudList = EntityManager::GetComponentData<BudList>(newBranchNode);
+					auto newBranchNodeBudList = EntityManager::GetSharedComponent<BudList>(newBranchNode);
 					BranchNodeInfo newBranchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(newBranchNode);
 					newBranchNodeInfo.ApicalBudExist = true;
 					newBranchNodeInfo.ActivatedBudsAmount = treeParameters.LateralBudPerNode + 1;
@@ -641,7 +641,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, std::s
 					newApicalBud.IsActive = true;
 					newApicalBud.IsApical = true;
 					newApicalBud.StartAge = treeAge.Value;
-					newBranchNodeBudList.Buds->push_back(newApicalBud);
+					newBranchNodeBudList->Buds.push_back(newApicalBud);
 #pragma endregion
 #pragma region Create Lateral Buds
 					for (int selectedNewBudIndex = 0; selectedNewBudIndex < treeParameters.LateralBudPerNode; selectedNewBudIndex++) {
@@ -652,14 +652,13 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, std::s
 						newLateralBud.IsActive = true;
 						newLateralBud.IsApical = false;
 						newLateralBud.StartAge = treeAge.Value;
-						newBranchNodeBudList.Buds->push_back(newLateralBud);
+						newBranchNodeBudList->Buds.push_back(newLateralBud);
 					}
 #pragma endregion
 					prevEulerAngle = newApicalBud.EulerAngles;
 					prevBranchNode = newBranchNode;
 					prevBranchNodeInfo = newBranchNodeInfo;
 #pragma region Apply new branch node info
-					EntityManager::SetComponentData(newBranchNode, newBranchNodeBudList);
 					EntityManager::SetComponentData(newBranchNode, newBranchNodeInfo);
 #pragma endregion
 				}
@@ -1610,8 +1609,8 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	bud.IsApical = true;
 	bud.StartAge = 0;
 
-	BudList list = EntityManager::GetComponentData<BudList>(branchNodeEntity);
-	list.Buds->push_back(bud);
+	auto list = EntityManager::GetSharedComponent<BudList>(branchNodeEntity);
+	list->Buds.push_back(bud);
 
 	BranchNodeInfo branchNodeInfo;
 	branchNodeInfo.IsActivatedEndNode = false;

@@ -26,6 +26,11 @@ std::size_t RingMeshList::GetHashCode()
 	return (size_t)this;
 }
 
+size_t BudList::GetHashCode()
+{
+	return (size_t)this;
+}
+
 std::size_t TreeData::GetHashCode()
 {
 	return (size_t)this;
@@ -39,7 +44,6 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 	//newNormalDir = glm::cross(glm::cross(dir, newNormalDir), dir);
 	
 	auto list = EntityManager::GetSharedComponent<RingMeshList>(branchNode);
-	//auto rings = list->Rings;
 	auto step = list->step;
 	//For stitching
 	int pStep = parentStep > 0 ? parentStep : step;
@@ -158,7 +162,7 @@ void TreeUtilities::TreeManager::Init()
 		"BranchNode",
 		LocalToWorld(), Connection(),
 		Illumination(), Gravity(),
-		BranchNodeIndex(), BranchNodeInfo(), TreeIndex(), BudList()
+		BranchNodeIndex(), BranchNodeInfo(), TreeIndex()
 	);
 	_TreeArchetype = EntityManager::CreateEntityArchetype(
 		"Tree",
@@ -335,14 +339,11 @@ void TreeManager::DeleteAllTrees()
 Entity TreeUtilities::TreeManager::CreateBranchNode(TreeIndex treeIndex, Entity parentEntity)
 {
 	auto entity = EntityManager::CreateEntity(_BranchNodeArchetype);
-	BudList ob = BudList();
-	ob.Buds = new std::vector<Bud>();
-	std::shared_ptr<RingMeshList> rml = std::make_shared<RingMeshList>();
+	auto ob = std::make_shared<BudList>();
 	EntityManager::SetComponentData(entity, treeIndex);
 	EntityManager::SetParent(entity, parentEntity);
 	EntityManager::SetComponentData(entity, _BranchNodeIndex);
-	EntityManager::SetComponentData(entity, ob);
-	EntityManager::SetSharedComponent(entity, rml);
+	EntityManager::SetSharedComponent(entity, ob);
 	_BranchNodeIndex.Value++;
 	BranchNodeInfo branchInfo;
 	branchInfo.IsActivatedEndNode = false;
@@ -429,13 +430,20 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 		Debug::Error("TreeManager: Not initialized!");
 		return;
 	}
-	//Prepare ring mesh.
-	EntityManager::ForEach<BranchNodeInfo>(_BranchNodeQuery, [resolution, subdivision](int i, Entity branchNode, BranchNodeInfo* info) 
-		{
-			if (EntityManager::HasComponentData<TreeData>(EntityManager::GetParent(branchNode))) return;
 
+	std::mutex creationM;
+	
+	//Prepare ring mesh.
+	EntityManager::ForEach<BranchNodeInfo>(_BranchNodeQuery, [&creationM, resolution, subdivision](int i, Entity branchNode, BranchNodeInfo* info) 
+		{
+			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(branchNode))) return;
+			if (!EntityManager::HasSharedComponent<RingMeshList>(branchNode))
+			{
+				std::lock_guard<std::mutex> lock(creationM);
+				EntityManager::SetSharedComponent(branchNode, std::make_shared<RingMeshList>());
+			}
 			auto list = EntityManager::GetSharedComponent<RingMeshList>(branchNode);
-			//std::vector<RingMesh> rings = list->Rings;
+		
 			list->Rings.clear();
 			glm::quat parentRotation = info->ParentRotation;
 			glm::vec3 parentTranslation = info->ParentTranslation;
