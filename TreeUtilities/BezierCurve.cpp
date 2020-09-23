@@ -22,10 +22,8 @@ glm::vec3 BezierCurve::GetPoint(float t) const
 glm::vec3 BezierCurve::GetAxis(float t) const
 {
 	t = glm::clamp(t, 0.f, 1.f);
-	return glm::normalize(CP0 * -3.0f * (1.0f - t) * (1.0f - t)
-		+ CP1 * 3.0f * (1.0f - t) * (1.0f - t) - 6.0f * t * (1.0f - t)
-		+ CP2 * 3.0f * t * t + 6.0f * t * (1.0f - t)
-		+ CP3 * 3.0f * t * t);
+	float mt = 1.0f - t;
+	return (CP1 - CP0) * 3.0f * mt * mt + 6.0f * t * mt * (CP2 - CP1) + 3.0f * t * t * (CP3 - CP2);
 }
 
 glm::vec3 TreeUtilities::BezierCurve::GetStartAxis() const

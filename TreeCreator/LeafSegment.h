@@ -8,31 +8,33 @@ namespace SorghumReconstruction {
 	struct LeafSegment
 	{
 		glm::vec3 Position;
+		glm::vec3 Front;
+		glm::vec3 Up;
 		glm::quat Rotation;
 		float HalfWidth;
 		float Theta;
-
-		LeafSegment(glm::vec3 position, glm::quat rotation, float halfWidth, float theta)
+		float Radius;
+		LeafSegment(glm::vec3 position, glm::vec3 up, glm::vec3 front, float halfWidth, float theta)
 		{
 			Position = position;
-			Rotation = rotation;
+			Up = up;
+			Front = front;
 			HalfWidth = halfWidth;
 			Theta = theta;
+			Radius = theta < 90.0f ? HalfWidth / glm::sin(glm::radians(Theta)) : HalfWidth;
 		}
 
-		glm::vec3 GetPoint(float angle) const
+		glm::vec3 GetPoint(float angle)
 		{
-			const auto down = glm::normalize(Rotation * glm::vec3(0.0f, -1.0f, 0.0f));
-			const auto front = glm::normalize(Rotation * glm::vec3(0.0f, 0.0f, -1.0f));
 			if(Theta < 90.0f)
 			{
-				const auto distanceToCenter = HalfWidth / glm::tan(glm::radians(Theta));
-				const auto center = Position - distanceToCenter * down;
-				const auto direction = glm::rotate(down, glm::radians(angle), front);
-				return center + HalfWidth / glm::sin(glm::radians(Theta)) * direction;
+				auto distanceToCenter = HalfWidth / glm::tan(glm::radians(Theta));
+				auto center = Position + distanceToCenter * Up;
+				auto direction = glm::rotate(Up, glm::radians(angle), Front);
+				return center - Radius * direction;
 			}
-			const auto direction = glm::rotate(down, glm::radians(angle), front);
-			return Position + HalfWidth * direction;
+			auto direction = glm::rotate(Up, glm::radians(angle), Front);
+			return Position - Radius * direction;
 		}
 	};
 }

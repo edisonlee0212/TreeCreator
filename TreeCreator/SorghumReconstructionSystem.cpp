@@ -98,10 +98,22 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::stri
 			for (int i = 0; i < amount; i++)
 			{
 				float percent = (float)i / (amount - 1);
-				auto front = spline->EvaluateAxis(percent);
-				auto up = glm::vec3(1.0f);
-				up = glm::cross(glm::cross(front, up), front);
-				spline->Segments.emplace_back(spline->EvaluatePoint(percent), glm::quatLookAt(front, up), 0.3f, 180.0f * (1.0f - percent * 0.6f));
+				auto front = glm::normalize(spline->EvaluateAxis(percent));
+				auto up = glm::vec3(0.0f, 0.0f, 1.0f);
+				
+				up = glm::normalize(glm::cross(glm::cross(front, up), front));
+				float width;
+				if(percent < 0.2f)
+				{
+					width = percent;
+				}else if(percent > 0.8f)
+				{
+					width = 1.0f - percent;
+				}else
+				{
+					width = 0.2f;
+				}
+				spline->Segments.emplace_back(spline->EvaluatePoint(percent), up, front, width, 180.0f * (1.0f - percent * 0.6f));
 			}
 			//Truck
 			const int step = 10;
@@ -112,12 +124,12 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::stri
 			const float yStep = 1.0f / spline->Segments.size();
 			for (int i = 0; i < spline->Segments.size(); i++)
 			{
-				const auto& segment = spline->Segments.at(i);
+				auto& segment = spline->Segments.at(i);
 				const float angleStep = segment.Theta / step;
 				const int vertsCount = step * 2 + 1;
 				for (int j = 0; j < vertsCount; j++)
 				{
-					archetype.Position = spline->Segments.at(i).GetPoint(j * angleStep);
+					archetype.Position = segment.GetPoint((j - step) * angleStep);
 					archetype.TexCoords0 = glm::vec2(j * xStep, j * yStep);
 					spline->Vertices.push_back(archetype);
 				}
@@ -138,11 +150,11 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::stri
 
 		}
 	);
-	auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(truck);
-	truckSpline = EntityManager::GetSharedComponent<Spline>(truck);
+	//auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(truck);
+	//truckSpline = EntityManager::GetSharedComponent<Spline>(truck);
 
-	mmc->Mesh = std::make_shared<Mesh>();
-	mmc->Mesh->SetVertices(17, truckSpline->Vertices, truckSpline->Indices);
+	//mmc->Mesh = std::make_shared<Mesh>();
+	//mmc->Mesh->SetVertices(17, truckSpline->Vertices, truckSpline->Indices);
 
 	EntityManager::ForEachChild(truck, [](Entity child)
 		{
@@ -159,11 +171,11 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 {
 	_TruckArchetype = EntityManager::CreateEntityArchetype("Truck",
 		TruckInfo(),
-		Translation(), Rotation(), Scale(), LocalToWorld(), MeshMaterialComponent()
+		Translation(), Rotation(), Scale(), LocalToWorld()
 	);
 	_LeafArchetype = EntityManager::CreateEntityArchetype("Leaf",
 		LeafInfo(),
-		LocalTranslation(), LocalRotation(), LocalScale(), LocalToParent(), LocalToWorld(), MeshMaterialComponent()
+		LocalTranslation(), LocalRotation(), LocalScale(), LocalToParent(), LocalToWorld()
 	);
 	_SplineQuery = EntityManager::CreateEntityQuery();
 	EntityManager::SetEntityQueryAnyFilters(_SplineQuery, TruckInfo(), LeafInfo());
@@ -172,19 +184,13 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 	_TruckMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto textureDiffuseTruck = new Texture2D(TextureType::DIFFUSE);
 	textureDiffuseTruck->LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), "");
-	auto textureNormalTruck = new Texture2D(TextureType::NORMAL);
-	textureNormalTruck->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_normal.jpg"), "");
 	_TruckMaterial->Textures2Ds()->push_back(textureDiffuseTruck);
-	_TruckMaterial->Textures2Ds()->push_back(textureNormalTruck);
 
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto textureLeaf = new Texture2D(TextureType::DIFFUSE);
 	textureLeaf->LoadTexture(FileIO::GetResourcePath("Textures/green.png"), "");
-	auto textureNormalLeaf = new Texture2D(TextureType::NORMAL);
-	textureNormalLeaf->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"), "");
 	_LeafMaterial->Textures2Ds()->push_back(textureLeaf);
-	_LeafMaterial->Textures2Ds()->push_back(textureNormalLeaf);
 	Enable();
 }
 
