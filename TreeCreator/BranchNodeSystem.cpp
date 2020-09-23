@@ -3,7 +3,7 @@
 
 #include <gtx/matrix_decompose.hpp>
 
-void TreeUtilities::BranchNodeSystem::DrawGUI()
+void TreeUtilities::BranchNodeSystem::DrawGui()
 {
 	ImGui::Begin("Tree Utilities");
 	if (ImGui::CollapsingHeader("Branch Node System", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -18,6 +18,38 @@ void TreeUtilities::BranchNodeSystem::DrawGUI()
 		ImGui::CheckboxFlags("Draw Branch Node Connections", &_ConfigFlags, BranchNodeSystem_DrawConnections);
 	}
 	ImGui::End();
+}
+
+void TreeUtilities::BranchNodeSystem::RaySelection()
+{
+	_RaySelectedEntity.Index = 0;
+	_RaySelectedEntity.Version = 0;
+	std::mutex writeMutex;
+	float minDistance = FLT_MAX;
+	auto cameraLtw = Application::GetMainCameraEntity().GetComponentData<LocalToWorld>();
+	const Ray cameraRay = Application::GetMainCameraComponent()->Value->ScreenPointToRay(
+		cameraLtw, InputManager::GetMouseScreenPosition());
+	EntityManager::ForEach<LocalToWorld, BranchNodeInfo>(_BranchNodeQuery, [this, cameraLtw, &writeMutex, &minDistance, cameraRay](int i, Entity entity, LocalToWorld* ltw, BranchNodeInfo* info)
+		{
+			const float distance = glm::distance(glm::vec3(cameraLtw.Value[3]), glm::vec3(ltw->Value[3]));
+			if (cameraRay.Intersect(ltw->Value[3], 0.1f))
+			{
+				std::lock_guard<std::mutex> lock(writeMutex);
+				if (distance < minDistance)
+				{
+					minDistance = distance;
+					this->_RaySelectedEntity = entity;
+				}
+			}
+		}
+	);
+	if(InputManager::GetKey(GLFW_KEY_F))
+	{
+		if (!_RaySelectedEntity.IsNull())
+		{
+			EntityEditorSystem::SetSelectedEntity(_RaySelectedEntity);
+		}
+	}
 }
 
 void TreeUtilities::BranchNodeSystem::OnCreate()
@@ -38,17 +70,23 @@ void TreeUtilities::BranchNodeSystem::Update()
 	_BranchNodeLTWList.clear();
 	if (_ConfigFlags & BranchNodeSystem_DrawBranchNodes) {
 		_BranchNodeQuery.ToComponentDataArray(_BranchNodeLTWList);
-		if (_BranchNodeLTWList.size() != 0)RenderManager::DrawGizmoCubeInstanced(glm::vec4(0, 0, 1, 1), (glm::mat4*)_BranchNodeLTWList.data(), _BranchNodeLTWList.size(), Application::GetMainCameraComponent()->Value.get(), glm::mat4(1.0f), 0.02f);
+		if (!_BranchNodeLTWList.empty())RenderManager::DrawGizmoCubeInstanced(glm::vec4(0, 0, 1, 1), (glm::mat4*)_BranchNodeLTWList.data(), _BranchNodeLTWList.size(), Application::GetMainCameraComponent()->Value.get(), glm::mat4(1.0f), 0.02f);
 	}
 	if (_ConfigFlags & BranchNodeSystem_DrawConnections) {
 		_ConnectionList.clear();
 		_BranchNodeQuery.ToComponentDataArray(_ConnectionList);
-		if (_ConnectionList.size() != 0)RenderManager::DrawGizmoMeshInstanced(Default::Primitives::Cylinder.get(), glm::vec4(0.6f, 0.3f, 0, 1), (glm::mat4*)_ConnectionList.data(), _ConnectionList.size(), Application::GetMainCameraComponent()->Value.get(), glm::mat4(1.0f), 1.0f);
+		if (!_ConnectionList.empty())RenderManager::DrawGizmoMeshInstanced(Default::Primitives::Cylinder.get(), glm::vec4(0.6f, 0.3f, 0, 1), (glm::mat4*)_ConnectionList.data(), _ConnectionList.size(), Application::GetMainCameraComponent()->Value.get(), glm::mat4(1.0f), 1.0f);
 	}
-	DrawGUI();
+	DrawGui();
+	RaySelection();
+	if(!_RaySelectedEntity.IsNull())
+	{
+		RenderManager::DrawGizmoPoint(glm::vec4(1, 1, 0, 1), Application::GetMainCameraComponent()->Value.get(),
+			_RaySelectedEntity.GetComponentData<LocalToWorld>().Value, 0.1f);
+	}
 }
 
-void TreeUtilities::BranchNodeSystem::RefreshConnections()
+void TreeUtilities::BranchNodeSystem::RefreshConnections() const
 {
 	float lineWidth = _ConnectionWidth;
 	EntityManager::ForEach<LocalToWorld, Connection, BranchNodeInfo>(_BranchNodeQuery, [lineWidth](int i, Entity entity, LocalToWorld* ltw, Connection* c, BranchNodeInfo* info) {

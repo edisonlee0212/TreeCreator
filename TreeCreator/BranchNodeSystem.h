@@ -17,13 +17,16 @@ namespace TreeUtilities {
 
         float _ConnectionWidth = 1.0f;
 
+        Entity _RaySelectedEntity;
+    	
         std::vector<LocalToWorld> _BranchNodeLTWList;
         std::vector<Connection> _ConnectionList;
-        void DrawGUI();
+        void DrawGui();
+        void RaySelection();
     public:
-        void OnCreate();
-        void OnDestroy();
-        void Update();
-        void RefreshConnections();
+        void OnCreate() override;
+        void OnDestroy() override;
+        void Update() override;
+        void RefreshConnections() const;
     };
 }

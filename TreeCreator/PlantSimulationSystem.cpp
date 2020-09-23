@@ -447,6 +447,7 @@ void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 
 bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 {
+	if (EntityManager::GetChildrenAmount(treeEntity) == 0) return false;
 #pragma region Collect tree data
 	auto treeData = EntityManager::GetSharedComponent<TreeData>(treeEntity);
 	TreeAge treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
@@ -703,6 +704,7 @@ void TreeUtilities::PlantSimulationSystem::CalculatePhysics(std::vector<Entity>&
 	for (auto& tree : trees) {
 		Rotation rotation = EntityManager::GetComponentData<Rotation>(tree);
 		TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
+		if (EntityManager::GetChildrenAmount(tree) == 0) continue;
 		Entity rootBranchNode = EntityManager::GetChildren(tree).at(0);
 		CalculateDirectGravityForce(tree, _Gravity);
 		BackPropagateForce(rootBranchNode, treeParameters.SaggingForceBackPropagateFixedCoefficient);
@@ -1020,8 +1022,6 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 			Rotation rotation = EntityManager::GetComponentData<Rotation>(tree);
 			LocalToWorld ltw = EntityManager::GetComponentData<LocalToWorld>(tree);
 			TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
-			Entity rootBranchNode = EntityManager::GetChildren(tree).at(0);
-
 			if (GrowTree(tree)) {
 				growed = true;
 				CalculatePhysics(trees);
