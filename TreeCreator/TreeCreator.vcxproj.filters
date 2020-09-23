@@ -45,9 +45,6 @@
     <ClCompile Include="NetworkSystem.cpp">
       <Filter>Source Files\Network</Filter>
     </ClCompile>
-    <ClCompile Include="PlantSimulationSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TreeScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -84,13 +81,13 @@
     <ClCompile Include="BranchSystem.cpp">
       <Filter>Source Files\TreeUtilities</Filter>
     </ClCompile>
+    <ClCompile Include="PlantSimulationSystem.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkSystem.h">
       <Filter>Header Files\Network</Filter>
-    </ClInclude>
-    <ClInclude Include="PlantSimulationSystem.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TreeScene.h">
       <Filter>Header Files</Filter>
@@ -156,6 +153,9 @@
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
     <ClInclude Include="TreeUtilities.h">
+      <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="PlantSimulationSystem.h">
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
   </ItemGroup>
