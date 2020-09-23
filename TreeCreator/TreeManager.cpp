@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "TreeManager.h"
 #include "LightEstimator.h"
 #include <gtx/matrix_decompose.hpp>

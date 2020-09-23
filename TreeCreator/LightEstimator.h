@@ -1,8 +1,8 @@
 #pragma once
-#include "TreeUtilitiesAPI.h"
+#include "UniEngine.h"
 using namespace UniEngine;
 namespace TreeUtilities {
-	class TREEUTILITIES_API LightSnapShot {
+	class LightSnapShot {
 		GLTexture2D* _SnapShotTexture;
 		GLPPBO* _PPBO;
 		float* _SRC;
@@ -34,7 +34,7 @@ namespace TreeUtilities {
 		~LightSnapShot();
 	};
 
-	class TREEUTILITIES_API LightEstimator
+	class LightEstimator
 	{
 		RenderTarget* _RenderTarget = nullptr;
 		size_t _Resolution = 2048;

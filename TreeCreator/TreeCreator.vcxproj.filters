@@ -31,6 +31,12 @@
     <Filter Include="Source Files\SorghumReconstruction">
       <UniqueIdentifier>{e5708bbe-0a2e-4743-a627-9878f7a058e4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\TreeUtilities">
+      <UniqueIdentifier>{73808b55-aadc-4337-b584-c48f9028a9b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\TreeUtilities">
+      <UniqueIdentifier>{6692182e-b65f-476f-9436-4f542c2a11ed}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TreeCreator.cpp">
@@ -53,6 +59,30 @@
     </ClCompile>
     <ClCompile Include="LeafSegment.cpp">
       <Filter>Source Files\SorghumReconstruction</Filter>
+    </ClCompile>
+    <ClCompile Include="Curve.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
+    <ClCompile Include="LightEstimator.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
+    <ClCompile Include="RingMesh.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeManager.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeSystem.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
+    <ClCompile Include="BezierCurve.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
+    <ClCompile Include="BranchNodeSystem.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
+    <ClCompile Include="BranchSystem.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -100,6 +130,33 @@
     </ClInclude>
     <ClInclude Include="LeafSegment.h">
       <Filter>Header Files\SorghumReconstruction</Filter>
+    </ClInclude>
+    <ClInclude Include="BezierCurve.h">
+      <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="BranchNodeSystem.h">
+      <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="BranchSystem.h">
+      <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Curve.h">
+      <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="LightEstimator.h">
+      <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="RingMesh.h">
+      <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeManager.h">
+      <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeSystem.h">
+      <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeUtilities.h">
+      <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

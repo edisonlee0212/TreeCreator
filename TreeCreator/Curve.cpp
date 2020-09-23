@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "Curve.h"
 
 void TreeUtilities::Curve::GetUniformCurve(size_t pointAmount, std::vector<glm::vec3>& points)

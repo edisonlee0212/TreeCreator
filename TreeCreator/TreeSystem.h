@@ -1,5 +1,5 @@
 #pragma once
-#include "TreeUtilitiesAPI.h"
+#include "UniEngine.h"
 using namespace UniEngine;
 namespace TreeUtilities {
     enum TreeSystemConfigFlags {
@@ -29,6 +29,6 @@ namespace TreeUtilities {
         void OnDestroy() override;
         void Update() override;
         void FixedUpdate() override;
-        TREEUTILITIES_API std::vector<Entity>* GetTreeEntities();
+        std::vector<Entity>* GetTreeEntities();
     };
 }

@@ -1,8 +1,9 @@
 #pragma once
-#include "TreeUtilitiesAPI.h"
+#include "UniEngine.h"
+
 #include "Curve.h"
 namespace TreeUtilities {
-	class TREEUTILITIES_API BezierCurve :
+	class BezierCurve :
 		public Curve
 	{
 	public:

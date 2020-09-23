@@ -1,5 +1,5 @@
 #pragma once
-#include "TreeUtilitiesAPI.h"
+#include "UniEngine.h"
 using namespace UniEngine;
 namespace TreeUtilities {
     enum BranchNodeSystemConfigFlags {
@@ -24,6 +24,6 @@ namespace TreeUtilities {
         void OnCreate();
         void OnDestroy();
         void Update();
-        void TREEUTILITIES_API RefreshConnections();
+        void RefreshConnections();
     };
 }

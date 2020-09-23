@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "BezierCurve.h"
 using namespace TreeUtilities;
 TreeUtilities::BezierCurve::BezierCurve(glm::vec3 cp0, glm::vec3 cp1, glm::vec3 cp2, glm::vec3 cp3)

@@ -1,8 +1,8 @@
 #pragma once
-#include "TreeUtilitiesAPI.h"
+#include "UniEngine.h"
 using namespace UniEngine;
 namespace TreeUtilities {
-	struct TREEUTILITIES_API RingMesh
+	struct RingMesh
 	{
 		glm::vec3 StartPosition, EndPosition;
 		glm::vec3 StartAxis, EndAxis;

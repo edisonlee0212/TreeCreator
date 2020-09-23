@@ -1,5 +1,5 @@
 #pragma once
-#include "TreeUtilitiesAPI.h"
+#include "UniEngine.h"
 #include "TreeSystem.h"
 #include "BranchSystem.h"
 #include "BranchNodeSystem.h"
@@ -10,7 +10,7 @@
 using namespace UniEngine;
 namespace TreeUtilities {
 #pragma region Common
-    struct TREEUTILITIES_API TreeIndex : ComponentBase {
+    struct TreeIndex : ComponentBase {
         unsigned Value;
         bool operator ==(const TreeIndex& other) const {
             return other.Value == Value;
@@ -19,7 +19,7 @@ namespace TreeUtilities {
 #pragma endregion
 
 #pragma region BranchNode
-    class TREEUTILITIES_API RingMeshList : public SharedComponentBase {
+    class RingMeshList : public SharedComponentBase {
     public:
         std::vector<RingMesh> Rings;
         glm::vec3 NormalDir;
@@ -27,44 +27,44 @@ namespace TreeUtilities {
         std::size_t GetHashCode() override;
     };
 
-    struct TREEUTILITIES_API Connection : ComponentBase {
+    struct Connection : ComponentBase {
         glm::mat4 Value;
         bool operator ==(const Connection& other) const {
             return other.Value == Value;
         }
     };
 
-    struct TREEUTILITIES_API Illumination : ComponentBase {
+    struct Illumination : ComponentBase {
         float Value;
         glm::vec3 LightDir;
     };
 
 
-    struct TREEUTILITIES_API Bud {
+    struct Bud {
         bool IsActive;
         bool IsApical;
         unsigned StartAge;
         glm::vec3 EulerAngles;
     };
 
-    struct TREEUTILITIES_API Gravity {
+    struct Gravity {
         float Value;
     };
 
-    class TREEUTILITIES_API BudList : public SharedComponentBase {
+    class BudList : public SharedComponentBase {
     public:
 	    size_t GetHashCode() override;
 	    std::vector<Bud> Buds;
     };
 
 
-    struct TREEUTILITIES_API BranchNodeIndex : ComponentBase {
+    struct BranchNodeIndex : ComponentBase {
         unsigned Value;
         bool operator ==(const BranchNodeIndex& other) const {
             return other.Value == Value;
         }
     };
-    struct TREEUTILITIES_API BranchNodeInfo : ComponentBase {
+    struct BranchNodeInfo : ComponentBase {
 #pragma region General
         int Level = 0;
         float DistanceToParent = 0;
@@ -121,7 +121,7 @@ namespace TreeUtilities {
     };
 #pragma endregion
 #pragma region Tree
-    struct TREEUTILITIES_API TreeParameters : ComponentBase {
+    struct TreeParameters : ComponentBase {
         int Seed;
 
 #pragma region Geometric
@@ -179,22 +179,22 @@ namespace TreeUtilities {
         float ThicknessControlFactor;
     };
 
-    struct TREEUTILITIES_API RewardEstimation : ComponentBase {
+    struct RewardEstimation : ComponentBase {
         float LightEstimationResult = 0.0f;
     };
 
-    struct TREEUTILITIES_API TreeAge : ComponentBase {
+    struct TreeAge : ComponentBase {
         int Value;
         int ToGrowIteration;
         bool Enable;
     };
 
-    struct TREEUTILITIES_API TreeInfo : ComponentType
+    struct TreeInfo : ComponentType
     {
 	    
     };
 	
-    class TREEUTILITIES_API TreeData : public SharedComponentBase {
+    class TreeData : public SharedComponentBase {
     public:
         int CurrentSeed;
         float Height;
@@ -211,7 +211,7 @@ namespace TreeUtilities {
         std::size_t GetHashCode() override;
     };
 #pragma endregion
-    class TREEUTILITIES_API TreeManager :
+    class TreeManager :
         public ManagerBase
     {
         static LightEstimator* _LightEstimator;

@@ -1,11 +1,8 @@
-// SponzaTest.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
 #include "UniEngine.h"
 #include "CameraControlSystem.h"
 #include "PlantSimulationSystem.h"
 #include "TreeManager.h"
 #include "SorghumReconstructionSystem.h"
-#include "EntityEditorSystem.h"
 
 using namespace UniEngine;
 using namespace TreeUtilities;
@@ -26,7 +23,7 @@ int main()
 {
 #pragma region Global light settings
 	LightingManager::SetEnableShadow(true);
-	LightingManager::SetDirectionalLightResolution(2048);
+	LightingManager::SetDirectionalLightResolution(1024);
 	LightingManager::SetStableFit(true);
 	LightingManager::SetMaxShadowDistance(100.0f);
 	LightingManager::SetSeamFixRatio(0.05f);

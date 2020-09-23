@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "LightEstimator.h"
 #include "TreeManager.h"
 TreeUtilities::LightSnapShot::LightSnapShot(size_t resolution, glm::vec3 centerPosition, glm::vec3 direction, float centerDistance, float width, float weight)

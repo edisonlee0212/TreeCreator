@@ -1,4 +1,3 @@
-#include "pch.h"
 #include "RingMesh.h"
 
 TreeUtilities::RingMesh::RingMesh(glm::vec3 startPosition, glm::vec3 endPosition, glm::vec3 startAxis, glm::vec3 endAxis, float startRadius, float endRadius)

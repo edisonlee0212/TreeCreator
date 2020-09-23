@@ -1,7 +1,7 @@
 #pragma once
-#include "TreeUtilitiesAPI.h"
+#include "UniEngine.h"
 namespace TreeUtilities {
-	class TREEUTILITIES_API Curve
+	class Curve
 	{
 	public:
 		virtual glm::vec3 GetPoint(float t) const = 0;

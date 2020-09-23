@@ -45,12 +45,12 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\examples;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\includes\glad\include;..\Submodules\UniEngine\includes\Assimp\include;..\Submodules\UniEngine\Submodules\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\Core;..\Submodules\UniEngine\EntityEditor;..\Submodules\UniEngine\UniEngine;..\Submodules\UniEngine\Entities;..\TreeUtilities;$(IncludePath)</IncludePath>
+    <IncludePath>..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\examples;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\includes\glad\include;..\Submodules\UniEngine\includes\Assimp\include;..\Submodules\UniEngine\Submodules\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\Core;..\Submodules\UniEngine\EntityEditor;..\Submodules\UniEngine\UniEngine;..\Submodules\UniEngine\Entities;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\examples;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\includes\glad\include;..\Submodules\UniEngine\includes\Assimp\include;..\Submodules\UniEngine\Submodules\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\Core;..\Submodules\UniEngine\EntityEditor;..\Submodules\UniEngine\UniEngine;..\Submodules\UniEngine\Entities;..\TreeUtilities;$(IncludePath)</IncludePath>
+    <IncludePath>..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\examples;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\includes\glad\include;..\Submodules\UniEngine\includes\Assimp\include;..\Submodules\UniEngine\Submodules\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\Core;..\Submodules\UniEngine\EntityEditor;..\Submodules\UniEngine\UniEngine;..\Submodules\UniEngine\Entities;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -72,7 +72,6 @@
 xcopy /y /d "..\Submodules\UniEngine\Entities\$(IntDir)Entities.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\EntityEditor\$(IntDir)EntityEditor.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\UniEngine\$(IntDir)UniEngine.dll" "$(OutDir)"
-xcopy /y /d "..\TreeUtilities\$(IntDir)TreeUtilities.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mtd.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -99,21 +98,33 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mtd.d
 xcopy /y /d "..\Submodules\UniEngine\Entities\$(IntDir)Entities.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\EntityEditor\$(IntDir)EntityEditor.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\UniEngine\$(IntDir)UniEngine.dll" "$(OutDir)"
-xcopy /y /d "..\TreeUtilities\$(IntDir)TreeUtilities.dll" "$(OutDir)"
 xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dll" "$(OutDir)" </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BezierCurve.cpp" />
+    <ClCompile Include="BranchNodeSystem.cpp" />
+    <ClCompile Include="BranchSystem.cpp" />
+    <ClCompile Include="Curve.cpp" />
     <ClCompile Include="LeafSegment.cpp" />
+    <ClCompile Include="LightEstimator.cpp" />
     <ClCompile Include="PlantSimulationSystem.cpp" />
     <ClCompile Include="NetworkSystem.cpp" />
     <ClCompile Include="quickhull\QuickHull.cpp" />
+    <ClCompile Include="RingMesh.cpp" />
     <ClCompile Include="SorghumReconstructionSystem.cpp" />
     <ClCompile Include="TreeCreator.cpp" />
+    <ClCompile Include="TreeManager.cpp" />
     <ClCompile Include="TreeScene.cpp" />
+    <ClCompile Include="TreeSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BezierCurve.h" />
+    <ClInclude Include="BranchNodeSystem.h" />
+    <ClInclude Include="BranchSystem.h" />
+    <ClInclude Include="Curve.h" />
     <ClInclude Include="LeafSegment.h" />
+    <ClInclude Include="LightEstimator.h" />
     <ClInclude Include="NetworkSystem.h" />
     <ClInclude Include="PlantSimulationSystem.h" />
     <ClInclude Include="quickhull\ConvexHull.hpp" />
@@ -126,8 +137,12 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     <ClInclude Include="quickhull\Structs\Ray.hpp" />
     <ClInclude Include="quickhull\Structs\Vector3.hpp" />
     <ClInclude Include="quickhull\Structs\VertexDataSource.hpp" />
+    <ClInclude Include="RingMesh.h" />
     <ClInclude Include="SorghumReconstructionSystem.h" />
+    <ClInclude Include="TreeManager.h" />
     <ClInclude Include="TreeScene.h" />
+    <ClInclude Include="TreeSystem.h" />
+    <ClInclude Include="TreeUtilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Submodules\UniEngine\Core\Core.vcxproj">
@@ -138,9 +153,6 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     </ProjectReference>
     <ProjectReference Include="..\Submodules\UniEngine\UniEngine\UniEngine.vcxproj">
       <Project>{324d4482-9924-4f0b-aba0-e6e9ba51b02f}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\TreeUtilities\TreeUtilities.vcxproj">
-      <Project>{e0c6f70b-f996-43a3-ad08-11725c1d01d8}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
