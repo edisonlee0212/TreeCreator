@@ -84,11 +84,12 @@ namespace SorghumReconstruction {
 		Entity CreateTruck() const;
 		Entity CreateLeafForTruck(Entity& truckEntity) const;
 
+		void DrawGUI();
 		
 	public:
 
-		Entity CreatePlant(std::string path, float resolution) const;
-
+		Entity CreatePlant(std::string path, float resolution, std::string name) const;
+		void ExportPlant(Entity plant, std::string path) const;
 		void OnCreate() override;
 		void OnDestroy() override;
 		void Update() override;

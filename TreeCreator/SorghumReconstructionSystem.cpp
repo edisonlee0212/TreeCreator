@@ -34,7 +34,12 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateLeafForTruck(En
 	return ret;
 }
 
-Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::string path, float resolution) const
+void SorghumReconstruction::SorghumReconstructionSystem::DrawGUI()
+{
+	
+}
+
+Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::string path, float resolution, std::string name) const
 {
 	std::ifstream file(path, std::fstream::in);
 	if (!file.is_open())
@@ -108,7 +113,7 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::stri
 					width = percent;
 				}else if(percent > 0.8f)
 				{
-					width = 1.0f - percent;
+					width = 1.0f - percent * 0.9f;
 				}else
 				{
 					width = 0.2f;
@@ -136,13 +141,13 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::stri
 				if (i != 0) {
 					for (int j = 0; j < vertsCount - 1; j++) {
 						//Down triangle
+						spline->Indices.push_back(vertexIndex + ((i - 1) + 1) * vertsCount + j);
+						spline->Indices.push_back(vertexIndex + (i - 1) * vertsCount + j + 1);
 						spline->Indices.push_back(vertexIndex + (i - 1) * vertsCount + j);
-						spline->Indices.push_back(vertexIndex + (i - 1) * vertsCount + j + 1);
-						spline->Indices.push_back(vertexIndex + ((i - 1) + 1) * vertsCount + j);
 						//Up triangle
-						spline->Indices.push_back(vertexIndex + ((i - 1) + 1) * vertsCount + j + 1);
-						spline->Indices.push_back(vertexIndex + ((i - 1) + 1) * vertsCount + j);
 						spline->Indices.push_back(vertexIndex + (i - 1) * vertsCount + j + 1);
+						spline->Indices.push_back(vertexIndex + ((i - 1) + 1) * vertsCount + j);
+						spline->Indices.push_back(vertexIndex + ((i - 1) + 1) * vertsCount + j + 1);
 					}
 				}
 			}
@@ -161,10 +166,81 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::stri
 			auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(child);
 			auto childSpline = EntityManager::GetSharedComponent<Spline>(child);
 			mmc->Mesh = std::make_shared<Mesh>();
-			mmc->Mesh->SetVertices(17, childSpline->Vertices, childSpline->Indices);
+			mmc->Mesh->SetVertices(17, childSpline->Vertices, childSpline->Indices, true);
 		}
 	);
+	ExportPlant(truck, name);
 	return truck;
+}
+
+void SorghumReconstruction::SorghumReconstructionSystem::ExportPlant(Entity plant, std::string path) const
+{
+	std::ofstream of;
+	of.open((path + ".obj").c_str(), std::ofstream::out | std::ofstream::trunc);
+	if (of.is_open())
+	{
+		std::string start = "#Plant model, by Bosheng Li";
+		start += "\n";
+		of.write(start.c_str(), start.size());
+		of.flush();
+
+		unsigned startIndex = 1;
+		EntityManager::ForEachChild(plant, [&of, &startIndex](Entity child)
+			{
+				auto lt = EntityManager::GetComponentData<LocalTranslation>(child).Value;
+				auto mesh = EntityManager::GetSharedComponent<MeshMaterialComponent>(child)->Mesh;
+				if (!mesh->GetVerticesUnsafe()->empty() && !mesh->GetIndicesUnsafe()->empty())
+				{
+					std::string header = "#Vertices: " + std::to_string(mesh->GetVerticesUnsafe()->size()) + ", tris: " + std::to_string(mesh->GetIndicesUnsafe()->size() / 3);
+					header += "\n";
+					of.write(header.c_str(), header.size());
+					of.flush();
+					std::string o = "o ";
+					o +=
+						"["
+						+ std::to_string(lt.x) + ","
+						+ std::to_string(lt.z)
+						+ "]" + "\n";
+					of.write(o.c_str(), o.size());
+					of.flush();
+					std::string data;
+#pragma region Data collection
+
+					for (const auto& vertex : *mesh->GetVerticesUnsafe()) {
+						data += "v " + std::to_string(vertex.Position.x + lt.x)
+							+ " " + std::to_string(vertex.Position.z + lt.z)
+							+ " " + std::to_string(vertex.Position.y + lt.y)
+							+ "\n";
+					}
+
+					//data += "s off\n";
+					data += "# List of indices for faces vertices, with (x, y, z).\n";
+					for (auto i = 0; i < mesh->GetIndicesUnsafe()->size() / 3; i++) {
+						auto f1 = mesh->GetIndicesUnsafe()->at(3l * i) + startIndex;
+						auto f2 = mesh->GetIndicesUnsafe()->at(3l * i + 1) + startIndex;
+						auto f3 = mesh->GetIndicesUnsafe()->at(3l * i + 2) + startIndex;
+						data += "f " + std::to_string(f1)
+							+ " " + std::to_string(f2)
+							+ " " + std::to_string(f3)
+							+ "\n";
+					}
+					startIndex += mesh->GetVerticesUnsafe()->size();
+#pragma endregion
+					of.write(data.c_str(), data.size());
+					of.flush();
+
+				}
+			}
+		);
+
+
+		of.close();
+		Debug::Log("Plant saved as " + path + ".obj");
+	}
+	else
+	{
+		Debug::Error("Can't open file!");
+	}
 }
 
 void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
