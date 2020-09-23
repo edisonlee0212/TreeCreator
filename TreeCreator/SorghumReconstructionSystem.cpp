@@ -1,32 +1,28 @@
 #include "SorghumReconstructionSystem.h"
 
 
-Entity SorghumRecon::SorghumReconstructionSystem::CreateTruck() const
+Entity SorghumReconstruction::SorghumReconstructionSystem::CreateTruck() const
 {
 	Entity ret = EntityManager::CreateEntity(_TruckArchetype);
 	Scale s;
 	s.Value = glm::vec3(1.0f);
 	auto spline = std::make_shared<Spline>();
-	auto rml = std::make_shared<RingMeshList>();
-	EntityManager::SetSharedComponent(ret, rml);
 	EntityManager::SetSharedComponent(ret, spline);
 	EntityManager::SetComponentData(ret, s);
 	auto mmc = std::make_shared<MeshMaterialComponent>();
 	mmc->Material = _TruckMaterial;
 	EntityManager::SetSharedComponent(ret, mmc);
-	
+
 	return ret;
 }
 
-Entity SorghumRecon::SorghumReconstructionSystem::CreateLeafForTruck(Entity& truckEntity) const
+Entity SorghumReconstruction::SorghumReconstructionSystem::CreateLeafForTruck(Entity& truckEntity) const
 {
 	Entity ret = EntityManager::CreateEntity(_LeafArchetype);
 	EntityManager::SetParent(ret, truckEntity);
 	LocalScale ls;
 	ls.Value = glm::vec3(1.0f);
 	auto spline = std::make_shared<Spline>();
-	auto rml = std::make_shared<RingMeshList>();
-	EntityManager::SetSharedComponent(ret, rml);
 	EntityManager::SetSharedComponent(ret, spline);
 	EntityManager::SetComponentData(ret, ls);
 
@@ -38,7 +34,7 @@ Entity SorghumRecon::SorghumReconstructionSystem::CreateLeafForTruck(Entity& tru
 	return ret;
 }
 
-Entity SorghumRecon::SorghumReconstructionSystem::CreatePlant(std::string path, float resolution) const
+Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::string path, float resolution) const
 {
 	std::ifstream file(path, std::fstream::in);
 	if (!file.is_open())
@@ -51,7 +47,7 @@ Entity SorghumRecon::SorghumReconstructionSystem::CreatePlant(std::string path, 
 	file >> leafCount;
 	Entity truck = CreateTruck();
 	auto truckSpline = EntityManager::GetSharedComponent<Spline>(truck);
-	
+
 
 
 	truckSpline->StartingPoint = -1;
@@ -83,156 +79,72 @@ Entity SorghumRecon::SorghumReconstructionSystem::CreatePlant(std::string path, 
 		leafSpline->Import(file);
 		EntityManager::SetSharedComponent(leaf, leafSpline);
 
-		const float splineU = glm::clamp(startingPoint, 0.0f, 1.0f) * float(truckSpline->Curves.size());
 
-		// Decompose the global u coordinate on the spline
-		float integerPart;
-		const float fractionalPart = modff(splineU, &integerPart);
-
-		auto curveIndex = int(integerPart);
-		auto curveU = fractionalPart;
-
-		// If evaluating the very last point on the spline
-		if (curveIndex == truckSpline->Curves.size() && curveU <= 0.0f)
-		{
-			// Flip to the end of the last patch
-			curveIndex--;
-			curveU = 1.0f;
-		}
 
 		LocalTranslation lt;
-		lt.Value = truckSpline->Curves.at(curveIndex).Evaluate(curveU);
+		lt.Value = truckSpline->EvaluatePoint(startingPoint);
 		EntityManager::SetComponentData(leaf, lt);
 	}
 	//TODO: fix this
 	EntityManager::ForEach<LocalToWorld>(_SplineQuery, [resolution]
 	(int index, Entity entity, LocalToWorld* ltw)
 		{
+
 			auto spline = EntityManager::GetSharedComponent<Spline>(entity);
 			spline->Vertices.clear();
 			spline->Indices.clear();
-
-			std::shared_ptr<RingMeshList> rml = EntityManager::GetSharedComponent<RingMeshList>(entity);
-			
-			rml->Rings.clear();
-			for (auto& curve : spline->Curves) {
-				int amount = 10;
-
-
-				glm::vec3 fromDir = curve.GetStartAxis();
-				glm::vec3 dir = curve.GetEndAxis();
-				float posStep = 1.0f / (float)amount;
-				glm::vec3 dirStep = (dir - fromDir) / (float)amount;
-				float thickness = 0.03f;
-				float parentThickness = 0.03f;
-				float radiusStep = 0;
-				for (int i = 1; i < amount; i++) {
-					rml->Rings.emplace_back(
-						curve.GetPoint(posStep * (i - 1)), curve.GetPoint(posStep * i),
-						fromDir + (float)(i - 1) * dirStep, fromDir + (float)i * dirStep,
-						parentThickness + (float)(i - 1) * radiusStep, parentThickness + (float)i * radiusStep);
-				}
-				if (amount > 1)rml->Rings.emplace_back(curve.GetPoint(1.0f - posStep), curve.CP3, dir - dirStep, dir, thickness - radiusStep, thickness);
-				else rml->Rings.emplace_back(curve.CP0, curve.CP3, fromDir, dir, parentThickness, thickness);
+			spline->Segments.clear();
+			const int amount = 15;
+			for (int i = 0; i < amount; i++)
+			{
+				float percent = (float)i / (amount - 1);
+				auto front = spline->EvaluateAxis(percent);
+				auto up = glm::vec3(1.0f);
+				up = glm::cross(glm::cross(front, up), front);
+				spline->Segments.emplace_back(spline->EvaluatePoint(percent), glm::quatLookAt(front, up), 0.3f, 180.0f * (1.0f - percent * 0.6f));
 			}
+			//Truck
+			const int step = 10;
 
-			if (spline->StartingPoint == -1) {
-				//Truck
-				int step = 12;
-				float angleStep = 360.0f / (float)(step);
-				glm::vec3 newNormalDir = glm::vec3(0, 1, 0);
-				int vertexIndex = spline->Vertices.size();
-				Vertex archetype;
-				float textureXstep = 1.0f / step * 4.0f;
-				for (int i = 0; i < step; i++) {
-					archetype.Position = rml->Rings.at(0).GetPoint(newNormalDir, angleStep * i, true);
-					float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
-					archetype.TexCoords0 = glm::vec2(x, 0.0f);
+			const int vertexIndex = spline->Vertices.size();
+			Vertex archetype;
+			const float xStep = 1.0f / step * 2.0f;
+			const float yStep = 1.0f / spline->Segments.size();
+			for (int i = 0; i < spline->Segments.size(); i++)
+			{
+				const auto& segment = spline->Segments.at(i);
+				const float angleStep = segment.Theta / step;
+				const int vertsCount = step * 2 + 1;
+				for (int j = 0; j < vertsCount; j++)
+				{
+					archetype.Position = spline->Segments.at(i).GetPoint(j * angleStep);
+					archetype.TexCoords0 = glm::vec2(j * xStep, j * yStep);
 					spline->Vertices.push_back(archetype);
 				}
-				int ringSize = rml->Rings.size();
-				float textureYstep = 1.0f / ringSize * 2.0f;
-				for (int ringIndex = 0; ringIndex < ringSize; ringIndex++) {
-					for (int i = 0; i < step; i++) {
-						archetype.Position = rml->Rings.at(ringIndex).GetPoint(newNormalDir, angleStep * i, false);
-						float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
-						float y = ringIndex < (ringSize / 2) ? (ringIndex + 1) * textureYstep : (ringSize - ringIndex - 1) * textureYstep;
-						archetype.TexCoords0 = glm::vec2(x, y);
-						spline->Vertices.push_back(archetype);
-					}
-					for (int i = 0; i < step - 1; i++) {
+				if (i != 0) {
+					for (int j = 0; j < vertsCount - 1; j++) {
 						//Down triangle
-						spline->Indices.push_back(vertexIndex + ringIndex * step + i);
-						spline->Indices.push_back(vertexIndex + ringIndex * step + i + 1);
-						spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step + i);
+						spline->Indices.push_back(vertexIndex + (i - 1) * vertsCount + j);
+						spline->Indices.push_back(vertexIndex + (i - 1) * vertsCount + j + 1);
+						spline->Indices.push_back(vertexIndex + ((i - 1) + 1) * vertsCount + j);
 						//Up triangle
-						spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step + i + 1);
-						spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step + i);
-						spline->Indices.push_back(vertexIndex + ringIndex * step + i + 1);
+						spline->Indices.push_back(vertexIndex + ((i - 1) + 1) * vertsCount + j + 1);
+						spline->Indices.push_back(vertexIndex + ((i - 1) + 1) * vertsCount + j);
+						spline->Indices.push_back(vertexIndex + (i - 1) * vertsCount + j + 1);
 					}
-					//Down triangle
-					spline->Indices.push_back(vertexIndex + ringIndex * step + step - 1);
-					spline->Indices.push_back(vertexIndex + ringIndex * step);
-					spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step + step - 1);
-					//Up triangle
-					spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step);
-					spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step + step - 1);
-					spline->Indices.push_back(vertexIndex + ringIndex * step);
 				}
 			}
-			else {
-				//Leaf
-				int step = 12;
-				float angleStep = 360.0f / (float)(step);
-				glm::vec3 newNormalDir = glm::vec3(0, 1, 0);
-				int vertexIndex = spline->Vertices.size();
-				Vertex archetype;
-				float textureXstep = 1.0f / step * 4.0f;
-				for (int i = 0; i < step; i++) {
-					archetype.Position = rml->Rings.at(0).GetPoint(newNormalDir, angleStep * i, true);
-					float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
-					archetype.TexCoords0 = glm::vec2(x, 0.0f);
-					spline->Vertices.push_back(archetype);
-				}
-				int ringSize = rml->Rings.size();
-				float textureYstep = 1.0f / ringSize * 2.0f;
-				for (int ringIndex = 0; ringIndex < ringSize; ringIndex++) {
-					for (int i = 0; i < step; i++) {
-						archetype.Position = rml->Rings.at(ringIndex).GetPoint(newNormalDir, angleStep * i, false);
-						float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
-						float y = ringIndex < (ringSize / 2) ? (ringIndex + 1) * textureYstep : (ringSize - ringIndex - 1) * textureYstep;
-						archetype.TexCoords0 = glm::vec2(x, y);
-						spline->Vertices.push_back(archetype);
-					}
-					for (int i = 0; i < step - 1; i++) {
-						//Down triangle
-						spline->Indices.push_back(vertexIndex + ringIndex * step + i);
-						spline->Indices.push_back(vertexIndex + ringIndex * step + i + 1);
-						spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step + i);
-						//Up triangle
-						spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step + i + 1);
-						spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step + i);
-						spline->Indices.push_back(vertexIndex + ringIndex * step + i + 1);
-					}
-					//Down triangle
-					spline->Indices.push_back(vertexIndex + ringIndex * step + step - 1);
-					spline->Indices.push_back(vertexIndex + ringIndex * step);
-					spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step + step - 1);
-					//Up triangle
-					spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step);
-					spline->Indices.push_back(vertexIndex + (ringIndex + 1) * step + step - 1);
-					spline->Indices.push_back(vertexIndex + ringIndex * step);
-				}
-			}
+
+
 		}
 	);
 	auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(truck);
 	truckSpline = EntityManager::GetSharedComponent<Spline>(truck);
-	
+
 	mmc->Mesh = std::make_shared<Mesh>();
 	mmc->Mesh->SetVertices(17, truckSpline->Vertices, truckSpline->Indices);
 
-	EntityManager::ForEachChild(truck, [](Entity child) 
+	EntityManager::ForEachChild(truck, [](Entity child)
 		{
 			auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(child);
 			auto childSpline = EntityManager::GetSharedComponent<Spline>(child);
@@ -243,14 +155,14 @@ Entity SorghumRecon::SorghumReconstructionSystem::CreatePlant(std::string path, 
 	return truck;
 }
 
-void SorghumRecon::SorghumReconstructionSystem::OnCreate()
+void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 {
 	_TruckArchetype = EntityManager::CreateEntityArchetype("Truck",
-		TruckInfo(), 
+		TruckInfo(),
 		Translation(), Rotation(), Scale(), LocalToWorld(), MeshMaterialComponent()
 	);
 	_LeafArchetype = EntityManager::CreateEntityArchetype("Leaf",
-		LeafInfo(), 
+		LeafInfo(),
 		LocalTranslation(), LocalRotation(), LocalScale(), LocalToParent(), LocalToWorld(), MeshMaterialComponent()
 	);
 	_SplineQuery = EntityManager::CreateEntityQuery();
@@ -276,20 +188,20 @@ void SorghumRecon::SorghumReconstructionSystem::OnCreate()
 	Enable();
 }
 
-void SorghumRecon::SorghumReconstructionSystem::OnDestroy()
+void SorghumReconstruction::SorghumReconstructionSystem::OnDestroy()
 {
 }
 
-void SorghumRecon::SorghumReconstructionSystem::Update()
+void SorghumReconstruction::SorghumReconstructionSystem::Update()
 {
 
 }
 
-void SorghumRecon::SorghumReconstructionSystem::FixedUpdate()
+void SorghumReconstruction::SorghumReconstructionSystem::FixedUpdate()
 {
 }
 
-void SorghumRecon::Spline::Import(std::ifstream& stream)
+void SorghumReconstruction::Spline::Import(std::ifstream& stream)
 {
 	int curveAmount;
 	stream >> curveAmount;

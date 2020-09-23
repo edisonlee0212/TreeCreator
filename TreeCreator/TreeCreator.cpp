@@ -9,7 +9,7 @@
 
 using namespace UniEngine;
 using namespace TreeUtilities;
-using namespace SorghumRecon;
+using namespace SorghumReconstruction;
 void InitGround();
 PlantSimulationSystem* InitPlantSimulationSystem();
 SorghumReconstructionSystem* InitSorghumReconstructionSystem();
@@ -25,7 +25,8 @@ float pcssScale = 1.0f;
 int main()
 {
 #pragma region Global light settings
-	LightingManager::SetDirectionalLightResolution(1024);
+	LightingManager::SetEnableShadow(true);
+	LightingManager::SetDirectionalLightResolution(2048);
 	LightingManager::SetStableFit(true);
 	LightingManager::SetMaxShadowDistance(100.0f);
 	LightingManager::SetSeamFixRatio(0.05f);

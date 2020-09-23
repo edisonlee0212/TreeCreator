@@ -1,9 +1,10 @@
 #pragma once
 #include "UniEngine.h"
 #include "TreeUtilities.h"
+#include "LeafSegment.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
-namespace SorghumRecon {
+namespace SorghumReconstruction {
 	struct TruckInfo : ComponentBase {
 	};
 
@@ -13,11 +14,54 @@ namespace SorghumRecon {
 	class Spline : public SharedComponentBase {
 	public:
 		float StartingPoint;
+		std::vector<LeafSegment> Segments;
 		std::vector<BezierCurve> Curves;
 		std::vector<Vertex> Vertices;
 		std::vector<unsigned> Indices;
 		void Import(std::ifstream& stream);
 
+		glm::vec3 EvaluatePoint(float point)
+		{
+			const float splineU = glm::clamp(point, 0.0f, 1.0f) * float(Curves.size());
+
+			// Decompose the global u coordinate on the spline
+			float integerPart;
+			const float fractionalPart = modff(splineU, &integerPart);
+
+			auto curveIndex = int(integerPart);
+			auto curveU = fractionalPart;
+
+			// If evaluating the very last point on the spline
+			if (curveIndex == Curves.size() && curveU <= 0.0f)
+			{
+				// Flip to the end of the last patch
+				curveIndex--;
+				curveU = 1.0f;
+			}
+			return Curves.at(curveIndex).GetPoint(curveU);
+		}
+
+		glm::vec3 EvaluateAxis(float point)
+		{
+			const float splineU = glm::clamp(point, 0.0f, 1.0f) * float(Curves.size());
+
+			// Decompose the global u coordinate on the spline
+			float integerPart;
+			const float fractionalPart = modff(splineU, &integerPart);
+
+			auto curveIndex = int(integerPart);
+			auto curveU = fractionalPart;
+
+			// If evaluating the very last point on the spline
+			if (curveIndex == Curves.size() && curveU <= 0.0f)
+			{
+				// Flip to the end of the last patch
+				curveIndex--;
+				curveU = 1.0f;
+			}
+			return Curves.at(curveIndex).GetAxis(curveU);
+		}
+		
 		size_t GetHashCode() override;
 	};
 
@@ -26,7 +70,7 @@ namespace SorghumRecon {
 		return (size_t)this;
 	}
 
-
+	
 	class SorghumReconstructionSystem :
 		public SystemBase
 	{
@@ -39,6 +83,8 @@ namespace SorghumRecon {
 
 		Entity CreateTruck() const;
 		Entity CreateLeafForTruck(Entity& truckEntity) const;
+
+		
 	public:
 
 		Entity CreatePlant(std::string path, float resolution) const;

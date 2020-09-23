@@ -104,6 +104,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="LeafSegment.cpp" />
     <ClCompile Include="PlantSimulationSystem.cpp" />
     <ClCompile Include="NetworkSystem.cpp" />
     <ClCompile Include="quickhull\QuickHull.cpp" />
@@ -112,6 +113,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     <ClCompile Include="TreeScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LeafSegment.h" />
     <ClInclude Include="NetworkSystem.h" />
     <ClInclude Include="PlantSimulationSystem.h" />
     <ClInclude Include="quickhull\ConvexHull.hpp" />
@@ -140,6 +142,9 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     <ProjectReference Include="..\TreeUtilities\TreeUtilities.vcxproj">
       <Project>{e0c6f70b-f996-43a3-ad08-11725c1d01d8}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MainSystems.cs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

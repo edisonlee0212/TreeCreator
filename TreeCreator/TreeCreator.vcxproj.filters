@@ -25,6 +25,12 @@
     <Filter Include="Source Files\quickhull">
       <UniqueIdentifier>{54632908-53ed-4954-ab43-dc5d89bef97f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\SorghumReconstruction">
+      <UniqueIdentifier>{8c551ecc-0cfc-483c-8420-616be1296937}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SorghumReconstruction">
+      <UniqueIdentifier>{e5708bbe-0a2e-4743-a627-9878f7a058e4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TreeCreator.cpp">
@@ -36,14 +42,17 @@
     <ClCompile Include="PlantSimulationSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SorghumReconstructionSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TreeScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="quickhull\QuickHull.cpp">
       <Filter>Source Files\quickhull</Filter>
+    </ClCompile>
+    <ClCompile Include="SorghumReconstructionSystem.cpp">
+      <Filter>Source Files\SorghumReconstruction</Filter>
+    </ClCompile>
+    <ClCompile Include="LeafSegment.cpp">
+      <Filter>Source Files\SorghumReconstruction</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -51,9 +60,6 @@
       <Filter>Header Files\Network</Filter>
     </ClInclude>
     <ClInclude Include="PlantSimulationSystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SorghumReconstructionSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TreeScene.h">
@@ -89,5 +95,16 @@
     <ClInclude Include="quickhull\QuickHull.hpp">
       <Filter>Header Files\quickhull</Filter>
     </ClInclude>
+    <ClInclude Include="SorghumReconstructionSystem.h">
+      <Filter>Header Files\SorghumReconstruction</Filter>
+    </ClInclude>
+    <ClInclude Include="LeafSegment.h">
+      <Filter>Header Files\SorghumReconstruction</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="MainSystems.cs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
