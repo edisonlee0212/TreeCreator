@@ -86,8 +86,8 @@ int main()
 	const bool enableSorghumRecon = true;
 	if (enableSorghumRecon) {
 		auto srSys = InitSorghumReconstructionSystem();
-		Entity plant1 = srSys->CreatePlant("skeleton_procedural_1.txt", 0.01f, "plant1");
-		Entity plant2 = srSys->CreatePlant("skeleton_procedural_2.txt", 0.01f, "plant2");
+		Entity plant1 = srSys->ImportPlant("skeleton_procedural_1.txt", 0.01f, "plant1");
+		Entity plant2 = srSys->ImportPlant("skeleton_procedural_2.txt", 0.01f, "plant2");
 		Translation t1;
 		Translation t2;
 		Rotation r1;
@@ -102,6 +102,11 @@ int main()
 
 		EntityManager::SetComponentData(plant2, t2);
 		EntityManager::SetComponentData(plant2, r2);
+
+
+
+		
+		srSys->GenerateMeshForAllPlants();
 	}
 
 #pragma region Engine Loop

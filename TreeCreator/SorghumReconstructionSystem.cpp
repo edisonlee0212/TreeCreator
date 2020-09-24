@@ -1,25 +1,25 @@
 #include "SorghumReconstructionSystem.h"
 
 
-Entity SorghumReconstruction::SorghumReconstructionSystem::CreateTruck() const
+Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant() const
 {
-	Entity ret = EntityManager::CreateEntity(_TruckArchetype);
+	Entity ret = EntityManager::CreateEntity(_PlantArchetype);
 	Scale s;
 	s.Value = glm::vec3(1.0f);
 	auto spline = std::make_shared<Spline>();
 	EntityManager::SetSharedComponent(ret, spline);
 	EntityManager::SetComponentData(ret, s);
 	auto mmc = std::make_shared<MeshMaterialComponent>();
-	mmc->Material = _TruckMaterial;
+	mmc->Material = _PlantMaterial;
 	EntityManager::SetSharedComponent(ret, mmc);
 
 	return ret;
 }
 
-Entity SorghumReconstruction::SorghumReconstructionSystem::CreateLeafForTruck(Entity& truckEntity) const
+Entity SorghumReconstruction::SorghumReconstructionSystem::CreateLeafForPlant(Entity& plantEntity) const
 {
 	Entity ret = EntityManager::CreateEntity(_LeafArchetype);
-	EntityManager::SetParent(ret, truckEntity);
+	EntityManager::SetParent(ret, plantEntity);
 	LocalScale ls;
 	ls.Value = glm::vec3(1.0f);
 	auto spline = std::make_shared<Spline>();
@@ -39,59 +39,9 @@ void SorghumReconstruction::SorghumReconstructionSystem::DrawGUI()
 	
 }
 
-Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::string path, float resolution, std::string name) const
+void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlants()
 {
-	std::ifstream file(path, std::fstream::in);
-	if (!file.is_open())
-	{
-		Debug::Log("Failed to open file!");
-		return Entity();
-	}
-	// Number of leaves in the file
-	int leafCount;
-	file >> leafCount;
-	Entity truck = CreateTruck();
-	auto truckSpline = EntityManager::GetSharedComponent<Spline>(truck);
-
-
-
-	truckSpline->StartingPoint = -1;
-	truckSpline->Import(file);
-
-	//Recenter plant:
-	glm::vec3 posSum = glm::vec3(0.0f);
-	int pointAmount = 0;
-	for (auto& curve : truckSpline->Curves) {
-		pointAmount += 2;
-		posSum += curve.CP0;
-		posSum += curve.CP3;
-	}
-	posSum /= pointAmount;
-	for (auto& curve : truckSpline->Curves) {
-		curve.CP0 -= posSum;
-		curve.CP1 -= posSum;
-		curve.CP2 -= posSum;
-		curve.CP3 -= posSum;
-	}
-
-	EntityManager::SetSharedComponent(truck, truckSpline);
-	for (int i = 0; i < leafCount; i++) {
-		Entity leaf = CreateLeafForTruck(truck);
-		auto leafSpline = EntityManager::GetSharedComponent<Spline>(leaf);
-		float startingPoint;
-		file >> startingPoint;
-		leafSpline->StartingPoint = startingPoint;
-		leafSpline->Import(file);
-		EntityManager::SetSharedComponent(leaf, leafSpline);
-
-
-
-		LocalTranslation lt;
-		lt.Value = truckSpline->EvaluatePoint(startingPoint);
-		EntityManager::SetComponentData(leaf, lt);
-	}
-	//TODO: fix this
-	EntityManager::ForEach<LocalToWorld>(_SplineQuery, [resolution]
+	EntityManager::ForEach<LocalToWorld>(_SplineQuery, []
 	(int index, Entity entity, LocalToWorld* ltw)
 		{
 
@@ -105,20 +55,10 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::stri
 				float percent = (float)i / (amount - 1);
 				auto front = glm::normalize(spline->EvaluateAxis(percent));
 				auto up = glm::vec3(0.0f, 0.0f, 1.0f);
-				
+
 				up = glm::normalize(glm::cross(glm::cross(front, up), front));
-				float width;
-				if(percent < 0.2f)
-				{
-					width = percent;
-				}else if(percent > 0.8f)
-				{
-					width = 1.0f - percent * 0.9f;
-				}else
-				{
-					width = 0.2f;
-				}
-				spline->Segments.emplace_back(spline->EvaluatePoint(percent), up, front, width, 180.0f * (1.0f - percent * 0.6f));
+			
+				spline->Segments.emplace_back(spline->EvaluatePoint(percent), up, front, spline->EvaluateWidth(percent), spline->EvaluateTheta(percent));
 			}
 			//Truck
 			const int step = 10;
@@ -160,16 +100,72 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant(std::stri
 
 	//mmc->Mesh = std::make_shared<Mesh>();
 	//mmc->Mesh->SetVertices(17, truckSpline->Vertices, truckSpline->Indices);
+	std::vector<Entity> plants;
+	_PlantQuery.ToEntityArray(plants);
+	for (auto& plant : plants) {
+		EntityManager::ForEachChild(plant, [](Entity child)
+			{
+				auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(child);
+				auto childSpline = EntityManager::GetSharedComponent<Spline>(child);
+				mmc->Mesh = std::make_shared<Mesh>();
+				mmc->Mesh->SetVertices(17, childSpline->Vertices, childSpline->Indices, true);
+			}
+		);
+	}
+}
 
-	EntityManager::ForEachChild(truck, [](Entity child)
-		{
-			auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(child);
-			auto childSpline = EntityManager::GetSharedComponent<Spline>(child);
-			mmc->Mesh = std::make_shared<Mesh>();
-			mmc->Mesh->SetVertices(17, childSpline->Vertices, childSpline->Indices, true);
-		}
-	);
-	ExportPlant(truck, name);
+Entity SorghumReconstruction::SorghumReconstructionSystem::ImportPlant(std::string path, float resolution, std::string name) const
+{
+	std::ifstream file(path, std::fstream::in);
+	if (!file.is_open())
+	{
+		Debug::Log("Failed to open file!");
+		return Entity();
+	}
+	// Number of leaves in the file
+	int leafCount;
+	file >> leafCount;
+	Entity truck = CreatePlant();
+	auto truckSpline = EntityManager::GetSharedComponent<Spline>(truck);
+
+
+
+	truckSpline->StartingPoint = -1;
+	truckSpline->Import(file);
+
+	//Recenter plant:
+	glm::vec3 posSum = glm::vec3(0.0f);
+	int pointAmount = 0;
+	for (auto& curve : truckSpline->Curves) {
+		pointAmount += 2;
+		posSum += curve.CP0;
+		posSum += curve.CP3;
+	}
+	posSum /= pointAmount;
+	for (auto& curve : truckSpline->Curves) {
+		curve.CP0 -= posSum;
+		curve.CP1 -= posSum;
+		curve.CP2 -= posSum;
+		curve.CP3 -= posSum;
+	}
+
+	EntityManager::SetSharedComponent(truck, truckSpline);
+	for (int i = 0; i < leafCount; i++) {
+		Entity leaf = CreateLeafForPlant(truck);
+		auto leafSpline = EntityManager::GetSharedComponent<Spline>(leaf);
+		float startingPoint;
+		file >> startingPoint;
+		leafSpline->StartingPoint = startingPoint;
+		leafSpline->Import(file);
+		EntityManager::SetSharedComponent(leaf, leafSpline);
+
+
+
+		LocalTranslation lt;
+		lt.Value = truckSpline->EvaluatePoint(startingPoint);
+		EntityManager::SetComponentData(leaf, lt);
+	}
+	
 	return truck;
 }
 
@@ -245,8 +241,8 @@ void SorghumReconstruction::SorghumReconstructionSystem::ExportPlant(Entity plan
 
 void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 {
-	_TruckArchetype = EntityManager::CreateEntityArchetype("Truck",
-		TruckInfo(),
+	_PlantArchetype = EntityManager::CreateEntityArchetype("Truck",
+		SorghumInfo(),
 		Translation(), Rotation(), Scale(), LocalToWorld()
 	);
 	_LeafArchetype = EntityManager::CreateEntityArchetype("Leaf",
@@ -254,13 +250,14 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 		LocalTranslation(), LocalRotation(), LocalScale(), LocalToParent(), LocalToWorld()
 	);
 	_SplineQuery = EntityManager::CreateEntityQuery();
-	EntityManager::SetEntityQueryAnyFilters(_SplineQuery, TruckInfo(), LeafInfo());
-
-	_TruckMaterial = std::make_shared<Material>();
-	_TruckMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
+	EntityManager::SetEntityQueryAnyFilters(_SplineQuery, SorghumInfo(), LeafInfo());
+	_PlantQuery = EntityManager::CreateEntityQuery();
+	EntityManager::SetEntityQueryAllFilters(_PlantQuery, SorghumInfo());
+	_PlantMaterial = std::make_shared<Material>();
+	_PlantMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto textureDiffuseTruck = new Texture2D(TextureType::DIFFUSE);
 	textureDiffuseTruck->LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), "");
-	_TruckMaterial->Textures2Ds()->push_back(textureDiffuseTruck);
+	_PlantMaterial->Textures2Ds()->push_back(textureDiffuseTruck);
 
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
@@ -297,4 +294,13 @@ void SorghumReconstruction::Spline::Import(std::ifstream& stream)
 		}
 		Curves.emplace_back(cp[0], cp[1], cp[2], cp[3]);
 	}
+}
+
+void SorghumReconstruction::Spline::FakeStart()
+{
+	glm::vec3 cp0, cp1, cp2, cp3;
+	
+	Curves[0] = BezierCurve(cp0, cp1, cp2, cp3);
+	
+	Curves.insert(Curves.begin(), BezierCurve(cp0, cp1, cp2, cp3));
 }

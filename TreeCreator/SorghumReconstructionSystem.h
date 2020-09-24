@@ -5,7 +5,7 @@
 using namespace UniEngine;
 using namespace TreeUtilities;
 namespace SorghumReconstruction {
-	struct TruckInfo : ComponentBase {
+	struct SorghumInfo : ComponentBase {
 	};
 
 	struct LeafInfo : ComponentBase {
@@ -19,7 +19,7 @@ namespace SorghumReconstruction {
 		std::vector<Vertex> Vertices;
 		std::vector<unsigned> Indices;
 		void Import(std::ifstream& stream);
-
+		void FakeStart();
 		glm::vec3 EvaluatePoint(float point)
 		{
 			const float splineU = glm::clamp(point, 0.0f, 1.0f) * float(Curves.size());
@@ -61,7 +61,66 @@ namespace SorghumReconstruction {
 			}
 			return Curves.at(curveIndex).GetAxis(curveU);
 		}
+
+		float EvaluateTheta(float point)
+		{
+			if (point < 0.1f)
+			{
+				return 180.0f;
+			}
+			if (point < 0.2f)
+			{
+				return 180.0f - (point - 0.1f) * 900.0f;
+			}
+			if (point < 0.4f)
+			{
+				return 90.0f - (point - 0.2f) * 400.0f;
+			}
+			return 10.0f;
+		}
 		
+		float EvaluateWidth(float point)
+		{
+			if (point < 0.01f)
+			{
+				return 0.01f;
+			}
+			if (point < 0.05f)
+			{
+				return point;
+			}
+			if (point < 0.1f)
+			{
+				return 0.05f;
+			}
+			if (point < 0.2f)
+			{
+				return 0.05f + (point - 0.1f) * 0.95f;
+			}
+			if (point < 0.4f)
+			{
+				return 0.1f + (point - 0.2f) * 0.5f;
+			}
+			if(point < 0.8f)
+			{
+				return 0.2f;
+			}
+			return 1.0f - point * 0.9f;
+			
+			if (point < 0.05f)
+			{
+				return point;
+			}
+			if(point < 0.3f)
+			{
+				return 0.15f;
+			}
+			if (point < 0.8f)
+			{
+				return 0.2f;
+			}
+			return 1.0f - point * 0.9f;
+		}
 		size_t GetHashCode() override;
 	};
 
@@ -74,21 +133,19 @@ namespace SorghumReconstruction {
 	class SorghumReconstructionSystem :
 		public SystemBase
 	{
-		EntityArchetype _TruckArchetype;
+		EntityArchetype _PlantArchetype;
 		EntityArchetype _LeafArchetype;
 		EntityQuery _SplineQuery;
-
-		std::shared_ptr<Material> _TruckMaterial;
+		EntityQuery _PlantQuery;
+		std::shared_ptr<Material> _PlantMaterial;
 		std::shared_ptr<Material> _LeafMaterial;
-
-		Entity CreateTruck() const;
-		Entity CreateLeafForTruck(Entity& truckEntity) const;
-
 		void DrawGUI();
 		
 	public:
-
-		Entity CreatePlant(std::string path, float resolution, std::string name) const;
+		Entity CreatePlant() const;
+		Entity CreateLeafForPlant(Entity& plantEntity) const;
+		void GenerateMeshForAllPlants();
+		Entity ImportPlant(std::string path, float resolution, std::string name) const;
 		void ExportPlant(Entity plant, std::string path) const;
 		void OnCreate() override;
 		void OnDestroy() override;
