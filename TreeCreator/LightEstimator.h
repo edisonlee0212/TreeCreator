@@ -62,6 +62,7 @@ namespace TreeUtilities {
 		void SetBranchNodeSize(float value);
 		glm::vec3 GetCenterPosition();
 		LightEstimator(size_t resolution = 512, float centerDistance = 100.0f);
+		void ResetResolution(size_t value);
 		void ResetCenterPosition(glm::vec3 position);
 		void ResetCenterDistance(float distance);
 		void ResetSnapShotWidth(float width);

@@ -170,6 +170,11 @@ TreeUtilities::LightEstimator::LightEstimator(size_t resolution, float centerDis
 	_BlurFilterRenderTarget->AttachTexture(_BlurFilter, GL_COLOR_ATTACHMENT0);
 }
 
+void TreeUtilities::LightEstimator::ResetResolution(size_t value)
+{
+	_Resolution = value;
+}
+
 void TreeUtilities::LightEstimator::ResetCenterPosition(glm::vec3 position)
 {
 	_CenterPositon = position;

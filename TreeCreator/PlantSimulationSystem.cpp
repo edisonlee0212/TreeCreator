@@ -543,7 +543,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& branchNode, std::s
 #pragma region Bud kill probability
 		float budKillProbability = 0;
 		if (bud.IsApical) {
-			budKillProbability = EntityManager::HasComponentData<TreeData>(EntityManager::GetParent(branchNode)) ? 0 : treeParameters.ApicalBudKillProbability;
+			budKillProbability = EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(branchNode)) ? 0 : treeParameters.ApicalBudKillProbability;
 		}
 		else {
 			budKillProbability = treeParameters.LateralBudKillProbability;

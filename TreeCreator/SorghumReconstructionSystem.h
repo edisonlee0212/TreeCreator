@@ -13,13 +13,20 @@ namespace SorghumReconstruction {
 
 	class Spline : public SharedComponentBase {
 	public:
+		glm::vec3 Left;
+		bool IsMin;
 		float StartingPoint;
+		glm::vec3 EndPoint;
+		float BreakingHeight;
+		glm::vec3 BreakingPoint;
+		float TopHeight;
+		float StemWidth;
 		std::vector<LeafSegment> Segments;
 		std::vector<BezierCurve> Curves;
 		std::vector<Vertex> Vertices;
 		std::vector<unsigned> Indices;
 		void Import(std::ifstream& stream);
-		void FakeStart();
+		void BuildStem(std::shared_ptr<Spline>& truckSpline);
 		glm::vec3 EvaluatePoint(float point)
 		{
 			const float splineU = glm::clamp(point, 0.0f, 1.0f) * float(Curves.size());
@@ -64,62 +71,61 @@ namespace SorghumReconstruction {
 
 		float EvaluateTheta(float point)
 		{
-			if (point < 0.1f)
+			glm::vec3 position = EvaluatePoint(point);
+			float height = position.z;
+			float distance = glm::distance(position, BreakingPoint);
+			float xyDistance = glm::distance(glm::vec2(position.x, position.y), glm::vec2(BreakingPoint.x, BreakingPoint.y));
+			if (height < BreakingHeight && xyDistance < 1.0f)
 			{
-				return 180.0f;
+				return 180;
 			}
-			if (point < 0.2f)
+			float percent = distance / glm::distance(BreakingPoint, EndPoint);
+			
+			if (percent < 0.3f)
 			{
-				return 180.0f - (point - 0.1f) * 900.0f;
+				return 180.0f - percent * 300.0f;
 			}
-			if (point < 0.4f)
+			if (percent < 0.5f)
 			{
-				return 90.0f - (point - 0.2f) * 400.0f;
+				return 90.0f - (percent - 0.3f) * 350.0f;
 			}
-			return 10.0f;
+			return 20.0f;
 		}
 		
 		float EvaluateWidth(float point)
 		{
-			if (point < 0.01f)
+			glm::vec3 position = EvaluatePoint(point);
+			float height = position.z;
+			float distance = glm::distance(position, BreakingPoint);
+			float xyDistance = glm::distance(glm::vec2(position.x, position.y), glm::vec2(BreakingPoint.x, BreakingPoint.y));
+			if (height < BreakingHeight && xyDistance < 1.0f)
 			{
-				return 0.01f;
+				float ret = StemWidth;
+				if(!IsMin)
+				{
+					if(distance > 0.5f)
+					{
+						ret -= (distance - 0.5f) * 0.2f;
+					}
+				}
+				return ret;
 			}
-			if (point < 0.05f)
-			{
-				return point;
-			}
-			if (point < 0.1f)
-			{
-				return 0.05f;
-			}
-			if (point < 0.2f)
-			{
-				return 0.05f + (point - 0.1f) * 0.95f;
-			}
-			if (point < 0.4f)
-			{
-				return 0.1f + (point - 0.2f) * 0.5f;
-			}
-			if(point < 0.8f)
-			{
-				return 0.2f;
-			}
-			return 1.0f - point * 0.9f;
+
+			float percent = distance / glm::distance(BreakingPoint, EndPoint);
 			
-			if (point < 0.05f)
+			if(percent < 0.2f)
 			{
-				return point;
+				return StemWidth + (IsMin ? 0.01f : 0.0f);
 			}
-			if(point < 0.3f)
+			if (percent < 0.4f)
 			{
-				return 0.15f;
+				return StemWidth + (percent - 0.2f) * 0.5f + (IsMin ? 0.01f : 0.0f);
 			}
-			if (point < 0.8f)
+			if (percent < 0.7f)
 			{
-				return 0.2f;
+				return StemWidth + 0.1f + (IsMin ? 0.01f : 0.0f);
 			}
-			return 1.0f - point * 0.9f;
+			return StemWidth + 0.1f - (percent - 0.7) * 0.4f + (IsMin ? 0.01f : 0.0f);
 		}
 		size_t GetHashCode() override;
 	};

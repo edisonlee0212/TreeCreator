@@ -56,6 +56,7 @@ int main()
 	
 #pragma region Light estimator setup
 	//The smaller the branch node's size, the more branching for tree.
+	TreeManager::GetLightEstimator()->ResetResolution(512);
 	TreeManager::GetLightEstimator()->SetBranchNodeSize(0.7f);
 	TreeManager::GetLightEstimator()->ResetCenterDistance(60);
 	TreeManager::GetLightEstimator()->ResetSnapShotWidth(30);
@@ -92,8 +93,8 @@ int main()
 		Translation t2;
 		Rotation r1;
 		Rotation r2;
-		t1.Value = glm::vec3(-2.5, 2.0, 0);
-		t2.Value = glm::vec3(2.5, 2.0, 0);
+		t1.Value = glm::vec3(-2.5, 0.0, 0);
+		t2.Value = glm::vec3(2.5, 0.0, 0);
 		r1.Value = glm::quat(glm::vec3(glm::radians(-90.0f), 0, 0));
 		r2.Value = glm::quat(glm::vec3(glm::radians(-90.0f), 0, 0));
 
@@ -102,11 +103,10 @@ int main()
 
 		EntityManager::SetComponentData(plant2, t2);
 		EntityManager::SetComponentData(plant2, r2);
-
-
-
 		
 		srSys->GenerateMeshForAllPlants();
+		srSys->ExportPlant(plant1, "plant1");
+		srSys->ExportPlant(plant2, "plant2");
 	}
 
 #pragma region Engine Loop
