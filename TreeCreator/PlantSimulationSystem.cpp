@@ -2,7 +2,7 @@
 #include "TreeScene.h"
 
 #include "quickhull/quickhull.hpp"
-
+#include <gtx/vector_angle.hpp>
 #include <gtx/matrix_decompose.hpp>
 #include <direct.h>
 void TreeUtilities::PlantSimulationSystem::DrawGUI()
@@ -214,9 +214,8 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 	}
 	ImGui::Begin("Tree Utilities");
 	if (ImGui::CollapsingHeader("Tree Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
-		if (ImGui::Button(_Growing ? "Pause growing" : "Resume growing")) {
-			_Growing = !_Growing;
-		}
+		ImGui::InputFloat("Limit angle", &_DirectionPruningLimitAngle, 0.0f, 0.0f, "%.1f");
+		ImGui::Checkbox("Enable direction pruning", &_EnableDirectionPruning);
 		if(ImGui::SliderFloat("Gravity", &_Gravity, 0.0f, 20.0f))
 		{
 			_GravityChanged = true;
@@ -253,6 +252,9 @@ void TreeUtilities::PlantSimulationSystem::DrawGUI()
 				{
 					age->ToGrowIteration += _NewPushIteration;
 				});
+		}
+		if (ImGui::Button(_Growing ? "Pause growing" : "Resume growing")) {
+			_Growing = !_Growing;
 		}
 		ImGui::Separator();
 		if (ImGui::Button("Delete all trees")) {
@@ -514,6 +516,8 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	if (growed) {
 		UpdateBranchNodeResource(rootBranchNode, treeParameters, treeAge);
 		EvaluatePruning(rootBranchNode, treeParameters, treeAge, treeData);
+
+		if(_EnableDirectionPruning) EvaluateDirectionPruning(rootBranchNode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
 	}
 	return growed;
 }
@@ -1039,7 +1043,7 @@ inline float TreeUtilities::PlantSimulationSystem::GetApicalControl(std::shared_
 {
 	float apicalControl = treeParameters.ApicalControlBase * glm::pow(treeParameters.ApicalControlAgeFactor, treeAge.Value);
 	if (treeInfo->ApicalControlTimeVal.at(treeAge.Value) < 1.0f) {
-		int reversedLevel = branchNodeInfo.MaxActivatedChildLevel - level + 1;
+		const int reversedLevel = branchNodeInfo.MaxActivatedChildLevel - level + 1;
 		return treeInfo->ApicalControlTimeLevelVal.at(treeAge.Value)[reversedLevel];
 	}
 	return treeInfo->ApicalControlTimeLevelVal.at(treeAge.Value)[level];
@@ -1053,7 +1057,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeLength(Entity& branch
 	if (branchNodeInfo.Pruned) EntityManager::SetComponentData(branchNode, branchNodeInfo);
 	EntityManager::ForEachChild(branchNode, [this, &branchNodeInfo](Entity child) {
 		UpdateBranchNodeLength(child);
-		BranchNodeInfo childNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(child);
+		const BranchNodeInfo childNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(child);
 		float d = childNodeInfo.DistanceToBranchEnd + childNodeInfo.DistanceToParent;
 		branchNodeInfo.TotalDistanceToBranchEnd += childNodeInfo.DistanceToParent + childNodeInfo.TotalDistanceToBranchEnd;
 		if (d > branchNodeInfo.DistanceToBranchEnd) branchNodeInfo.DistanceToBranchEnd = d;
@@ -1069,9 +1073,9 @@ void TreeUtilities::PlantSimulationSystem::UpdateBranchNodeActivatedLevel(Entity
 	float maxChildLength = 0;
 	Entity maxChild;
 	EntityManager::ForEachChild(branchNode, [this, &branchNodeInfo, &maxChild, &maxChildLength](Entity child) {
-		BranchNodeInfo childNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(child);
+		const BranchNodeInfo childNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(child);
 		if (branchNodeInfo.Pruned) return;
-		float d = childNodeInfo.TotalDistanceToBranchEnd + childNodeInfo.DistanceToParent;
+		const float d = childNodeInfo.TotalDistanceToBranchEnd + childNodeInfo.DistanceToParent;
 		if (d > maxChildLength) {
 			maxChildLength = d;
 			maxChild = child;
@@ -1213,11 +1217,25 @@ void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& branchNode, T
 	);
 }
 
+void PlantSimulationSystem::EvaluateDirectionPruning(Entity& branchNode, glm::vec3 escapeDirection, float limitAngle)
+{
+	BranchNodeInfo branchNodeInfo = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
+	if(glm::angle(escapeDirection, branchNodeInfo.DesiredGlobalRotation * glm::vec3(0.0f, 0.0f, -1.0f)) < glm::radians(limitAngle))
+	{
+		PruneBranchNode(branchNode, &branchNodeInfo);
+	}
+	EntityManager::ForEachChild(branchNode, [this, &escapeDirection, &limitAngle](Entity child)
+		{
+			EvaluateDirectionPruning(child, escapeDirection, limitAngle);
+		}
+	);
+}
+
 void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntity)
 {
 	glm::mat4 treeTransform = EntityManager::GetComponentData<LocalToWorld>(treeEntity).Value;
 	auto treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity).Value;
-	auto treeInfo = EntityManager::GetSharedComponent<TreeData>(treeEntity);
+	auto treeData = EntityManager::GetSharedComponent<TreeData>(treeEntity);
 	std::mutex heightMutex;
 	float treeHeight = 0.0f;
 	EntityManager::ForEach<TreeIndex, LocalToWorld, BranchNodeInfo>(_BranchNodeQuery,
@@ -1233,7 +1251,7 @@ void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntit
 			}
 		}
 	);
-	treeInfo->Height = treeHeight;
+	treeData->Height = treeHeight;
 }
 
 void TreeUtilities::PlantSimulationSystem::CalculateDirectGravityForce(Entity& treeEntity, float gravity)

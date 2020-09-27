@@ -29,7 +29,7 @@ namespace SorghumReconstruction {
 			if(Theta < 90.0f)
 			{
 				auto distanceToCenter = HalfWidth / glm::tan(glm::radians(Theta));
-				auto center = Position + distanceToCenter * Up;
+				auto center = Position + (Radius - HalfWidth) * Up;
 				auto direction = glm::rotate(Up, glm::radians(angle), Front);
 				return center - Radius * direction;
 			}

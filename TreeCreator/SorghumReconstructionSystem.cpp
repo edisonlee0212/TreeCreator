@@ -49,20 +49,41 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 			spline->Vertices.clear();
 			spline->Indices.clear();
 			spline->Segments.clear();
-			const int amount = 30;
+			/*const int amount = 30;
 			for (int i = 0; i < amount; i++)
 			{
 				float percent = (float)i / (amount - 1);
-				auto front = glm::normalize(spline->EvaluateAxis(percent));
-				
-				auto up = glm::vec3(0.0f, 0.0f, 1.0f);
+				auto front = glm::normalize(spline->EvaluateAxisFromCurve(percent));
 
-				up = glm::normalize(glm::cross(glm::cross(front, up), front));
-				 
-				//auto up = glm::normalize(glm::cross(spline->Left, front));
+				auto up = glm::normalize(glm::cross(spline->Left, front));
 			
-				spline->Segments.emplace_back(spline->EvaluatePoint(percent), up, front, spline->EvaluateWidth(percent), spline->EvaluateTheta(percent));
+				spline->Segments.emplace_back(spline->EvaluatePointFromCurve(percent), up, front, spline->EvaluateWidth(percent), spline->EvaluateTheta(percent));
+			}*/
+
+			const int amount = 10;
+
+			for(int i = 1; i < spline->Nodes.size(); i++)
+			{
+				auto& prev = spline->Nodes.at(i - 1);
+				auto& curr = spline->Nodes.at(i);
+				
+				float distance = glm::distance(prev.Position, curr.Position);
+				BezierCurve curve = BezierCurve(prev.Position, prev.Position + distance / 5.0f * prev.Axis, curr.Position - distance / 5.0f * curr.Axis, curr.Position);
+				for(float div = 1.0f / amount; div <= 1.0f; div += 1.0f / amount)
+				{
+					auto front = prev.Axis * (1.0f - div) + curr.Axis * div;
+					
+					auto up = glm::normalize(glm::cross(spline->Left, front));
+					
+					spline->Segments.emplace_back(
+						curve.GetPoint(div),
+						up, 
+						front,
+						prev.Width * (1.0f - div) + curr.Width * div,
+						prev.Theta * (1.0f - div) + curr.Theta * div);
+				}
 			}
+			
 			//Truck
 			const int step = 10;
 
@@ -130,6 +151,7 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::ImportPlant(std::stri
 	int leafCount;
 	file >> leafCount;
 	Entity truck = CreatePlant();
+	truck.SetName(name);
 	auto truckSpline = EntityManager::GetSharedComponent<Spline>(truck);
 
 
@@ -164,29 +186,24 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::ImportPlant(std::stri
 		file >> startingPoint;
 		
 		if (minOrder > startingPoint) minOrder = startingPoint;
-		leafSpline->IsMin = false;
 		leafSpline->StartingPoint = startingPoint;
 		leafSpline->Import(file);
 		EntityManager::SetSharedComponent(leaf, leafSpline);
 		for (auto& curve : leafSpline->Curves) {
-			curve.CP0 += truckSpline->EvaluatePoint(startingPoint);
-			curve.CP1 += truckSpline->EvaluatePoint(startingPoint);
-			curve.CP2 += truckSpline->EvaluatePoint(startingPoint);
-			curve.CP3 += truckSpline->EvaluatePoint(startingPoint);
+			curve.CP0 += truckSpline->EvaluatePointFromCurve(startingPoint);
+			curve.CP1 += truckSpline->EvaluatePointFromCurve(startingPoint);
+			curve.CP2 += truckSpline->EvaluatePointFromCurve(startingPoint);
+			curve.CP3 += truckSpline->EvaluatePointFromCurve(startingPoint);
 		}
-		leafSpline->EndPoint = leafSpline->Curves.back().CP3;
-		leafSpline->StemWidth = 0.1f - leafSpline->StartingPoint * 0.02f;
-		leafSpline->TopHeight = leafSpline->Curves.back().CP3.z;
-		
-		leafSpline->Left = glm::cross(leafSpline->EvaluateAxis(1.0f), leafSpline->EvaluateAxis(0.0f));
+
+		leafSpline->Left = glm::cross(glm::vec3(0.0f, 0.0f, 1.0f), leafSpline.get()->Curves.begin()->CP0 - leafSpline.get()->Curves.back().CP3);
 	}
 	EntityManager::ForEachChild(truck, [&minOrder, &truckSpline](Entity leaf)
 		{
 			auto leafSpline = EntityManager::GetSharedComponent<Spline>(leaf);
-			if (leafSpline->StartingPoint == minOrder) {
-				leafSpline->IsMin = true;
-			}
-			leafSpline->BuildStem(truckSpline);
+
+			//leafSpline->BuildStem(truckSpline);
+			leafSpline->BuildNodes(truckSpline);
 		});
 	return truck;
 }
@@ -319,22 +336,19 @@ void SorghumReconstruction::Spline::Import(std::ifstream& stream)
 	}
 }
 
-void SorghumReconstruction::Spline::BuildStem(std::shared_ptr<Spline>& truckSpline)
+
+void SorghumReconstruction::Spline::BuildNodes(std::shared_ptr<Spline>& truckSpline)
 {
-	//90%
-	float cutPercentage = 0.95f;
-
-	glm::vec3 cp0, cp1, cp2, cp3;
-	cp0 = IsMin ? truckSpline.get()->EvaluatePoint(0.0f) : truckSpline.get()->EvaluatePoint(StartingPoint - 0.25f);
-	cp1 = Curves.begin()->CP0;
-	BreakingHeight = cp1.z;
-
-	BreakingPoint = cp1;
-	float cp0cp1Dist = cutPercentage * glm::distance(Curves.begin()->CP0, Curves.begin()->CP1);
-	glm::vec3 cutAxis = EvaluateAxis(1.0f - cutPercentage);
-	Curves.begin()->CP0 = EvaluatePoint(1.0f - cutPercentage);
-	Curves.begin()->CP1 = Curves.begin()->CP0 + cutAxis * cp0cp1Dist;
-	cp2 = Curves.begin()->CP0 - cutAxis * 0.02f;
-	cp3 = Curves.begin()->CP0;
-	Curves.insert(Curves.begin(), BezierCurve(cp0, cp1, cp2, cp3));
+	float width = 0.1f - StartingPoint * 0.05f;
+	for(float i = 0.0f; i < StartingPoint - 0.05f; i += 0.05f)
+	{
+		Nodes.emplace_back(truckSpline.get()->EvaluatePointFromCurve(i), 180.0f, width, truckSpline.get()->EvaluateAxisFromCurve(i));
+	}
+	for(float i = 0.05f; i <= 1.0f; i += 0.05f)
+	{
+		float w = 0.15f;
+		if (i > 0.75f) w -= (i - 0.75f) * 0.5f;
+		Nodes.emplace_back(EvaluatePointFromCurve(i), i == 0.05f ? 20.0f : 10.0f, w, EvaluateAxisFromCurve(i));
+	}
+	
 }

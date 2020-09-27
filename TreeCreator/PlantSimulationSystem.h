@@ -13,8 +13,9 @@ namespace TreeUtilities {
 		public SystemBase
 	{
 #pragma region GUI Related
-		bool _DisplayConvexHull;
-		
+		float _DirectionPruningLimitAngle = 70;
+		bool _DisplayConvexHull = false;
+		bool _EnableDirectionPruning = false;
 		bool _GravityChanged = false;
 		bool _DisplayFullParam = true;
 		char _CurrentWorkingDir[256] = {};
@@ -44,8 +45,9 @@ namespace TreeUtilities {
 		void UpdateLocalTransform(Entity& branchNode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation);
 		void UpdateBranchNodeResource(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge);
 		bool GrowShoots(Entity& branchNode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
-		void DeactivateBud(BranchNodeInfo& branchNodeInfo, Bud& bud);
+		static void DeactivateBud(BranchNodeInfo& branchNodeInfo, Bud& bud);
 		void EvaluatePruning(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge, std::shared_ptr<TreeData>& treeInfo);
+		void EvaluateDirectionPruning(Entity& branchNode, glm::vec3 escapeDirection, float limitAngle);
 		void ApplyLocalTransform(Entity& treeEntity);
 		void CalculateDirectGravityForce(Entity& treeEntity, float gravity);
 		void BackPropagateForce(Entity& branchNode, float fixedPropagationCoefficient);
