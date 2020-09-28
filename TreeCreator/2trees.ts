@@ -1,7 +1,7 @@
 Amount:
 2
 Position
--5.000000
+-3.000000
 0.000000
 0.000000
 Seed
@@ -69,7 +69,7 @@ EndNodeThickness
 ThicknessControlFactor
 0.500000
 Position
-5.000000
+3.000000
 0.000000
 0.000000
 Seed

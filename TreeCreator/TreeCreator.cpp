@@ -149,25 +149,36 @@ SorghumReconstructionSystem* InitSorghumReconstructionSystem()
 }
 void InitGround() {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());
-	auto entity = EntityManager::CreateEntity(archetype, "Floor");
-	Translation translation = Translation();
-	translation.Value = glm::vec3(0.0f, 0.0f, 0.0f);
-	Scale scale = Scale();
-	scale.Value = glm::vec3(50.0f);
-	EntityManager::SetComponentData<Translation>(entity, translation);
-	EntityManager::SetComponentData<Scale>(entity, scale);
-
 
 	auto mat = std::make_shared<Material>();
 	mat->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto texture = new Texture2D(TextureType::DIFFUSE);
-	texture->LoadTexture(FileIO::GetResourcePath("Textures/white.png"), "");
+	texture->LoadTexture("../Resources/Textures/grassland.jpg", "");
 	mat->Textures2Ds()->push_back(texture);
 	mat->SetMaterialProperty("material.shininess", 32.0f);
 	auto meshMaterial = std::make_shared<MeshMaterialComponent>();
 	meshMaterial->Mesh = Default::Primitives::Quad;
 	meshMaterial->Material = mat;
-	EntityManager::SetSharedComponent<MeshMaterialComponent>(entity, meshMaterial);
+	Translation translation = Translation();
+	Scale scale = Scale();
+	auto baseEntity = EntityManager::CreateEntity(archetype, "Ground");
+	int radius = 10;
+	float size = 1.0f;
+	for(int i = -radius; i <= radius; i++)
+	{
+		for(int j = -radius; j <= radius; j++)
+		{
+			auto entity = EntityManager::CreateEntity(archetype, "Floor");
+			EntityManager::SetParent(entity, baseEntity);
+			translation.Value = glm::vec3(size * 2 * i, 0.0f, size * 2 * j);
+			scale.Value = glm::vec3(size * 1.0f);
+			EntityManager::SetComponentData<Translation>(entity, translation);
+			EntityManager::SetComponentData<Scale>(entity, scale);
+			EntityManager::SetSharedComponent<MeshMaterialComponent>(entity, meshMaterial);
+		}
+	}
+	
+	
 
 }
 void LightSettingMenu() {
