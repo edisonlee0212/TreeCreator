@@ -201,7 +201,7 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::InputInt("Iterations left", (int*)((char*)data + sizeof(int)));
 		}
 	);
-
+	
 	EntityEditorSystem::AddComponentInspector<TreeIndex>(
 		[](ComponentBase* data)
 		{
@@ -234,7 +234,59 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::InputFloat2("Thickness End/Fac", &tps->EndNodeThickness);
 		}
 	);
-		
+
+	EntityEditorSystem::AddComponentInspector<InternodeInfo>(
+		[](ComponentBase* data)
+		{
+			auto internodeInfo = static_cast<InternodeInfo*>(data);
+			ImGui::Text(("Level: " + std::to_string(internodeInfo->Level)).c_str());
+		}
+	);
+
+	EntityEditorSystem::AddComponentInspector<InternodeInfo>(
+		[](ComponentBase* data)
+		{
+			auto internodeInfo = static_cast<InternodeInfo*>(data);
+			ImGui::Text(("Level: " + std::to_string(internodeInfo->Level)).c_str());
+			ImGui::Text(("DistanceToParent: " + std::to_string(internodeInfo->DistanceToParent)).c_str());
+			ImGui::Text(("DistanceToBranchEnd: " + std::to_string(internodeInfo->DistanceToBranchEnd)).c_str());
+			ImGui::Text(("TotalDistanceToBranchEnd: " + std::to_string(internodeInfo->TotalDistanceToBranchEnd)).c_str());
+			ImGui::Text(("DistanceToBranchStart: " + std::to_string(internodeInfo->DistanceToBranchStart)).c_str());
+			ImGui::Text(("AccumulatedLength: " + std::to_string(internodeInfo->AccumulatedLength)).c_str());
+			ImGui::Text(("AccumulatedLight: " + std::to_string(internodeInfo->AccumulatedLight)).c_str());
+			ImGui::Text(("AccumulatedActivatedBudsAmount: " + std::to_string(internodeInfo->AccumulatedActivatedBudsAmount)).c_str());
+			ImGui::Text(("AccumulatedGravity: " + std::to_string(internodeInfo->AccumulatedGravity)).c_str());
+			ImGui::Text(("NumValidChild: " + std::to_string(internodeInfo->NumValidChild)).c_str());
+			ImGui::Text(("MaxChildLevel: " + std::to_string(internodeInfo->MaxChildLevel)).c_str());
+			ImGui::Text(("MaxActivatedChildLevel: " + std::to_string(internodeInfo->MaxActivatedChildLevel)).c_str());
+			ImGui::Text(("Inhibitor: " + std::to_string(internodeInfo->Inhibitor)).c_str());
+			ImGui::Text(("ParentInhibitorFactor: " + std::to_string(internodeInfo->ParentInhibitorFactor)).c_str());
+			ImGui::Text(("ActivatedBudsAmount: " + std::to_string(internodeInfo->ActivatedBudsAmount)).c_str());
+			ImGui::Text(("BranchEndInternodeAmount: " + std::to_string(internodeInfo->BranchEndInternodeAmount)).c_str());
+			ImGui::Text(("Pruned: " + std::to_string(internodeInfo->Pruned)).c_str());
+			ImGui::Text(("IsApical: " + std::to_string(internodeInfo->IsApical)).c_str());
+			ImGui::Text(("ApicalBudExist: " + std::to_string(internodeInfo->ApicalBudExist)).c_str());
+			ImGui::Text(("IsActivatedEndNode: " + std::to_string(internodeInfo->IsActivatedEndNode)).c_str());
+			ImGui::Text(("Length: " + std::to_string(internodeInfo->Length)).c_str());
+			ImGui::Text(("Thickness: " + std::to_string(internodeInfo->Thickness)).c_str());
+			ImGui::Text(("Deformation: " + std::to_string(internodeInfo->Deformation)).c_str());
+			ImGui::Text(("Straightness: " + std::to_string(internodeInfo->Straightness)).c_str());
+			ImGui::Text(("Slope: " + std::to_string(internodeInfo->Slope)).c_str());
+			ImGui::Text(("SiblingAngle: " + std::to_string(internodeInfo->SiblingAngle)).c_str());
+			ImGui::Text(("ParentAngle: " + std::to_string(internodeInfo->ParentAngle)).c_str());
+			ImGui::Text(("ParentThickness: " + std::to_string(internodeInfo->ParentThickness)).c_str());
+			ImGui::Text(("IsMainChild: " + std::to_string(internodeInfo->IsMainChild)).c_str());
+		}
+	);
+
+	EntityEditorSystem::AddComponentInspector<Illumination>(
+		[](ComponentBase* data)
+		{
+			auto illumination = static_cast<Illumination*>(data);
+			ImGui::Text(("Value: " + std::to_string(illumination->Value)).c_str());
+		}
+	);
+
 	_Ready = true;
 }
 
