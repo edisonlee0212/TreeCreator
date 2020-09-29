@@ -75,13 +75,13 @@
     <ClCompile Include="BezierCurve.cpp">
       <Filter>Source Files\TreeUtilities</Filter>
     </ClCompile>
-    <ClCompile Include="BranchNodeSystem.cpp">
-      <Filter>Source Files\TreeUtilities</Filter>
-    </ClCompile>
     <ClCompile Include="BranchSystem.cpp">
       <Filter>Source Files\TreeUtilities</Filter>
     </ClCompile>
     <ClCompile Include="PlantSimulationSystem.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
+    <ClCompile Include="InternodeSystem.cpp">
       <Filter>Source Files\TreeUtilities</Filter>
     </ClCompile>
   </ItemGroup>
@@ -131,9 +131,6 @@
     <ClInclude Include="BezierCurve.h">
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
-    <ClInclude Include="BranchNodeSystem.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
     <ClInclude Include="BranchSystem.h">
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
@@ -156,6 +153,9 @@
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
     <ClInclude Include="PlantSimulationSystem.h">
+      <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="InternodeSystem.h">
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
   </ItemGroup>

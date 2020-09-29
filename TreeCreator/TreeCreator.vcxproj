@@ -103,7 +103,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BezierCurve.cpp" />
-    <ClCompile Include="BranchNodeSystem.cpp" />
+    <ClCompile Include="InternodeSystem.cpp" />
     <ClCompile Include="BranchSystem.cpp" />
     <ClCompile Include="Curve.cpp" />
     <ClCompile Include="LeafSegment.cpp" />
@@ -120,7 +120,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BezierCurve.h" />
-    <ClInclude Include="BranchNodeSystem.h" />
+    <ClInclude Include="InternodeSystem.h" />
     <ClInclude Include="BranchSystem.h" />
     <ClInclude Include="Curve.h" />
     <ClInclude Include="LeafSegment.h" />

@@ -217,8 +217,8 @@ void TreeUtilities::LightEstimator::TakeSnapShot(bool storeSnapshot)
 	std::vector<LocalToWorld> matrices = std::vector<LocalToWorld>();
 	std::vector<Entity> leafEntities = std::vector<Entity>();
 	
-	TreeManager::GetBranchNodeQuery().ToComponentDataArray(matrices);
-	TreeManager::GetBranchNodeQuery().ToEntityArray(leafEntities);
+	TreeManager::GetInternodeQuery().ToComponentDataArray(matrices);
+	TreeManager::GetInternodeQuery().ToEntityArray(leafEntities);
 	
 	auto mesh = Default::Primitives::Sphere;
 	

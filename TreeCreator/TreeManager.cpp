@@ -7,20 +7,20 @@ using namespace TreeUtilities;
 LightEstimator* TreeUtilities::TreeManager::_LightEstimator;
 
 TreeSystem* TreeUtilities::TreeManager::_TreeSystem;
-BranchNodeSystem* TreeUtilities::TreeManager::_BranchNodeSystem;
+InternodeSystem* TreeUtilities::TreeManager::_InternodeSystem;
 
-EntityArchetype TreeUtilities::TreeManager::_BranchNodeArchetype;
+EntityArchetype TreeUtilities::TreeManager::_InternodeArchetype;
 EntityArchetype TreeUtilities::TreeManager::_TreeArchetype;
 
 EntityQuery TreeUtilities::TreeManager::_TreeQuery;
-EntityQuery TreeUtilities::TreeManager::_BranchNodeQuery;
+EntityQuery TreeUtilities::TreeManager::_InternodeQuery;
 
 TreeIndex TreeUtilities::TreeManager::_TreeIndex;
-BranchNodeIndex TreeUtilities::TreeManager::_BranchNodeIndex;
+InternodeIndex TreeUtilities::TreeManager::_InternodeIndex;
 
 bool TreeUtilities::TreeManager::_Ready;
 #pragma region Helpers
-std::size_t RingMeshList::GetHashCode()
+std::size_t InternodeData::GetHashCode()
 {
 	return (size_t)this;
 }
@@ -35,14 +35,14 @@ std::size_t TreeData::GetHashCode()
 	return (size_t)this;
 }
 
-void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep)
+void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& internode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep)
 {
-	BranchNodeInfo info = EntityManager::GetComponentData<BranchNodeInfo>(branchNode);
+	InternodeInfo info = EntityManager::GetComponentData<InternodeInfo>(internode);
 	glm::vec3 newNormalDir = normal;
 	//glm::vec3 dir = info.DesiredGlobalRotation * glm::vec3(0.0f, 0.0f, -1.0f);
 	//newNormalDir = glm::cross(glm::cross(dir, newNormalDir), dir);
 	
-	auto list = EntityManager::GetSharedComponent<RingMeshList>(branchNode);
+	auto list = EntityManager::GetSharedComponent<InternodeData>(internode);
 	auto step = list->step;
 	//For stitching
 	int pStep = parentStep > 0 ? parentStep : step;
@@ -148,7 +148,7 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 		}
 	}
 	
-	EntityManager::ForEachChild(branchNode, [&vertices, &indices, &newNormalDir, resolution, step](Entity child)
+	EntityManager::ForEachChild(internode, [&vertices, &indices, &newNormalDir, resolution, step](Entity child)
 		{
 			SimpleMeshGenerator(child, vertices, indices, newNormalDir, resolution, step);
 		}
@@ -157,11 +157,11 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& branchNode, std::ve
 
 void TreeUtilities::TreeManager::Init()
 {
-	_BranchNodeArchetype = EntityManager::CreateEntityArchetype(
-		"BranchNode",
+	_InternodeArchetype = EntityManager::CreateEntityArchetype(
+		"Internode",
 		LocalToWorld(), Connection(),
 		Illumination(), Gravity(),
-		BranchNodeIndex(), BranchNodeInfo(), TreeIndex()
+		InternodeIndex(), InternodeInfo(), TreeIndex()
 	);
 	_TreeArchetype = EntityManager::CreateEntityArchetype(
 		"Tree",
@@ -171,18 +171,18 @@ void TreeUtilities::TreeManager::Init()
 		RewardEstimation()
 		);
 
-	_BranchNodeQuery = EntityManager::CreateEntityQuery();
-	EntityManager::SetEntityQueryAllFilters(_BranchNodeQuery, BranchNodeInfo());
+	_InternodeQuery = EntityManager::CreateEntityQuery();
+	EntityManager::SetEntityQueryAllFilters(_InternodeQuery, InternodeInfo());
 	_TreeQuery = EntityManager::CreateEntityQuery();
 	EntityManager::SetEntityQueryAllFilters(_TreeQuery, TreeInfo());
 
 	_TreeSystem = Application::GetWorld()->CreateSystem<TreeSystem>(SystemGroup::SimulationSystemGroup);
-	_BranchNodeSystem = Application::GetWorld()->CreateSystem<BranchNodeSystem>(SystemGroup::SimulationSystemGroup);
+	_InternodeSystem = Application::GetWorld()->CreateSystem<InternodeSystem>(SystemGroup::SimulationSystemGroup);
 
 
 
 	_TreeIndex.Value = 0;
-	_BranchNodeIndex.Value = 0;
+	_InternodeIndex.Value = 0;
 
 	_LightEstimator = new LightEstimator();
 
@@ -213,7 +213,7 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::InputFloat2("Extinction Prob A/L", &tps->ApicalBudKillProbability);
 			ImGui::InputFloat3("AD Dis/Age", &tps->ApicalControlDistanceFactor);
 			ImGui::InputFloat("Growth Rate", &tps->GrowthRate);
-			ImGui::InputFloat2("Node Len Base/Age", &tps->BranchNodeLengthBase);
+			ImGui::InputFloat2("Node Len Base/Age", &tps->InternodeLengthBase);
 			ImGui::InputFloat4("AC Base/Age/Lvl/Dist", &tps->ApicalControlBase);
 			ImGui::InputInt("Max Bud Age", &tps->MaxBudAge);
 			ImGui::InputFloat("Phototropism", &tps->Phototropism);
@@ -235,9 +235,9 @@ bool TreeUtilities::TreeManager::IsReady()
 	return _Ready;
 }
 
-EntityQuery TreeUtilities::TreeManager::GetBranchNodeQuery()
+EntityQuery TreeUtilities::TreeManager::GetInternodeQuery()
 {
-	return _BranchNodeQuery;
+	return _InternodeQuery;
 }
 
 EntityQuery TreeUtilities::TreeManager::GetTreeQuery()
@@ -245,9 +245,9 @@ EntityQuery TreeUtilities::TreeManager::GetTreeQuery()
 	return _TreeQuery;
 }
 
-BranchNodeSystem* TreeUtilities::TreeManager::GetBranchNodeSystem()
+InternodeSystem* TreeUtilities::TreeManager::GetInternodeSystem()
 {
-	return _BranchNodeSystem;
+	return _InternodeSystem;
 }
 
 TreeSystem* TreeUtilities::TreeManager::GetTreeSystem()
@@ -266,12 +266,12 @@ void TreeUtilities::TreeManager::GetAllTrees(std::vector<Entity>& container)
 	return _TreeQuery.ToEntityArray(container);
 }
 
-void TreeUtilities::TreeManager::CalculateBranchNodeIllumination()
+void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 {
-	std::vector<Entity> branchNodes;
-	_BranchNodeQuery.ToEntityArray(branchNodes);
+	std::vector<Entity> internodes;
+	_InternodeQuery.ToEntityArray(internodes);
 	GetLightEstimator()->TakeSnapShot(true);
-	EntityManager::ForEach<Illumination, TreeIndex>(_BranchNodeQuery, [](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index) 
+	EntityManager::ForEach<Illumination, TreeIndex>(_InternodeQuery, [](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index) 
 		{
 			illumination->LightDir = glm::vec3(0);
 			illumination->Value = 0;
@@ -335,19 +335,19 @@ void TreeManager::DeleteAllTrees()
 	}
 }
 
-Entity TreeUtilities::TreeManager::CreateBranchNode(TreeIndex treeIndex, Entity parentEntity)
+Entity TreeUtilities::TreeManager::CreateInternode(TreeIndex treeIndex, Entity parentEntity)
 {
-	auto entity = EntityManager::CreateEntity(_BranchNodeArchetype);
+	auto entity = EntityManager::CreateEntity(_InternodeArchetype);
 	auto ob = std::make_shared<BudList>();
 	EntityManager::SetComponentData(entity, treeIndex);
 	EntityManager::SetParent(entity, parentEntity);
-	EntityManager::SetComponentData(entity, _BranchNodeIndex);
+	EntityManager::SetComponentData(entity, _InternodeIndex);
 	EntityManager::SetSharedComponent(entity, ob);
-	_BranchNodeIndex.Value++;
-	BranchNodeInfo branchInfo;
-	branchInfo.IsActivatedEndNode = false;
-	branchInfo.MaxActivatedChildLevel = 0;
-	EntityManager::SetComponentData(entity, branchInfo);
+	_InternodeIndex.Value++;
+	InternodeInfo internodeInfo;
+	internodeInfo.IsActivatedEndNode = false;
+	internodeInfo.MaxActivatedChildLevel = 0;
+	EntityManager::SetComponentData(entity, internodeInfo);
 	return entity;
 }
 
@@ -433,15 +433,15 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	std::mutex creationM;
 	
 	//Prepare ring mesh.
-	EntityManager::ForEach<BranchNodeInfo>(_BranchNodeQuery, [&creationM, resolution, subdivision](int i, Entity branchNode, BranchNodeInfo* info) 
+	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [&creationM, resolution, subdivision](int i, Entity internode, InternodeInfo* info) 
 		{
-			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(branchNode))) return;
-			if (!EntityManager::HasSharedComponent<RingMeshList>(branchNode))
+			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(internode))) return;
+			if (!EntityManager::HasSharedComponent<InternodeData>(internode))
 			{
 				std::lock_guard<std::mutex> lock(creationM);
-				EntityManager::SetSharedComponent(branchNode, std::make_shared<RingMeshList>());
+				EntityManager::SetSharedComponent(internode, std::make_shared<InternodeData>());
 			}
-			auto list = EntityManager::GetSharedComponent<RingMeshList>(branchNode);
+			auto list = EntityManager::GetSharedComponent<InternodeData>(internode);
 		
 			list->Rings.clear();
 			glm::quat parentRotation = info->ParentRotation;
@@ -461,7 +461,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			glm::vec3 parentMainChildDir = info->ParentMainChildRotation * glm::vec3(0, 0, -1);
 			glm::vec3 fromDir = (parentDir + parentMainChildDir) / 2.0f;
 			dir = (dir + mainChildDir) / 2.0f;
-#pragma region Subdivision branch here.
+#pragma region Subdivision internode here.
 			auto distance = glm::distance(parentTranslation, translation);
 
 			int step = (parentThickness / resolution);
@@ -495,10 +495,10 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	std::vector<Vertex> vertices;
 	std::vector<unsigned> indices;
 
-	auto branchNode = EntityManager::GetChildren(treeEntity).at(0);
+	auto internodeEntity = EntityManager::GetChildren(treeEntity).at(0);
 	
-	if(EntityManager::GetChildrenAmount(branchNode) != 0){
-		SimpleMeshGenerator(EntityManager::GetChildren(branchNode).at(0), vertices, indices, glm::vec3(1, 0, 0), resolution);
+	if(EntityManager::GetChildrenAmount(internodeEntity) != 0){
+		SimpleMeshGenerator(EntityManager::GetChildren(internodeEntity).at(0), vertices, indices, glm::vec3(1, 0, 0), resolution);
 		mmc->Mesh = std::make_shared<Mesh>();
 		mmc->Mesh->SetVertices(17, vertices, indices, true);
 		treeData->MeshGenerated = true;

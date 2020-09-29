@@ -1,26 +1,26 @@
-#include "BranchNodeSystem.h"
+#include "InternodeSystem.h"
 #include "TreeManager.h"
 
 #include <gtx/matrix_decompose.hpp>
 
-void TreeUtilities::BranchNodeSystem::DrawGui()
+void TreeUtilities::InternodeSystem::DrawGui()
 {
 	ImGui::Begin("Tree Utilities");
-	if (ImGui::CollapsingHeader("Branch Node System", ImGuiTreeNodeFlags_DefaultOpen)) {
-		ImGui::Text("Branch Nodes Amount: %d ", _BranchNodeQuery.GetEntityAmount());
+	if (ImGui::CollapsingHeader("Internode System", ImGuiTreeNodeFlags_DefaultOpen)) {
+		ImGui::Text("Internodes Amount: %d ", _InternodeQuery.GetEntityAmount());
 		ImGui::Separator();
-		ImGui::InputFloat("Branch Node Connection Width", &_ConnectionWidth);
-		if (ImGui::Button("Regenerate connections for Branch Nodes")) {
+		ImGui::InputFloat("Internode Connection Width", &_ConnectionWidth);
+		if (ImGui::Button("Regenerate connections for internodes")) {
 			RefreshConnections();
 		}
 		ImGui::Separator();
-		ImGui::CheckboxFlags("Draw Branch Nodes", &_ConfigFlags, BranchNodeSystem_DrawBranchNodes);
-		ImGui::CheckboxFlags("Draw Branch Node Connections", &_ConfigFlags, BranchNodeSystem_DrawConnections);
+		ImGui::CheckboxFlags("Draw internodes", &_ConfigFlags, InternodeSystem_DrawInternodes);
+		ImGui::CheckboxFlags("Draw internode Connections", &_ConfigFlags, InternodeSystem_DrawConnections);
 	}
 	ImGui::End();
 }
 
-void TreeUtilities::BranchNodeSystem::RaySelection()
+void TreeUtilities::InternodeSystem::RaySelection()
 {
 	_RaySelectedEntity.Index = 0;
 	_RaySelectedEntity.Version = 0;
@@ -29,7 +29,7 @@ void TreeUtilities::BranchNodeSystem::RaySelection()
 	auto cameraLtw = Application::GetMainCameraEntity().GetComponentData<LocalToWorld>();
 	const Ray cameraRay = Application::GetMainCameraComponent()->Value->ScreenPointToRay(
 		cameraLtw, InputManager::GetMouseScreenPosition());
-	EntityManager::ForEach<LocalToWorld, BranchNodeInfo>(_BranchNodeQuery, [this, cameraLtw, &writeMutex, &minDistance, cameraRay](int i, Entity entity, LocalToWorld* ltw, BranchNodeInfo* info)
+	EntityManager::ForEach<LocalToWorld, InternodeInfo>(_InternodeQuery, [this, cameraLtw, &writeMutex, &minDistance, cameraRay](int i, Entity entity, LocalToWorld* ltw, InternodeInfo* info)
 		{
 			const float distance = glm::distance(glm::vec3(cameraLtw.Value[3]), glm::vec3(ltw->Value[3]));
 			if (cameraRay.Intersect(ltw->Value[3], 0.1f))
@@ -52,29 +52,29 @@ void TreeUtilities::BranchNodeSystem::RaySelection()
 	}
 }
 
-void TreeUtilities::BranchNodeSystem::OnCreate()
+void TreeUtilities::InternodeSystem::OnCreate()
 {
-	_BranchNodeLTWList.clear();
-	_BranchNodeQuery = TreeManager::GetBranchNodeQuery();
-	_ConfigFlags = BranchNodeSystem_DrawBranchNodes;
-	_ConfigFlags = BranchNodeSystem_DrawConnections;
+	_InternodeLTWList.clear();
+	_InternodeQuery = TreeManager::GetInternodeQuery();
+	_ConfigFlags = InternodeSystem_DrawInternodes;
+	_ConfigFlags = InternodeSystem_DrawConnections;
 	Enable();
 }
 
-void TreeUtilities::BranchNodeSystem::OnDestroy()
+void TreeUtilities::InternodeSystem::OnDestroy()
 {
 }
 
-void TreeUtilities::BranchNodeSystem::Update()
+void TreeUtilities::InternodeSystem::Update()
 {
-	_BranchNodeLTWList.clear();
-	if (_ConfigFlags & BranchNodeSystem_DrawBranchNodes) {
-		_BranchNodeQuery.ToComponentDataArray(_BranchNodeLTWList);
-		if (!_BranchNodeLTWList.empty())RenderManager::DrawGizmoCubeInstanced(glm::vec4(0, 0, 1, 1), (glm::mat4*)_BranchNodeLTWList.data(), _BranchNodeLTWList.size(), Application::GetMainCameraComponent()->Value.get(), glm::mat4(1.0f), 0.02f);
+	_InternodeLTWList.clear();
+	if (_ConfigFlags & InternodeSystem_DrawInternodes) {
+		_InternodeQuery.ToComponentDataArray(_InternodeLTWList);
+		if (!_InternodeLTWList.empty())RenderManager::DrawGizmoCubeInstanced(glm::vec4(0, 0, 1, 1), (glm::mat4*)_InternodeLTWList.data(), _InternodeLTWList.size(), Application::GetMainCameraComponent()->Value.get(), glm::mat4(1.0f), 0.02f);
 	}
-	if (_ConfigFlags & BranchNodeSystem_DrawConnections) {
+	if (_ConfigFlags & InternodeSystem_DrawConnections) {
 		_ConnectionList.clear();
-		_BranchNodeQuery.ToComponentDataArray(_ConnectionList);
+		_InternodeQuery.ToComponentDataArray(_ConnectionList);
 		if (!_ConnectionList.empty())RenderManager::DrawGizmoMeshInstanced(Default::Primitives::Cylinder.get(), glm::vec4(0.6f, 0.3f, 0, 1), (glm::mat4*)_ConnectionList.data(), _ConnectionList.size(), Application::GetMainCameraComponent()->Value.get(), glm::mat4(1.0f), 1.0f);
 	}
 	DrawGui();
@@ -86,10 +86,10 @@ void TreeUtilities::BranchNodeSystem::Update()
 	}
 }
 
-void TreeUtilities::BranchNodeSystem::RefreshConnections() const
+void TreeUtilities::InternodeSystem::RefreshConnections() const
 {
 	float lineWidth = _ConnectionWidth;
-	EntityManager::ForEach<LocalToWorld, Connection, BranchNodeInfo>(_BranchNodeQuery, [lineWidth](int i, Entity entity, LocalToWorld* ltw, Connection* c, BranchNodeInfo* info) {
+	EntityManager::ForEach<LocalToWorld, Connection, InternodeInfo>(_InternodeQuery, [lineWidth](int i, Entity entity, LocalToWorld* ltw, Connection* c, InternodeInfo* info) {
 		glm::vec3 scale;
 		glm::quat rotation;
 		glm::vec3 translation;

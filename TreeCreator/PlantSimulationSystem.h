@@ -36,23 +36,23 @@ namespace TreeUtilities {
 		float _Gravity = 0;
 		bool _Growing = false;
 		EntityQuery _TreeQuery;
-		EntityQuery _BranchNodeQuery;
+		EntityQuery _InternodeQuery;
 
-		float GetApicalControl(std::shared_ptr<TreeData>& treeInfo, BranchNodeInfo& branchNodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
+		float GetApicalControl(std::shared_ptr<TreeData>& treeInfo, InternodeInfo& internodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
 		void DrawGUI();
-		void UpdateBranchNodeLength(Entity& branchNode);
-		void UpdateBranchNodeActivatedLevel(Entity& branchNode);
-		void UpdateLocalTransform(Entity& branchNode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation);
-		void UpdateBranchNodeResource(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge);
-		bool GrowShoots(Entity& branchNode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
-		static void DeactivateBud(BranchNodeInfo& branchNodeInfo, Bud& bud);
-		void EvaluatePruning(Entity& branchNode, TreeParameters& treeParameters, TreeAge& treeAge, std::shared_ptr<TreeData>& treeInfo);
-		void EvaluateDirectionPruning(Entity& branchNode, glm::vec3 escapeDirection, float limitAngle);
+		void UpdateInternodeLength(Entity& internode);
+		void UpdateInternodeActivatedLevel(Entity& internode);
+		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation);
+		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge);
+		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
+		static void DeactivateBud(InternodeInfo& internodeInfo, Bud& bud);
+		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, std::shared_ptr<TreeData>& treeInfo);
+		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);
 		void ApplyLocalTransform(Entity& treeEntity);
 		void CalculateDirectGravityForce(Entity& treeEntity, float gravity);
-		void BackPropagateForce(Entity& branchNode, float fixedPropagationCoefficient);
+		void BackPropagateForce(Entity& internode, float fixedPropagationCoefficient);
 		void CalculateCrownShyness(float radius);
-		inline void PruneBranchNode(Entity& branchNode, BranchNodeInfo* branchNodeInfo);
+		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo);
 
 		void BuildConvexHullForTree(Entity& tree);
 	public:

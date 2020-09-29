@@ -2,7 +2,7 @@
 #include "UniEngine.h"
 #include "TreeSystem.h"
 #include "BranchSystem.h"
-#include "BranchNodeSystem.h"
+#include "InternodeSystem.h"
 #include "LightEstimator.h"
 
 #include "RingMesh.h"
@@ -18,8 +18,8 @@ namespace TreeUtilities {
     };    
 #pragma endregion
 
-#pragma region BranchNode
-    class RingMeshList : public SharedComponentBase {
+#pragma region Internode
+    class InternodeData : public SharedComponentBase {
     public:
         std::vector<RingMesh> Rings;
         glm::vec3 NormalDir;
@@ -58,13 +58,13 @@ namespace TreeUtilities {
     };
 
 
-    struct BranchNodeIndex : ComponentBase {
+    struct InternodeIndex : ComponentBase {
         unsigned Value;
-        bool operator ==(const BranchNodeIndex& other) const {
+        bool operator ==(const InternodeIndex& other) const {
             return other.Value == Value;
         }
     };
-    struct BranchNodeInfo : ComponentBase {
+    struct InternodeInfo : ComponentBase {
 #pragma region General
         int Level = 0;
         float DistanceToParent = 0;
@@ -84,7 +84,7 @@ namespace TreeUtilities {
         float Inhibitor = 0;
         float ParentInhibitorFactor = 1;
         int ActivatedBudsAmount = 0;
-        unsigned BranchEndNodeAmount;
+        unsigned BranchEndInternodeAmount;
         bool Pruned;
         bool IsApical;
         bool ApicalBudExist = false;
@@ -145,8 +145,8 @@ namespace TreeUtilities {
 
         float GrowthRate;
 
-        float BranchNodeLengthBase;
-        float BranchNodeLengthAgeFactor;
+        float InternodeLengthBase;
+        float InternodeLengthAgeFactor;
 
 
         float ApicalControlBase;
@@ -217,39 +217,39 @@ namespace TreeUtilities {
         static LightEstimator* _LightEstimator;
 
         static TreeSystem* _TreeSystem;
-        static BranchNodeSystem* _BranchNodeSystem;
+        static InternodeSystem* _InternodeSystem;
         
-        static EntityArchetype _BranchNodeArchetype;
+        static EntityArchetype _InternodeArchetype;
         static EntityArchetype _TreeArchetype;
 
         static EntityQuery _TreeQuery;
-        static EntityQuery _BranchNodeQuery;
+        static EntityQuery _InternodeQuery;
 
         static TreeIndex _TreeIndex;
-        static BranchNodeIndex _BranchNodeIndex;
+        static InternodeIndex _InternodeIndex;
 
         static bool _Ready;
         
-        static void SimpleMeshGenerator(Entity& branchNode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep = -1);
+        static void SimpleMeshGenerator(Entity& internode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep = -1);
     public:
         static void Init();
         static bool IsReady();
 
-        static EntityQuery GetBranchNodeQuery();
+        static EntityQuery GetInternodeQuery();
         static EntityQuery GetTreeQuery();
 
-        static BranchNodeSystem* GetBranchNodeSystem();
+        static InternodeSystem* GetInternodeSystem();
         static TreeSystem* GetTreeSystem();
 
         static void GetAllTrees(std::vector<Entity>& container);
         
-        static void CalculateBranchNodeIllumination();
+        static void CalculateInternodeIllumination();
 
         static std::shared_ptr<Mesh> GetMeshForTree(Entity treeEntity);
         static void GenerateSimpleMeshForTree(Entity treeEntity, float resolution, float subdivision = 1.0f);
         static void DeleteAllTrees();
         static Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial);
-        static Entity CreateBranchNode(TreeIndex treeIndex, Entity parentEntity);
+        static Entity CreateInternode(TreeIndex treeIndex, Entity parentEntity);
 
         static void ExportMeshToOBJ(Entity treeEntity, std::string filename);
 
