@@ -63,9 +63,6 @@
     <ClCompile Include="LightEstimator.cpp">
       <Filter>Source Files\TreeUtilities</Filter>
     </ClCompile>
-    <ClCompile Include="RingMesh.cpp">
-      <Filter>Source Files\TreeUtilities</Filter>
-    </ClCompile>
     <ClCompile Include="TreeManager.cpp">
       <Filter>Source Files\TreeUtilities</Filter>
     </ClCompile>
@@ -82,6 +79,9 @@
       <Filter>Source Files\TreeUtilities</Filter>
     </ClCompile>
     <ClCompile Include="InternodeSystem.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
+    <ClCompile Include="InternodeRingSegment.cpp">
       <Filter>Source Files\TreeUtilities</Filter>
     </ClCompile>
   </ItemGroup>
@@ -140,9 +140,6 @@
     <ClInclude Include="LightEstimator.h">
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
-    <ClInclude Include="RingMesh.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
     <ClInclude Include="TreeManager.h">
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
@@ -156,6 +153,9 @@
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
     <ClInclude Include="InternodeSystem.h">
+      <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="InternodeRingSegment.h">
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
   </ItemGroup>

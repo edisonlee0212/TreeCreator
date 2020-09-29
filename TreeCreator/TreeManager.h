@@ -5,7 +5,7 @@
 #include "InternodeSystem.h"
 #include "LightEstimator.h"
 
-#include "RingMesh.h"
+#include "InternodeRingSegment.h"
 #include "BezierCurve.h"
 using namespace UniEngine;
 namespace TreeUtilities {
@@ -19,13 +19,7 @@ namespace TreeUtilities {
 #pragma endregion
 
 #pragma region Internode
-    class InternodeData : public SharedComponentBase {
-    public:
-        std::vector<RingMesh> Rings;
-        glm::vec3 NormalDir;
-        int step;
-        std::size_t GetHashCode() override;
-    };
+    
 
     struct Connection : ComponentBase {
         glm::mat4 Value;
@@ -51,13 +45,17 @@ namespace TreeUtilities {
         float Value;
     };
 
-    class BudList : public SharedComponentBase {
+    class InternodeData : public SharedComponentBase {
     public:
-	    size_t GetHashCode() override;
-	    std::vector<Bud> Buds;
+        std::vector<Bud> Buds;
+        std::vector<InternodeRingSegment> Rings;
+        std::vector<glm::mat4> LeafLocalTransforms;
+        glm::vec3 NormalDir;
+        int step;
+        std::size_t GetHashCode() override;
+        void OnGui() override;
     };
-
-
+	
     struct InternodeIndex : ComponentBase {
         unsigned Value;
         bool operator ==(const InternodeIndex& other) const {
@@ -209,6 +207,7 @@ namespace TreeUtilities {
         std::shared_ptr<Mesh> ConvexHull;
         float ResourceToGrow;
         std::size_t GetHashCode() override;
+    	void OnGui() override;
     };
 #pragma endregion
     class TreeManager :

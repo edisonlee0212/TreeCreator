@@ -111,7 +111,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     <ClCompile Include="PlantSimulationSystem.cpp" />
     <ClCompile Include="NetworkSystem.cpp" />
     <ClCompile Include="quickhull\QuickHull.cpp" />
-    <ClCompile Include="RingMesh.cpp" />
+    <ClCompile Include="InternodeRingSegment.cpp" />
     <ClCompile Include="SorghumReconstructionSystem.cpp" />
     <ClCompile Include="TreeCreator.cpp" />
     <ClCompile Include="TreeManager.cpp" />
@@ -137,7 +137,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     <ClInclude Include="quickhull\Structs\Ray.hpp" />
     <ClInclude Include="quickhull\Structs\Vector3.hpp" />
     <ClInclude Include="quickhull\Structs\VertexDataSource.hpp" />
-    <ClInclude Include="RingMesh.h" />
+    <ClInclude Include="InternodeRingSegment.h" />
     <ClInclude Include="SorghumReconstructionSystem.h" />
     <ClInclude Include="TreeManager.h" />
     <ClInclude Include="TreeScene.h" />

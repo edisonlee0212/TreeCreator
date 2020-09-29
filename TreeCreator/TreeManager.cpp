@@ -25,14 +25,22 @@ std::size_t InternodeData::GetHashCode()
 	return (size_t)this;
 }
 
-size_t BudList::GetHashCode()
+void InternodeData::OnGui()
 {
-	return (size_t)this;
+	
 }
 
 std::size_t TreeData::GetHashCode()
 {
 	return (size_t)this;
+}
+
+void TreeData::OnGui()
+{
+	ImGui::Text(("Current seed " + std::to_string(CurrentSeed)).c_str());
+	ImGui::Text(("Height " + std::to_string(Height)).c_str());
+	ImGui::Text(("Max branching depth " + std::to_string(MaxBranchingDepth)).c_str());
+	ImGui::Text(("Lateral buds count " + std::to_string(LateralBudsCount)).c_str());
 }
 
 void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& internode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep)
@@ -338,11 +346,11 @@ void TreeManager::DeleteAllTrees()
 Entity TreeUtilities::TreeManager::CreateInternode(TreeIndex treeIndex, Entity parentEntity)
 {
 	auto entity = EntityManager::CreateEntity(_InternodeArchetype);
-	auto ob = std::make_shared<BudList>();
+	auto internodeData = std::make_shared<InternodeData>();
 	EntityManager::SetComponentData(entity, treeIndex);
 	EntityManager::SetParent(entity, parentEntity);
 	EntityManager::SetComponentData(entity, _InternodeIndex);
-	EntityManager::SetSharedComponent(entity, ob);
+	EntityManager::SetSharedComponent(entity, internodeData);
 	_InternodeIndex.Value++;
 	InternodeInfo internodeInfo;
 	internodeInfo.IsActivatedEndNode = false;
@@ -436,11 +444,6 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [&creationM, resolution, subdivision](int i, Entity internode, InternodeInfo* info) 
 		{
 			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(internode))) return;
-			if (!EntityManager::HasSharedComponent<InternodeData>(internode))
-			{
-				std::lock_guard<std::mutex> lock(creationM);
-				EntityManager::SetSharedComponent(internode, std::make_shared<InternodeData>());
-			}
 			auto list = EntityManager::GetSharedComponent<InternodeData>(internode);
 		
 			list->Rings.clear();

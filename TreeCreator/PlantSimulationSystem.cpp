@@ -539,10 +539,10 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 	if (internodeInfo.ActivatedBudsAmount == 0) return ret;
 #pragma endregion
 	auto internodeIllumination = EntityManager::GetComponentData<Illumination>(internode);
-	auto budsList = EntityManager::GetSharedComponent<BudList>(internode);
+	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
 	//auto internodeIndex = EntityManager::GetComponentData<InternodeIndex>(internode);
 	float lateralInhibitorToAdd = 0;
-	for (auto& bud : budsList->Buds) {
+	for (auto& bud : internodeData->Buds) {
 #pragma region Bud kill probability
 		float budKillProbability = 0;
 		if (bud.IsApical) {
@@ -600,7 +600,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 				for (int selectedNewNodeIndex = 0; selectedNewNodeIndex < internodesToGrow; selectedNewNodeIndex++) {
 #pragma region Setup internode
 					Entity newInternode = TreeManager::CreateInternode(treeIndex, prevInternode);
-					auto newInternodeBudList = EntityManager::GetSharedComponent<BudList>(newInternode);
+					auto newInternodeData = EntityManager::GetSharedComponent<InternodeData>(newInternode);
 					InternodeInfo newInternodeInfo = EntityManager::GetComponentData<InternodeInfo>(newInternode);
 					newInternodeInfo.ApicalBudExist = true;
 					newInternodeInfo.ActivatedBudsAmount = treeParameters.LateralBudPerNode + 1;
@@ -645,7 +645,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 					newApicalBud.IsActive = true;
 					newApicalBud.IsApical = true;
 					newApicalBud.StartAge = treeAge.Value;
-					newInternodeBudList->Buds.push_back(newApicalBud);
+					newInternodeData->Buds.push_back(newApicalBud);
 #pragma endregion
 #pragma region Create Lateral Buds
 					for (int selectedNewBudIndex = 0; selectedNewBudIndex < treeParameters.LateralBudPerNode; selectedNewBudIndex++) {
@@ -656,7 +656,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 						newLateralBud.IsActive = true;
 						newLateralBud.IsApical = false;
 						newLateralBud.StartAge = treeAge.Value;
-						newInternodeBudList->Buds.push_back(newLateralBud);
+						newInternodeData->Buds.push_back(newLateralBud);
 					}
 #pragma endregion
 					prevEulerAngle = newApicalBud.EulerAngles;
@@ -697,11 +697,11 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 		}
 #pragma endregion
 	}
-	for (int i = 0; i < budsList->Buds.size(); i++)
+	for (int i = 0; i < internodeData->Buds.size(); i++)
 	{
-		if (!budsList->Buds[i].IsActive)
+		if (!internodeData->Buds[i].IsActive)
 		{
-			budsList->Buds.erase(budsList->Buds.begin() + i);
+			internodeData->Buds.erase(internodeData->Buds.begin() + i);
 			i--;
 		}
 	}
@@ -1634,8 +1634,8 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	bud.IsApical = true;
 	bud.StartAge = 0;
 
-	auto list = EntityManager::GetSharedComponent<BudList>(internode);
-	list->Buds.push_back(bud);
+	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
+	internodeData->Buds.push_back(bud);
 
 	InternodeInfo internodeInfo;
 	internodeInfo.IsActivatedEndNode = false;

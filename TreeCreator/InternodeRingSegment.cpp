@@ -1,6 +1,6 @@
-#include "RingMesh.h"
+#include "InternodeRingSegment.h"
 
-TreeUtilities::RingMesh::RingMesh(glm::vec3 startPosition, glm::vec3 endPosition, glm::vec3 startAxis, glm::vec3 endAxis, float startRadius, float endRadius)
+TreeUtilities::InternodeRingSegment::InternodeRingSegment(glm::vec3 startPosition, glm::vec3 endPosition, glm::vec3 startAxis, glm::vec3 endAxis, float startRadius, float endRadius)
 	: StartPosition(startPosition),
 	EndPosition(endPosition),
 	StartAxis(startAxis),
@@ -10,7 +10,7 @@ TreeUtilities::RingMesh::RingMesh(glm::vec3 startPosition, glm::vec3 endPosition
 {
 }
 
-void TreeUtilities::RingMesh::AppendPoints(std::vector<Vertex>& vertices, glm::vec3& normalDir, int step)
+void TreeUtilities::InternodeRingSegment::AppendPoints(std::vector<Vertex>& vertices, glm::vec3& normalDir, int step)
 {
 	std::vector<Vertex> startRing;
 	std::vector<Vertex> endRing;
@@ -51,7 +51,7 @@ void TreeUtilities::RingMesh::AppendPoints(std::vector<Vertex>& vertices, glm::v
 	vertices.push_back(startRing[0]);
 }
 
-inline glm::vec3 TreeUtilities::RingMesh::GetPoint(glm::vec3& normalDir, float angle, bool isStart)
+inline glm::vec3 TreeUtilities::InternodeRingSegment::GetPoint(glm::vec3& normalDir, float angle, bool isStart)
 {
 	glm::vec3 position;
 	glm::vec3 direction;
