@@ -770,6 +770,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.GravitropismLevelFactor = 0.0f;
 		tps.PruningFactor = 0.05f;
 		tps.LowBranchPruningFactor = 0.639226f;
+		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.2f;
 		tps.SaggingFactor = 0.0506f;
 		tps.MaxBudAge = 10;
@@ -807,6 +808,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.GravitropismLevelFactor = 0.0f;
 		tps.PruningFactor = 0.05f;
 		tps.LowBranchPruningFactor = 1.3f;
+		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.73f;
 		tps.SaggingFactor = 0.0506f;
 		tps.MaxBudAge = 8;
@@ -843,6 +845,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.GravitropismLevelFactor = 0.15f;
 		tps.PruningFactor = 0.7f;
 		tps.LowBranchPruningFactor = 1.3f;
+		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.73f;
 		tps.SaggingFactor = 0.0506f;
 		tps.MaxBudAge = 8;
@@ -879,6 +882,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.GravitropismLevelFactor = 0.14f;
 		tps.PruningFactor = 0.82f;
 		tps.LowBranchPruningFactor = 2.83f;
+		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.795f;
 		tps.SaggingFactor = 0.0506f;
 		tps.MaxBudAge = 8;
@@ -916,6 +920,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.GravitropismLevelFactor = 0.73f;
 		tps.PruningFactor = 0.12f;
 		tps.LowBranchPruningFactor = 1.25f;
+		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.73f;
 		tps.SaggingFactor = 0.0506f;
 		tps.MaxBudAge = 8;
@@ -952,6 +957,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.GravitropismLevelFactor = 0.15f;
 		tps.PruningFactor = 0.48f;
 		tps.LowBranchPruningFactor = 5.5f;
+		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.79f;
 		tps.SaggingFactor = 0.0506f;
 		tps.MaxBudAge = 8;
@@ -988,6 +994,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.GravitropismLevelFactor = 0.12f;
 		tps.PruningFactor = 0.22f;
 		tps.LowBranchPruningFactor = 1.11f;
+		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.78f;
 		tps.SaggingFactor = 0.0506f;
 		tps.MaxBudAge = 8;
@@ -1024,6 +1031,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.GravitropismLevelFactor = 0.14f;
 		tps.PruningFactor = 0.8f;
 		tps.LowBranchPruningFactor = 2.9f;
+		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.19f;
 		tps.SaggingFactor = 0.0506f;
 		tps.MaxBudAge = 8;
@@ -1157,9 +1165,9 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 			internodeData->LeafLocalTransforms.push_back(localTransform);
 			leafTransforms.push_back(internodeInfo.GlobalTransform * localTransform);
 			lr = glm::quat(glm::vec3(0, 0, glm::radians(180.0f)));
-			const auto localTransformBack = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
-			internodeData->LeafLocalTransforms.push_back(localTransformBack);
-			leafTransforms.push_back(internodeInfo.GlobalTransform * localTransformBack);
+			//const auto localTransformBack = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
+			//internodeData->LeafLocalTransforms.push_back(localTransformBack);
+			//leafTransforms.push_back(internodeInfo.GlobalTransform * localTransformBack);
 		}
 	}
 
@@ -1616,9 +1624,11 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultTreeSurfaceMaterial2->Textures2Ds()->push_back(textureNormal2);
 
 	_DefaultTreeLeafMaterial1 = std::make_shared<Material>();
+	_DefaultTreeLeafMaterial1->SetMaterialProperty("material.shininess", 32.0f);
 	_DefaultTreeLeafMaterial1->Programs()->push_back(Default::GLPrograms::StandardInstancedProgram);
 	auto textureDiffuseLeaf1 = new Texture2D(TextureType::DIFFUSE);
 	textureDiffuseLeaf1->LoadTexture(FileIO::GetResourcePath("Textures/Leaf/PrunusAvium/A/level0.png"), "");
+	//textureDiffuseLeaf1->LoadTexture(FileIO::GetResourcePath("Textures/green.png"), "");
 	auto textureNormalLeaf1 = new Texture2D(TextureType::NORMAL);
 	textureNormalLeaf1->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"), "");
 	_DefaultTreeLeafMaterial1->Textures2Ds()->push_back(textureDiffuseLeaf1);

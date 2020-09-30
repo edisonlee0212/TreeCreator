@@ -383,6 +383,7 @@ Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurf
 	instancedMeshMaterialComponent->Matrices.clear();
 	instancedMeshMaterialComponent->Material = std::move(treeLeafMaterial);
 	instancedMeshMaterialComponent->Mesh = std::move(treeLeafMesh);
+	instancedMeshMaterialComponent->BackCulling = false;
 	EntityManager::SetSharedComponent(entity, std::move(instancedMeshMaterialComponent));
 	EntityManager::SetSharedComponent(entity, std::make_shared<TreeData>());
 	EntityManager::SetComponentData(entity, _TreeIndex);
