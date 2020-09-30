@@ -44,7 +44,7 @@ namespace TreeUtilities {
 		EntityQuery _InternodeQuery;
 
 		float GetApicalControl(std::shared_ptr<TreeData>& treeInfo, InternodeInfo& internodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
-		void DrawGui();
+		inline void DrawGui();
 		void UpdateDistanceToBranchEnd(Entity& internode);
 		void UpdateDistanceToBranchStart(Entity& internode);
 		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation, std::vector<glm::mat4>& leafTransforms);

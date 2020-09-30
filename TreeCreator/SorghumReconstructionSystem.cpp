@@ -61,7 +61,7 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 				spline->Segments.emplace_back(spline->EvaluatePointFromCurve(percent), up, front, spline->EvaluateWidth(percent), spline->EvaluateTheta(percent));
 			}*/
 
-			const int amount = 10;
+			const int amount = 5;
 
 			for(int i = 1; i < spline->Nodes.size(); i++)
 			{
@@ -86,7 +86,7 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 			}
 			
 			//Truck
-			const int step = 10;
+			const int step = 5;
 
 			const int vertexIndex = spline->Vertices.size();
 			Vertex archetype;

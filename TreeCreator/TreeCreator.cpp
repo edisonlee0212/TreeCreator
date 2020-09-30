@@ -108,7 +108,7 @@ int main()
 		srSys->ExportPlant(plant1, "plant1");
 		srSys->ExportPlant(plant2, "plant2");
 	}
-
+	
 #pragma region Engine Loop
 	bool loopable = true;
 	//Start engine. Here since we need to inject procedures to the main engine loop we need to manually loop by our self.
@@ -131,7 +131,23 @@ int main()
 		dlc->lightSize = lightSize;
 		LightingManager::SetPCSSScaleFactor(pcssScale);
 #pragma endregion
+		ImGui::Begin("WireFrame");
+		static bool enableWireFrame = false;
+		ImGui::Checkbox("Enable wire-frame mode", &enableWireFrame);
+		ImGui::End();
+		if(enableWireFrame)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}else
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
 
+		ImGui::Begin("Shadow");
+		static bool enableShadow = true;
+		ImGui::Checkbox("Enable shadow", &enableShadow);
+		ImGui::End();
+		LightingManager::SetEnableShadow(enableShadow);
 		//ImGui::ShowDemoWindow();
 		Application::Update();
 		loopable = Application::LateUpdate();

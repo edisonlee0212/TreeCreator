@@ -655,8 +655,6 @@ inline void PlantSimulationSystem::PruneInternode(Entity& internode, InternodeIn
 	internodeInfo->IsActivatedEndNode = false;
 	EntityManager::SetComponentData(internode, *internodeInfo);
 }
-
-
 #pragma endregion
 #pragma region Removal
 void PlantSimulationSystem::EvaluateRemoval(Entity& internode, TreeParameters& treeParameters)
@@ -1382,7 +1380,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 	}
 }
 #pragma endregion
-void TreeUtilities::PlantSimulationSystem::DrawGui()
+inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Plant Simulation")) {
