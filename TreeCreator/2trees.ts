@@ -7,7 +7,7 @@ Position
 Seed
 1
 LateralBudPerNode
-6
+3
 VarianceApicalAngle
 38.000000
 BranchingAngleMean
@@ -54,6 +54,8 @@ PruningFactor
 0.000000
 LowBranchPruningFactor
 1.300000
+ThicknessRemovalFactor
+0.000000
 GravityBendingStrength
 0.730000
 ApicalBudLightingFactor
@@ -67,7 +69,7 @@ SaggingForceBackPropagateFixedCoefficient
 EndNodeThickness
 0.010000
 ThicknessControlFactor
-0.500000
+0.600000
 Position
 3.000000
 0.000000
@@ -75,7 +77,7 @@ Position
 Seed
 1
 LateralBudPerNode
-6
+3
 VarianceApicalAngle
 38.000000
 BranchingAngleMean
@@ -122,6 +124,8 @@ PruningFactor
 0.000000
 LowBranchPruningFactor
 1.300000
+ThicknessRemovalFactor
+0.000000
 GravityBendingStrength
 0.730000
 ApicalBudLightingFactor
@@ -135,4 +139,4 @@ SaggingForceBackPropagateFixedCoefficient
 EndNodeThickness
 0.010000
 ThicknessControlFactor
-0.500000
+0.600000

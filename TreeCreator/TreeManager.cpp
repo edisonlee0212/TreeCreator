@@ -27,7 +27,7 @@ std::size_t InternodeData::GetHashCode()
 
 void InternodeData::OnGui()
 {
-	
+	ImGui::Text(("Leaf count: " + std::to_string(LeafLocalTransforms.size())).c_str());
 }
 
 std::size_t TreeData::GetHashCode()
@@ -367,18 +367,28 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 		for (auto i : futures) i.wait();
 	}
 	_LightEstimator->SetMaxIllumination(maxIllumination);
+	EntityManager::ForEach<Illumination, TreeIndex>(_InternodeQuery, [maxIllumination](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index)
+		{
+			illumination->LightDir = glm::normalize(illumination->LightDir);
+			illumination->Value /= maxIllumination;
+		}
+	);
 }
 
 
-Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial)
+Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh)
 {
-	auto entity = EntityManager::CreateEntity(_TreeArchetype);
-	std::shared_ptr<TreeData> treeData = std::make_shared<TreeData>();
-	EntityManager::SetSharedComponent(entity, treeData);
+	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
+	auto instancedMeshMaterialComponent = std::make_shared<InstancedMeshMaterialComponent>();
+	instancedMeshMaterialComponent->Matrices.clear();
+	instancedMeshMaterialComponent->Material = std::move(treeLeafMaterial);
+	instancedMeshMaterialComponent->Mesh = std::move(treeLeafMesh);
+	EntityManager::SetSharedComponent(entity, std::move(instancedMeshMaterialComponent));
+	EntityManager::SetSharedComponent(entity, std::make_shared<TreeData>());
 	EntityManager::SetComponentData(entity, _TreeIndex);
 	auto mmc = std::make_shared<MeshMaterialComponent>();
 	mmc->Material = std::move(treeSurfaceMaterial);
-	EntityManager::SetSharedComponent(entity, mmc);
+	EntityManager::SetSharedComponent(entity, std::move(mmc));
 	_TreeIndex.Value++;
 	return entity;
 }

@@ -30,6 +30,11 @@ namespace TreeUtilities {
 		std::vector<glm::vec3> _NewTreePositions;
 		std::shared_ptr<Material> _DefaultTreeSurfaceMaterial1;
 		std::shared_ptr<Material> _DefaultTreeSurfaceMaterial2;
+
+		std::shared_ptr<Material> _DefaultTreeLeafMaterial1;
+		std::shared_ptr<Material> _DefaultTreeLeafMaterial2;
+
+		std::shared_ptr<Mesh> _DefaultTreeLeafMesh;
 #pragma endregion
 
 		unsigned int _ConfigFlags = 0;
@@ -42,11 +47,12 @@ namespace TreeUtilities {
 		void DrawGUI();
 		void UpdateInternodeLength(Entity& internode);
 		void UpdateInternodeActivatedLevel(Entity& internode);
-		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation);
+		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation, std::vector<glm::mat4>& leafTransforms);
 		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge);
 		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
 		static void DeactivateBud(InternodeInfo& internodeInfo, Bud& bud);
 		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, std::shared_ptr<TreeData>& treeInfo);
+		void EvaluateRemoval(Entity& internode, TreeParameters& treeParameters);
 		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);
 		void ApplyLocalTransform(Entity& treeEntity);
 		void CalculateDirectGravityForce(Entity& treeEntity, float gravity);
@@ -68,7 +74,7 @@ namespace TreeUtilities {
 		void OnDestroy() override;
 		void Update() override;
 		void FixedUpdate() override;
-		Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters parameters, glm::vec3 position, bool enabled = true);
+		Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters parameters, glm::vec3 position, bool enabled = true);
 		void CreateDefaultTree();
 	};
 }
