@@ -523,7 +523,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	if (growed) {
 		UpdateInternodeResource(rootInternode, treeParameters, treeAge);
 		EvaluatePruning(rootInternode, treeParameters, treeAge, treeData);
-		//EvaluateRemoval(rootInternode, treeParameters);
+		EvaluateRemoval(rootInternode, treeParameters);
 		if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
 	}
 	return growed;
@@ -1146,8 +1146,8 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
 	internodeData->LeafLocalTransforms.clear();
 	float illumination = EntityManager::GetComponentData<Illumination>(internode).Value;
-	if (illumination > 0.0f) {
-		if (internodeInfo.Level > internodeInfo.MaxChildLevel - 4)
+	if (illumination > 0.01f) {
+		if (internodeInfo.Level > internodeInfo.MaxChildLevel - 6)
 		{
 			glm::vec3 lp = glm::vec3(0.0f);
 			glm::quat lr = glm::identity<glm::quat>();

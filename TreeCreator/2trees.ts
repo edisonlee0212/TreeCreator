@@ -55,7 +55,7 @@ PruningFactor
 LowBranchPruningFactor
 1.300000
 ThicknessRemovalFactor
-0.000000
+0.200000
 GravityBendingStrength
 0.730000
 ApicalBudLightingFactor
@@ -125,7 +125,7 @@ PruningFactor
 LowBranchPruningFactor
 1.300000
 ThicknessRemovalFactor
-0.000000
+0.200000
 GravityBendingStrength
 0.730000
 ApicalBudLightingFactor
