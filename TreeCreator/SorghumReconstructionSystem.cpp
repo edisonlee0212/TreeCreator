@@ -29,6 +29,7 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateLeafForPlant(En
 	auto mmc = std::make_shared<MeshMaterialComponent>();
 	mmc->Material = _LeafMaterial;
 	mmc->Mesh = nullptr;
+	mmc->BackCulling = false;
 	EntityManager::SetSharedComponent(ret, mmc);
 
 	return ret;

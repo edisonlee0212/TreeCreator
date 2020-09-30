@@ -44,9 +44,9 @@ namespace TreeUtilities {
 		EntityQuery _InternodeQuery;
 
 		float GetApicalControl(std::shared_ptr<TreeData>& treeInfo, InternodeInfo& internodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
-		void DrawGUI();
-		void UpdateInternodeLength(Entity& internode);
-		void UpdateInternodeActivatedLevel(Entity& internode);
+		void DrawGui();
+		void UpdateDistanceToBranchEnd(Entity& internode);
+		void UpdateDistanceToBranchStart(Entity& internode);
 		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation, std::vector<glm::mat4>& leafTransforms);
 		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge);
 		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
@@ -54,19 +54,20 @@ namespace TreeUtilities {
 		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, std::shared_ptr<TreeData>& treeInfo);
 		void EvaluateRemoval(Entity& internode, TreeParameters& treeParameters);
 		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);
-		void ApplyLocalTransform(Entity& treeEntity);
-		void CalculateDirectGravityForce(Entity& treeEntity, float gravity);
+		void ApplyLocalTransform(Entity& treeEntity) const;
+		void CalculateDirectGravityForce(Entity& treeEntity, float gravity) const;
 		void BackPropagateForce(Entity& internode, float fixedPropagationCoefficient);
 		void CalculateCrownShyness(float radius);
-		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo);
-
+		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo) const;
+		static inline void TreeParameterImportHelper(std::ifstream& ifs, TreeParameters& treeParameters);
+		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);
 		void BuildConvexHullForTree(Entity& tree);
 	public:
 		static TreeParameters ImportTreeParameters(const std::string& path);
 		static void ExportTreeParameters(const std::string& path, TreeParameters& treeParameters);
 		void ExportSettings(const std::string& path);
 		void ImportSettings(const std::string& path);
-		void LoadDefaultTreeParameters(int preset, TreeParameters& tps);
+		static void LoadDefaultTreeParameters(int preset, TreeParameters& tps);
 		void TryGrowAllTrees(std::vector<Entity>& trees);
 		bool GrowTree(Entity& treeEntity);
 		void CalculatePhysics(std::vector<Entity>& trees);
