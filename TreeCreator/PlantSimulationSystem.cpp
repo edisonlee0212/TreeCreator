@@ -1055,7 +1055,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 			if (GrowTree(tree)) {
 				growed = true;
 				CalculatePhysics(trees);
-				CalculateCrownShyness(1.5f);
+				CalculateCrownShyness(2.0f);
 			}
 		}
 	}
@@ -1154,20 +1154,26 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
 	internodeData->LeafLocalTransforms.clear();
 	float illumination = EntityManager::GetComponentData<Illumination>(internode).Value;
-	if (illumination > 0.01f) {
+	if (illumination > 0.04f) {
 		if (internodeInfo.Level > internodeInfo.MaxChildLevel - 6)
 		{
 			glm::vec3 lp = glm::vec3(0.0f);
-			glm::quat lr = glm::identity<glm::quat>();
-			glm::vec3 ls = glm::vec3(0.2f);
-			const auto localTransform = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
+			//x, ÏòÑôÖá£¬y: ºáÖá£¬z£ºroll
+			glm::quat lr;
+			glm::vec3 ls = glm::vec3(0.1f, 1.0f, 0.2f);
+			glm::mat4 localTransform;
+			
+			lr = glm::quat(glm::vec3(glm::radians(45.0f), 0.0f, 0.0f));
+			localTransform = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
 			//Generate leaf here.
 			internodeData->LeafLocalTransforms.push_back(localTransform);
 			leafTransforms.push_back(internodeInfo.GlobalTransform * localTransform);
-			lr = glm::quat(glm::vec3(0, 0, glm::radians(180.0f)));
-			//const auto localTransformBack = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
-			//internodeData->LeafLocalTransforms.push_back(localTransformBack);
-			//leafTransforms.push_back(internodeInfo.GlobalTransform * localTransformBack);
+
+			lr = glm::quat(glm::vec3(glm::radians(-45.0f), 0.0f, 0.0f));
+			localTransform = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
+			//Generate leaf here.
+			internodeData->LeafLocalTransforms.push_back(localTransform);
+			leafTransforms.push_back(internodeInfo.GlobalTransform * localTransform);
 		}
 	}
 
@@ -1634,7 +1640,34 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultTreeLeafMaterial1->Textures2Ds()->push_back(textureDiffuseLeaf1);
 	//_DefaultTreeLeafMaterial1->Textures2Ds()->push_back(textureNormalLeaf1);
 
-	_DefaultTreeLeafMesh = Default::Primitives::Quad;
+	std::vector<Vertex> leafVertices;
+	std::vector<unsigned> leafIndices;
+	Vertex v;
+	v.Position = glm::vec3(-1, 0, 0);
+	v.TexCoords0 = glm::vec2(0, 0);
+	leafVertices.push_back(v);
+	v.Position = glm::vec3(-1, 0, -2);
+	v.TexCoords0 = glm::vec2(0, 1);
+	leafVertices.push_back(v);
+	v.Position = glm::vec3(1, 0, 0);
+	v.TexCoords0 = glm::vec2(1, 0);
+	leafVertices.push_back(v);
+	v.Position = glm::vec3(1, 0, -2);
+	v.TexCoords0 = glm::vec2(1, 1);
+	leafVertices.push_back(v);
+
+	leafIndices.push_back(0);
+	leafIndices.push_back(1);
+	leafIndices.push_back(2);
+
+	leafIndices.push_back(3);
+	leafIndices.push_back(2);
+	leafIndices.push_back(1);
+	_DefaultTreeLeafMesh = std::make_shared<Mesh>();
+	_DefaultTreeLeafMesh->SetVertices((unsigned)VertexAttribute::Position | (unsigned)VertexAttribute::TexCoord0,
+		leafVertices, leafIndices);
+	
+	//_DefaultTreeLeafMesh = Default::Primitives::Quad;
 
 	_Gravity = 1.0f;
 	_NewTreeParameters.resize(1);

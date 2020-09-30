@@ -215,10 +215,10 @@ void TreeUtilities::LightEstimator::Clear()
 void TreeUtilities::LightEstimator::TakeSnapShot(bool storeSnapshot)
 {
 	std::vector<LocalToWorld> matrices = std::vector<LocalToWorld>();
-	std::vector<Entity> leafEntities = std::vector<Entity>();
+	std::vector<Entity> internodeEntities = std::vector<Entity>();
 	
 	TreeManager::GetInternodeQuery().ToComponentDataArray(matrices);
-	TreeManager::GetInternodeQuery().ToEntityArray(leafEntities);
+	TreeManager::GetInternodeQuery().ToEntityArray(internodeEntities);
 	
 	auto mesh = Default::Primitives::Sphere;
 	
@@ -227,7 +227,7 @@ void TreeUtilities::LightEstimator::TakeSnapShot(bool storeSnapshot)
 	if (count == 0) return;
 	mesh->Enable();
 
-	indicesBuffer.SetData((GLsizei)count * sizeof(Entity), leafEntities.data(), GL_STATIC_DRAW);
+	indicesBuffer.SetData((GLsizei)count * sizeof(Entity), internodeEntities.data(), GL_STATIC_DRAW);
 	mesh->VAO()->EnableAttributeArray(11);
 	mesh->VAO()->SetAttributeIntPointer(11, 1, GL_UNSIGNED_INT, sizeof(Entity), (void*)0);
 	mesh->VAO()->SetAttributeDivisor(11, 1);

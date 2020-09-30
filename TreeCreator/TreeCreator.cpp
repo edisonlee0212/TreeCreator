@@ -22,8 +22,8 @@ float pcssScale = 1.0f;
 int main()
 {
 #pragma region Global light settings
-	LightingManager::SetEnableShadow(false);
-	LightingManager::SetDirectionalLightResolution(1024);
+	LightingManager::SetEnableShadow(true);
+	LightingManager::SetDirectionalLightResolution(2048);
 	LightingManager::SetStableFit(true);
 	LightingManager::SetMaxShadowDistance(100.0f);
 	LightingManager::SetSeamFixRatio(0.05f);
