@@ -70,6 +70,8 @@ EndNodeThickness
 0.010000
 ThicknessControlFactor
 0.500000
+CrownShyness
+0.200000
 Position
 0.000000
 0.000000
@@ -140,6 +142,8 @@ EndNodeThickness
 0.010000
 ThicknessControlFactor
 0.450000
+CrownShyness
+0.200000
 Position
 0.000000
 0.000000
@@ -210,6 +214,8 @@ EndNodeThickness
 0.010000
 ThicknessControlFactor
 0.450000
+CrownShyness
+0.200000
 Position
 5.000000
 0.000000
@@ -280,6 +286,8 @@ EndNodeThickness
 0.010000
 ThicknessControlFactor
 0.500000
+CrownShyness
+0.200000
 Position
 5.000000
 0.000000
@@ -350,6 +358,8 @@ EndNodeThickness
 0.010000
 ThicknessControlFactor
 0.500000
+CrownShyness
+0.200000
 Position
 7.500000
 0.000000

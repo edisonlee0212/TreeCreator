@@ -51,13 +51,13 @@ namespace TreeUtilities {
 		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge);
 		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
 		static void DeactivateBud(InternodeInfo& internodeInfo, Bud& bud);
-		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, std::shared_ptr<TreeData>& treeInfo);
+		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
 		void EvaluateRemoval(Entity& internode, TreeParameters& treeParameters);
 		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);
 		void ApplyLocalTransform(Entity& treeEntity) const;
 		void CalculateDirectGravityForce(Entity& treeEntity, float gravity) const;
 		void BackPropagateForce(Entity& internode, float fixedPropagationCoefficient);
-		void CalculateCrownShyness(float radius);
+		void CalculateCrownShyness();
 		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo) const;
 		static inline void TreeParameterImportHelper(std::ifstream& ifs, TreeParameters& treeParameters);
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);

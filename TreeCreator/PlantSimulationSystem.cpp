@@ -31,19 +31,28 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 			TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
 			if (GrowTree(tree)) {
 				growed = true;
-				CalculatePhysics(trees);
-				CalculateCrownShyness(2.0f);
 			}
 		}
 	}
 	if (growed == false) {
-		_Growing = false;
+		if(_Growing)
+		{
+			_Growing = false;
+			CalculatePhysics(trees);
+			CalculateCrownShyness();
+		}
+		
+	}else
+	{
+		CalculatePhysics(trees);
+		CalculateCrownShyness();
 	}
 }
 bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 {
 	if (EntityManager::GetChildrenAmount(treeEntity) == 0) return false;
 #pragma region Collect tree data
+	auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
 	auto treeData = EntityManager::GetSharedComponent<TreeData>(treeEntity);
 	TreeAge treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
@@ -57,14 +66,15 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 
 #pragma region Prepare info
 	if (treeAge.Value == 0) {
-		treeData->CurrentSeed = treeParameters.Seed;
-		srand(treeData->CurrentSeed);
+		treeInfo.CurrentSeed = treeParameters.Seed;
+		srand(treeInfo.CurrentSeed);
 	}
 	else {
-		srand(treeData->CurrentSeed);
-		treeData->CurrentSeed = glm::linearRand(0.0f, 1.0f) * INT_MAX;
+		srand(treeInfo.CurrentSeed);
+		treeInfo.CurrentSeed = glm::linearRand(0.0f, 1.0f) * INT_MAX;
 	}
-	treeData->MaxBranchingDepth = 3;
+	treeInfo.MaxBranchingDepth = 3;
+	EntityManager::SetComponentData(treeEntity, treeInfo);
 	const auto timeOff = treeAge.Value + treeAge.ToGrowIteration + 4;
 	treeData->ApicalDominanceTimeVal.resize(timeOff);
 	treeData->GravitropismLevelVal.resize(timeOff);
@@ -110,7 +120,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	EntityManager::SetComponentData(treeEntity, treeAge);
 	if (growed) {
 		UpdateInternodeResource(rootInternode, treeParameters, treeAge);
-		EvaluatePruning(rootInternode, treeParameters, treeAge, treeData);
+		EvaluatePruning(rootInternode, treeParameters, treeAge, treeInfo);
 		EvaluateRemoval(rootInternode, treeParameters);
 		if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
 	}
@@ -260,6 +270,8 @@ void PlantSimulationSystem::TreeParameterImportHelper(std::ifstream& ifs, TreePa
 #pragma endregion
 	ifs >> temp; ifs >> treeParameters.EndNodeThickness;
 	ifs >> temp; ifs >> treeParameters.ThicknessControlFactor;
+
+	ifs >> temp; ifs >> treeParameters.CrownShynessBase;
 }
 void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters)
 {
@@ -303,9 +315,10 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 	output += "\nSaggingFactor\n"; output += std::to_string(treeParameters.SaggingFactor);
 	output += "\nSaggingForceBackPropagateFixedCoefficient\n"; output += std::to_string(treeParameters.SaggingForceBackPropagateFixedCoefficient);
 #pragma endregion
-	//output += "\nAge\n"; output += std::to_string(treeParameters.Age);
 	output += "\nEndNodeThickness\n"; output += std::to_string(treeParameters.EndNodeThickness);
 	output += "\nThicknessControlFactor\n"; output += std::to_string(treeParameters.ThicknessControlFactor);
+
+	output += "\nCrownShynessBase\n"; output += std::to_string(treeParameters.CrownShynessBase);
 	ofs.write(output.c_str(), output.size());
 	ofs.flush();
 }
@@ -573,26 +586,38 @@ void TreeUtilities::PlantSimulationSystem::DeactivateBud(InternodeInfo& internod
 #pragma endregion
 #pragma region PostProcessing
 #pragma region Pruning
-void PlantSimulationSystem::CalculateCrownShyness(float radius)
+void PlantSimulationSystem::CalculateCrownShyness()
 {
 	std::vector<LocalToWorld> internodesLTWs;
 	std::vector<TreeIndex> internodesTreeIndices;
+	std::vector<TreeIndex> treeIndices;
+	std::vector<TreeParameters> treeParameters;
 	_InternodeQuery.ToComponentDataArray(internodesLTWs);
 	_InternodeQuery.ToComponentDataArray(internodesTreeIndices);
 
-	EntityManager::ForEach<LocalToWorld, InternodeInfo, TreeIndex>(_InternodeQuery, [radius, &internodesLTWs, &internodesTreeIndices, this](int i, Entity branchNode, LocalToWorld* ltw, InternodeInfo* info, TreeIndex* index)
+	_TreeQuery.ToComponentDataArray(treeIndices);
+	_TreeQuery.ToComponentDataArray(treeParameters);
+	EntityManager::ForEach<LocalToWorld, InternodeInfo, TreeIndex>(_InternodeQuery, [&treeIndices, &treeParameters, &internodesLTWs, &internodesTreeIndices, this](int i, Entity branchNode, LocalToWorld* ltw, InternodeInfo* info, TreeIndex* index)
 		{
 			if (info->Pruned) return;
 			if (!info->IsActivatedEndNode) return;
+			for(size_t ii = 0; ii < treeIndices.size(); ii++)
+			{
+				if(treeIndices[ii].Value == index->Value)
+				{
+					info->CrownShyness = treeParameters[ii].CrownShynessBase;
+					break;
+				}
+			}
+			if (info->CrownShyness <= 0) return;
 			for (size_t bi = 0; bi < internodesLTWs.size(); bi++)
 			{
 				if (internodesTreeIndices[bi].Value != index->Value)
 				{
-					//auto position1 = glm::vec2(ltw->Value[3].x, ltw->Value[3].z);
-					//auto position2 = glm::vec2(internodesLTWs[bi].Value[3].x, internodesLTWs[bi].Value[3].z);
 					auto position1 = glm::vec3(ltw->Value[3].x, ltw->Value[3].y, ltw->Value[3].z);
 					auto position2 = glm::vec3(internodesLTWs[bi].Value[3].x, internodesLTWs[bi].Value[3].y, internodesLTWs[bi].Value[3].z);
-					if (glm::distance(position1, position2) < radius)
+
+					if (glm::distance(position1, position2) < info->CrownShyness)
 					{
 						info->Pruned = true;
 						info->IsActivatedEndNode = false;
@@ -602,7 +627,7 @@ void PlantSimulationSystem::CalculateCrownShyness(float radius)
 		}
 	);
 }
-void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, std::shared_ptr<TreeData>& treeInfo)
+void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	if (EntityManager::GetChildrenAmount(internode) == 0)
@@ -616,7 +641,7 @@ void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& internode, Tr
 	if (internodeInfo.Level == 0 && treeAge.Value < 3) return;
 	if (internodeInfo.Level == 1 && !internodeInfo.IsApical) {
 		float height = EntityManager::GetComponentData<LocalToWorld>(internode).Value[3].y;
-		if (height < treeParameters.LowBranchPruningFactor && height < treeInfo->Height) {
+		if (height < treeParameters.LowBranchPruningFactor && height < treeInfo.Height) {
 			PruneInternode(internode, &internodeInfo);
 			return;
 		}
@@ -695,7 +720,7 @@ void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntit
 {
 	glm::mat4 treeTransform = EntityManager::GetComponentData<LocalToWorld>(treeEntity).Value;
 	auto treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity).Value;
-	auto treeData = EntityManager::GetSharedComponent<TreeData>(treeEntity);
+	auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
 	std::mutex heightMutex;
 	float treeHeight = 0.0f;
 	EntityManager::ForEach<TreeIndex, LocalToWorld, InternodeInfo>(_InternodeQuery,
@@ -711,7 +736,8 @@ void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntit
 			}
 		}
 	);
-	treeData->Height = treeHeight;
+	treeInfo.Height = treeHeight;
+	EntityManager::SetComponentData(treeEntity, treeInfo);
 }
 void TreeUtilities::PlantSimulationSystem::CalculateDirectGravityForce(Entity& treeEntity, float gravity) const
 {
@@ -1559,6 +1585,7 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 
 					ImGui::InputFloat2("Thickness End/Fac", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].EndNodeThickness);
 
+					ImGui::InputFloat("Crown Shyness Base", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].CrownShynessBase);
 #pragma endregion
 
 				}

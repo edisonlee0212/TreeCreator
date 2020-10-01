@@ -102,9 +102,6 @@ namespace TreeUtilities {
         glm::quat DesiredLocalRotation;
         glm::mat4 GlobalTransform;
         glm::mat4 LocalTransform;
-
-
-        
 #pragma endregion
 
 #pragma region Mesh generation
@@ -116,6 +113,7 @@ namespace TreeUtilities {
         bool IsMainChild = false;
 #pragma endregion
 
+        float CrownShyness;
     };
 #pragma endregion
 #pragma region Tree
@@ -177,6 +175,12 @@ namespace TreeUtilities {
 
         float EndNodeThickness;
         float ThicknessControlFactor;
+    	
+#pragma region CrownShyness
+        float CrownShynessBase;
+#pragma endregion
+
+        
     };
 
     struct RewardEstimation : ComponentBase {
@@ -184,22 +188,22 @@ namespace TreeUtilities {
     };
 
     struct TreeAge : ComponentBase {
+        
         int Value;
         int ToGrowIteration;
         bool Enable;
     };
 
-    struct TreeInfo : ComponentType
+    struct TreeInfo : ComponentBase
     {
-	    
-    };
-	
-    class TreeData : public SharedComponentBase {
-    public:
         int CurrentSeed;
         float Height;
         int MaxBranchingDepth;
         int LateralBudsCount;
+    };
+	
+    class TreeData : public SharedComponentBase {
+    public:
         bool MeshGenerated;
         bool FoliageGenerated;
         std::vector<float> ApicalDominanceTimeVal;
@@ -207,7 +211,6 @@ namespace TreeUtilities {
         std::vector<float> ApicalControlTimeVal;
         std::vector<std::vector<float>> ApicalControlTimeLevelVal;
         std::shared_ptr<Mesh> ConvexHull;
-        float ResourceToGrow;
         std::size_t GetHashCode() override;
     	void OnGui() override;
     };

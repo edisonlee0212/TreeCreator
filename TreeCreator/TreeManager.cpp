@@ -37,10 +37,7 @@ std::size_t TreeData::GetHashCode()
 
 void TreeData::OnGui()
 {
-	ImGui::Text(("Current seed " + std::to_string(CurrentSeed)).c_str());
-	ImGui::Text(("Height " + std::to_string(Height)).c_str());
-	ImGui::Text(("Max branching depth " + std::to_string(MaxBranchingDepth)).c_str());
-	ImGui::Text(("Lateral buds count " + std::to_string(LateralBudsCount)).c_str());
+	
 }
 
 void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& internode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep)
@@ -287,6 +284,18 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 
+	EntityEditorSystem::AddComponentInspector<TreeInfo>(
+		[](ComponentBase* data)
+		{
+			auto info = static_cast<TreeInfo*>(data);
+			ImGui::Text(("Current seed " + std::to_string(info->CurrentSeed)).c_str());
+			ImGui::Text(("Height " + std::to_string(info->Height)).c_str());
+			ImGui::Text(("Max branching depth " + std::to_string(info->MaxBranchingDepth)).c_str());
+			ImGui::Text(("Lateral buds count " + std::to_string(info->LateralBudsCount)).c_str());
+		}
+	);
+	
+	
 	_Ready = true;
 }
 
