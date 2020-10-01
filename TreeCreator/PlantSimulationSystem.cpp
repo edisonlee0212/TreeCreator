@@ -16,16 +16,15 @@ void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 	if (_GravityChanged)
 	{
 		_GravityChanged = false;
-		CalculatePhysics(trees);
+		for (auto& tree : trees) CalculatePhysics(tree);
+		TreeManager::GetInternodeSystem()->RefreshConnections();
 	}
 }
 void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& trees)
 {
 	bool growed = false;
 	if (_Growing) {
-		TreeManager::CalculateInternodeIllumination();
 		for (auto& tree : trees) {
-
 			Rotation rotation = EntityManager::GetComponentData<Rotation>(tree);
 			LocalToWorld ltw = EntityManager::GetComponentData<LocalToWorld>(tree);
 			TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
@@ -38,14 +37,28 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 		if(_Growing)
 		{
 			_Growing = false;
-			CalculatePhysics(trees);
-			CalculateCrownShyness();
 		}
 		
 	}else
 	{
-		CalculatePhysics(trees);
+		TreeManager::CalculateInternodeIllumination();
+		for (auto& treeEntity : trees)
+		{
+			auto rootInternode = EntityManager::GetChildren(treeEntity).at(0);
+			auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
+			auto treeData = EntityManager::GetSharedComponent<TreeData>(treeEntity);
+			auto treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
+			auto treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
+			auto treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(treeEntity);
+			auto immc = EntityManager::GetSharedComponent<InstancedMeshMaterialComponent>(treeEntity);
+			immc->Matrices.clear();
+			UpdateInternodeResource(rootInternode, treeParameters, treeAge, immc->Matrices);
+			EvaluatePruning(rootInternode, treeParameters, treeAge, treeInfo);
+			EvaluateRemoval(rootInternode, treeParameters);
+			if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
+		}
 		CalculateCrownShyness();
+		TreeManager::GetInternodeSystem()->RefreshConnections();
 	}
 }
 bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
@@ -104,26 +117,21 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 #pragma endregion
 #pragma region Update branch structure information
 	Entity rootInternode = EntityManager::GetChildren(treeEntity).at(0);
-	bool growed = GrowShoots(rootInternode, treeData, treeAge, treeParameters, treeIndex);
-
-	UpdateDistanceToBranchEnd(rootInternode);
-	InternodeInfo tempBNInfo = EntityManager::GetComponentData<InternodeInfo>(rootInternode);
-	tempBNInfo.Level = 0;
-	tempBNInfo.MaxActivatedChildLevel = 0;
-	tempBNInfo.DistanceToBranchStart = 0;
-	EntityManager::SetComponentData(rootInternode, tempBNInfo);
-	UpdateDistanceToBranchStart(rootInternode);
-#pragma endregion
-
-	treeAge.Value++;
-	treeAge.ToGrowIteration--;
-	EntityManager::SetComponentData(treeEntity, treeAge);
+	const bool growed = GrowShoots(rootInternode, treeData, treeAge, treeParameters, treeIndex);
 	if (growed) {
-		UpdateInternodeResource(rootInternode, treeParameters, treeAge);
-		EvaluatePruning(rootInternode, treeParameters, treeAge, treeInfo);
-		EvaluateRemoval(rootInternode, treeParameters);
-		if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
+		UpdateDistanceToBranchEnd(rootInternode, treeParameters);
+		InternodeInfo tempBNInfo = EntityManager::GetComponentData<InternodeInfo>(rootInternode);
+		tempBNInfo.Level = 0;
+		tempBNInfo.MaxActivatedChildLevel = 0;
+		tempBNInfo.DistanceToBranchStart = 0;
+		EntityManager::SetComponentData(rootInternode, tempBNInfo);
+		UpdateDistanceToBranchStart(rootInternode);
+		CalculatePhysics(treeEntity);
+		treeAge.Value++;
+		treeAge.ToGrowIteration--;
+		EntityManager::SetComponentData(treeEntity, treeAge);
 	}
+#pragma endregion
 	return growed;
 }
 #pragma region Helpers
@@ -171,7 +179,7 @@ void TreeUtilities::PlantSimulationSystem::ExportSettings(const std::string& pat
 		ofs.flush();
 		for (auto i = 0; i < _NewTreeAmount; i++)
 		{
-			output += "\nPosition\n";
+			output = "\nPosition\n";
 			output += std::to_string(_NewTreePositions[i].x);
 			output += "\n";
 			output += std::to_string(_NewTreePositions[i].y);
@@ -371,9 +379,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	auto treeInfo = EntityManager::GetSharedComponent<TreeData>(treeEntity);
 	treeInfo->MeshGenerated = false;
 	glm::mat4 transform = glm::identity<glm::mat4>();
-	auto immc = EntityManager::GetSharedComponent<InstancedMeshMaterialComponent>(treeEntity);
-	immc->Matrices.clear();
-	UpdateLocalTransform(internode, treeParameters, transform, r.Value, immc->Matrices);
+	UpdateLocalTransform(internode, treeParameters, transform, r.Value);
 
 	EntityManager::SetComponentData(internode, internodeInfo);
 	EntityManager::SetComponentData(treeEntity, treeParameters);
@@ -423,7 +429,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 		// now take into consideration the light on the bud
 		float illumination = internodeIllumination.Value;
 		if (illumination < 1.0f) {
-			budGrowProbability *= glm::pow(illumination, bud.IsApical ? treeParameters.ApicalBudLightingFactor : treeParameters.LateralBudLightingFactor);
+			//budGrowProbability *= glm::pow(illumination, bud.IsApical ? treeParameters.ApicalBudLightingFactor : treeParameters.LateralBudLightingFactor);
 		}
 
 		// now check whether the bud is going to flush or not
@@ -620,6 +626,7 @@ void PlantSimulationSystem::CalculateCrownShyness()
 					if (glm::distance(position1, position2) < info->CrownShyness)
 					{
 						info->Pruned = true;
+						info->PruneReason = 4;
 						info->IsActivatedEndNode = false;
 					}
 				}
@@ -641,17 +648,16 @@ void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& internode, Tr
 	if (internodeInfo.Level == 0 && treeAge.Value < 3) return;
 	if (internodeInfo.Level == 1 && !internodeInfo.IsApical) {
 		float height = EntityManager::GetComponentData<LocalToWorld>(internode).Value[3].y;
-		if (height < treeParameters.LowBranchPruningFactor && height < treeInfo.Height) {
-			PruneInternode(internode, &internodeInfo);
+		if (height < treeParameters.LowBranchPruningFactor && height < treeInfo.Height / 2) {
+			PruneInternode(internode, &internodeInfo, 0);
 			return;
 		}
 	}
-	float normalL = internodeInfo.AccumulatedLength / treeParameters.InternodeLengthBase;
 	float ratioScale = 1;
-	float factor = ratioScale / glm::sqrt(normalL);
-	//factor *= internodeInfo.AccumulatedLight;
+	float factor = ratioScale / glm::sqrt(internodeInfo.AccumulatedLength);
+	factor *= internodeInfo.AccumulatedLight;
 	if (factor < treeParameters.PruningFactor) {
-		PruneInternode(internode, &internodeInfo);
+		PruneInternode(internode, &internodeInfo, 1);
 		return;
 	}
 
@@ -666,7 +672,7 @@ void PlantSimulationSystem::EvaluateDirectionPruning(Entity& internode, glm::vec
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	if (glm::angle(escapeDirection, internodeInfo.DesiredGlobalRotation * glm::vec3(0.0f, 0.0f, -1.0f)) < glm::radians(limitAngle))
 	{
-		PruneInternode(internode, &internodeInfo);
+		PruneInternode(internode, &internodeInfo, 2);
 	}
 	EntityManager::ForEachChild(internode, [this, &escapeDirection, &limitAngle](Entity child)
 		{
@@ -674,10 +680,11 @@ void PlantSimulationSystem::EvaluateDirectionPruning(Entity& internode, glm::vec
 		}
 	);
 }
-inline void PlantSimulationSystem::PruneInternode(Entity& internode, InternodeInfo* internodeInfo) const
+inline void PlantSimulationSystem::PruneInternode(Entity& internode, InternodeInfo* internodeInfo, int PruneReason) const
 {
 	internodeInfo->Pruned = true;
 	internodeInfo->IsActivatedEndNode = false;
+	internodeInfo->PruneReason = PruneReason;
 	EntityManager::SetComponentData(internode, *internodeInfo);
 }
 #pragma endregion
@@ -698,23 +705,17 @@ void PlantSimulationSystem::EvaluateRemoval(Entity& internode, TreeParameters& t
 }
 #pragma endregion
 #pragma region Physics
-void TreeUtilities::PlantSimulationSystem::CalculatePhysics(std::vector<Entity>& trees)
+void TreeUtilities::PlantSimulationSystem::CalculatePhysics(Entity tree)
 {
-	for (auto& tree : trees) {
 		Rotation rotation = EntityManager::GetComponentData<Rotation>(tree);
 		TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
-		if (EntityManager::GetChildrenAmount(tree) == 0) continue;
+		if (EntityManager::GetChildrenAmount(tree) == 0) return;
 		Entity rootInternode = EntityManager::GetChildren(tree).at(0);
 		CalculateDirectGravityForce(tree, _Gravity);
 		BackPropagateForce(rootInternode, treeParameters.SaggingForceBackPropagateFixedCoefficient);
 		glm::mat4 transform = glm::identity<glm::mat4>(); //glm::translate(glm::mat4(1.0f), glm::vec3(0.0f))* glm::mat4_cast(glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)))* glm::scale(glm::vec3(1.0f));
-
-		auto immc = EntityManager::GetSharedComponent<InstancedMeshMaterialComponent>(tree);
-		immc->Matrices.clear();
-		UpdateLocalTransform(rootInternode, treeParameters, transform, rotation.Value, immc->Matrices);
+		UpdateLocalTransform(rootInternode, treeParameters, transform, rotation.Value);
 		ApplyLocalTransform(tree);
-		TreeManager::GetInternodeSystem()->RefreshConnections();
-	}
 }
 void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntity) const
 {
@@ -765,20 +766,35 @@ void TreeUtilities::PlantSimulationSystem::BackPropagateForce(Entity& internode,
 #pragma endregion
 #pragma endregion
 #pragma region Info Updates
-void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& internode)
+void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& internode, TreeParameters& treeParameters)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	internodeInfo.DistanceToBranchEnd = 0;
 	internodeInfo.TotalDistanceToBranchEnd = 0;
-	EntityManager::ForEachChild(internode, [this, &internodeInfo](Entity child)
+	internodeInfo.BranchEndInternodeAmount = EntityManager::GetChildrenAmount(internode) == 0 ? 1 : 0;
+
+	if (EntityManager::GetChildrenAmount(internode) == 0) internodeInfo.Thickness = treeParameters.EndNodeThickness;
+	else {
+		internodeInfo.Thickness = 0;
+	}
+	internodeInfo.MaxChildLevel = internodeInfo.Level;
+	float mainChildThickness = 0.0f;
+	EntityManager::ForEachChild(internode, [this, &internodeInfo, &mainChildThickness, &treeParameters](Entity child)
 		{
-			UpdateDistanceToBranchEnd(child);
+			UpdateDistanceToBranchEnd(child, treeParameters);
 			const InternodeInfo childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
 			float d = childNodeInfo.DistanceToBranchEnd + childNodeInfo.DistanceToParent;
 			internodeInfo.TotalDistanceToBranchEnd += childNodeInfo.DistanceToParent + childNodeInfo.TotalDistanceToBranchEnd;
 			if (d > internodeInfo.DistanceToBranchEnd) internodeInfo.DistanceToBranchEnd = d;
+
+			internodeInfo.BranchEndInternodeAmount += childNodeInfo.BranchEndInternodeAmount;
+			internodeInfo.Thickness += treeParameters.ThicknessControlFactor * childNodeInfo.Thickness;
+			if (childNodeInfo.Thickness > mainChildThickness) {
+				mainChildThickness = childNodeInfo.Thickness;
+			}
 		}
 	);
+	if (mainChildThickness > internodeInfo.Thickness) internodeInfo.Thickness = mainChildThickness;
 	EntityManager::SetComponentData(internode, internodeInfo);
 }
 void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchStart(Entity& internode)
@@ -811,7 +827,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchStart(Entity& i
 	);
 	EntityManager::SetComponentData(internode, internodeInfo);
 }
-void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation, std::vector<glm::mat4>& leafTransforms)
+void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	glm::quat actualLocalRotation = internodeInfo.DesiredLocalRotation;
@@ -839,38 +855,14 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 
 	internodeInfo.GlobalTransform = parentLTW * internodeInfo.LocalTransform;
 
-	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
-	internodeData->LeafLocalTransforms.clear();
-	float illumination = EntityManager::GetComponentData<Illumination>(internode).Value;
-	if (illumination > 0.04f) {
-		if (internodeInfo.Level > internodeInfo.MaxChildLevel - 6)
-		{
-			glm::vec3 lp = glm::vec3(0.0f);
-			//x, ÏòÑôÖá£¬y: ºáÖá£¬z£ºroll
-			glm::quat lr;
-			glm::vec3 ls = glm::vec3(0.1f, 1.0f, 0.2f);
-			glm::mat4 localTransform;
-
-			lr = glm::quat(glm::vec3(glm::radians(45.0f), 0.0f, 0.0f));
-			localTransform = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
-			//Generate leaf here.
-			internodeData->LeafLocalTransforms.push_back(localTransform);
-			leafTransforms.push_back(internodeInfo.GlobalTransform * localTransform);
-
-			lr = glm::quat(glm::vec3(glm::radians(-45.0f), 0.0f, 0.0f));
-			localTransform = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
-			//Generate leaf here.
-			internodeData->LeafLocalTransforms.push_back(localTransform);
-			leafTransforms.push_back(internodeInfo.GlobalTransform * localTransform);
-		}
-	}
+	
 
 	float mainChildThickness = 0;
 	InternodeInfo mainChildInfo;
 	unsigned mainChildEntityIndex = 0;
-	EntityManager::ForEachChild(internode, [this, &mainChildInfo, &mainChildEntityIndex, &mainChildThickness, &treeParameters, &internodeInfo, &treeRotation, &leafTransforms](Entity child)
+	EntityManager::ForEachChild(internode, [this, &mainChildInfo, &mainChildEntityIndex, &mainChildThickness, &treeParameters, &internodeInfo, &treeRotation](Entity child)
 		{
-			UpdateLocalTransform(child, treeParameters, internodeInfo.GlobalTransform, treeRotation, leafTransforms);
+			UpdateLocalTransform(child, treeParameters, internodeInfo.GlobalTransform, treeRotation);
 			InternodeInfo childInternodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
 			childInternodeInfo.ParentThickness = internodeInfo.Thickness;
 			if (mainChildThickness < childInternodeInfo.Thickness) {
@@ -904,28 +896,44 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 
 	EntityManager::SetComponentData(internode, internodeInfo);
 }
-void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge)
+void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, std::vector<glm::mat4>& leafTransforms)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
-
-	internodeInfo.DistanceToBranchEnd = 0;
-	internodeInfo.NumValidChild = 0;
-
-	if (EntityManager::GetChildrenAmount(internode) == 0) internodeInfo.Thickness = treeParameters.EndNodeThickness;
-	else {
-		internodeInfo.Thickness = 0;
-	}
-
 	Illumination internodeIllumination = EntityManager::GetComponentData<Illumination>(internode);
 	internodeInfo.AccumulatedLight = internodeIllumination.Value;
 	internodeInfo.AccumulatedLength = internodeInfo.DistanceToParent;
 	internodeInfo.AccumulatedActivatedBudsAmount = internodeInfo.ActivatedBudsAmount;
-	internodeInfo.BranchEndInternodeAmount = EntityManager::GetChildrenAmount(internode) == 0 ? 1 : 0;
-	internodeInfo.MaxChildLevel = internodeInfo.Level;
-	float mainChildThickness = 0.0f;
-	EntityManager::ForEachChild(internode, [this, &mainChildThickness, &internodeInfo, &treeParameters, &treeAge](Entity child)
+	
+	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
+	internodeData->LeafLocalTransforms.clear();
+	float illumination = EntityManager::GetComponentData<Illumination>(internode).Value;
+	if (illumination > 0.04f) {
+		if (internodeInfo.Level > internodeInfo.MaxChildLevel - 6)
 		{
-			UpdateInternodeResource(child, treeParameters, treeAge);
+			glm::vec3 lp = glm::vec3(0.0f);
+			//x, ÏòÑôÖá£¬y: ºáÖá£¬z£ºroll
+			glm::quat lr;
+			glm::vec3 ls = glm::vec3(0.1f, 1.0f, 0.2f);
+			glm::mat4 localTransform;
+
+			lr = glm::quat(glm::vec3(glm::radians(45.0f), 0.0f, 0.0f));
+			localTransform = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
+			//Generate leaf here.
+			internodeData->LeafLocalTransforms.push_back(localTransform);
+			leafTransforms.push_back(internodeInfo.GlobalTransform * localTransform);
+
+			lr = glm::quat(glm::vec3(glm::radians(-45.0f), 0.0f, 0.0f));
+			localTransform = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
+			//Generate leaf here.
+			internodeData->LeafLocalTransforms.push_back(localTransform);
+			leafTransforms.push_back(internodeInfo.GlobalTransform * localTransform);
+		}
+	}
+
+	
+	EntityManager::ForEachChild(internode, [this, &internodeInfo, &treeParameters, &treeAge, &leafTransforms](Entity child)
+		{
+			UpdateInternodeResource(child, treeParameters, treeAge, leafTransforms);
 			InternodeInfo childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
 
 			if (internodeInfo.MaxChildLevel < childNodeInfo.MaxChildLevel) {
@@ -934,24 +942,13 @@ void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& inter
 			else if (internodeInfo.MaxChildLevel < childNodeInfo.Level) {
 				internodeInfo.MaxChildLevel = childNodeInfo.Level;
 			}
-			float d = childNodeInfo.DistanceToBranchEnd + childNodeInfo.DistanceToParent;
-			if (d > internodeInfo.DistanceToBranchEnd)internodeInfo.DistanceToBranchEnd = d;
-			float cL = childNodeInfo.DistanceToParent;
-			internodeInfo.NumValidChild += 1;
-
-			internodeInfo.BranchEndInternodeAmount += childNodeInfo.BranchEndInternodeAmount;
-			internodeInfo.Thickness += treeParameters.ThicknessControlFactor * childNodeInfo.Thickness;
-			if (childNodeInfo.Thickness > mainChildThickness) {
-				mainChildThickness = childNodeInfo.Thickness;
-			}
-
-			if (childNodeInfo.Pruned) return;
 			internodeInfo.AccumulatedLight += childNodeInfo.AccumulatedLight;
-			internodeInfo.AccumulatedActivatedBudsAmount += childNodeInfo.AccumulatedActivatedBudsAmount;
 			internodeInfo.AccumulatedLength += childNodeInfo.AccumulatedLength;
+			if (childNodeInfo.Pruned) return;
+			internodeInfo.AccumulatedActivatedBudsAmount += childNodeInfo.AccumulatedActivatedBudsAmount;
 		}
 	);
-	if (mainChildThickness > internodeInfo.Thickness) internodeInfo.Thickness = mainChildThickness;
+	
 
 	EntityManager::SetComponentData(internode, internodeInfo);
 }

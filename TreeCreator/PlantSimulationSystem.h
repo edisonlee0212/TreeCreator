@@ -45,10 +45,10 @@ namespace TreeUtilities {
 
 		float GetApicalControl(std::shared_ptr<TreeData>& treeInfo, InternodeInfo& internodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
 		inline void DrawGui();
-		void UpdateDistanceToBranchEnd(Entity& internode);
+		void UpdateDistanceToBranchEnd(Entity& internode, TreeParameters& treeParameters);
 		void UpdateDistanceToBranchStart(Entity& internode);
-		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation, std::vector<glm::mat4>& leafTransforms);
-		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge);
+		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation);
+		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, std::vector<glm::mat4>& leafTransforms);
 		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
 		static void DeactivateBud(InternodeInfo& internodeInfo, Bud& bud);
 		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
@@ -58,7 +58,7 @@ namespace TreeUtilities {
 		void CalculateDirectGravityForce(Entity& treeEntity, float gravity) const;
 		void BackPropagateForce(Entity& internode, float fixedPropagationCoefficient);
 		void CalculateCrownShyness();
-		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo) const;
+		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo, int pruneReason) const;
 		static inline void TreeParameterImportHelper(std::ifstream& ifs, TreeParameters& treeParameters);
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);
 		void BuildConvexHullForTree(Entity& tree);
@@ -70,7 +70,7 @@ namespace TreeUtilities {
 		static void LoadDefaultTreeParameters(int preset, TreeParameters& tps);
 		void TryGrowAllTrees(std::vector<Entity>& trees);
 		bool GrowTree(Entity& treeEntity);
-		void CalculatePhysics(std::vector<Entity>& trees);
+		void CalculatePhysics(Entity tree);
 		void OnCreate() override;
 		void OnDestroy() override;
 		void Update() override;

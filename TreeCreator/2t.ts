@@ -51,7 +51,7 @@ GravitropismBase
 GravitropismLevelFactor
 0.000000
 PruningFactor
-0.000000
+0.001000
 LowBranchPruningFactor
 1.300000
 ThicknessRemovalFactor
@@ -70,7 +70,7 @@ EndNodeThickness
 0.010000
 ThicknessControlFactor
 0.700000
-CrownShyness
+CrownShynessBase
 2.000000
 Position
 3.000000
@@ -123,7 +123,7 @@ GravitropismBase
 GravitropismLevelFactor
 0.000000
 PruningFactor
-0.000000
+0.001000
 LowBranchPruningFactor
 1.300000
 ThicknessRemovalFactor
@@ -142,5 +142,5 @@ EndNodeThickness
 0.010000
 ThicknessControlFactor
 0.700000
-CrownShyness
+CrownShynessBase
 2.000000

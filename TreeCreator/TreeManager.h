@@ -74,7 +74,6 @@ namespace TreeUtilities {
         float AccumulatedLight = 0;
         float AccumulatedActivatedBudsAmount = 0;
         float AccumulatedGravity = 0;
-        unsigned NumValidChild;
 #pragma endregion
 #pragma region Growth
         int MaxChildLevel;
@@ -84,6 +83,7 @@ namespace TreeUtilities {
         int ActivatedBudsAmount = 0;
         unsigned BranchEndInternodeAmount;
         bool Pruned;
+        int PruneReason;
         bool IsApical;
         bool ApicalBudExist = false;
         bool IsActivatedEndNode;

@@ -253,7 +253,6 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::Text(("AccumulatedLight: " + std::to_string(internodeInfo->AccumulatedLight)).c_str());
 			ImGui::Text(("AccumulatedActivatedBudsAmount: " + std::to_string(internodeInfo->AccumulatedActivatedBudsAmount)).c_str());
 			ImGui::Text(("AccumulatedGravity: " + std::to_string(internodeInfo->AccumulatedGravity)).c_str());
-			ImGui::Text(("NumValidChild: " + std::to_string(internodeInfo->NumValidChild)).c_str());
 			ImGui::Text(("MaxChildLevel: " + std::to_string(internodeInfo->MaxChildLevel)).c_str());
 			ImGui::Text(("MaxActivatedChildLevel: " + std::to_string(internodeInfo->MaxActivatedChildLevel)).c_str());
 			ImGui::Text(("Inhibitor: " + std::to_string(internodeInfo->Inhibitor)).c_str());
@@ -261,6 +260,7 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::Text(("ActivatedBudsAmount: " + std::to_string(internodeInfo->ActivatedBudsAmount)).c_str());
 			ImGui::Text(("BranchEndInternodeAmount: " + std::to_string(internodeInfo->BranchEndInternodeAmount)).c_str());
 			ImGui::Text(("Pruned: " + std::to_string(internodeInfo->Pruned)).c_str());
+			ImGui::Text(("Pruned reason: " + std::to_string(internodeInfo->PruneReason)).c_str());
 			ImGui::Text(("IsApical: " + std::to_string(internodeInfo->IsApical)).c_str());
 			ImGui::Text(("ApicalBudExist: " + std::to_string(internodeInfo->ApicalBudExist)).c_str());
 			ImGui::Text(("IsActivatedEndNode: " + std::to_string(internodeInfo->IsActivatedEndNode)).c_str());
