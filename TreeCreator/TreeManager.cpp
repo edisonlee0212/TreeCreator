@@ -195,7 +195,7 @@ void TreeUtilities::TreeManager::Init()
 		[](ComponentBase* data)
 		{
 			ImGui::Text(("Current age: " + std::to_string(*(int*)data)).c_str());
-			ImGui::InputInt("Iterations left", (int*)((char*)data + sizeof(int)));
+			ImGui::DragInt("Iterations left", (int*)((char*)data + sizeof(int)));
 		}
 	);
 	
@@ -210,25 +210,25 @@ void TreeUtilities::TreeManager::Init()
 		[](ComponentBase* data)
 		{
 			auto tps = static_cast<TreeParameters*>(data);
-			ImGui::InputInt("Seed", &tps->Seed);
-			ImGui::InputInt("Lateral Bud Number", &tps->LateralBudPerNode);
-			ImGui::InputFloat("Apical Angle Var", &tps->VarianceApicalAngle);
-			ImGui::InputFloat2("Branching Angle M/Var", &tps->BranchingAngleMean);
-			ImGui::InputFloat2("Roll Angle M/Var", &tps->RollAngleMean);
-			ImGui::InputFloat2("Extinction Prob A/L", &tps->ApicalBudKillProbability);
-			ImGui::InputFloat3("AD Dis/Age", &tps->ApicalControlDistanceFactor);
-			ImGui::InputFloat("Growth Rate", &tps->GrowthRate);
-			ImGui::InputFloat2("Node Len Base/Age", &tps->InternodeLengthBase);
-			ImGui::InputFloat4("AC Base/Age/Lvl/Dist", &tps->ApicalControlBase);
-			ImGui::InputInt("Max Bud Age", &tps->MaxBudAge);
-			ImGui::InputFloat("Phototropism", &tps->Phototropism);
-			ImGui::InputFloat2("Gravitropism Base/Age", &tps->GravitropismBase);
-			ImGui::InputFloat("PruningFactor", &tps->PruningFactor);
-			ImGui::InputFloat("LowBranchPruningFactor", &tps->LowBranchPruningFactor);
-			ImGui::InputFloat("GravityBendingStrength", &tps->GravityBendingStrength);
-			ImGui::InputFloat2("Lighting Factor A/L", &tps->ApicalBudLightingFactor);
-			ImGui::InputFloat2("Gravity Base/BPCo", &tps->SaggingFactor);
-			ImGui::InputFloat2("Thickness End/Fac", &tps->EndNodeThickness);
+			ImGui::DragInt("Seed", &tps->Seed);
+			ImGui::DragInt("Lateral Bud Number", &tps->LateralBudPerNode);
+			ImGui::DragFloat("Apical Angle Var", &tps->VarianceApicalAngle);
+			ImGui::DragFloat2("Branching Angle M/Var", &tps->BranchingAngleMean);
+			ImGui::DragFloat2("Roll Angle M/Var", &tps->RollAngleMean);
+			ImGui::DragFloat2("Extinction Prob A/L", &tps->ApicalBudKillProbability);
+			ImGui::DragFloat3("AD Dis/Age", &tps->ApicalControlDistanceFactor);
+			ImGui::DragFloat("Growth Rate", &tps->GrowthRate);
+			ImGui::DragFloat2("Node Len Base/Age", &tps->InternodeLengthBase);
+			ImGui::DragFloat4("AC Base/Age/Lvl/Dist", &tps->ApicalControlBase);
+			ImGui::DragInt("Max Bud Age", &tps->MaxBudAge);
+			ImGui::DragFloat("Phototropism", &tps->Phototropism);
+			ImGui::DragFloat2("Gravitropism Base/Age", &tps->GravitropismBase);
+			ImGui::DragFloat("PruningFactor", &tps->PruningFactor);
+			ImGui::DragFloat("LowBranchPruningFactor", &tps->LowBranchPruningFactor);
+			ImGui::DragFloat("GravityBendingStrength", &tps->GravityBendingStrength);
+			ImGui::DragFloat2("Lighting Factor A/L", &tps->ApicalBudLightingFactor);
+			ImGui::DragFloat2("Gravity Base/BPCo", &tps->SaggingFactor);
+			ImGui::DragFloat2("Thickness End/Fac", &tps->EndNodeThickness);
 		}
 	);
 
