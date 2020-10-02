@@ -295,6 +295,13 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 	
+	EntityEditorSystem::AddComponentInspector<Gravity>(
+		[](ComponentBase* data)
+		{
+			auto info = static_cast<Gravity*>(data);
+			ImGui::Text(("Value: " + std::to_string(info->Value)).c_str());
+		}
+	);
 	
 	_Ready = true;
 }

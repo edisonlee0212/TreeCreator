@@ -506,7 +506,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 #pragma endregion
 #pragma region Create Apical Bud
 					Bud newApicalBud;
-					newApicalBud.EulerAngles = glm::vec3(glm::gaussRand(glm::vec2(0.0f), glm::vec2(glm::radians(treeParameters.VarianceApicalAngle / 2.0f))), 0.0f);
+					newApicalBud.EulerAngles = glm::vec3(glm::gaussRand(glm::vec2(0.0f), glm::vec2(glm::radians(treeParameters.VarianceApicalAngle))), 0.0f);
 					newApicalBud.IsActive = true;
 					newApicalBud.IsApical = true;
 					newApicalBud.StartAge = treeAge.Value;
@@ -841,8 +841,12 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 	glm::quat newGlobalRotation = treeRotation * internodeInfo.ParentRotation * internodeInfo.DesiredLocalRotation;
 	glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
 	glm::vec3 up = newGlobalRotation * glm::vec3(0, 1, 0);
+	float currentAngle = glm::abs(glm::angle(front, glm::vec3(0, -1, 0)) - glm::radians(90.0f));
 	float gravityBending = treeParameters.GravityBendingStrength * internodeInfo.AccumulatedGravity;
-	front += gravityBending * glm::vec3(0, -1, 0);
+
+	//glm::vec3 left = glm::cross(front, glm::vec3(0, 1, 0));
+	//front = glm::rotate(front, gravityBending * currentAngle / glm::radians(90.0f), left);
+	front += gravityBending * currentAngle / glm::radians(90.0f) * glm::vec3(0, -1, 0);
 	front = glm::normalize(front);
 	up = glm::cross(glm::cross(front, up), front);
 	newGlobalRotation = glm::quatLookAt(front, up);
@@ -1217,7 +1221,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 	case 4:
 		//F6b
 		tps.Seed = 1;
-		tps.VarianceApicalAngle = 0;
+		tps.VarianceApicalAngle = 20;
 		tps.LateralBudPerNode = 2;
 		tps.BranchingAngleMean = 41;
 		tps.BranchingAngleVariance = 3;

@@ -41,7 +41,7 @@ namespace TreeUtilities {
         glm::vec3 EulerAngles;
     };
 
-    struct Gravity {
+    struct Gravity : ComponentBase{
         float Value;
     };
 
