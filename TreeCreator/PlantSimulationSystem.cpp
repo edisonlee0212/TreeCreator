@@ -429,7 +429,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 		// now take into consideration the light on the bud
 		float illumination = internodeIllumination.Value;
 		if (illumination < 1.0f) {
-			//budGrowProbability *= glm::pow(illumination, bud.IsApical ? treeParameters.ApicalBudLightingFactor : treeParameters.LateralBudLightingFactor);
+			budGrowProbability *= glm::pow(illumination, bud.IsApical ? treeParameters.ApicalBudLightingFactor : treeParameters.LateralBudLightingFactor);
 		}
 
 		// now check whether the bud is going to flush or not
@@ -1137,7 +1137,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.MaxBudAge = 10;
 
 		tps.EndNodeThickness = 0.02f;
-		tps.ThicknessControlFactor = 0.75f;
+		tps.ThicknessControlFactor = 0.65f;
 		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
 #pragma endregion
 		break;
