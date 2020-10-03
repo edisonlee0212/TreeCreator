@@ -98,7 +98,7 @@ namespace SorghumReconstruction {
 		std::shared_ptr<Material> _StemMaterial;
 		std::shared_ptr<Material> _LeafMaterial;
 		void DrawGUI();
-		
+		void ObjExportHelper(glm::vec3 position, std::shared_ptr<Mesh> mesh, std::ofstream& of, unsigned& startIndex) const;
 	public:
 		Entity CreatePlant() const;
 		Entity CreateLeafForPlant(Entity& plantEntity) const;
