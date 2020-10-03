@@ -17,7 +17,6 @@ void TreeScene::ExportSceneAsOBJ(std::string filename)
 		for (auto treeEntity : trees)
 		{
 			auto ltw = EntityManager::GetComponentData<LocalToWorld>(treeEntity);
-			//auto info = EntityManager::GetComponentData<TreeData>(treeEntity);
 			auto mesh = TreeManager::GetMeshForTree(treeEntity);
 			if(!mesh->GetVerticesUnsafe()->empty() && !mesh->GetIndicesUnsafe()->empty())
 			{

@@ -142,12 +142,6 @@ int main()
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
-
-		ImGui::Begin("Shadow");
-		static bool enableShadow = true;
-		ImGui::Checkbox("Enable shadow", &enableShadow);
-		ImGui::End();
-		LightingManager::SetEnableShadow(enableShadow);
 		//ImGui::ShowDemoWindow();
 		Application::Update();
 		loopable = Application::LateUpdate();

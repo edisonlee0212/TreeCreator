@@ -9,8 +9,11 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant() const
 	auto spline = std::make_shared<Spline>();
 	EntityManager::SetSharedComponent(ret, spline);
 	EntityManager::SetComponentData(ret, s);
+	
 	auto mmc = std::make_shared<MeshMaterialComponent>();
-	mmc->Material = _PlantMaterial;
+	mmc->Material = _StemMaterial;
+	mmc->Mesh = std::make_shared<Mesh>();
+	mmc->BackCulling = false;
 	EntityManager::SetSharedComponent(ret, mmc);
 
 	return ret;
@@ -28,7 +31,7 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateLeafForPlant(En
 
 	auto mmc = std::make_shared<MeshMaterialComponent>();
 	mmc->Material = _LeafMaterial;
-	mmc->Mesh = nullptr;
+	mmc->Mesh = std::make_shared<Mesh>();
 	mmc->BackCulling = false;
 	EntityManager::SetSharedComponent(ret, mmc);
 
@@ -42,24 +45,39 @@ void SorghumReconstruction::SorghumReconstructionSystem::DrawGUI()
 
 void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlants()
 {
-	EntityManager::ForEach<LocalToWorld>(_SplineQuery, []
+	std::mutex meshMutex;
+	EntityManager::ForEach<LocalToWorld>(_SplineQuery, [&meshMutex]
 	(int index, Entity entity, LocalToWorld* ltw)
 		{
 
 			auto spline = EntityManager::GetSharedComponent<Spline>(entity);
+			spline->Nodes.clear();
+			if (spline->StartingPoint != -1) {
+				auto truckSpline = EntityManager::GetSharedComponent<Spline>(EntityManager::GetParent(entity));
+				float width = 0.1f - spline->StartingPoint * 0.05f;
+				for (float i = 0.0f; i < spline->StartingPoint - 0.05f; i += 0.05f)
+				{
+					spline->Nodes.emplace_back(truckSpline->EvaluatePointFromCurve(i), 180.0f, width, truckSpline->EvaluateAxisFromCurve(i));
+				}
+				for (float i = 0.05f; i <= 1.0f; i += 0.05f)
+				{
+					float w = 0.15f;
+					if (i > 0.75f) w -= (i - 0.75f) * 0.5f;
+					spline->Nodes.emplace_back(spline->EvaluatePointFromCurve(i), i == 0.05f ? 20.0f : 10.0f, w, spline->EvaluateAxisFromCurve(i));
+				}
+			}else
+			{
+				for (float i = 0.0f; i <= 1.0f; i += 0.05f)
+				{
+					spline->Nodes.emplace_back(spline->EvaluatePointFromCurve(i), 180.0f, 0.04f, spline->EvaluateAxisFromCurve(i));
+				}
+				auto endPoint = spline->EvaluatePointFromCurve(1.0f);
+				auto endAxis = spline->EvaluateAxisFromCurve(1.0f);
+				spline->Nodes.emplace_back(endPoint + endAxis * 0.05f, 10.0f, 0.001f, endAxis);
+			}
 			spline->Vertices.clear();
 			spline->Indices.clear();
 			spline->Segments.clear();
-			/*const int amount = 30;
-			for (int i = 0; i < amount; i++)
-			{
-				float percent = (float)i / (amount - 1);
-				auto front = glm::normalize(spline->EvaluateAxisFromCurve(percent));
-
-				auto up = glm::normalize(glm::cross(spline->Left, front));
-			
-				spline->Segments.emplace_back(spline->EvaluatePointFromCurve(percent), up, front, spline->EvaluateWidth(percent), spline->EvaluateTheta(percent));
-			}*/
 
 			const int amount = 5;
 
@@ -116,28 +134,23 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 					}
 				}
 			}
-
-
+			
 		}
 	);
-	//auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(truck);
-	//truckSpline = EntityManager::GetSharedComponent<Spline>(truck);
-
-	//mmc->Mesh = std::make_shared<Mesh>();
-	//mmc->Mesh->SetVertices(17, truckSpline->Vertices, truckSpline->Indices);
 	std::vector<Entity> plants;
 	_PlantQuery.ToEntityArray(plants);
 	for (auto& plant : plants) {
+		auto pmmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(plant);
+		auto spline = EntityManager::GetSharedComponent<Spline>(plant);
+		pmmc->Mesh->SetVertices(17, spline->Vertices, spline->Indices, true);
 		EntityManager::ForEachChild(plant, [](Entity child)
 			{
 				auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(child);
 				auto childSpline = EntityManager::GetSharedComponent<Spline>(child);
-				mmc->Mesh = std::make_shared<Mesh>();
 				mmc->Mesh->SetVertices(17, childSpline->Vertices, childSpline->Indices, true);
 			}
 		);
 	}
-	
 }
 
 Entity SorghumReconstruction::SorghumReconstructionSystem::ImportPlant(std::string path, float resolution, std::string name) const
@@ -162,31 +175,20 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::ImportPlant(std::stri
 
 	//Recenter plant:
 	glm::vec3 posSum = truckSpline->Curves.front().CP0;
-	
-	/*
-	int pointAmount = 0;
-	for (auto& curve : truckSpline->Curves) {
-		pointAmount += 2;
-		posSum += curve.CP0;
-		posSum += curve.CP3;
-	}
-	posSum /= pointAmount;
-	*/
+
 	for (auto& curve : truckSpline->Curves) {
 		curve.CP0 -= posSum;
 		curve.CP1 -= posSum;
 		curve.CP2 -= posSum;
 		curve.CP3 -= posSum;
 	}
-	EntityManager::SetSharedComponent(truck, truckSpline);
-	float minOrder = 10.0f;
+	truckSpline->Left = glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), truckSpline->Curves.begin()->CP0 - truckSpline->Curves.back().CP3);
 	for (int i = 0; i < leafCount; i++) {
 		Entity leaf = CreateLeafForPlant(truck);
 		auto leafSpline = EntityManager::GetSharedComponent<Spline>(leaf);
 		float startingPoint;
 		file >> startingPoint;
 		
-		if (minOrder > startingPoint) minOrder = startingPoint;
 		leafSpline->StartingPoint = startingPoint;
 		leafSpline->Import(file);
 		EntityManager::SetSharedComponent(leaf, leafSpline);
@@ -199,13 +201,6 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::ImportPlant(std::stri
 
 		leafSpline->Left = glm::cross(glm::vec3(0.0f, 0.0f, 1.0f), leafSpline.get()->Curves.begin()->CP0 - leafSpline.get()->Curves.back().CP3);
 	}
-	EntityManager::ForEachChild(truck, [&minOrder, &truckSpline](Entity leaf)
-		{
-			auto leafSpline = EntityManager::GetSharedComponent<Spline>(leaf);
-
-			//leafSpline->BuildStem(truckSpline);
-			leafSpline->BuildNodes(truckSpline);
-		});
 	return truck;
 }
 
@@ -264,7 +259,6 @@ void SorghumReconstruction::SorghumReconstructionSystem::ExportPlant(Entity plan
 #pragma endregion
 					of.write(data.c_str(), data.size());
 					of.flush();
-
 				}
 			}
 		);
@@ -293,11 +287,11 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 	EntityManager::SetEntityQueryAnyFilters(_SplineQuery, SorghumInfo(), LeafInfo());
 	_PlantQuery = EntityManager::CreateEntityQuery();
 	EntityManager::SetEntityQueryAllFilters(_PlantQuery, SorghumInfo());
-	_PlantMaterial = std::make_shared<Material>();
-	_PlantMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
+	_StemMaterial = std::make_shared<Material>();
+	_StemMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto textureDiffuseTruck = new Texture2D(TextureType::DIFFUSE);
 	textureDiffuseTruck->LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), "");
-	_PlantMaterial->Textures2Ds()->push_back(textureDiffuseTruck);
+	_StemMaterial->Textures2Ds()->push_back(textureDiffuseTruck);
 
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
@@ -335,21 +329,4 @@ void SorghumReconstruction::Spline::Import(std::ifstream& stream)
 		}
 		Curves.emplace_back(cp[0], cp[1], cp[2], cp[3]);
 	}
-}
-
-
-void SorghumReconstruction::Spline::BuildNodes(std::shared_ptr<Spline>& truckSpline)
-{
-	float width = 0.1f - StartingPoint * 0.05f;
-	for(float i = 0.0f; i < StartingPoint - 0.05f; i += 0.05f)
-	{
-		Nodes.emplace_back(truckSpline.get()->EvaluatePointFromCurve(i), 180.0f, width, truckSpline.get()->EvaluateAxisFromCurve(i));
-	}
-	for(float i = 0.05f; i <= 1.0f; i += 0.05f)
-	{
-		float w = 0.15f;
-		if (i > 0.75f) w -= (i - 0.75f) * 0.5f;
-		Nodes.emplace_back(EvaluatePointFromCurve(i), i == 0.05f ? 20.0f : 10.0f, w, EvaluateAxisFromCurve(i));
-	}
-	
 }

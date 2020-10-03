@@ -38,7 +38,6 @@ namespace SorghumReconstruction {
 		std::vector<Vertex> Vertices;
 		std::vector<unsigned> Indices;
 		void Import(std::ifstream& stream);
-		void BuildNodes(std::shared_ptr<Spline>& truckSpline);
 		glm::vec3 EvaluatePointFromCurve(float point)
 		{
 			const float splineU = glm::clamp(point, 0.0f, 1.0f) * float(Curves.size());
@@ -96,7 +95,7 @@ namespace SorghumReconstruction {
 		EntityArchetype _LeafArchetype;
 		EntityQuery _SplineQuery;
 		EntityQuery _PlantQuery;
-		std::shared_ptr<Material> _PlantMaterial;
+		std::shared_ptr<Material> _StemMaterial;
 		std::shared_ptr<Material> _LeafMaterial;
 		void DrawGUI();
 		
