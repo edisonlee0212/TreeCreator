@@ -37,6 +37,12 @@
     <Filter Include="Source Files\TreeUtilities">
       <UniqueIdentifier>{6692182e-b65f-476f-9436-4f542c2a11ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\pugixml">
+      <UniqueIdentifier>{d89a30ee-9332-48ee-b499-12c5917dfad4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\pugixml">
+      <UniqueIdentifier>{2e0e61ac-89c1-42e3-9ef4-7fc04265f248}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TreeCreator.cpp">
@@ -83,6 +89,9 @@
     </ClCompile>
     <ClCompile Include="InternodeRingSegment.cpp">
       <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
+    <ClCompile Include="pugixml\pugixml.cpp">
+      <Filter>Source Files\pugixml</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -157,6 +166,12 @@
     </ClInclude>
     <ClInclude Include="InternodeRingSegment.h">
       <Filter>Header Files\TreeUtilities</Filter>
+    </ClInclude>
+    <ClInclude Include="pugixml\pugixml.hpp">
+      <Filter>Header Files\pugixml</Filter>
+    </ClInclude>
+    <ClInclude Include="pugixml\pugiconfig.hpp">
+      <Filter>Header Files\pugixml</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

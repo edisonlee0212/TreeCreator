@@ -110,6 +110,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     <ClCompile Include="LightEstimator.cpp" />
     <ClCompile Include="PlantSimulationSystem.cpp" />
     <ClCompile Include="NetworkSystem.cpp" />
+    <ClCompile Include="pugixml\pugixml.cpp" />
     <ClCompile Include="quickhull\QuickHull.cpp" />
     <ClCompile Include="InternodeRingSegment.cpp" />
     <ClCompile Include="SorghumReconstructionSystem.cpp" />
@@ -127,6 +128,8 @@ xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dl
     <ClInclude Include="LightEstimator.h" />
     <ClInclude Include="NetworkSystem.h" />
     <ClInclude Include="PlantSimulationSystem.h" />
+    <ClInclude Include="pugixml\pugiconfig.hpp" />
+    <ClInclude Include="pugixml\pugixml.hpp" />
     <ClInclude Include="quickhull\ConvexHull.hpp" />
     <ClInclude Include="quickhull\HalfEdgeMesh.hpp" />
     <ClInclude Include="quickhull\MathUtils.hpp" />

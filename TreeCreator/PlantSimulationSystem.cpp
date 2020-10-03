@@ -6,6 +6,9 @@
 #include <gtx/matrix_decompose.hpp>
 #include <direct.h>
 
+#include "pugixml/pugixml.hpp"
+
+
 void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
 	auto trees = std::vector<Entity>();
@@ -170,28 +173,32 @@ void PlantSimulationSystem::ExportTreeParameters(const std::string& path, TreePa
 void TreeUtilities::PlantSimulationSystem::ExportSettings(const std::string& path)
 {
 	std::ofstream ofs;
-	ofs.open((path + ".ts").c_str(), std::ofstream::out | std::ofstream::trunc);
+	ofs.open((path + ".xml").c_str(), std::ofstream::out | std::ofstream::trunc);
 	if (ofs.is_open())
 	{
-		std::string output = "";
-		output += "Amount:\n"; output += std::to_string(_NewTreeAmount);
+		std::string output = "<TreeSettings amount=\"" + std::to_string(_NewTreeAmount) + "\">\n";
 		ofs.write(output.c_str(), output.size());
 		ofs.flush();
 		for (auto i = 0; i < _NewTreeAmount; i++)
 		{
-			output = "\nPosition\n";
-			output += std::to_string(_NewTreePositions[i].x);
-			output += "\n";
-			output += std::to_string(_NewTreePositions[i].y);
-			output += "\n";
-			output += std::to_string(_NewTreePositions[i].z);
-			output += "\n";
+			output = "\t<Instance index=\"" + std::to_string(i) + "\">\n";
+			output += "\t\t<Position>\n";
+			output += "\t\t\t<x>" + std::to_string(_NewTreePositions[i].x) + "</x>\n";
+			output += "\t\t\t<y>" + std::to_string(_NewTreePositions[i].y) + "</y>\n";
+			output += "\t\t\t<z>" + std::to_string(_NewTreePositions[i].z) + "</z>\n";
+			output += "\t\t</Position>\n";
 			ofs.write(output.c_str(), output.size());
 			ofs.flush();
 			TreeParameterExportHelper(ofs, _NewTreeParameters[i]);
+			output = "\t</Instance>\n";
+			ofs.write(output.c_str(), output.size());
+			ofs.flush();
 		}
+		output = "</TreeSettings>\n";
+		ofs.write(output.c_str(), output.size());
+		ofs.flush();
 		ofs.close();
-		Debug::Log("Tree group saved: " + path + ".ts");
+		Debug::Log("Tree group saved: " + path + ".xml");
 	}
 	else
 	{
@@ -200,24 +207,163 @@ void TreeUtilities::PlantSimulationSystem::ExportSettings(const std::string& pat
 }
 void PlantSimulationSystem::ImportSettings(const std::string& path)
 {
-	std::ifstream ifs;
-	ifs.open((path + ".ts").c_str());
-	if (ifs.is_open())
-	{
-		std::string temp;
-		ifs >> temp; ifs >> _NewTreeAmount;
-		_NewTreeParameters.resize(_NewTreeAmount);
-		_NewTreePositions.resize(_NewTreeAmount);
-		_NewTreePositions.resize(_NewTreeAmount);
-		for (auto i = 0; i < _NewTreeAmount; i++)
-		{
-			ifs >> temp; ifs >> _NewTreePositions[i].x >> _NewTreePositions[i].y >> _NewTreePositions[i].z;
-			TreeParameterImportHelper(ifs, _NewTreeParameters[i]);
-		}
-	}
-	else
-	{
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_file((path + ".xml").c_str());
+	if (!result) {
 		Debug::Error("Can't open file!");
+		return;
+	}
+	_NewTreeAmount = doc.child("TreeSettings").attribute("amount").as_int();
+	_NewTreeParameters.resize(_NewTreeAmount);
+	_NewTreePositions.resize(_NewTreeAmount);
+	int i = 0;
+	for(const auto& instanceNode : doc.child("TreeSettings"))
+	{
+		const auto& positionNode = instanceNode.child("Position");
+		_NewTreePositions[i].x = std::atof(positionNode.child("x").first_child().value());
+		_NewTreePositions[i].y = std::atof(positionNode.child("y").first_child().value());
+		_NewTreePositions[i].z = std::atof(positionNode.child("z").first_child().value());
+		const auto& treeParametersNode = instanceNode.child("TreeParameters");
+		for(const auto& parameterNode : treeParametersNode.children())
+		{
+			std::string name = parameterNode.name();
+			if(name.compare("Seed") == 0)
+			{
+				_NewTreeParameters[i].Seed = std::atoi(parameterNode.first_child().value());
+			}else if(name.compare("LateralBudPerNode") == 0)
+			{
+				_NewTreeParameters[i].LateralBudPerNode = std::atoi(parameterNode.first_child().value());
+			}
+			else if (name.compare("VarianceApicalAngle") == 0)
+			{
+				_NewTreeParameters[i].VarianceApicalAngle = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("BranchingAngleMean") == 0)
+			{
+				_NewTreeParameters[i].BranchingAngleMean = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("BranchingAngleVariance") == 0)
+			{
+				_NewTreeParameters[i].BranchingAngleVariance = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("RollAngleMean") == 0)
+			{
+				_NewTreeParameters[i].RollAngleMean = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("RollAngleVariance") == 0)
+			{
+				_NewTreeParameters[i].RollAngleVariance = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalBudKillProbability") == 0)
+			{
+				_NewTreeParameters[i].ApicalBudKillProbability = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LateralBudKillProbability") == 0)
+			{
+				_NewTreeParameters[i].LateralBudKillProbability = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalDominanceBase") == 0)
+			{
+				_NewTreeParameters[i].ApicalDominanceBase = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalDominanceDistanceFactor") == 0)
+			{
+				_NewTreeParameters[i].ApicalDominanceDistanceFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalDominanceAgeFactor") == 0)
+			{
+				_NewTreeParameters[i].ApicalDominanceAgeFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("GrowthRate") == 0)
+			{
+				_NewTreeParameters[i].GrowthRate = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("InternodeLengthBase") == 0)
+			{
+				_NewTreeParameters[i].InternodeLengthBase = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("InternodeLengthAgeFactor") == 0)
+			{
+				_NewTreeParameters[i].InternodeLengthAgeFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalControlBase") == 0)
+			{
+				_NewTreeParameters[i].ApicalControlBase = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalControlAgeFactor") == 0)
+			{
+				_NewTreeParameters[i].ApicalControlAgeFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalControlLevelFactor") == 0)
+			{
+				_NewTreeParameters[i].ApicalControlLevelFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalControlDistanceFactor") == 0)
+			{
+				_NewTreeParameters[i].ApicalControlDistanceFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("MaxBudAge") == 0)
+			{
+				_NewTreeParameters[i].MaxBudAge = std::atoi(parameterNode.first_child().value());
+			}
+			else if (name.compare("Phototropism") == 0)
+			{
+				_NewTreeParameters[i].Phototropism = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("GravitropismBase") == 0)
+			{
+				_NewTreeParameters[i].GravitropismBase = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("GravitropismLevelFactor") == 0)
+			{
+				_NewTreeParameters[i].GravitropismLevelFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("PruningFactor") == 0)
+			{
+				_NewTreeParameters[i].PruningFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LowBranchPruningFactor") == 0)
+			{
+				_NewTreeParameters[i].LowBranchPruningFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ThicknessRemovalFactor") == 0)
+			{
+				_NewTreeParameters[i].ThicknessRemovalFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("GravityBendingStrength") == 0)
+			{
+			_NewTreeParameters[i].GravityBendingStrength = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalBudLightingFactor") == 0)
+			{
+			_NewTreeParameters[i].ApicalBudLightingFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LateralBudLightingFactor") == 0)
+			{
+			_NewTreeParameters[i].LateralBudLightingFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("SaggingFactor") == 0)
+			{
+			_NewTreeParameters[i].SaggingFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("SaggingForceBackPropagateFixedCoefficient") == 0)
+			{
+			_NewTreeParameters[i].SaggingForceBackPropagateFixedCoefficient = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("EndNodeThickness") == 0)
+			{
+			_NewTreeParameters[i].EndNodeThickness = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ThicknessControlFactor") == 0)
+			{
+			_NewTreeParameters[i].ThicknessControlFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("CrownShynessBase") == 0)
+			{
+			_NewTreeParameters[i].CrownShynessBase = std::atof(parameterNode.first_child().value());
+			}
+		}
+		i++;
 	}
 }
 void PlantSimulationSystem::TreeParameterImportHelper(std::ifstream& ifs, TreeParameters& treeParameters)
@@ -284,49 +430,52 @@ void PlantSimulationSystem::TreeParameterImportHelper(std::ifstream& ifs, TreePa
 void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters)
 {
 	std::string output;
-	output += "Seed\n"; output += std::to_string(treeParameters.Seed);
+	output += "\t\t<TreeParameters>\n";
+	output += "\t\t\t<Seed>"; output += std::to_string(treeParameters.Seed) + "</Seed>\n";
 #pragma region Geometric
-	output += "\nLateralBudPerNode\n"; output += std::to_string(treeParameters.LateralBudPerNode);
-	output += "\nVarianceApicalAngle\n";  output += std::to_string(treeParameters.VarianceApicalAngle);
-	output += "\nBranchingAngleMean\n";  output += std::to_string(treeParameters.BranchingAngleMean);
-	output += "\nBranchingAngleVariance\n";  output += std::to_string(treeParameters.BranchingAngleVariance);
-	output += "\nRollAngleMean\n";  output += std::to_string(treeParameters.RollAngleMean);
-	output += "\nRollAngleVariance\n";  output += std::to_string(treeParameters.RollAngleVariance);
+	output += "\t\t\t<LateralBudPerNode>"; output += std::to_string(treeParameters.LateralBudPerNode) + "</LateralBudPerNode>\n";
+	output += "\t\t\t<VarianceApicalAngle>";  output += std::to_string(treeParameters.VarianceApicalAngle) + "</VarianceApicalAngle>\n";
+	output += "\t\t\t<BranchingAngleMean>";  output += std::to_string(treeParameters.BranchingAngleMean) + "</BranchingAngleMean>\n";
+	output += "\t\t\t<BranchingAngleVariance>";  output += std::to_string(treeParameters.BranchingAngleVariance) + "</BranchingAngleVariance>\n";
+	output += "\t\t\t<RollAngleMean>";  output += std::to_string(treeParameters.RollAngleMean) + "</RollAngleMean>\n";
+	output += "\t\t\t<RollAngleVariance>";  output += std::to_string(treeParameters.RollAngleVariance) + "</RollAngleVariance>\n";
 #pragma endregion
 #pragma region Bud fate
-	output += "\nApicalBudKillProbability\n"; output += std::to_string(treeParameters.ApicalBudKillProbability);
-	output += "\nLateralBudKillProbability\n"; output += std::to_string(treeParameters.LateralBudKillProbability);
-	output += "\nApicalDominanceBase\n";  output += std::to_string(treeParameters.ApicalDominanceBase);
-	output += "\nApicalDominanceDistanceFactor\n";  output += std::to_string(treeParameters.ApicalDominanceDistanceFactor);
-	output += "\nApicalDominanceAgeFactor\n";  output += std::to_string(treeParameters.ApicalDominanceAgeFactor);
-	output += "\nGrowthRate\n"; output += std::to_string(treeParameters.GrowthRate);
-	output += "\nBranchNodeLengthBase\n";  output += std::to_string(treeParameters.InternodeLengthBase);
-	output += "\nBranchNodeLengthAgeFactor\n";  output += std::to_string(treeParameters.InternodeLengthAgeFactor);
-	output += "\nApicalControlBase\n";  output += std::to_string(treeParameters.ApicalControlBase);
-	output += "\nApicalControlAgeFactor\n";  output += std::to_string(treeParameters.ApicalControlAgeFactor);
-	output += "\nApicalControlLevelFactor\n";  output += std::to_string(treeParameters.ApicalControlLevelFactor);
-	output += "\nApicalControlDistanceFactor\n";  output += std::to_string(treeParameters.ApicalControlDistanceFactor);
-	output += "\nMaxBudAge\n"; output += std::to_string(treeParameters.MaxBudAge);
+	output += "\t\t\t<ApicalBudKillProbability>"; output += std::to_string(treeParameters.ApicalBudKillProbability) + "</ApicalBudKillProbability>\n";
+	output += "\t\t\t<LateralBudKillProbability>"; output += std::to_string(treeParameters.LateralBudKillProbability) + "</LateralBudKillProbability>\n";
+	output += "\t\t\t<ApicalDominanceBase>";  output += std::to_string(treeParameters.ApicalDominanceBase) + "</ApicalDominanceBase>\n";
+	output += "\t\t\t<ApicalDominanceDistanceFactor>";  output += std::to_string(treeParameters.ApicalDominanceDistanceFactor) + "</ApicalDominanceDistanceFactor>\n";
+	output += "\t\t\t<ApicalDominanceAgeFactor>";  output += std::to_string(treeParameters.ApicalDominanceAgeFactor) + "</ApicalDominanceAgeFactor>\n";
+	output += "\t\t\t<GrowthRate>"; output += std::to_string(treeParameters.GrowthRate) + "</GrowthRate>\n";
+	output += "\t\t\t<InternodeNodeLengthBase>";  output += std::to_string(treeParameters.InternodeLengthBase) + "</InternodeLengthBase>\n";
+	output += "\t\t\t<InternodeLengthAgeFactor>";  output += std::to_string(treeParameters.InternodeLengthAgeFactor) + "</InternodeLengthAgeFactor>\n";
+	output += "\t\t\t<ApicalControlBase>";  output += std::to_string(treeParameters.ApicalControlBase) + "</ApicalControlBase>\n";
+	output += "\t\t\t<ApicalControlAgeFactor>";  output += std::to_string(treeParameters.ApicalControlAgeFactor) + "</ApicalControlAgeFactor>\n";
+	output += "\t\t\t<ApicalControlLevelFactor>";  output += std::to_string(treeParameters.ApicalControlLevelFactor) + "</ApicalControlLevelFactor>\n";
+	output += "\t\t\t<ApicalControlDistanceFactor>";  output += std::to_string(treeParameters.ApicalControlDistanceFactor) + "</ApicalControlDistanceFactor>\n";
+	output += "\t\t\t<MaxBudAge>"; output += std::to_string(treeParameters.MaxBudAge) + "</MaxBudAge>\n";
 #pragma endregion
 #pragma region Environmental
-	output += "\nPhototropism\n"; output += std::to_string(treeParameters.Phototropism);
-	output += "\nGravitropismBase\n"; output += std::to_string(treeParameters.GravitropismBase);
-	output += "\nGravitropismLevelFactor\n"; output += std::to_string(treeParameters.GravitropismLevelFactor);
-	output += "\nPruningFactor\n"; output += std::to_string(treeParameters.PruningFactor);
-	output += "\nLowBranchPruningFactor\n"; output += std::to_string(treeParameters.LowBranchPruningFactor);
-	output += "\nThicknessRemovalFactor\n"; output += std::to_string(treeParameters.ThicknessRemovalFactor);
-	output += "\nGravityBendingStrength\n"; output += std::to_string(treeParameters.GravityBendingStrength);
-	output += "\nApicalBudLightingFactor\n"; output += std::to_string(treeParameters.ApicalBudLightingFactor);
-	output += "\nLateralBudLightingFactor\n"; output += std::to_string(treeParameters.LateralBudLightingFactor);
+	output += "\t\t\t<Phototropism>"; output += std::to_string(treeParameters.Phototropism) + "</Phototropism>\n";
+	output += "\t\t\t<GravitropismBase>"; output += std::to_string(treeParameters.GravitropismBase) + "</GravitropismBase>\n";
+	output += "\t\t\t<GravitropismLevelFactor>"; output += std::to_string(treeParameters.GravitropismLevelFactor) + "</GravitropismLevelFactor>\n";
+	output += "\t\t\t<PruningFactor>"; output += std::to_string(treeParameters.PruningFactor) + "</PruningFactor>\n";
+	output += "\t\t\t<LowBranchPruningFactor>"; output += std::to_string(treeParameters.LowBranchPruningFactor) + "</LowBranchPruningFactor>\n";
+	output += "\t\t\t<ThicknessRemovalFactor>"; output += std::to_string(treeParameters.ThicknessRemovalFactor) + "</ThicknessRemovalFactor>\n";
+	output += "\t\t\t<GravityBendingStrength>"; output += std::to_string(treeParameters.GravityBendingStrength) + "</GravityBendingStrength>\n";
+	output += "\t\t\t<ApicalBudLightingFactor>"; output += std::to_string(treeParameters.ApicalBudLightingFactor) + "</ApicalBudLightingFactor>\n";
+	output += "\t\t\t<LateralBudLightingFactor>"; output += std::to_string(treeParameters.LateralBudLightingFactor) + "</LateralBudLightingFactor>\n";
 #pragma endregion
 #pragma region Sagging
-	output += "\nSaggingFactor\n"; output += std::to_string(treeParameters.SaggingFactor);
-	output += "\nSaggingForceBackPropagateFixedCoefficient\n"; output += std::to_string(treeParameters.SaggingForceBackPropagateFixedCoefficient);
+	output += "\t\t\t<SaggingFactor>"; output += std::to_string(treeParameters.SaggingFactor) + "</SaggingFactor>\n";
+	output += "\t\t\t<SaggingForceBackPropagateFixedCoefficient>"; output += std::to_string(treeParameters.SaggingForceBackPropagateFixedCoefficient) + "</SaggingForceBackPropagateFixedCoefficient>\n";
 #pragma endregion
-	output += "\nEndNodeThickness\n"; output += std::to_string(treeParameters.EndNodeThickness);
-	output += "\nThicknessControlFactor\n"; output += std::to_string(treeParameters.ThicknessControlFactor);
+	output += "\t\t\t<EndNodeThickness>"; output += std::to_string(treeParameters.EndNodeThickness) + "</EndNodeThickness>\n";
+	output += "\t\t\t<ThicknessControlFactor>"; output += std::to_string(treeParameters.ThicknessControlFactor) + "</ThicknessControlFactor>\n";
 
-	output += "\nCrownShynessBase\n"; output += std::to_string(treeParameters.CrownShynessBase);
+	output += "\t\t\t<CrownShynessBase>"; output += std::to_string(treeParameters.CrownShynessBase) + "</CrownShynessBase>\n";
+
+	output += "\t\t</TreeParameters>\n";
 	ofs.write(output.c_str(), output.size());
 	ofs.flush();
 }
