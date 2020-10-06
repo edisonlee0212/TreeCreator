@@ -56,6 +56,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 			auto immc = EntityManager::GetSharedComponent<InstancedMeshRenderer>(treeEntity);
 			immc->Matrices.clear();
 			UpdateInternodeResource(rootInternode, treeParameters, treeAge, immc->Matrices);
+			immc->RecalculateBoundingBox();
 			EvaluatePruning(rootInternode, treeParameters, treeAge, treeInfo);
 			EvaluateRemoval(rootInternode, treeParameters);
 			if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
