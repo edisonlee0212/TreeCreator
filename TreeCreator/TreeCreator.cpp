@@ -22,14 +22,14 @@ float pcssScale = 1.0f;
 int main()
 {
 #pragma region Global light settings
-	LightingManager::SetEnableShadow(true);
-	LightingManager::SetDirectionalLightResolution(2048);
-	LightingManager::SetStableFit(true);
-	LightingManager::SetMaxShadowDistance(100.0f);
-	LightingManager::SetSeamFixRatio(0.05f);
-	LightingManager::SetVSMMaxVariance(0.001f);
-	LightingManager::SetEVSMExponent(80.0f);
-	LightingManager::SetSplitRatio(0.2f, 0.4f, 0.6f, 1.0f);
+	RenderManager::SetEnableShadow(true);
+	RenderManager::SetDirectionalLightResolution(2048);
+	RenderManager::SetStableFit(true);
+	RenderManager::SetMaxShadowDistance(100.0f);
+	RenderManager::SetSeamFixRatio(0.05f);
+	RenderManager::SetVSMMaxVariance(0.001f);
+	RenderManager::SetEVSMExponent(80.0f);
+	RenderManager::SetSplitRatio(0.2f, 0.4f, 0.6f, 1.0f);
 #pragma endregion
 	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
@@ -129,7 +129,7 @@ int main()
 		dlc->specular = glm::vec3(255, 255, 255) * lightSpecular / 256.0f;
 		dlc->diffuse = glm::vec3(255, 255, 251) * lightDiffuse / 256.0f;
 		dlc->lightSize = lightSize;
-		LightingManager::SetPCSSScaleFactor(pcssScale);
+		RenderManager::SetPCSSScaleFactor(pcssScale);
 #pragma endregion
 		ImGui::Begin("WireFrame");
 		static bool enableWireFrame = false;
@@ -161,34 +161,34 @@ void InitGround() {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());
 
 	auto mat = std::make_shared<Material>();
-	mat->Programs()->push_back(Default::GLPrograms::StandardProgram);
+	mat->Programs()->push_back(Default::GLPrograms::StandardInstancedProgram);
 	auto texture = new Texture2D(TextureType::DIFFUSE);
 	texture->LoadTexture("../Resources/Textures/grassland.jpg", "");
 	mat->Textures2Ds()->push_back(texture);
 	mat->SetMaterialProperty("material.shininess", 32.0f);
-	auto meshMaterial = std::make_shared<MeshMaterialComponent>();
-	meshMaterial->Mesh = Default::Primitives::Quad;
-	meshMaterial->Material = mat;
+	auto instancedMeshRenderer = std::make_shared<InstancedMeshRenderer>();
+	instancedMeshRenderer->Mesh = Default::Primitives::Quad;
+	instancedMeshRenderer->Material = mat;
 	Translation translation = Translation();
 	Scale scale = Scale();
 	auto baseEntity = EntityManager::CreateEntity(archetype, "Ground");
+	translation.Value = glm::vec3(0.0f);
+	scale.Value = glm::vec3(1.0f);
+	baseEntity.SetComponentData(translation);
+	baseEntity.SetComponentData(scale);
 	int radius = 10;
 	float size = 1.0f;
 	for(int i = -radius; i <= radius; i++)
 	{
 		for(int j = -radius; j <= radius; j++)
 		{
-			auto entity = EntityManager::CreateEntity(archetype, "Floor");
-			EntityManager::SetParent(entity, baseEntity);
-			translation.Value = glm::vec3(size * 2 * i, 0.0f, size * 2 * j);
-			scale.Value = glm::vec3(size * 1.0f);
-			EntityManager::SetComponentData<Translation>(entity, translation);
-			EntityManager::SetComponentData<Scale>(entity, scale);
-			EntityManager::SetSharedComponent<MeshMaterialComponent>(entity, meshMaterial);
+			auto position = glm::vec3(size * 2 * i, 0.0f, size * 2 * j);
+			auto scale = glm::vec3(size * 1.0f);
+			instancedMeshRenderer->Matrices.emplace_back(glm::translate(glm::identity<glm::mat4>(), position) * glm::scale(glm::identity<glm::mat4>(), scale));
 		}
 	}
-	
-	
+	instancedMeshRenderer->RecalculateBoundingBox();
+	baseEntity.SetSharedComponent<InstancedMeshRenderer>(instancedMeshRenderer);
 
 }
 void LightSettingMenu() {

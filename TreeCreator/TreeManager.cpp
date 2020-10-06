@@ -395,15 +395,15 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh)
 {
 	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
-	auto instancedMeshMaterialComponent = std::make_shared<InstancedMeshMaterialComponent>();
-	instancedMeshMaterialComponent->Matrices.clear();
-	instancedMeshMaterialComponent->Material = std::move(treeLeafMaterial);
-	instancedMeshMaterialComponent->Mesh = std::move(treeLeafMesh);
-	instancedMeshMaterialComponent->BackCulling = false;
-	EntityManager::SetSharedComponent(entity, std::move(instancedMeshMaterialComponent));
+	auto instancedMeshRenderer = std::make_shared<InstancedMeshRenderer>();
+	instancedMeshRenderer->Matrices.clear();
+	instancedMeshRenderer->Material = std::move(treeLeafMaterial);
+	instancedMeshRenderer->Mesh = std::move(treeLeafMesh);
+	instancedMeshRenderer->BackCulling = false;
+	EntityManager::SetSharedComponent(entity, std::move(instancedMeshRenderer));
 	EntityManager::SetSharedComponent(entity, std::make_shared<TreeData>());
 	EntityManager::SetComponentData(entity, _TreeIndex);
-	auto mmc = std::make_shared<MeshMaterialComponent>();
+	auto mmc = std::make_shared<MeshRenderer>();
 	mmc->Material = std::move(treeSurfaceMaterial);
 	EntityManager::SetSharedComponent(entity, std::move(mmc));
 	_TreeIndex.Value++;
@@ -501,7 +501,7 @@ std::shared_ptr<Mesh> TreeUtilities::TreeManager::GetMeshForTree(Entity treeEnti
 		Debug::Error("TreeManager: Not initialized!");
 		return nullptr;
 	}
-	return EntityManager::GetSharedComponent<MeshMaterialComponent>(treeEntity)->Mesh;
+	return EntityManager::GetSharedComponent<MeshRenderer>(treeEntity)->Mesh;
 }
 #pragma endregion
 
@@ -572,7 +572,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 
 	);
 
-	auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(treeEntity);
+	auto mmc = EntityManager::GetSharedComponent<MeshRenderer>(treeEntity);
 	auto treeData = EntityManager::GetSharedComponent<TreeData>(treeEntity);
 	std::vector<Vertex> vertices;
 	std::vector<unsigned> indices;

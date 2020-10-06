@@ -14,15 +14,25 @@ namespace SorghumReconstruction {
 		float LeafHalfWidth;
 		float Theta;
 		float Radius;
-		float HeightFactor;
-		LeafSegment(glm::vec3 position, glm::vec3 up, glm::vec3 front, float leafHalfWidth, float theta, float heightFactor = 0.0f)
+		float LeftFlatness;
+		float LeftFlatnessFactor;
+		float RightFlatness;
+		float RightFlatnessFactor;
+		LeafSegment(glm::vec3 position, glm::vec3 up, glm::vec3 front, float leafHalfWidth, float theta, 
+			float leftFlatness = 0.0f,
+			float rightFlatness = 0.0f,
+			float leftFlatnessFactor = 1.0f,
+			float rightFlatnessFactor = 1.0f)
 		{
 			Position = position;
 			Up = up;
 			Front = front;
 			LeafHalfWidth = leafHalfWidth;
 			Theta = theta;
-			HeightFactor = heightFactor;
+			LeftFlatness = leftFlatness;
+			RightFlatness = rightFlatness;
+			LeftFlatnessFactor = leftFlatnessFactor;
+			RightFlatnessFactor = rightFlatnessFactor;
 			Radius = theta < 90.0f ? LeafHalfWidth / glm::sin(glm::radians(Theta)) : LeafHalfWidth;
 		}
 
@@ -31,10 +41,16 @@ namespace SorghumReconstruction {
 			if(Theta < 90.0f)
 			{
 				auto distanceToCenter = Radius * glm::cos(glm::radians(glm::abs(angle)));
-				auto actualHeight = (Radius - distanceToCenter) * HeightFactor;
+				auto actualHeight = (Radius - distanceToCenter) * (angle < 0 ? LeftFlatness : RightFlatness);
+				auto maxHeight = Radius * (1.0f - glm::cos(glm::radians(glm::abs(Theta))));
 				auto center = Position + (Radius - LeafHalfWidth) * Up;
 				auto direction = glm::rotate(Up, glm::radians(angle), Front);
-				return center - Radius * direction - actualHeight * Up;
+				float compressFactor = glm::pow(actualHeight / maxHeight, angle < 0 ? LeftFlatnessFactor : RightFlatnessFactor);
+				if(glm::isnan(compressFactor))
+				{
+					compressFactor = 0.0f;
+				}
+				return center - Radius * direction - actualHeight * compressFactor * Up;
 			}
 			auto direction = glm::rotate(Up, glm::radians(angle), Front);
 			return Position - Radius * direction;

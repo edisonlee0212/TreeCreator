@@ -10,7 +10,7 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant() const
 	EntityManager::SetSharedComponent(ret, spline);
 	EntityManager::SetComponentData(ret, s);
 	
-	auto mmc = std::make_shared<MeshMaterialComponent>();
+	auto mmc = std::make_shared<MeshRenderer>();
 	mmc->Material = _StemMaterial;
 	mmc->Mesh = std::make_shared<Mesh>();
 	mmc->BackCulling = false;
@@ -29,7 +29,7 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateLeafForPlant(En
 	EntityManager::SetSharedComponent(ret, spline);
 	EntityManager::SetComponentData(ret, ls);
 
-	auto mmc = std::make_shared<MeshMaterialComponent>();
+	auto mmc = std::make_shared<MeshRenderer>();
 	mmc->Material = _LeafMaterial;
 	mmc->Mesh = std::make_shared<Mesh>();
 	mmc->BackCulling = false;
@@ -127,6 +127,14 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 
 			const int amount = 5;
 			float temp = 0.0f;
+
+			float leftPeriodFactor = glm::linearRand(0.4f, 1.0f);
+			float rightPeriodFactor = glm::linearRand(0.4f, 1.0f);
+			float leftFlatness = glm::linearRand(0.75f, 1.75f);
+			float rightFlatness = glm::linearRand(0.5f, 1.5f);
+			float leftFlatnessFactor = glm::linearRand(1.0f, 2.5f);
+			float rightFlatnessFactor = glm::linearRand(1, 3);
+		
 			for(int i = 1; i < spline->Nodes.size(); i++)
 			{
 				auto& prev = spline->Nodes.at(i - 1);
@@ -146,7 +154,9 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 						front,
 						prev.Width * (1.0f - div) + curr.Width * div,
 						prev.Theta * (1.0f - div) + curr.Theta * div,
-						glm::sin(temp) * 0.75f);
+						glm::sin(temp * leftPeriodFactor) * leftFlatness,
+						glm::sin(temp * rightPeriodFactor) * rightFlatness,
+						leftFlatnessFactor, rightFlatnessFactor);
 					temp += 0.3f;
 				}
 			}
@@ -188,12 +198,12 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 	std::vector<Entity> plants;
 	_PlantQuery.ToEntityArray(plants);
 	for (auto& plant : plants) {
-		auto pmmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(plant);
+		auto pmmc = EntityManager::GetSharedComponent<MeshRenderer>(plant);
 		auto spline = EntityManager::GetSharedComponent<Spline>(plant);
 		pmmc->Mesh->SetVertices(17, spline->Vertices, spline->Indices, true);
 		EntityManager::ForEachChild(plant, [](Entity child)
 			{
-				auto mmc = EntityManager::GetSharedComponent<MeshMaterialComponent>(child);
+				auto mmc = EntityManager::GetSharedComponent<MeshRenderer>(child);
 				auto childSpline = EntityManager::GetSharedComponent<Spline>(child);
 				mmc->Mesh->SetVertices(17, childSpline->Vertices, childSpline->Indices, true);
 			}
@@ -265,13 +275,13 @@ void SorghumReconstruction::SorghumReconstructionSystem::ExportPlant(Entity plan
 
 		unsigned startIndex = 1;
 
-		auto mesh = EntityManager::GetSharedComponent<MeshMaterialComponent>(plant)->Mesh;
+		auto mesh = EntityManager::GetSharedComponent<MeshRenderer>(plant)->Mesh;
 		ObjExportHelper(glm::vec3(0.0f), mesh, of, startIndex);
 		
 		EntityManager::ForEachChild(plant, [this, &of, &startIndex](Entity child)
 			{
 				auto lt = EntityManager::GetComponentData<LocalTranslation>(child).Value;
-				auto mesh = EntityManager::GetSharedComponent<MeshMaterialComponent>(child)->Mesh;
+				auto mesh = EntityManager::GetSharedComponent<MeshRenderer>(child)->Mesh;
 				ObjExportHelper(lt, mesh, of, startIndex);
 			}
 		);

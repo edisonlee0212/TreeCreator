@@ -53,7 +53,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 			auto treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
 			auto treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
 			auto treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(treeEntity);
-			auto immc = EntityManager::GetSharedComponent<InstancedMeshMaterialComponent>(treeEntity);
+			auto immc = EntityManager::GetSharedComponent<InstancedMeshRenderer>(treeEntity);
 			immc->Matrices.clear();
 			UpdateInternodeResource(rootInternode, treeParameters, treeAge, immc->Matrices);
 			EvaluatePruning(rootInternode, treeParameters, treeAge, treeInfo);
@@ -1533,8 +1533,8 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.ApicalDominanceBase = 0.38f;
 		tps.ApicalDominanceDistanceFactor = 0.9f;
 		tps.ApicalDominanceAgeFactor = 0.31f;
-		tps.GrowthRate = 1.9f;
-		tps.InternodeLengthBase = 0.51f;
+		tps.GrowthRate = 2.2f;
+		tps.InternodeLengthBase = 0.61f;
 		tps.InternodeLengthAgeFactor = 0.98f;
 
 		tps.ApicalControlBase = 3.25f;
