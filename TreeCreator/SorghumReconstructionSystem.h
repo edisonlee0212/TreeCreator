@@ -97,9 +97,13 @@ namespace SorghumReconstruction {
 		EntityQuery _PlantQuery;
 		std::shared_ptr<Material> _StemMaterial;
 		std::shared_ptr<Material> _LeafMaterial;
+		std::shared_ptr<Material> _InstancedStemMaterial;
+		std::shared_ptr<Material> _InstancedLeafMaterial;
 		void DrawGUI();
 		void ObjExportHelper(glm::vec3 position, std::shared_ptr<Mesh> mesh, std::ofstream& of, unsigned& startIndex) const;
 	public:
+		Entity CopyPlant(Entity original);
+		Entity CreateGridPlant(Entity original, std::vector<glm::mat4>& matrices, bool rotateLeaves = false, float devAngle = 0.0f);
 		Entity CreatePlant() const;
 		Entity CreateLeafForPlant(Entity& plantEntity) const;
 		void GenerateMeshForAllPlants();

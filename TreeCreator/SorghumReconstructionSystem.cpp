@@ -99,6 +99,68 @@ void SorghumReconstruction::SorghumReconstructionSystem::ObjExportHelper(glm::ve
 	}
 }
 
+Entity SorghumReconstruction::SorghumReconstructionSystem::CopyPlant(Entity original)
+{
+	Entity plant = EntityManager::CreateEntity(_PlantArchetype);
+	plant.SetComponentData(EntityManager::GetComponentData<SorghumInfo>(original));
+	plant.SetComponentData(EntityManager::GetComponentData<Translation>(original));
+	plant.SetComponentData(EntityManager::GetComponentData<Rotation>(original));
+	plant.SetComponentData(EntityManager::GetComponentData<Scale>(original));
+	plant.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(original));
+	plant.SetSharedComponent(EntityManager::GetSharedComponent<MeshRenderer>(original));
+	EntityManager::ForEachChild(original, [this, &plant](Entity child)
+		{
+			Entity newChild = EntityManager::CreateEntity(_LeafArchetype);
+			newChild.SetComponentData(EntityManager::GetComponentData<LeafInfo>(child));
+			newChild.SetComponentData(EntityManager::GetComponentData<LocalTranslation> (child));
+			newChild.SetComponentData(EntityManager::GetComponentData<LocalRotation>(child));
+			newChild.SetComponentData(EntityManager::GetComponentData<LocalScale>(child));
+			newChild.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(child));
+			newChild.SetSharedComponent(EntityManager::GetSharedComponent<MeshRenderer>(child));
+			EntityManager::SetParent(newChild, plant);
+		});
+	return plant;
+}
+
+Entity SorghumReconstruction::SorghumReconstructionSystem::CreateGridPlant(Entity original, std::vector<glm::mat4>& matrices, bool rotateLeaves, float devAngle)
+{
+	Entity plant = EntityManager::CreateEntity(_PlantArchetype);
+	plant.SetComponentData(EntityManager::GetComponentData<SorghumInfo>(original));
+	plant.SetComponentData(EntityManager::GetComponentData<Translation>(original));
+	plant.SetComponentData(EntityManager::GetComponentData<Rotation>(original));
+	plant.SetComponentData(EntityManager::GetComponentData<Scale>(original));
+	plant.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(original));
+	auto imr = std::make_shared<InstancedMeshRenderer>();
+	const auto mr = EntityManager::GetSharedComponent<MeshRenderer>(original);
+	imr->Mesh = mr->Mesh;
+	imr->BackCulling = false;
+	imr->Material = _InstancedStemMaterial;
+	imr->Matrices.clear();
+	imr->Matrices.insert(imr->Matrices.begin(), matrices.begin(), matrices.end());
+	imr->RecalculateBoundingBox();
+	plant.SetSharedComponent(imr);
+	EntityManager::ForEachChild(original, [this, &plant, &matrices](Entity child)
+		{
+			Entity newChild = EntityManager::CreateEntity(_LeafArchetype);
+			newChild.SetComponentData(EntityManager::GetComponentData<LeafInfo>(child));
+			newChild.SetComponentData(EntityManager::GetComponentData<LocalTranslation>(child));
+			newChild.SetComponentData(EntityManager::GetComponentData<LocalRotation>(child));
+			newChild.SetComponentData(EntityManager::GetComponentData<LocalScale>(child));
+			newChild.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(child));
+			auto imr = std::make_shared<InstancedMeshRenderer>();
+			const auto mr = EntityManager::GetSharedComponent<MeshRenderer>(child);
+			imr->Mesh = mr->Mesh;
+			imr->BackCulling = false;
+			imr->Material = _InstancedLeafMaterial;
+			imr->Matrices.clear();
+			imr->Matrices.insert(imr->Matrices.begin(), matrices.begin(), matrices.end());
+			imr->RecalculateBoundingBox();
+			newChild.SetSharedComponent(imr);
+			EntityManager::SetParent(newChild, plant);
+		});
+	return plant;
+}
+
 
 void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlants()
 {
@@ -121,8 +183,8 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 				stemNodeCount = spline->Nodes.size();
 				for (float i = 0.05f; i <= 1.0f; i += 0.05f)
 				{
-					float w = 0.15f;
-					if (i > 0.75f) w -= (i - 0.75f) * 0.5f;
+					float w = 0.2f;
+					if (i > 0.75f) w -= (i - 0.75f) * 0.75f;
 					spline->Nodes.emplace_back(spline->EvaluatePointFromCurve(i), i == 0.05f ? 60.0f : 40.0f, w, spline->EvaluateAxisFromCurve(i));
 				}
 			}else
@@ -145,10 +207,10 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 
 			float leftPeriodFactor = glm::linearRand(0.4f, 1.0f);
 			float rightPeriodFactor = glm::linearRand(0.4f, 1.0f);
-			float leftFlatness = glm::linearRand(0.75f, 1.75f);
+			float leftFlatness = glm::linearRand(0.5f, 1.5f);
 			float rightFlatness = glm::linearRand(0.5f, 1.5f);
 			float leftFlatnessFactor = glm::linearRand(1.0f, 2.5f);
-			float rightFlatnessFactor = glm::linearRand(1, 3);
+			float rightFlatnessFactor = glm::linearRand(1.0f, 2.5f);
 
 			int stemSegmentCount = 0;
 			for(int i = 1; i < spline->Nodes.size(); i++)
@@ -181,7 +243,7 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 			}
 			
 			//Truck
-			const int step = 5;
+			const int step = 10;
 
 			const int vertexIndex = spline->Vertices.size();
 			Vertex archetype;
@@ -331,17 +393,27 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 	EntityManager::SetEntityQueryAnyFilters(_SplineQuery, SorghumInfo(), LeafInfo());
 	_PlantQuery = EntityManager::CreateEntityQuery();
 	EntityManager::SetEntityQueryAllFilters(_PlantQuery, SorghumInfo());
+	
 	_StemMaterial = std::make_shared<Material>();
 	_StemMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto textureDiffuseTruck = new Texture2D(TextureType::DIFFUSE);
 	textureDiffuseTruck->LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), "");
 	_StemMaterial->Textures2Ds()->push_back(textureDiffuseTruck);
-
+	_StemMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
 	auto textureLeaf = new Texture2D(TextureType::DIFFUSE);
 	textureLeaf->LoadTexture("../Resources/Textures/leafSurface2.jpg", "");
 	_LeafMaterial->Textures2Ds()->push_back(textureLeaf);
+	_LeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
+	_InstancedStemMaterial = std::make_shared<Material>();
+	_InstancedStemMaterial->Programs()->push_back(Default::GLPrograms::StandardInstancedProgram);
+	_InstancedStemMaterial->Textures2Ds()->push_back(textureDiffuseTruck);
+	_InstancedStemMaterial->SetMaterialProperty("material.shininess", 0.5f);
+	_InstancedLeafMaterial = std::make_shared<Material>();
+	_InstancedLeafMaterial->Programs()->push_back(Default::GLPrograms::StandardInstancedProgram);
+	_InstancedLeafMaterial->Textures2Ds()->push_back(textureLeaf);
+	_InstancedLeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	Enable();
 }
 

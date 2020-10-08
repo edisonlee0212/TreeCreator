@@ -40,6 +40,15 @@ namespace SorghumReconstruction {
 		{
 			if(Theta < 90.0f)
 			{
+				auto midRibMaxHeight = LeafHalfWidth / 8.0f;
+				auto midRibMaxAngle = Theta / 5.0f;
+				
+				auto midRibHeight = 0.0f;
+				if(glm::abs(angle) < midRibMaxAngle)
+				{
+					midRibHeight = midRibMaxHeight * glm::cos(glm::radians(90.0f * glm::abs(angle) / midRibMaxAngle));
+				}
+				
 				auto distanceToCenter = Radius * glm::cos(glm::radians(glm::abs(angle)));
 				auto actualHeight = (Radius - distanceToCenter) * (angle < 0 ? LeftFlatness : RightFlatness);
 				auto maxHeight = Radius * (1.0f - glm::cos(glm::radians(glm::abs(Theta))));
@@ -50,7 +59,7 @@ namespace SorghumReconstruction {
 				{
 					compressFactor = 0.0f;
 				}
-				return center - Radius * direction - actualHeight * compressFactor * Up;
+				return center - Radius * direction - actualHeight * compressFactor * Up + midRibHeight * Up;
 			}
 			auto direction = glm::rotate(Up, glm::radians(angle), Front);
 			return Position - Radius * direction;

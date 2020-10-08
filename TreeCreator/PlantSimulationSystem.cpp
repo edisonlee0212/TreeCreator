@@ -1084,7 +1084,6 @@ void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& inter
 		}
 	}
 
-	
 	EntityManager::ForEachChild(internode, [this, &internodeInfo, &treeParameters, &treeAge, &leafTransforms](Entity child)
 		{
 			UpdateInternodeResource(child, treeParameters, treeAge, leafTransforms);
