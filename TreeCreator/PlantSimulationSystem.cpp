@@ -8,6 +8,9 @@
 
 #include "pugixml/pugixml.hpp"
 
+#include <CGAL/Point_set_3.h>
+
+#include "CrownSurfaceRecon.h"
 
 void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
@@ -1106,19 +1109,49 @@ void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& inter
 	EntityManager::SetComponentData(internode, internodeInfo);
 }
 #pragma endregion
-void PlantSimulationSystem::BuildConvexHullForTree(Entity& tree)
+
+
+
+void PlantSimulationSystem::BuildHullForTree(Entity& tree)
 {
 	std::vector<LocalToWorld> internodeLTWs;
 	std::vector<InternodeInfo> internodeInfos;
 	const auto treeIndex = EntityManager::GetComponentData<TreeIndex>(tree);
 	_InternodeQuery.ToComponentDataArray(treeIndex, internodeLTWs);
 	_InternodeQuery.ToComponentDataArray(treeIndex, internodeInfos);
+	std::vector<glm::vec3> positions;
+	std::vector<glm::vec3> normals;
+	for (size_t i = 0; i < internodeLTWs.size(); i++)
+	{
+		if (internodeInfos[i].DistanceToBranchEnd == 0)
+		{
+			const auto transform = internodeInfos[i].GlobalTransform;
+			glm::vec3 translation;
+			glm::quat rotation;
+			glm::vec3 scale;
+			glm::vec3 skew;
+			glm::vec4 perspective;
+			glm::decompose(transform, scale, rotation, translation, skew, perspective);
+			auto front = rotation * glm::vec3(0.0f, 0.0f, -1.0f);
+			positions.push_back(translation);
+			normals.push_back(front);
+		}
+	}
 
+	auto treeInfo = EntityManager::GetSharedComponent<TreeData>(tree);
+	treeInfo->ConvexHull = std::make_shared<Mesh>();
+	CrownSurfaceRecon psr;
+	//psr.PoissonConstruct(positions, normals, treeInfo->ConvexHull);
+	//psr.AdvancingFrontConstruct(positions, treeInfo->ConvexHull);
+	psr.ScaleSpaceConstruct(positions, treeInfo->ConvexHull);
+	
+	
+	/*
 	quickhull::QuickHull<float> qh; // Could be double as well
 	std::vector<quickhull::Vector3<float>> pointCloud;
 	for (size_t i = 0; i < internodeLTWs.size(); i++)
 	{
-		//if(internodesInfos[i].IsActivatedEndNode)
+		if(internodeInfos[i].DistanceToBranchEnd == 0)
 		{
 			const auto transform = internodeInfos[i].GlobalTransform;
 			pointCloud.emplace_back(transform[3].x, transform[3].y, transform[3].z);
@@ -1146,6 +1179,7 @@ void PlantSimulationSystem::BuildConvexHullForTree(Entity& tree)
 	auto treeInfo = EntityManager::GetSharedComponent<TreeData>(tree);
 	treeInfo->ConvexHull = std::make_shared<Mesh>();
 	treeInfo->ConvexHull->SetVertices(17, vertices, indices, true);
+	*/
 }
 void TreeUtilities::PlantSimulationSystem::OnCreate()
 {
@@ -1794,7 +1828,7 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 			_TreeQuery.ToEntityArray(trees);
 			for (auto& tree : trees)
 			{
-				BuildConvexHullForTree(tree);
+				BuildHullForTree(tree);
 			}
 		}
 

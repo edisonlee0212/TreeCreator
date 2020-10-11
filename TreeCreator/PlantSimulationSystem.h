@@ -61,7 +61,7 @@ namespace TreeUtilities {
 		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo, int pruneReason) const;
 		static inline void TreeParameterImportHelper(std::ifstream& ifs, TreeParameters& treeParameters);
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);
-		void BuildConvexHullForTree(Entity& tree);
+		void BuildHullForTree(Entity& tree);
 	public:
 		static TreeParameters ImportTreeParameters(const std::string& path);
 		static void ExportTreeParameters(const std::string& path, TreeParameters& treeParameters);

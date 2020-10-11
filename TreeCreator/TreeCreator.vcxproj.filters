@@ -93,6 +93,9 @@
     <ClCompile Include="pugixml\pugixml.cpp">
       <Filter>Source Files\pugixml</Filter>
     </ClCompile>
+    <ClCompile Include="CrownSurfaceRecon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkSystem.h">
@@ -172,6 +175,9 @@
     </ClInclude>
     <ClInclude Include="pugixml\pugiconfig.hpp">
       <Filter>Header Files\pugixml</Filter>
+    </ClInclude>
+    <ClInclude Include="CrownSurfaceRecon.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

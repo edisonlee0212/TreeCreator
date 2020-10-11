@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "UniEngine.h"
 #include "CameraControlSystem.h"
 #include "PlantSimulationSystem.h"
@@ -20,6 +22,7 @@ float lightSize = 1.2f;
 float pcssScale = 1.0f;
 int main()
 {
+
 #pragma region Global light settings
 	RenderManager::SetEnableShadow(true);
 	RenderManager::SetAmbientLight(0.05f);
@@ -90,16 +93,17 @@ int main()
 		Entity plant1 = srSys->ImportPlant("skeleton_procedural_1.txt", 0.01f, "Sorghum 1");
 		Entity plant2 = srSys->ImportPlant("skeleton_procedural_2.txt", 0.01f, "Sorghum 2");
 		Entity plant3 = srSys->ImportPlant("skeleton_procedural_3.txt", 0.01f, "Sorghum 3");
-		
+		Entity plant4 = srSys->ImportPlant("skeleton_procedural_4.txt", 0.01f, "Sorghum 4");
 		srSys->GenerateMeshForAllPlants();
 		srSys->ExportPlant(plant1, "plant1");
 		srSys->ExportPlant(plant2, "plant2");
 		srSys->ExportPlant(plant3, "plant3");
+		srSys->ExportPlant(plant4, "plant4");
 		
 		glm::vec2 radius = glm::vec2(45,5);
 		glm::vec2 size = glm::vec2(0.565f, 2.7f);
 		std::vector<std::vector<glm::mat4>> matricesList;
-		matricesList.resize(3);
+		matricesList.resize(4);
 		for(auto& i : matricesList)
 		{
 			i.clear();
@@ -130,6 +134,9 @@ int main()
 				case 2:
 					angle = glm::gaussRand(40.0f, 5.0f) + glm::linearRand(-change, change);
 					break;
+				case 3:
+					angle = glm::gaussRand(40.0f, 5.0f) + glm::linearRand(-change, change);
+					break;
 				default:
 					break;
 				}
@@ -150,21 +157,29 @@ int main()
 		Translation t1;
 		Translation t2;
 		Translation t3;
+		Translation t4;
 		Rotation r1;
 		Rotation r2;
 		Rotation r3;
+		Rotation r4;
 		Scale s1;
 		Scale s2;
 		Scale s3;
-		s1.Value = glm::vec3(1.0f, -1.0f, 1.0f);
+		Scale s4;
+		s1.Value = glm::vec3(1.0f, 1.0f, 1.0f);
 		s2.Value = glm::vec3(1.0f, 1.0f, 1.0f);
 		s3.Value = glm::vec3(1.0f, 1.0f, 1.0f);
+		s4.Value = glm::vec3(1.0f, 1.0f, 1.0f);
+		
 		t1.Value = glm::vec3(-5.0f, 0.0, 0);
 		t2.Value = glm::vec3(0.0f, 0.0, 0);
 		t3.Value = glm::vec3(5.0f, 0.0, 0);
+		t4.Value = glm::vec3(10.0f, 0.0, 0);
+		
 		r1.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(-42.0f), 0));
 		r2.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(30.0f), 0));
 		r3.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(40.0f), 0));
+		r4.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(40.0f), 0));
 		EntityManager::SetComponentData(plant1, t1);
 		EntityManager::SetComponentData(plant1, r1);
 		EntityManager::SetComponentData(plant1, s1);
@@ -176,6 +191,10 @@ int main()
 		EntityManager::SetComponentData(plant3, t3);
 		EntityManager::SetComponentData(plant3, r3);
 		EntityManager::SetComponentData(plant3, s3);
+		
+		EntityManager::SetComponentData(plant4, t4);
+		EntityManager::SetComponentData(plant4, r4);
+		EntityManager::SetComponentData(plant4, s4);
 	}
 	
 #pragma region Engine Loop

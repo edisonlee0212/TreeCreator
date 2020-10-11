@@ -330,7 +330,7 @@ namespace pugi
 	class PUGIXML_CLASS xml_writer_file: public xml_writer
 	{
 	public:
-		// Construct writer from a FILE* object; void* is used to avoid header dependencies on stdio
+		// PoissonConstruct writer from a FILE* object; void* is used to avoid header dependencies on stdio
 		xml_writer_file(void* file);
 
 		virtual void write(const void* data, size_t size) PUGIXML_OVERRIDE;
@@ -344,7 +344,7 @@ namespace pugi
 	class PUGIXML_CLASS xml_writer_stream: public xml_writer
 	{
 	public:
-		// Construct writer from an output stream object
+		// PoissonConstruct writer from an output stream object
 		xml_writer_stream(std::basic_ostream<char, std::char_traits<char> >& stream);
 		xml_writer_stream(std::basic_ostream<wchar_t, std::char_traits<wchar_t> >& stream);
 
@@ -841,7 +841,7 @@ namespace pugi
 		// Default constructor
 		xml_node_iterator();
 
-		// Construct an iterator which points to the specified node
+		// PoissonConstruct an iterator which points to the specified node
 		xml_node_iterator(const xml_node& node);
 
 		// Iterator operators
@@ -883,7 +883,7 @@ namespace pugi
 		// Default constructor
 		xml_attribute_iterator();
 
-		// Construct an iterator which points to the specified attribute
+		// PoissonConstruct an iterator which points to the specified attribute
 		xml_attribute_iterator(const xml_attribute& attr, const xml_node& parent);
 
 		// Iterator operators
@@ -919,7 +919,7 @@ namespace pugi
 		// Default constructor
 		xml_named_node_iterator();
 
-		// Construct an iterator which points to the specified node
+		// PoissonConstruct an iterator which points to the specified node
 		xml_named_node_iterator(const xml_node& node, const char_t* name);
 
 		// Iterator operators
@@ -1219,7 +1219,7 @@ namespace pugi
 		xpath_query& operator=(const xpath_query&);
 
 	public:
-		// Construct a compiled object from XPath expression.
+		// PoissonConstruct a compiled object from XPath expression.
 		// If PUGIXML_NO_EXCEPTIONS is not defined, throws xpath_exception on compilation errors.
 		explicit xpath_query(const char_t* query, xpath_variable_set* variables = PUGIXML_NULL);
 
@@ -1293,7 +1293,7 @@ namespace pugi
 		xpath_parse_result _result;
 
 	public:
-		// Construct exception from parse result
+		// PoissonConstruct exception from parse result
 		explicit xpath_exception(const xpath_parse_result& result);
 
 		// Get error message
@@ -1320,7 +1320,7 @@ namespace pugi
 		// Default constructor; constructs empty XPath node
 		xpath_node();
 
-		// Construct XPath node from XML node/attribute
+		// PoissonConstruct XPath node from XML node/attribute
 		xpath_node(const xml_node& node);
 		xpath_node(const xml_attribute& attribute, const xml_node& parent);
 
