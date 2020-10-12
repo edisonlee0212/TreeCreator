@@ -395,24 +395,24 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 	EntityManager::SetEntityQueryAllFilters(_PlantQuery, SorghumInfo());
 	
 	_StemMaterial = std::make_shared<Material>();
-	_StemMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
-	auto textureDiffuseTruck = new Texture2D(TextureType::DIFFUSE);
+	_StemMaterial->SetProgram(Default::GLPrograms::StandardProgram);
+	auto textureDiffuseTruck = std::make_shared<Texture2D>(TextureType::DIFFUSE);
 	textureDiffuseTruck->LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), "");
-	_StemMaterial->Textures2Ds()->push_back(textureDiffuseTruck);
+	_StemMaterial->SetTexture(textureDiffuseTruck);
 	_StemMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	_LeafMaterial = std::make_shared<Material>();
-	_LeafMaterial->Programs()->push_back(Default::GLPrograms::StandardProgram);
-	auto textureLeaf = new Texture2D(TextureType::DIFFUSE);
+	_LeafMaterial->SetProgram(Default::GLPrograms::StandardProgram);
+	auto textureLeaf = std::make_shared<Texture2D>(TextureType::DIFFUSE);
 	textureLeaf->LoadTexture("../Resources/Textures/leafSurface2.jpg", "");
-	_LeafMaterial->Textures2Ds()->push_back(textureLeaf);
+	_LeafMaterial->SetTexture(textureLeaf);
 	_LeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	_InstancedStemMaterial = std::make_shared<Material>();
-	_InstancedStemMaterial->Programs()->push_back(Default::GLPrograms::StandardInstancedProgram);
-	_InstancedStemMaterial->Textures2Ds()->push_back(textureDiffuseTruck);
+	_InstancedStemMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
+	_InstancedStemMaterial->SetTexture(textureDiffuseTruck);
 	_InstancedStemMaterial->SetMaterialProperty("material.shininess", 0.5f);
 	_InstancedLeafMaterial = std::make_shared<Material>();
-	_InstancedLeafMaterial->Programs()->push_back(Default::GLPrograms::StandardInstancedProgram);
-	_InstancedLeafMaterial->Textures2Ds()->push_back(textureLeaf);
+	_InstancedLeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
+	_InstancedLeafMaterial->SetTexture(textureLeaf);
 	_InstancedLeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	Enable();
 }

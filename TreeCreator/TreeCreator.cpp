@@ -20,6 +20,12 @@ float lightDiffuse = 1.0f;
 float lightSpecular = 0.2f;
 float lightSize = 1.2f;
 float pcssScale = 1.0f;
+
+
+float ssaobias = 0.025f;
+float ssaoradius = 3.0f;
+float ssaofactor = 1.0f;
+
 int main()
 {
 
@@ -151,9 +157,9 @@ int main()
 			}
 			
 		}
-		Entity gridPlant1 = srSys->CreateGridPlant(plant1, matricesList[0]);
-		Entity gridPlant2 = srSys->CreateGridPlant(plant2, matricesList[1]);
-		Entity gridPlant3 = srSys->CreateGridPlant(plant3, matricesList[2]);
+		//Entity gridPlant1 = srSys->CreateGridPlant(plant1, matricesList[0]);
+		//Entity gridPlant2 = srSys->CreateGridPlant(plant2, matricesList[1]);
+		//Entity gridPlant3 = srSys->CreateGridPlant(plant3, matricesList[2]);
 		Translation t1;
 		Translation t2;
 		Translation t3;
@@ -230,6 +236,16 @@ int main()
 		{
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
+
+		ImGui::Begin("SSAO");
+		ImGui::SliderFloat("Radius", &ssaoradius, 0.1f, 5.0f);
+		ImGui::SliderFloat("Bias", &ssaobias, 0.0f, 1.0f);
+		ImGui::SliderFloat("Factor", &ssaofactor, 1.0f, 10.0f);
+		ImGui::End();
+		RenderManager::SetSSAOKernelRadius(ssaoradius);
+		RenderManager::SetSSAOKernelBias(ssaobias);
+		RenderManager::SetSSAOFactor(ssaofactor);
+		
 		//ImGui::ShowDemoWindow();
 		Application::Update();
 		loopable = Application::LateUpdate();
@@ -249,11 +265,11 @@ void InitGround() {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());
 
 	auto mat = std::make_shared<Material>();
-	mat->Programs()->push_back(Default::GLPrograms::StandardInstancedProgram);
+	mat->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	
-	auto textureDiffuse = new Texture2D(TextureType::DIFFUSE);
+	auto textureDiffuse = std::make_shared<Texture2D>(TextureType::DIFFUSE);
 	textureDiffuse->LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg", "");
-	mat->Textures2Ds()->push_back(textureDiffuse);
+	mat->SetTexture(textureDiffuse);
 	auto textureNormal = new Texture2D(TextureType::NORMAL);
 	textureNormal->LoadTexture("../Resources/Textures/dirt_01_normal.jpg", "");
 	//mat->Textures2Ds()->push_back(textureNormal);
