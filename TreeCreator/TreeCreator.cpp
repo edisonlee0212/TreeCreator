@@ -38,6 +38,7 @@ int main()
 #pragma region Lights
 	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", Translation(), Rotation(), LocalToWorld(), DirectionalLightComponent());
 	DirectionalLightComponent dlc;
+	dlc.diffuseBrightness = 1.1f;
 	dlc.depthBias = 0.001;
 	dlc.normalOffset = 0.001;
 	dlc.lightSize = 5.2;
