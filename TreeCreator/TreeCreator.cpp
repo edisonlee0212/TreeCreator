@@ -14,8 +14,6 @@ PlantSimulationSystem* InitPlantSimulationSystem();
 SorghumReconstructionSystem* InitSorghumReconstructionSystem();
 void LightSettingMenu();
 
-float lightAngle0 = 60;
-float lightAngle1 = 0;
 float pcssScale = 0.03f;
 float ambientLight = 0.1f;
 float ssaobias = 0.08f;
@@ -29,22 +27,24 @@ int main()
 	RenderManager::SetEnableShadow(true);
 	RenderManager::SetDirectionalLightResolution(8192);
 	RenderManager::SetStableFit(true);
-	RenderManager::SetMaxShadowDistance(200.0f);
+	RenderManager::SetMaxShadowDistance(100.0f);
 	RenderManager::SetSeamFixRatio(0.05f);
 	RenderManager::SetSplitRatio(0.2f, 0.4f, 0.6f, 1.0f);
 #pragma endregion
 	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
 #pragma region Lights
-	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", Translation(), Rotation(), LocalToWorld(), DirectionalLightComponent());
+	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", EulerRotation(), Rotation(), DirectionalLightComponent());
 	DirectionalLightComponent dlc;
 	dlc.diffuseBrightness = 1.1f;
 	dlc.depthBias = 0.001;
 	dlc.normalOffset = 0.001;
 	dlc.lightSize = 5.2;
+	EulerRotation er;
+	er.Value = glm::vec3(60, 0, 0);
 	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
 	EntityManager::SetComponentData(dle, dlc);
-	
+	EntityManager::SetComponentData(dle, er);
 #pragma endregion
 #pragma region Preparations
 	Application::SetTimeStep(0.016f);
@@ -120,7 +120,6 @@ int main()
 			float yStep = -radius.y * size.y * 2;
 			for (int j = -radius.y; j <= radius.y; j++)
 			{
-				bool mirror = glm::linearRand(0, 1) == 0;
 				int index = glm::linearRand(0, (int)matricesList.size() - 1);
 				glm::vec3 translation;
 				glm::quat rotation;
@@ -138,25 +137,30 @@ int main()
 					angle = glm::gaussRand(40.0f, 5.0f) + glm::linearRand(-change, change);
 					break;
 				case 3:
-					angle = glm::gaussRand(40.0f, 5.0f) + glm::linearRand(-change, change);
+					angle = glm::gaussRand(-110.0f, 5.0f) + glm::linearRand(-change, change);
 					break;
 				default:
 					break;
 				}
 				float sway = 5.0f;
-				rotation = glm::quat(glm::vec3(glm::radians(-90.0f + glm::linearRand(-sway, sway)), glm::radians(angle * (mirror ? 1.0f : - 1.0f)), glm::radians(glm::linearRand(-sway, sway))));
+				rotation = glm::quat(glm::vec3(glm::radians(-90.0f + glm::linearRand(-sway, sway)), glm::radians(angle), glm::radians(glm::linearRand(-sway, sway))));
 				translation = glm::vec3(xStep, 0.0f, yStep) + glm::gaussRand(glm::vec3(0.0f), glm::vec3(0.02f));
 				yStep += size.y * 2 * glm::gaussRand(1.0f, 0.05f);
 				glm::vec3 scale;
-				scale = glm::vec3(1.0f, 1.0f * (mirror ? 1.0f : -1.0f), 1.0f) * glm::gaussRand(1.0f, 0.05f);
+				scale = glm::vec3(1.0f, 1.0f, 1.0f) * glm::gaussRand(1.0f, 0.05f);
 				glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(rotation) * glm::scale(scale);
 				matricesList[index].push_back(transform);
 			}
 			
 		}
-		//Entity gridPlant1 = srSys->CreateGridPlant(plant1, matricesList[0]);
-		//Entity gridPlant2 = srSys->CreateGridPlant(plant2, matricesList[1]);
-		//Entity gridPlant3 = srSys->CreateGridPlant(plant3, matricesList[2]);
+		Entity gridPlant1 = srSys->CreateGridPlant(plant1, matricesList[0]);
+		gridPlant1.SetName("Grid 1");
+		Entity gridPlant2 = srSys->CreateGridPlant(plant2, matricesList[1]);
+		gridPlant2.SetName("Grid 2");
+		Entity gridPlant3 = srSys->CreateGridPlant(plant3, matricesList[2]);
+		gridPlant3.SetName("Grid 3");
+		Entity gridPlant4 = srSys->CreateGridPlant(plant4, matricesList[3]);
+		gridPlant4.SetName("Grid 4");
 		Translation t1;
 		Translation t2;
 		Translation t3;
@@ -179,10 +183,10 @@ int main()
 		t3.Value = glm::vec3(5.0f, 0.0, 0);
 		t4.Value = glm::vec3(10.0f, 0.0, 0);
 		
-		r1.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(-42.0f), 0));
+		r1.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(42.0f), 0));
 		r2.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(30.0f), 0));
 		r3.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(40.0f), 0));
-		r4.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(40.0f), 0));
+		r4.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(-110.0f), 0));
 		EntityManager::SetComponentData(plant1, t1);
 		EntityManager::SetComponentData(plant1, r1);
 		EntityManager::SetComponentData(plant1, s1);
@@ -209,14 +213,6 @@ int main()
 		Application::PreUpdate();
 		LightSettingMenu();
 #pragma region Apply lights
-		Rotation r;
-		r.Value = glm::quatLookAt(
-			glm::normalize(glm::vec3(
-				glm::cos(glm::radians(lightAngle0)) * glm::sin(glm::radians(lightAngle1)),
-				glm::sin(glm::radians(lightAngle0)),
-				glm::cos(glm::radians(lightAngle0)) * glm::cos(glm::radians(lightAngle1))))
-			, glm::vec3(0, 1, 0));
-		EntityManager::SetComponentData<Rotation>(dle, r);
 		RenderManager::SetPCSSScaleFactor(pcssScale);
 #pragma endregion
 		ImGui::Begin("WireFrame");
@@ -297,10 +293,8 @@ void InitGround() {
 
 }
 void LightSettingMenu() {
-	ImGui::Begin("Light Angle Controller");
+	ImGui::Begin("Light Settings");
 	ImGui::SliderFloat("Ambient Light", &ambientLight, 0.0f, 1.0f);
-	ImGui::SliderFloat("Angle", &lightAngle0, 0.0f, 89.0f);
-	ImGui::SliderFloat("Circle", &lightAngle1, 0.0f, 360.0f);
 	ImGui::SliderFloat("PCSS Scale", &pcssScale, 0.0f, 3.0f);
 	ImGui::End();
 }
