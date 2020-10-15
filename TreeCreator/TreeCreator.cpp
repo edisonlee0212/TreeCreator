@@ -16,37 +16,33 @@ void LightSettingMenu();
 
 float lightAngle0 = 60;
 float lightAngle1 = 0;
-float lightDiffuse = 1.0f;
-float lightSpecular = 0.2f;
-float lightSize = 1.2f;
-float pcssScale = 1.0f;
-
-
-float ssaobias = 0.025f;
-float ssaoradius = 3.0f;
-float ssaofactor = 1.0f;
-
+float pcssScale = 0.03f;
+float ambientLight = 0.1f;
+float ssaobias = 0.08f;
+float ssaoradius = 0.05f;
+float ssaofactor = 10.0f;
+int ssaoSample = 32;
 int main()
 {
 
 #pragma region Global light settings
 	RenderManager::SetEnableShadow(true);
-	RenderManager::SetAmbientLight(0.05f);
 	RenderManager::SetDirectionalLightResolution(8192);
 	RenderManager::SetStableFit(true);
 	RenderManager::SetMaxShadowDistance(200.0f);
 	RenderManager::SetSeamFixRatio(0.05f);
-	RenderManager::SetVSMMaxVariance(0.001f);
-	RenderManager::SetEVSMExponent(80.0f);
 	RenderManager::SetSplitRatio(0.2f, 0.4f, 0.6f, 1.0f);
 #pragma endregion
 	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
 #pragma region Lights
-	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Light", Translation(), Rotation(), LocalToWorld());
-	auto dlc = std::make_shared<DirectionalLightComponent>();
+	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", Translation(), Rotation(), LocalToWorld(), DirectionalLightComponent());
+	DirectionalLightComponent dlc;
+	dlc.depthBias = 0.001;
+	dlc.normalOffset = 0.001;
+	dlc.lightSize = 5.2;
 	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
-	EntityManager::SetSharedComponent<DirectionalLightComponent>(dle, dlc);
+	EntityManager::SetComponentData(dle, dlc);
 	
 #pragma endregion
 #pragma region Preparations
@@ -220,9 +216,6 @@ int main()
 				glm::cos(glm::radians(lightAngle0)) * glm::cos(glm::radians(lightAngle1))))
 			, glm::vec3(0, 1, 0));
 		EntityManager::SetComponentData<Rotation>(dle, r);
-		dlc->specular = glm::vec3(255, 255, 255) * lightSpecular / 256.0f;
-		dlc->diffuse = glm::vec3(255, 255, 251) * lightDiffuse / 256.0f;
-		dlc->lightSize = lightSize;
 		RenderManager::SetPCSSScaleFactor(pcssScale);
 #pragma endregion
 		ImGui::Begin("WireFrame");
@@ -238,14 +231,16 @@ int main()
 		}
 
 		ImGui::Begin("SSAO");
-		ImGui::SliderFloat("Radius", &ssaoradius, 0.1f, 5.0f);
+		ImGui::SliderFloat("Radius", &ssaoradius, 0.0f, 2.0f);
 		ImGui::SliderFloat("Bias", &ssaobias, 0.0f, 1.0f);
-		ImGui::SliderFloat("Factor", &ssaofactor, 1.0f, 10.0f);
+		ImGui::SliderFloat("Factor", &ssaofactor, 1.0f, 32.0f);
+		ImGui::SliderInt("Sample amount", &ssaoSample, 0, 64);
 		ImGui::End();
 		RenderManager::SetSSAOKernelRadius(ssaoradius);
 		RenderManager::SetSSAOKernelBias(ssaobias);
 		RenderManager::SetSSAOFactor(ssaofactor);
-		
+		RenderManager::SetSSAOSampleSize(ssaoSample);
+		RenderManager::SetAmbientLight(ambientLight);
 		//ImGui::ShowDemoWindow();
 		Application::Update();
 		loopable = Application::LateUpdate();
@@ -302,12 +297,10 @@ void InitGround() {
 }
 void LightSettingMenu() {
 	ImGui::Begin("Light Angle Controller");
+	ImGui::SliderFloat("Ambient Light", &ambientLight, 0.0f, 1.0f);
 	ImGui::SliderFloat("Angle", &lightAngle0, 0.0f, 89.0f);
 	ImGui::SliderFloat("Circle", &lightAngle1, 0.0f, 360.0f);
-	ImGui::SliderFloat("Diffuse", &lightDiffuse, 0.0f, 2.0f);
-	ImGui::SliderFloat("Specular", &lightSpecular, 0.0f, 2.0f);
 	ImGui::SliderFloat("PCSS Scale", &pcssScale, 0.0f, 3.0f);
-	ImGui::SliderFloat("Light Size", &lightSize, 0.0f, 5.0f);
 	ImGui::End();
 }
 
