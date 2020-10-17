@@ -27,9 +27,9 @@ int main()
 	RenderManager::SetEnableShadow(true);
 	RenderManager::SetDirectionalLightResolution(8192);
 	RenderManager::SetStableFit(true);
-	RenderManager::SetMaxShadowDistance(100.0f);
+	RenderManager::SetMaxShadowDistance(800.0f);
 	RenderManager::SetSeamFixRatio(0.05f);
-	RenderManager::SetSplitRatio(0.2f, 0.4f, 0.6f, 1.0f);
+	RenderManager::SetSplitRatio(0.05f, 0.2f, 0.4f, 1.0f);
 #pragma endregion
 	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
@@ -97,70 +97,72 @@ int main()
 		Entity plant2 = srSys->ImportPlant("skeleton_procedural_2.txt", 0.01f, "Sorghum 2");
 		Entity plant3 = srSys->ImportPlant("skeleton_procedural_3.txt", 0.01f, "Sorghum 3");
 		Entity plant4 = srSys->ImportPlant("skeleton_procedural_4.txt", 0.01f, "Sorghum 4");
-		srSys->GenerateMeshForAllPlants();
+		srSys->GenerateMeshForAllPlants(5, 5);
 		srSys->ExportPlant(plant1, "plant1");
 		srSys->ExportPlant(plant2, "plant2");
 		srSys->ExportPlant(plant3, "plant3");
 		srSys->ExportPlant(plant4, "plant4");
-		
-		glm::vec2 radius = glm::vec2(45,5);
-		glm::vec2 size = glm::vec2(0.565f, 2.7f);
-		std::vector<std::vector<glm::mat4>> matricesList;
-		matricesList.resize(4);
-		for(auto& i : matricesList)
-		{
-			i.clear();
-		}
-		float xStep = -radius.x * size.x * 2;
-		
-		for (int i = -radius.x; i <= radius.x; i++)
-		{
-			if (i % 18 == 0) xStep += 2.0f * glm::gaussRand(1.0f, 0.5f);
-			xStep += size.x * 2 * glm::gaussRand(1.0f, 0.5f);
-			float yStep = -radius.y * size.y * 2;
-			for (int j = -radius.y; j <= radius.y; j++)
+		if (false) {
+			glm::vec2 radius = glm::vec2(53, 12);
+			glm::vec2 size = glm::vec2(0.565f, 2.7f);
+			std::vector<std::vector<glm::mat4>> matricesList;
+			matricesList.resize(4);
+			for (auto& i : matricesList)
 			{
-				int index = glm::linearRand(0, (int)matricesList.size() - 1);
-				glm::vec3 translation;
-				glm::quat rotation;
-				float angle = glm::gaussRand(35.0, 4.0);
-				float change = 10.0f;
-				switch (index)
-				{
-				case 0:
-					angle = glm::gaussRand(42.0f, 5.0f) + glm::linearRand(-change, change);
-					break;
-				case 1:
-					angle = glm::gaussRand(30.0f, 5.0f) + glm::linearRand(-change, change);
-					break;
-				case 2:
-					angle = glm::gaussRand(40.0f, 5.0f) + glm::linearRand(-change, change);
-					break;
-				case 3:
-					angle = glm::gaussRand(-110.0f, 5.0f) + glm::linearRand(-change, change);
-					break;
-				default:
-					break;
-				}
-				float sway = 5.0f;
-				rotation = glm::quat(glm::vec3(glm::radians(-90.0f + glm::linearRand(-sway, sway)), glm::radians(angle), glm::radians(glm::linearRand(-sway, sway))));
-				translation = glm::vec3(xStep, 0.0f, yStep) + glm::gaussRand(glm::vec3(0.0f), glm::vec3(0.02f));
-				yStep += size.y * 2 * glm::gaussRand(1.0f, 0.05f);
-				glm::vec3 scale;
-				scale = glm::vec3(1.0f, 1.0f, 1.0f) * glm::gaussRand(1.0f, 0.05f);
-				glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(rotation) * glm::scale(scale);
-				matricesList[index].push_back(transform);
+				i.clear();
 			}
-			
+			float xStep = -radius.x * size.x * 2;
+
+			for (int i = -radius.x; i <= radius.x; i++)
+			{
+				if (i % 18 == 0) xStep += 2.0f * glm::gaussRand(1.0f, 0.2f);
+				xStep += size.x * 2 * glm::gaussRand(1.0f, 0.5f);
+				float yStep = -radius.y * size.y * 2;
+				for (int j = -radius.y; j <= radius.y; j++)
+				{
+					int index = glm::linearRand(0, (int)matricesList.size() - 1);
+					glm::vec3 translation;
+					glm::quat rotation;
+					float angle = glm::gaussRand(35.0, 4.0);
+					float change = 10.0f;
+					switch (index)
+					{
+					case 0:
+						angle = glm::gaussRand(42.0f, 5.0f) + glm::linearRand(-change, change);
+						break;
+					case 1:
+						angle = glm::gaussRand(30.0f, 5.0f) + glm::linearRand(-change, change);
+						break;
+					case 2:
+						angle = glm::gaussRand(40.0f, 5.0f) + glm::linearRand(-change, change);
+						break;
+					case 3:
+						angle = glm::gaussRand(-110.0f, 5.0f) + glm::linearRand(-change, change);
+						break;
+					default:
+						break;
+					}
+					float sway = 5.0f;
+					rotation = glm::quat(glm::vec3(glm::radians(-90.0f + glm::linearRand(-sway, sway)), glm::radians(angle), glm::radians(glm::linearRand(-sway, sway))));
+					translation = glm::vec3(xStep, 0.0f, yStep) + glm::gaussRand(glm::vec3(0.0f), glm::vec3(0.02f));
+					yStep += size.y * 2 * glm::gaussRand(1.0f, 0.05f);
+					glm::vec3 scale;
+					scale = glm::vec3(1.0f, 1.0f, 1.0f) * glm::gaussRand(1.0f, 0.05f);
+					glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(rotation) * glm::scale(scale);
+					matricesList[index].push_back(transform);
+				}
+
+			}
+
+			Entity gridPlant1 = srSys->CreateGridPlant(plant1, matricesList[0]);
+			gridPlant1.SetName("Grid 1");
+			Entity gridPlant2 = srSys->CreateGridPlant(plant2, matricesList[1]);
+			gridPlant2.SetName("Grid 2");
+			Entity gridPlant3 = srSys->CreateGridPlant(plant3, matricesList[2]);
+			gridPlant3.SetName("Grid 3");
+			Entity gridPlant4 = srSys->CreateGridPlant(plant4, matricesList[3]);
+			gridPlant4.SetName("Grid 4");
 		}
-		Entity gridPlant1 = srSys->CreateGridPlant(plant1, matricesList[0]);
-		gridPlant1.SetName("Grid 1");
-		Entity gridPlant2 = srSys->CreateGridPlant(plant2, matricesList[1]);
-		gridPlant2.SetName("Grid 2");
-		Entity gridPlant3 = srSys->CreateGridPlant(plant3, matricesList[2]);
-		gridPlant3.SetName("Grid 3");
-		Entity gridPlant4 = srSys->CreateGridPlant(plant4, matricesList[3]);
-		gridPlant4.SetName("Grid 4");
 		Translation t1;
 		Translation t2;
 		Translation t3;
@@ -262,9 +264,9 @@ void InitGround() {
 	auto textureDiffuse = std::make_shared<Texture2D>(TextureType::DIFFUSE);
 	textureDiffuse->LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg", "");
 	mat->SetTexture(textureDiffuse);
-	auto textureNormal = new Texture2D(TextureType::NORMAL);
+	auto textureNormal = std::make_shared<Texture2D>(TextureType::NORMAL);
 	textureNormal->LoadTexture("../Resources/Textures/dirt_01_normal.jpg", "");
-	//mat->Textures2Ds()->push_back(textureNormal);
+	mat->SetTexture(textureNormal);
 	
 	mat->SetMaterialProperty("material.shininess", 32.0f);
 	auto instancedMeshRenderer = std::make_shared<InstancedMeshRenderer>();
@@ -277,8 +279,8 @@ void InitGround() {
 	scale.Value = glm::vec3(1.0f);
 	baseEntity.SetComponentData(translation);
 	baseEntity.SetComponentData(scale);
-	int radius = 4;
-	float size = 10.0f;
+	int radius = 6;
+	float size = 6.0f;
 	for(int i = -radius; i <= radius; i++)
 	{
 		for(int j = -radius; j <= radius; j++)

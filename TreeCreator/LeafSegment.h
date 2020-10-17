@@ -18,12 +18,14 @@ namespace SorghumReconstruction {
 		float LeftFlatnessFactor;
 		float RightFlatness;
 		float RightFlatnessFactor;
-		LeafSegment(glm::vec3 position, glm::vec3 up, glm::vec3 front, float leafHalfWidth, float theta, 
+		bool IsLeaf;
+		LeafSegment(glm::vec3 position, glm::vec3 up, glm::vec3 front, float leafHalfWidth, float theta, bool isLeaf,
 			float leftFlatness = 0.0f,
 			float rightFlatness = 0.0f,
 			float leftFlatnessFactor = 1.0f,
 			float rightFlatnessFactor = 1.0f)
 		{
+			IsLeaf = isLeaf;
 			Position = position;
 			Up = up;
 			Front = front;

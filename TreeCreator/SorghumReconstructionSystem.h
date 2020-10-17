@@ -17,12 +17,14 @@ namespace SorghumReconstruction {
 		float Theta;
 		float Width;
 		glm::vec3 Axis;
-		PlantNode(glm::vec3 position, float angle, float width, glm::vec3 axis)
+		bool IsLeaf;
+		PlantNode(glm::vec3 position, float angle, float width, glm::vec3 axis, bool isLeaf)
 		{
 			Position = position;
 			Theta = angle;
 			Width = width;
 			Axis = axis;
+			IsLeaf = isLeaf;
 		}
 	};
 	
@@ -106,7 +108,7 @@ namespace SorghumReconstruction {
 		Entity CreateGridPlant(Entity original, std::vector<glm::mat4>& matrices, bool rotateLeaves = false, float devAngle = 0.0f);
 		Entity CreatePlant() const;
 		Entity CreateLeafForPlant(Entity& plantEntity) const;
-		void GenerateMeshForAllPlants();
+		void GenerateMeshForAllPlants(int segmentAmount = 2, int step = 2);
 		Entity ImportPlant(std::string path, float resolution, std::string name) const;
 		void ExportPlant(Entity plant, std::string path) const;
 		void OnCreate() override;

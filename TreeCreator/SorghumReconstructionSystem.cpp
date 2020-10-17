@@ -162,10 +162,10 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateGridPlant(Entit
 }
 
 
-void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlants()
+void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlants(int segmentAmount, int step)
 {
 	std::mutex meshMutex;
-	EntityManager::ForEach<LocalToWorld>(_SplineQuery, [&meshMutex]
+	EntityManager::ForEach<LocalToWorld>(_SplineQuery, [&meshMutex, segmentAmount, step]
 	(int index, Entity entity, LocalToWorld* ltw)
 		{
 
@@ -177,7 +177,7 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 				float width = 0.1f - spline->StartingPoint * 0.05f;
 				for (float i = 0.0f; i < spline->StartingPoint - 0.05f; i += 0.05f)
 				{
-					spline->Nodes.emplace_back(truckSpline->EvaluatePointFromCurve(i), 180.0f, width, truckSpline->EvaluateAxisFromCurve(i));
+					spline->Nodes.emplace_back(truckSpline->EvaluatePointFromCurve(i), 180.0f, width, truckSpline->EvaluateAxisFromCurve(i), false);
 
 				}
 				stemNodeCount = spline->Nodes.size();
@@ -185,32 +185,32 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 				{
 					float w = 0.2f;
 					if (i > 0.75f) w -= (i - 0.75f) * 0.75f;
-					spline->Nodes.emplace_back(spline->EvaluatePointFromCurve(i), i == 0.05f ? 60.0f : 40.0f, w, spline->EvaluateAxisFromCurve(i));
+					spline->Nodes.emplace_back(spline->EvaluatePointFromCurve(i), i == 0.05f ? 60.0f : 10.0f, w, spline->EvaluateAxisFromCurve(i), true);
 				}
 			}else
 			{
 				for (float i = 0.0f; i <= 1.0f; i += 0.05f)
 				{
-					spline->Nodes.emplace_back(spline->EvaluatePointFromCurve(i), 180.0f, 0.04f, spline->EvaluateAxisFromCurve(i));
+					spline->Nodes.emplace_back(spline->EvaluatePointFromCurve(i), 180.0f, 0.04f, spline->EvaluateAxisFromCurve(i), false);
 				}
 				auto endPoint = spline->EvaluatePointFromCurve(1.0f);
 				auto endAxis = spline->EvaluateAxisFromCurve(1.0f);
-				spline->Nodes.emplace_back(endPoint + endAxis * 0.05f, 10.0f, 0.001f, endAxis);
+				spline->Nodes.emplace_back(endPoint + endAxis * 0.05f, 10.0f, 0.001f, endAxis, false);
 				stemNodeCount = spline->Nodes.size();
 			}
 			spline->Vertices.clear();
 			spline->Indices.clear();
 			spline->Segments.clear();
 
-			const int amount = 5;
+
 			float temp = 0.0f;
 
-			float leftPeriodFactor = glm::linearRand(0.4f, 1.0f);
-			float rightPeriodFactor = glm::linearRand(0.4f, 1.0f);
-			float leftFlatness = glm::linearRand(0.5f, 1.5f);
-			float rightFlatness = glm::linearRand(0.5f, 1.5f);
-			float leftFlatnessFactor = glm::linearRand(1.0f, 2.5f);
-			float rightFlatnessFactor = glm::linearRand(1.0f, 2.5f);
+			float leftPeriod = 0.0f;
+			float rightPeriod = 0.0f;
+			float leftFlatness = glm::gaussRand(1.75f, 0.5f);//glm::linearRand(0.5f, 2.0f);
+			float rightFlatness = glm::gaussRand(1.75f, 0.5f);//glm::linearRand(0.5f, 2.0f);
+			float leftFlatnessFactor = glm::gaussRand(1.25f, 0.2f);//glm::linearRand(1.0f, 2.5f);
+			float rightFlatnessFactor = glm::gaussRand(1.25f, 0.2f);//glm::linearRand(1.0f, 2.5f);
 
 			int stemSegmentCount = 0;
 			for(int i = 1; i < spline->Nodes.size(); i++)
@@ -223,27 +223,36 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 				}
 				float distance = glm::distance(prev.Position, curr.Position);
 				BezierCurve curve = BezierCurve(prev.Position, prev.Position + distance / 5.0f * prev.Axis, curr.Position - distance / 5.0f * curr.Axis, curr.Position);
-				for(float div = 1.0f / amount; div <= 1.0f; div += 1.0f / amount)
+				for(float div = 1.0f / segmentAmount; div <= 1.0f; div += 1.0f / segmentAmount)
 				{
 					auto front = prev.Axis * (1.0f - div) + curr.Axis * div;
 					
 					auto up = glm::normalize(glm::cross(spline->Left, front));
-					
-					spline->Segments.emplace_back(
-						curve.GetPoint(div),
-						up, 
-						front,
-						prev.Width * (1.0f - div) + curr.Width * div,
-						prev.Theta * (1.0f - div) + curr.Theta * div,
-						glm::sin(temp * leftPeriodFactor) * leftFlatness,
-						glm::sin(temp * rightPeriodFactor) * rightFlatness,
-						leftFlatnessFactor, rightFlatnessFactor);
-					temp += 0.3f;
+					if (prev.IsLeaf) {
+						leftPeriod += glm::gaussRand(1.25f, 0.5f) / segmentAmount;
+						rightPeriod += glm::gaussRand(1.25f, 0.5f) / segmentAmount;
+						spline->Segments.emplace_back(
+							curve.GetPoint(div),
+							up,
+							front,
+							prev.Width * (1.0f - div) + curr.Width * div,
+							prev.Theta * (1.0f - div) + curr.Theta * div,
+							curr.IsLeaf,
+							glm::sin(leftPeriod) * leftFlatness,
+							glm::sin(rightPeriod) * rightFlatness,
+							leftFlatnessFactor, rightFlatnessFactor);
+					}else
+					{
+						spline->Segments.emplace_back(
+							curve.GetPoint(div),
+							up,
+							front,
+							prev.Width * (1.0f - div) + curr.Width * div,
+							prev.Theta * (1.0f - div) + curr.Theta * div,
+							curr.IsLeaf);
+					}
 				}
 			}
-			
-			//Truck
-			const int step = 10;
 
 			const int vertexIndex = spline->Vertices.size();
 			Vertex archetype;
@@ -403,7 +412,7 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardProgram);
 	auto textureLeaf = std::make_shared<Texture2D>(TextureType::DIFFUSE);
-	textureLeaf->LoadTexture("../Resources/Textures/leafSurface2.jpg", "");
+	textureLeaf->LoadTexture("../Resources/Textures/leafSurfaceBright.jpg", "");
 	_LeafMaterial->SetTexture(textureLeaf);
 	_LeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	_InstancedStemMaterial = std::make_shared<Material>();
