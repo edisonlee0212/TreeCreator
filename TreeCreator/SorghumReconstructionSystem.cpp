@@ -46,9 +46,9 @@ void SorghumReconstruction::SorghumReconstructionSystem::DrawGUI()
 void SorghumReconstruction::SorghumReconstructionSystem::ObjExportHelper(glm::vec3 position, std::shared_ptr<Mesh> mesh, std::ofstream& of,
 	unsigned& startIndex) const
 {
-	if (!mesh->GetVerticesUnsafe()->empty() && !mesh->GetIndicesUnsafe()->empty())
+	if (!mesh->GetVerticesUnsafe().empty() && !mesh->GetIndicesUnsafe().empty())
 	{
-		std::string header = "#Vertices: " + std::to_string(mesh->GetVerticesUnsafe()->size()) + ", tris: " + std::to_string(mesh->GetIndicesUnsafe()->size() / 3);
+		std::string header = "#Vertices: " + std::to_string(mesh->GetVerticesUnsafe().size()) + ", tris: " + std::to_string(mesh->GetIndicesUnsafe().size() / 3);
 		header += "\n";
 		of.write(header.c_str(), header.size());
 		of.flush();
@@ -63,36 +63,36 @@ void SorghumReconstruction::SorghumReconstructionSystem::ObjExportHelper(glm::ve
 		std::string data;
 #pragma region Data collection
 
-		for (const auto& vertex : *mesh->GetVerticesUnsafe()) {
+		for (const auto& vertex : mesh->GetVerticesUnsafe()) {
 			data += "v " + std::to_string(vertex.Position.x + position.x)
 				+ " " + std::to_string(vertex.Position.z + position.z)
 				+ " " + std::to_string(vertex.Position.y + position.y)
 				+ "\n";
 		}
-		for (const auto& vertex : *mesh->GetVerticesUnsafe()) {
+		for (const auto& vertex : mesh->GetVerticesUnsafe()) {
 			data += "vn " + std::to_string(vertex.Normal.x)
 				+ " " + std::to_string(vertex.Normal.z)
 				+ " " + std::to_string(vertex.Normal.y)
 				+ "\n";
 		}
 		
-		for (const auto& vertex : *mesh->GetVerticesUnsafe()) {
+		for (const auto& vertex : mesh->GetVerticesUnsafe()) {
 			data += "vt " + std::to_string(vertex.TexCoords0.x)
 				+ " " + std::to_string(vertex.TexCoords0.y)
 				+ "\n";
 		}
 		//data += "s off\n";
 		data += "# List of indices for faces vertices, with (x, y, z).\n";
-		for (auto i = 0; i < mesh->GetIndicesUnsafe()->size() / 3; i++) {
-			auto f1 = mesh->GetIndicesUnsafe()->at(3l * i) + startIndex;
-			auto f2 = mesh->GetIndicesUnsafe()->at(3l * i + 1) + startIndex;
-			auto f3 = mesh->GetIndicesUnsafe()->at(3l * i + 2) + startIndex;
+		for (auto i = 0; i < mesh->GetIndicesUnsafe().size() / 3; i++) {
+			auto f1 = mesh->GetIndicesUnsafe().at(3l * i) + startIndex;
+			auto f2 = mesh->GetIndicesUnsafe().at(3l * i + 1) + startIndex;
+			auto f3 = mesh->GetIndicesUnsafe().at(3l * i + 2) + startIndex;
 			data += "f " + std::to_string(f1) + "/" + std::to_string(f1) + "/" + std::to_string(f1)
 				+ " " + std::to_string(f2) + "/" + std::to_string(f2) + "/" + std::to_string(f2)
 				+ " " + std::to_string(f3) + "/" + std::to_string(f3) + "/" + std::to_string(f3)
 				+ "\n";
 		}
-		startIndex += mesh->GetVerticesUnsafe()->size();
+		startIndex += mesh->GetVerticesUnsafe().size();
 #pragma endregion
 		of.write(data.c_str(), data.size());
 		of.flush();

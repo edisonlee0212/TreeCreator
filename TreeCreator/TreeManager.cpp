@@ -445,7 +445,7 @@ void TreeUtilities::TreeManager::ExportMeshToOBJ(Entity treeEntity, std::string 
 	auto vertices = mesh->GetVerticesUnsafe();
 	auto indices = mesh->GetIndicesUnsafe();
 
-	if (vertices->size() == 0) {
+	if (vertices.size() == 0) {
 		Debug::Log("Mesh not generated!");
 		return;
 	}
@@ -457,17 +457,17 @@ void TreeUtilities::TreeManager::ExportMeshToOBJ(Entity treeEntity, std::string 
 		std::string data = "";
 #pragma region Data collection
 		data += "# List of geometric vertices, with (x, y, z).\n";
-		for (const auto& vertex : *vertices) {
+		for (const auto& vertex : vertices) {
 			data += "v " + std::to_string(vertex.Position.x)
 				+ " " + std::to_string(vertex.Position.y)
 				+ " " + std::to_string(vertex.Position.z)
 				+ "\n";
 		}
 		data += "# List of indices for faces vertices, with (x, y, z).\n";
-		for (int i = 0; i < indices->size() / 3; i++) {
-			data += "f " + std::to_string(indices->at(i * 3) + 1)
-				+ " " + std::to_string(indices->at(i * 3 + 1) + 1)
-				+ " " + std::to_string(indices->at(i * 3 + 2) + 1)
+		for (int i = 0; i < indices.size() / 3; i++) {
+			data += "f " + std::to_string(indices.at(i * 3) + 1)
+				+ " " + std::to_string(indices.at(i * 3 + 1) + 1)
+				+ " " + std::to_string(indices.at(i * 3 + 2) + 1)
 				+ "\n";
 		}
 #pragma endregion

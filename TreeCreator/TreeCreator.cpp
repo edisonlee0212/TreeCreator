@@ -12,18 +12,16 @@ using namespace SorghumReconstruction;
 void InitGround();
 PlantSimulationSystem* InitPlantSimulationSystem();
 SorghumReconstructionSystem* InitSorghumReconstructionSystem();
-void LightSettingMenu();
 
-float pcssScale = 0.03f;
-float ambientLight = 0.1f;
-float ssaobias = 0.08f;
-float ssaoradius = 0.05f;
-float ssaofactor = 10.0f;
-int ssaoSample = 32;
 int main()
 {
-
 #pragma region Global light settings
+	RenderManager::SetPCSSScaleFactor(0.03f);
+	RenderManager::SetSSAOKernelBias(0.08);
+	RenderManager::SetSSAOKernelRadius(0.05f);
+	RenderManager::SetSSAOSampleSize(32);
+	RenderManager::SetAmbientLight(0.1f);
+	RenderManager::SetSSAOFactor(10.0f);
 	RenderManager::SetEnableShadow(true);
 	RenderManager::SetDirectionalLightResolution(8192);
 	RenderManager::SetStableFit(true);
@@ -54,12 +52,13 @@ int main()
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());
 	CameraControlSystem* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);
 	ccs->Enable();
-	ccs->SetPosition(glm::vec3(0, 6, 20));
-	ccs->SetVelocity(10.0f);
+	Translation t;
+	t.Value = glm::vec3(0, 6, 20);
+	Application::GetMainCameraEntity().SetComponentData(t);
+	ccs->SetVelocity(15.0f);
 	InitGround();
 #pragma endregion
 	TreeManager::Init();
-	
 #pragma region Light estimator setup
 	//The smaller the branch node's size, the more branching for tree.
 	TreeManager::GetLightEstimator()->ResetResolution(512);
@@ -212,34 +211,7 @@ int main()
 	//Another way to run engine is to simply execute:
 	//Application.Run();
 	while (loopable) {
-		Application::PreUpdate();
-		LightSettingMenu();
-#pragma region Apply lights
-		RenderManager::SetPCSSScaleFactor(pcssScale);
-#pragma endregion
-		ImGui::Begin("WireFrame");
-		static bool enableWireFrame = false;
-		ImGui::Checkbox("Enable wire-frame mode", &enableWireFrame);
-		ImGui::End();
-		if(enableWireFrame)
-		{
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-		}else
-		{
-			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		}
-
-		ImGui::Begin("SSAO");
-		ImGui::SliderFloat("Radius", &ssaoradius, 0.0f, 2.0f);
-		ImGui::SliderFloat("Bias", &ssaobias, 0.0f, 1.0f);
-		ImGui::SliderFloat("Factor", &ssaofactor, 1.0f, 32.0f);
-		ImGui::SliderInt("Sample amount", &ssaoSample, 0, 64);
-		ImGui::End();
-		RenderManager::SetSSAOKernelRadius(ssaoradius);
-		RenderManager::SetSSAOKernelBias(ssaobias);
-		RenderManager::SetSSAOFactor(ssaofactor);
-		RenderManager::SetSSAOSampleSize(ssaoSample);
-		RenderManager::SetAmbientLight(ambientLight);
+		Application::PreUpdate();		
 		//ImGui::ShowDemoWindow();
 		Application::Update();
 		loopable = Application::LateUpdate();
@@ -293,11 +265,5 @@ void InitGround() {
 	instancedMeshRenderer->RecalculateBoundingBox();
 	baseEntity.SetSharedComponent<InstancedMeshRenderer>(instancedMeshRenderer);
 
-}
-void LightSettingMenu() {
-	ImGui::Begin("Light Settings");
-	ImGui::SliderFloat("Ambient Light", &ambientLight, 0.0f, 1.0f);
-	ImGui::SliderFloat("PCSS Scale", &pcssScale, 0.0f, 3.0f);
-	ImGui::End();
 }
 
