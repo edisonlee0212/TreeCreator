@@ -1193,30 +1193,24 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 
 	_DefaultTreeSurfaceMaterial1 = std::make_shared<Material>();
 	_DefaultTreeSurfaceMaterial1->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureDiffuse1 = std::make_shared<Texture2D>(TextureType::DIFFUSE);
-	textureDiffuse1->LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), "");
-	auto textureNormal1 = std::make_shared<Texture2D>(TextureType::NORMAL);
-	textureNormal1->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_normal.jpg"), "");
+	auto textureDiffuse1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), TextureType::DIFFUSE);
+	auto textureNormal1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_normal.jpg"), TextureType::NORMAL);
 	_DefaultTreeSurfaceMaterial1->SetTexture(textureDiffuse1);
 	_DefaultTreeSurfaceMaterial1->SetTexture(textureNormal1);
 
 	_DefaultTreeSurfaceMaterial2 = std::make_shared<Material>();
 	_DefaultTreeSurfaceMaterial2->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureDiffuse2 = std::make_shared<Texture2D>(TextureType::DIFFUSE);
-	textureDiffuse2->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"), "");
-	auto textureNormal2 = std::make_shared<Texture2D>(TextureType::NORMAL);
-	textureNormal2->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"), "");
+	auto textureDiffuse2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"), TextureType::DIFFUSE);
+	auto textureNormal2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"), TextureType::NORMAL);
 	_DefaultTreeSurfaceMaterial2->SetTexture(textureDiffuse2);
 	_DefaultTreeSurfaceMaterial2->SetTexture(textureNormal2);
 
 	_DefaultTreeLeafMaterial1 = std::make_shared<Material>();
 	_DefaultTreeLeafMaterial1->SetMaterialProperty("material.shininess", 32.0f);
 	_DefaultTreeLeafMaterial1->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	auto textureDiffuseLeaf1 = std::make_shared<Texture2D>(TextureType::DIFFUSE);
-	textureDiffuseLeaf1->LoadTexture(FileIO::GetResourcePath("Textures/Leaf/PrunusAvium/A/level0.png"), "");
+	auto textureDiffuseLeaf1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/Leaf/PrunusAvium/A/level0.png"), TextureType::DIFFUSE);
 	//textureDiffuseLeaf1->LoadTexture(FileIO::GetResourcePath("Textures/green.png"), "");
-	auto textureNormalLeaf1 = std::make_shared<Texture2D>(TextureType::NORMAL);
-	textureNormalLeaf1->LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"), "");
+	auto textureNormalLeaf1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"), TextureType::NORMAL);
 	_DefaultTreeLeafMaterial1->SetTexture(textureDiffuseLeaf1);
 	//_DefaultTreeLeafMaterial1->Textures2Ds()->push_back(textureNormalLeaf1);
 

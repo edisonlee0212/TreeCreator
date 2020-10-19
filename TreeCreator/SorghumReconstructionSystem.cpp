@@ -405,14 +405,12 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 	
 	_StemMaterial = std::make_shared<Material>();
 	_StemMaterial->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureDiffuseTruck = std::make_shared<Texture2D>(TextureType::DIFFUSE);
-	textureDiffuseTruck->LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), "");
+	auto textureDiffuseTruck = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), TextureType::DIFFUSE);
 	_StemMaterial->SetTexture(textureDiffuseTruck);
 	_StemMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureLeaf = std::make_shared<Texture2D>(TextureType::DIFFUSE);
-	textureLeaf->LoadTexture("../Resources/Textures/leafSurfaceBright.jpg", "");
+	auto textureLeaf = AssetManager::LoadTexture("../Resources/Textures/leafSurfaceBright.jpg", TextureType::DIFFUSE);
 	_LeafMaterial->SetTexture(textureLeaf);
 	_LeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	_InstancedStemMaterial = std::make_shared<Material>();

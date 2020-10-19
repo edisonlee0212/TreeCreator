@@ -20,7 +20,7 @@ int main()
 	RenderManager::SetSSAOKernelBias(0.08);
 	RenderManager::SetSSAOKernelRadius(0.05f);
 	RenderManager::SetSSAOSampleSize(32);
-	RenderManager::SetAmbientLight(0.1f);
+	RenderManager::SetAmbientLight(0.3f);
 	RenderManager::SetSSAOFactor(10.0f);
 	RenderManager::SetEnableShadow(true);
 	RenderManager::SetDirectionalLightResolution(8192);
@@ -233,11 +233,9 @@ void InitGround() {
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	
-	auto textureDiffuse = std::make_shared<Texture2D>(TextureType::DIFFUSE);
-	textureDiffuse->LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg", "");
+	auto textureDiffuse = AssetManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg", TextureType::DIFFUSE);
 	mat->SetTexture(textureDiffuse);
-	auto textureNormal = std::make_shared<Texture2D>(TextureType::NORMAL);
-	textureNormal->LoadTexture("../Resources/Textures/dirt_01_normal.jpg", "");
+	auto textureNormal = AssetManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg", TextureType::NORMAL);
 	mat->SetTexture(textureNormal);
 	
 	mat->SetMaterialProperty("material.shininess", 32.0f);
