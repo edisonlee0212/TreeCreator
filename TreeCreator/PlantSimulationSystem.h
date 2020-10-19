@@ -28,9 +28,12 @@ namespace TreeUtilities {
 		int _CurrentFocusedNewTreeIndex = 0;
 		std::vector<TreeParameters> _NewTreeParameters;
 		std::vector<glm::vec3> _NewTreePositions;
-		std::shared_ptr<Material> _DefaultTreeSurfaceMaterial1;
-		std::shared_ptr<Material> _DefaultTreeSurfaceMaterial2;
-
+		std::shared_ptr<Texture2D> _DefaultTreeSurfaceTex1;
+		std::shared_ptr<Texture2D> _DefaultTreeSurfaceNTex1;
+		std::shared_ptr<Texture2D> _DefaultTreeSurfaceSTex1;
+		std::shared_ptr<Texture2D> _DefaultTreeSurfaceTex2;
+		std::shared_ptr<Texture2D> _DefaultTreeSurfaceNTex2;
+		std::shared_ptr<Material> _DefaultConvexHullSurfaceMaterial;
 		std::shared_ptr<Material> _DefaultTreeLeafMaterial1;
 		std::shared_ptr<Material> _DefaultTreeLeafMaterial2;
 
@@ -75,7 +78,7 @@ namespace TreeUtilities {
 		void OnDestroy() override;
 		void Update() override;
 		void FixedUpdate() override;
-		Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters parameters, glm::vec3 position, bool enabled = true);
+		Entity CreateTree(std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters parameters, glm::vec3 position, bool enabled = true);
 		void CreateDefaultTree();
 	};
 }

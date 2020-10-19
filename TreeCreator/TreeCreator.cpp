@@ -233,10 +233,10 @@ void InitGround() {
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	
-	auto textureDiffuse = AssetManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg", TextureType::DIFFUSE);
-	mat->SetTexture(textureDiffuse);
-	auto textureNormal = AssetManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg", TextureType::NORMAL);
-	mat->SetTexture(textureNormal);
+	auto textureDiffuse = AssetManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg");
+	mat->SetTexture(textureDiffuse, TextureType::DIFFUSE);
+	auto textureNormal = AssetManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg");
+	mat->SetTexture(textureNormal, TextureType::NORMAL);
 	
 	mat->SetMaterialProperty("material.shininess", 32.0f);
 	auto instancedMeshRenderer = std::make_shared<InstancedMeshRenderer>();

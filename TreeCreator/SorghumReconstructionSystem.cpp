@@ -405,21 +405,21 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 	
 	_StemMaterial = std::make_shared<Material>();
 	_StemMaterial->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureDiffuseTruck = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), TextureType::DIFFUSE);
-	_StemMaterial->SetTexture(textureDiffuseTruck);
+	auto textureDiffuseTruck = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/brown.png"));
+	_StemMaterial->SetTexture(textureDiffuseTruck, TextureType::DIFFUSE);
 	_StemMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureLeaf = AssetManager::LoadTexture("../Resources/Textures/leafSurfaceBright.jpg", TextureType::DIFFUSE);
-	_LeafMaterial->SetTexture(textureLeaf);
+	auto textureLeaf = AssetManager::LoadTexture("../Resources/Textures/leafSurfaceBright.jpg");
+	_LeafMaterial->SetTexture(textureLeaf, TextureType::DIFFUSE);
 	_LeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	_InstancedStemMaterial = std::make_shared<Material>();
 	_InstancedStemMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	_InstancedStemMaterial->SetTexture(textureDiffuseTruck);
+	_InstancedStemMaterial->SetTexture(textureDiffuseTruck, TextureType::DIFFUSE);
 	_InstancedStemMaterial->SetMaterialProperty("material.shininess", 0.5f);
 	_InstancedLeafMaterial = std::make_shared<Material>();
 	_InstancedLeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	_InstancedLeafMaterial->SetTexture(textureLeaf);
+	_InstancedLeafMaterial->SetTexture(textureLeaf, TextureType::DIFFUSE);
 	_InstancedLeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	Enable();
 }

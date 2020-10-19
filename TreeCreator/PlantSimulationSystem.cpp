@@ -485,9 +485,13 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 }
 #pragma endregion
 #pragma region Growth
-Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters treeParameters, glm::vec3 position, bool enabled)
+Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters treeParameters, glm::vec3 position, bool enabled)
 {
-	auto treeEntity = TreeManager::CreateTree(treeSurfaceMaterial, treeLeafMaterial, treeLeafMesh);
+	auto mat = std::make_shared<Material>();
+	mat->SetTexture(_DefaultTreeSurfaceTex1, TextureType::DIFFUSE);
+	mat->SetTexture(_DefaultTreeSurfaceNTex1, TextureType::NORMAL);
+	mat->SetTexture(_DefaultTreeSurfaceSTex1, TextureType::SPECULAR);
+	auto treeEntity = TreeManager::CreateTree(mat, treeLeafMaterial, treeLeafMesh);
 	Entity internode = TreeManager::CreateInternode(EntityManager::GetComponentData<TreeIndex>(treeEntity), treeEntity);
 #pragma region Position & Style
 	Translation t;
@@ -1191,28 +1195,20 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 		_TempImportFilePath[i] = 0;
 	}
 
-	_DefaultTreeSurfaceMaterial1 = std::make_shared<Material>();
-	_DefaultTreeSurfaceMaterial1->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureDiffuse1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/brown.png"), TextureType::DIFFUSE);
-	auto textureNormal1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_normal.jpg"), TextureType::NORMAL);
-	_DefaultTreeSurfaceMaterial1->SetTexture(textureDiffuse1);
-	_DefaultTreeSurfaceMaterial1->SetTexture(textureNormal1);
-
-	_DefaultTreeSurfaceMaterial2 = std::make_shared<Material>();
-	_DefaultTreeSurfaceMaterial2->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureDiffuse2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"), TextureType::DIFFUSE);
-	auto textureNormal2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"), TextureType::NORMAL);
-	_DefaultTreeSurfaceMaterial2->SetTexture(textureDiffuse2);
-	_DefaultTreeSurfaceMaterial2->SetTexture(textureNormal2);
-
+	_DefaultTreeSurfaceTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_baseColor.jpg"));
+	_DefaultTreeSurfaceNTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_normal.jpg"));
+	_DefaultTreeSurfaceSTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg"));
+	_DefaultTreeSurfaceTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"));
+	_DefaultTreeSurfaceNTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
+	
 	_DefaultTreeLeafMaterial1 = std::make_shared<Material>();
 	_DefaultTreeLeafMaterial1->SetMaterialProperty("material.shininess", 32.0f);
 	_DefaultTreeLeafMaterial1->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	auto textureDiffuseLeaf1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/Leaf/PrunusAvium/A/level0.png"), TextureType::DIFFUSE);
+	auto textureDiffuseLeaf1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/Leaf/PrunusAvium/A/level0.png"));
 	//textureDiffuseLeaf1->LoadTexture(FileIO::GetResourcePath("Textures/green.png"), "");
-	auto textureNormalLeaf1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"), TextureType::NORMAL);
-	_DefaultTreeLeafMaterial1->SetTexture(textureDiffuseLeaf1);
-	//_DefaultTreeLeafMaterial1->Textures2Ds()->push_back(textureNormalLeaf1);
+	auto textureNormalLeaf1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
+	_DefaultTreeLeafMaterial1->SetTexture(textureDiffuseLeaf1, TextureType::DIFFUSE);
+	//_DefaultTreeLeafMaterial1->Textures2Ds()->push_back(textureNormalLeaf1, TextureType::NORMAL);
 
 	std::vector<Vertex> leafVertices;
 	std::vector<unsigned> leafIndices;
@@ -1277,7 +1273,7 @@ void PlantSimulationSystem::CreateDefaultTree()
 {
 	TreeParameters tps;
 	LoadDefaultTreeParameters(1, tps);
-	CreateTree(_DefaultTreeSurfaceMaterial1, _DefaultTreeLeafMaterial1, _DefaultTreeLeafMesh, tps, glm::vec3(0.0f), true);
+	CreateTree(_DefaultTreeLeafMaterial1, _DefaultTreeLeafMesh, tps, glm::vec3(0.0f), true);
 }
 void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset, TreeParameters& tps)
 {
@@ -1781,7 +1777,7 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 				if (ImGui::Button("OK", ImVec2(120, 0))) {
 					//Create tree here.
 					for (auto i = 0; i < _NewTreeAmount; i++) {
-						CreateTree(_DefaultTreeSurfaceMaterial1, _DefaultTreeLeafMaterial1, _DefaultTreeLeafMesh, _NewTreeParameters[i], _NewTreePositions[i], true);
+						CreateTree(_DefaultTreeLeafMaterial1, _DefaultTreeLeafMesh, _NewTreeParameters[i], _NewTreePositions[i], true);
 					}
 					ImGui::CloseCurrentPopup();
 				}
