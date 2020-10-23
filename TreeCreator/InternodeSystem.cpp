@@ -27,7 +27,7 @@ void TreeUtilities::InternodeSystem::RaySelection()
 	std::mutex writeMutex;
 	float minDistance = FLT_MAX;
 	auto cameraLtw = Application::GetMainCameraEntity().GetComponentData<LocalToWorld>();
-	const Ray cameraRay = Application::GetMainCameraComponent()->Value->ScreenPointToRay(
+	const Ray cameraRay = Application::GetMainCameraComponent()->get()->Value->ScreenPointToRay(
 		cameraLtw, InputManager::GetMouseScreenPosition());
 	EntityManager::ForEach<LocalToWorld, InternodeInfo>(_InternodeQuery, [this, cameraLtw, &writeMutex, &minDistance, cameraRay](int i, Entity entity, LocalToWorld* ltw, InternodeInfo* info)
 		{
@@ -47,7 +47,7 @@ void TreeUtilities::InternodeSystem::RaySelection()
 	{
 		if (!_RaySelectedEntity.IsNull())
 		{
-			EntityEditorSystem::SetSelectedEntity(_RaySelectedEntity);
+			EditorManager::SetSelectedEntity(_RaySelectedEntity);
 		}
 	}
 }
@@ -70,18 +70,18 @@ void TreeUtilities::InternodeSystem::Update()
 	_InternodeLTWList.clear();
 	if (_ConfigFlags & InternodeSystem_DrawInternodes) {
 		_InternodeQuery.ToComponentDataArray(_InternodeLTWList);
-		if (!_InternodeLTWList.empty())RenderManager::DrawGizmoCubeInstanced(glm::vec4(0, 0, 1, 1), (glm::mat4*)_InternodeLTWList.data(), _InternodeLTWList.size(), Application::GetMainCameraComponent()->Value.get(), glm::mat4(1.0f), 0.02f);
+		if (!_InternodeLTWList.empty())RenderManager::DrawGizmoCubeInstanced(glm::vec4(0, 0, 1, 1), (glm::mat4*)_InternodeLTWList.data(), _InternodeLTWList.size(), Application::GetMainCameraComponent()->get()->Value.get(), glm::mat4(1.0f), 0.02f);
 	}
 	if (_ConfigFlags & InternodeSystem_DrawConnections) {
 		_ConnectionList.clear();
 		_InternodeQuery.ToComponentDataArray(_ConnectionList);
-		if (!_ConnectionList.empty())RenderManager::DrawGizmoMeshInstanced(Default::Primitives::Cylinder.get(), glm::vec4(0.6f, 0.3f, 0, 1), (glm::mat4*)_ConnectionList.data(), _ConnectionList.size(), Application::GetMainCameraComponent()->Value.get(), glm::mat4(1.0f), 1.0f);
+		if (!_ConnectionList.empty())RenderManager::DrawGizmoMeshInstanced(Default::Primitives::Cylinder.get(), glm::vec4(0.6f, 0.3f, 0, 1), (glm::mat4*)_ConnectionList.data(), _ConnectionList.size(), Application::GetMainCameraComponent()->get()->Value.get(), glm::mat4(1.0f), 1.0f);
 	}
 	DrawGui();
 	RaySelection();
 	if(!_RaySelectedEntity.IsNull())
 	{
-		RenderManager::DrawGizmoPoint(glm::vec4(1, 1, 0, 1), Application::GetMainCameraComponent()->Value.get(),
+		RenderManager::DrawGizmoPoint(glm::vec4(1, 1, 0, 1), Application::GetMainCameraComponent()->get()->Value.get(),
 			_RaySelectedEntity.GetComponentData<LocalToWorld>().Value, 0.1f);
 	}
 }

@@ -60,7 +60,7 @@ namespace TreeUtilities {
 		void ApplyLocalTransform(Entity& treeEntity) const;
 		void CalculateDirectGravityForce(Entity& treeEntity, float gravity) const;
 		void BackPropagateForce(Entity& internode, float fixedPropagationCoefficient);
-		void CalculateCrownShyness();
+		void CalculateCrownShyness(float detectionDistance = 5.0f);
 		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo, int pruneReason) const;
 		static inline void TreeParameterImportHelper(std::ifstream& ifs, TreeParameters& treeParameters);
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);

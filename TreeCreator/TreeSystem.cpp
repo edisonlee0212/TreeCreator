@@ -9,7 +9,7 @@ void TreeUtilities::TreeSystem::DrawGUI()
 		ImGui::Separator();
 	}
 	ImGui::End();
-	auto _SelectedTreeEntity = EntityEditorSystem::GetSelectedEntity();
+	auto _SelectedTreeEntity = EditorManager::GetSelectedEntity();
 
 	ImGui::Begin("Tree Inspector");
 	

@@ -46,7 +46,7 @@ int main()
 #pragma endregion
 #pragma region Preparations
 	Application::SetTimeStep(0.016f);
-	World* world = Application::GetWorld();
+	auto world = Application::GetWorld();
 	WorldTime* time = world->Time();
 
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());
@@ -96,7 +96,7 @@ int main()
 		Entity plant2 = srSys->ImportPlant("skeleton_procedural_2.txt", 0.01f, "Sorghum 2");
 		Entity plant3 = srSys->ImportPlant("skeleton_procedural_3.txt", 0.01f, "Sorghum 3");
 		Entity plant4 = srSys->ImportPlant("skeleton_procedural_4.txt", 0.01f, "Sorghum 4");
-		srSys->GenerateMeshForAllPlants(5, 5);
+		srSys->GenerateMeshForAllPlants(6, 9);
 		srSys->ExportPlant(plant1, "plant1");
 		srSys->ExportPlant(plant2, "plant2");
 		srSys->ExportPlant(plant3, "plant3");

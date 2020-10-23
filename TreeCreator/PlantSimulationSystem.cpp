@@ -40,12 +40,13 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 		}
 	}
 	if (growed == false) {
-		if(_Growing)
+		if (_Growing)
 		{
 			_Growing = false;
 		}
-		
-	}else
+
+	}
+	else
 	{
 		TreeManager::CalculateInternodeIllumination();
 		for (auto& treeEntity : trees)
@@ -221,20 +222,21 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 	_NewTreeParameters.resize(_NewTreeAmount);
 	_NewTreePositions.resize(_NewTreeAmount);
 	int i = 0;
-	for(const auto& instanceNode : doc.child("TreeSettings"))
+	for (const auto& instanceNode : doc.child("TreeSettings"))
 	{
 		const auto& positionNode = instanceNode.child("Position");
 		_NewTreePositions[i].x = std::atof(positionNode.child("x").first_child().value());
 		_NewTreePositions[i].y = std::atof(positionNode.child("y").first_child().value());
 		_NewTreePositions[i].z = std::atof(positionNode.child("z").first_child().value());
 		const auto& treeParametersNode = instanceNode.child("TreeParameters");
-		for(const auto& parameterNode : treeParametersNode.children())
+		for (const auto& parameterNode : treeParametersNode.children())
 		{
 			std::string name = parameterNode.name();
-			if(name.compare("Seed") == 0)
+			if (name.compare("Seed") == 0)
 			{
 				_NewTreeParameters[i].Seed = std::atoi(parameterNode.first_child().value());
-			}else if(name.compare("LateralBudPerNode") == 0)
+			}
+			else if (name.compare("LateralBudPerNode") == 0)
 			{
 				_NewTreeParameters[i].LateralBudPerNode = std::atoi(parameterNode.first_child().value());
 			}
@@ -336,35 +338,39 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 			}
 			else if (name.compare("GravityBendingStrength") == 0)
 			{
-			_NewTreeParameters[i].GravityBendingStrength = std::atof(parameterNode.first_child().value());
+				_NewTreeParameters[i].GravityBendingStrength = std::atof(parameterNode.first_child().value());
 			}
 			else if (name.compare("ApicalBudLightingFactor") == 0)
 			{
-			_NewTreeParameters[i].ApicalBudLightingFactor = std::atof(parameterNode.first_child().value());
+				_NewTreeParameters[i].ApicalBudLightingFactor = std::atof(parameterNode.first_child().value());
 			}
 			else if (name.compare("LateralBudLightingFactor") == 0)
 			{
-			_NewTreeParameters[i].LateralBudLightingFactor = std::atof(parameterNode.first_child().value());
+				_NewTreeParameters[i].LateralBudLightingFactor = std::atof(parameterNode.first_child().value());
 			}
 			else if (name.compare("SaggingFactor") == 0)
 			{
-			_NewTreeParameters[i].SaggingFactor = std::atof(parameterNode.first_child().value());
+				_NewTreeParameters[i].SaggingFactor = std::atof(parameterNode.first_child().value());
 			}
 			else if (name.compare("SaggingForceBackPropagateFixedCoefficient") == 0)
 			{
-			_NewTreeParameters[i].SaggingForceBackPropagateFixedCoefficient = std::atof(parameterNode.first_child().value());
+				_NewTreeParameters[i].SaggingForceBackPropagateFixedCoefficient = std::atof(parameterNode.first_child().value());
 			}
 			else if (name.compare("EndNodeThickness") == 0)
 			{
-			_NewTreeParameters[i].EndNodeThickness = std::atof(parameterNode.first_child().value());
+				_NewTreeParameters[i].EndNodeThickness = std::atof(parameterNode.first_child().value());
 			}
 			else if (name.compare("ThicknessControlFactor") == 0)
 			{
-			_NewTreeParameters[i].ThicknessControlFactor = std::atof(parameterNode.first_child().value());
+				_NewTreeParameters[i].ThicknessControlFactor = std::atof(parameterNode.first_child().value());
 			}
 			else if (name.compare("CrownShynessBase") == 0)
 			{
-			_NewTreeParameters[i].CrownShynessBase = std::atof(parameterNode.first_child().value());
+				_NewTreeParameters[i].CrownShynessBase = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("CrownShynessFactor") == 0)
+			{
+				_NewTreeParameters[i].CrownShynessFactor = std::atof(parameterNode.first_child().value());
 			}
 		}
 		i++;
@@ -451,7 +457,7 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 	output += "\t\t\t<ApicalDominanceDistanceFactor>";  output += std::to_string(treeParameters.ApicalDominanceDistanceFactor) + "</ApicalDominanceDistanceFactor>\n";
 	output += "\t\t\t<ApicalDominanceAgeFactor>";  output += std::to_string(treeParameters.ApicalDominanceAgeFactor) + "</ApicalDominanceAgeFactor>\n";
 	output += "\t\t\t<GrowthRate>"; output += std::to_string(treeParameters.GrowthRate) + "</GrowthRate>\n";
-	output += "\t\t\t<InternodeNodeLengthBase>";  output += std::to_string(treeParameters.InternodeLengthBase) + "</InternodeLengthBase>\n";
+	output += "\t\t\t<InternodeLengthBase>";  output += std::to_string(treeParameters.InternodeLengthBase) + "</InternodeLengthBase>\n";
 	output += "\t\t\t<InternodeLengthAgeFactor>";  output += std::to_string(treeParameters.InternodeLengthAgeFactor) + "</InternodeLengthAgeFactor>\n";
 	output += "\t\t\t<ApicalControlBase>";  output += std::to_string(treeParameters.ApicalControlBase) + "</ApicalControlBase>\n";
 	output += "\t\t\t<ApicalControlAgeFactor>";  output += std::to_string(treeParameters.ApicalControlAgeFactor) + "</ApicalControlAgeFactor>\n";
@@ -478,7 +484,7 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 	output += "\t\t\t<ThicknessControlFactor>"; output += std::to_string(treeParameters.ThicknessControlFactor) + "</ThicknessControlFactor>\n";
 
 	output += "\t\t\t<CrownShynessBase>"; output += std::to_string(treeParameters.CrownShynessBase) + "</CrownShynessBase>\n";
-
+	output += "\t\t\t<CrownShynessFactor>"; output += std::to_string(treeParameters.CrownShynessFactor) + "</CrownShynessFactor>\n";
 	output += "\t\t</TreeParameters>\n";
 	ofs.write(output.c_str(), output.size());
 	ofs.flush();
@@ -573,7 +579,8 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 		else {
 			budKillProbability = treeParameters.LateralBudKillProbability;
 		}
-		if (glm::linearRand(0.0f, 1.0f) < budKillProbability) {
+		float randomProb = glm::linearRand(0.0f, 1.0f);
+		if (randomProb < budKillProbability) {
 			DeactivateBud(internodeInfo, bud);
 			continue;
 		}
@@ -588,7 +595,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 		if (illumination < 1.0f) {
 			budGrowProbability *= glm::pow(illumination, bud.IsApical ? treeParameters.ApicalBudLightingFactor : treeParameters.LateralBudLightingFactor);
 		}
-
+		budGrowProbability *= internodeInfo.CrownShyness;
 		// now check whether the bud is going to flush or not
 		bool flush = treeAge.Value < 2 ? true : budGrowProbability >= glm::linearRand(0.0f, 1.0f);
 #pragma endregion
@@ -749,45 +756,60 @@ void TreeUtilities::PlantSimulationSystem::DeactivateBud(InternodeInfo& internod
 #pragma endregion
 #pragma region PostProcessing
 #pragma region Pruning
-void PlantSimulationSystem::CalculateCrownShyness()
+void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 {
 	std::vector<LocalToWorld> internodesLTWs;
 	std::vector<TreeIndex> internodesTreeIndices;
 	std::vector<TreeIndex> treeIndices;
 	std::vector<TreeParameters> treeParameters;
-	_InternodeQuery.ToComponentDataArray(internodesLTWs);
-	_InternodeQuery.ToComponentDataArray(internodesTreeIndices);
+	_InternodeQuery.ToComponentDataArray<LocalToWorld, InternodeInfo>(internodesLTWs, [detectionDistance](InternodeInfo& info)
+	{
+		return info.DistanceToBranchEnd <= detectionDistance;
+	});
+	_InternodeQuery.ToComponentDataArray<TreeIndex, InternodeInfo>(internodesTreeIndices, [detectionDistance](InternodeInfo& info)
+	{
+		return info.DistanceToBranchEnd <= detectionDistance;
+	});
 
 	_TreeQuery.ToComponentDataArray(treeIndices);
 	_TreeQuery.ToComponentDataArray(treeParameters);
-	EntityManager::ForEach<LocalToWorld, InternodeInfo, TreeIndex>(_InternodeQuery, [&treeIndices, &treeParameters, &internodesLTWs, &internodesTreeIndices, this](int i, Entity branchNode, LocalToWorld* ltw, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<LocalToWorld, InternodeInfo, TreeIndex>(_InternodeQuery, [detectionDistance, &treeIndices, &treeParameters, &internodesLTWs, &internodesTreeIndices, this](int i, Entity branchNode, LocalToWorld* ltw, InternodeInfo* info, TreeIndex* index)
 		{
-			if (info->Pruned) return;
-			if (!info->IsActivatedEndNode) return;
-			for(size_t ii = 0; ii < treeIndices.size(); ii++)
+			if (info->Pruned) {
+				info->CrownShyness = 1.0f;
+				return;
+			}
+			if (info->DistanceToBranchEnd > detectionDistance) {
+				info->CrownShyness = 1.0f;
+				return;
+			}
+			//if (!info->IsActivatedEndNode) return;
+			float crownShynessLimit = 0;
+			float crownShynessFactor = 1.0f;
+			for (size_t ii = 0; ii < treeIndices.size(); ii++)
 			{
-				if(treeIndices[ii].Value == index->Value)
+				if (treeIndices[ii].Value == index->Value)
 				{
-					info->CrownShyness = treeParameters[ii].CrownShynessBase;
+					crownShynessLimit = treeParameters[ii].CrownShynessBase;
+					crownShynessFactor = treeParameters[ii].CrownShynessFactor;
 					break;
 				}
 			}
-			if (info->CrownShyness <= 0) return;
+			if (crownShynessLimit <= 0) return;
+			float minDistance = FLT_MAX;
 			for (size_t bi = 0; bi < internodesLTWs.size(); bi++)
 			{
 				if (internodesTreeIndices[bi].Value != index->Value)
 				{
 					auto position1 = glm::vec3(ltw->Value[3].x, ltw->Value[3].y, ltw->Value[3].z);
 					auto position2 = glm::vec3(internodesLTWs[bi].Value[3].x, internodesLTWs[bi].Value[3].y, internodesLTWs[bi].Value[3].z);
-
-					if (glm::distance(position1, position2) < info->CrownShyness)
-					{
-						info->Pruned = true;
-						info->PruneReason = 4;
-						info->IsActivatedEndNode = false;
-					}
+					float d = glm::distance(position1, position2);
+					if (minDistance > d) minDistance = d;
 				}
 			}
+			minDistance /= crownShynessLimit;
+			if (minDistance < 1.0f) minDistance = 1.0f;
+			info->CrownShyness = glm::pow(1.0f - 1.0f / minDistance, crownShynessFactor);
 		}
 	);
 }
@@ -856,7 +878,7 @@ void PlantSimulationSystem::EvaluateRemoval(Entity& internode, TreeParameters& t
 			{
 				EntityManager::DeleteEntity(child);
 			}
-			EvaluateRemoval(child, treeParameters);
+			else EvaluateRemoval(child, treeParameters);
 		}
 	);
 }
@@ -864,15 +886,15 @@ void PlantSimulationSystem::EvaluateRemoval(Entity& internode, TreeParameters& t
 #pragma region Physics
 void TreeUtilities::PlantSimulationSystem::CalculatePhysics(Entity tree)
 {
-		Rotation rotation = EntityManager::GetComponentData<Rotation>(tree);
-		TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
-		if (EntityManager::GetChildrenAmount(tree) == 0) return;
-		Entity rootInternode = EntityManager::GetChildren(tree).at(0);
-		CalculateDirectGravityForce(tree, _Gravity);
-		BackPropagateForce(rootInternode, treeParameters.SaggingForceBackPropagateFixedCoefficient);
-		glm::mat4 transform = glm::identity<glm::mat4>(); //glm::translate(glm::mat4(1.0f), glm::vec3(0.0f))* glm::mat4_cast(glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)))* glm::scale(glm::vec3(1.0f));
-		UpdateLocalTransform(rootInternode, treeParameters, transform, rotation.Value);
-		ApplyLocalTransform(tree);
+	Rotation rotation = EntityManager::GetComponentData<Rotation>(tree);
+	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
+	if (EntityManager::GetChildrenAmount(tree) == 0) return;
+	Entity rootInternode = EntityManager::GetChildren(tree).at(0);
+	CalculateDirectGravityForce(tree, _Gravity);
+	BackPropagateForce(rootInternode, treeParameters.SaggingForceBackPropagateFixedCoefficient);
+	glm::mat4 transform = glm::identity<glm::mat4>(); //glm::translate(glm::mat4(1.0f), glm::vec3(0.0f))* glm::mat4_cast(glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)))* glm::scale(glm::vec3(1.0f));
+	UpdateLocalTransform(rootInternode, treeParameters, transform, rotation.Value);
+	ApplyLocalTransform(tree);
 }
 void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntity) const
 {
@@ -1016,7 +1038,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 
 	internodeInfo.GlobalTransform = parentLTW * internodeInfo.LocalTransform;
 
-	
+
 
 	float mainChildThickness = 0;
 	InternodeInfo mainChildInfo;
@@ -1064,7 +1086,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& inter
 	internodeInfo.AccumulatedLight = internodeIllumination.Value;
 	internodeInfo.AccumulatedLength = internodeInfo.DistanceToParent;
 	internodeInfo.AccumulatedActivatedBudsAmount = internodeInfo.ActivatedBudsAmount;
-	
+
 	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
 	internodeData->LeafLocalTransforms.clear();
 	float illumination = EntityManager::GetComponentData<Illumination>(internode).Value;
@@ -1108,7 +1130,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& inter
 			internodeInfo.AccumulatedActivatedBudsAmount += childNodeInfo.AccumulatedActivatedBudsAmount;
 		}
 	);
-	
+
 
 	EntityManager::SetComponentData(internode, internodeInfo);
 }
@@ -1148,8 +1170,8 @@ void PlantSimulationSystem::BuildHullForTree(Entity& tree)
 	//psr.PoissonConstruct(positions, normals, treeInfo->ConvexHull);
 	//psr.AdvancingFrontConstruct(positions, treeInfo->ConvexHull);
 	psr.ScaleSpaceConstruct(positions, treeInfo->ConvexHull);
-	
-	
+
+
 	/*
 	quickhull::QuickHull<float> qh; // Could be double as well
 	std::vector<quickhull::Vector3<float>> pointCloud;
@@ -1200,7 +1222,7 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultTreeSurfaceSTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg"));
 	_DefaultTreeSurfaceTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"));
 	_DefaultTreeSurfaceNTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
-	
+
 	_DefaultTreeLeafMaterial1 = std::make_shared<Material>();
 	_DefaultTreeLeafMaterial1->SetMaterialProperty("material.shininess", 32.0f);
 	_DefaultTreeLeafMaterial1->SetProgram(Default::GLPrograms::StandardInstancedProgram);
@@ -1236,7 +1258,7 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultTreeLeafMesh = std::make_shared<Mesh>();
 	_DefaultTreeLeafMesh->SetVertices((unsigned)VertexAttribute::Position | (unsigned)VertexAttribute::TexCoord0,
 		leafVertices, leafIndices);
-	
+
 	//_DefaultTreeLeafMesh = Default::Primitives::Quad;
 
 	_Gravity = 1.0f;
@@ -1262,7 +1284,7 @@ void TreeUtilities::PlantSimulationSystem::Update()
 		{
 			auto data = EntityManager::GetSharedComponent<TreeData>(trees[i]);
 			if (data->ConvexHull != nullptr) {
-				RenderManager::DrawGizmoMesh(data->ConvexHull.get(), glm::vec4(0.5, 0.5, 0.5, 1.0), Application::GetMainCameraComponent()->Value.get(), ltws[i].Value);
+				RenderManager::DrawGizmoMesh(data->ConvexHull.get(), glm::vec4(0.5, 0.5, 0.5, 1.0), Application::GetMainCameraComponent()->get()->Value.get(), ltws[i].Value);
 			}
 		}
 
@@ -1316,6 +1338,9 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.65f;
 		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+
+		tps.CrownShynessBase = 1.0f;
+		tps.CrownShynessFactor = 1.0f;
 #pragma endregion
 		break;
 	case 2:
@@ -1353,6 +1378,8 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
 		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		tps.CrownShynessBase = 1.0f;
+		tps.CrownShynessFactor = 1.0f;
 		break;
 	case 3:
 		//F6a
@@ -1390,6 +1417,8 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
 		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		tps.CrownShynessBase = 1.0f;
+		tps.CrownShynessFactor = 1.0f;
 		break;
 	case 4:
 		//F6b
@@ -1427,6 +1456,8 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
 		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		tps.CrownShynessBase = 1.0f;
+		tps.CrownShynessFactor = 1.0f;
 		break;
 
 	case 5:
@@ -1465,6 +1496,8 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
 		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		tps.CrownShynessBase = 1.0f;
+		tps.CrownShynessFactor = 1.0f;
 		break;
 	case 6:
 		//F6d
@@ -1502,6 +1535,8 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
 		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		tps.CrownShynessBase = 1.0f;
+		tps.CrownShynessFactor = 1.0f;
 		break;
 	case 7:
 		//F6e
@@ -1539,6 +1574,8 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
 		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		tps.CrownShynessBase = 1.0f;
+		tps.CrownShynessFactor = 1.0f;
 		break;
 	case 8:
 		//F6f
@@ -1576,6 +1613,8 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
 		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
+		tps.CrownShynessBase = 1.0f;
+		tps.CrownShynessFactor = 1.0f;
 		break;
 	}
 }
@@ -1759,7 +1798,7 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 
 					ImGui::InputFloat2("Thickness End/Fac", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].EndNodeThickness);
 
-					ImGui::InputFloat("Crown Shyness Base", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].CrownShynessBase);
+					ImGui::InputFloat2("Crown Shyness Base/Factor", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].CrownShynessBase);
 #pragma endregion
 
 				}

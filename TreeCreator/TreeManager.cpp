@@ -191,7 +191,7 @@ void TreeUtilities::TreeManager::Init()
 
 	_LightEstimator = new LightEstimator();
 
-	EntityEditorSystem::AddComponentInspector<TreeAge>(
+	EditorManager::AddComponentInspector<TreeAge>(
 		[](ComponentBase* data)
 		{
 			ImGui::Text(("Current age: " + std::to_string(*(int*)data)).c_str());
@@ -199,14 +199,14 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 	
-	EntityEditorSystem::AddComponentInspector<TreeIndex>(
+	EditorManager::AddComponentInspector<TreeIndex>(
 		[](ComponentBase* data)
 		{
 			ImGui::Text(("Value: " + std::to_string(*(int*)data)).c_str());
 		}
 	);
 
-	EntityEditorSystem::AddComponentInspector<TreeParameters>(
+	EditorManager::AddComponentInspector<TreeParameters>(
 		[](ComponentBase* data)
 		{
 			auto tps = static_cast<TreeParameters*>(data);
@@ -232,7 +232,7 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 
-	EntityEditorSystem::AddComponentInspector<InternodeInfo>(
+	EditorManager::AddComponentInspector<InternodeInfo>(
 		[](ComponentBase* data)
 		{
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
@@ -240,7 +240,7 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 
-	EntityEditorSystem::AddComponentInspector<InternodeInfo>(
+	EditorManager::AddComponentInspector<InternodeInfo>(
 		[](ComponentBase* data)
 		{
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
@@ -276,7 +276,7 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 
-	EntityEditorSystem::AddComponentInspector<Illumination>(
+	EditorManager::AddComponentInspector<Illumination>(
 		[](ComponentBase* data)
 		{
 			auto illumination = static_cast<Illumination*>(data);
@@ -284,7 +284,7 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 
-	EntityEditorSystem::AddComponentInspector<TreeInfo>(
+	EditorManager::AddComponentInspector<TreeInfo>(
 		[](ComponentBase* data)
 		{
 			auto info = static_cast<TreeInfo*>(data);
@@ -295,7 +295,7 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 	
-	EntityEditorSystem::AddComponentInspector<Gravity>(
+	EditorManager::AddComponentInspector<Gravity>(
 		[](ComponentBase* data)
 		{
 			auto info = static_cast<Gravity*>(data);

@@ -19,7 +19,7 @@
 			<ApicalDominanceDistanceFactor>0.130000</ApicalDominanceDistanceFactor>
 			<ApicalDominanceAgeFactor>0.820000</ApicalDominanceAgeFactor>
 			<GrowthRate>0.980000</GrowthRate>
-			<InternodeLengthBase>1.020000</InternodeLengthBase>
+      <InternodeLengthBase>1.020000</InternodeLengthBase>
 			<InternodeLengthAgeFactor>0.970000</InternodeLengthAgeFactor>
 			<ApicalControlBase>2.400000</ApicalControlBase>
 			<ApicalControlAgeFactor>0.850000</ApicalControlAgeFactor>
@@ -40,6 +40,7 @@
 			<EndNodeThickness>0.010000</EndNodeThickness>
 			<ThicknessControlFactor>0.700000</ThicknessControlFactor>
 			<CrownShynessBase>2.000000</CrownShynessBase>
+			<CrownShynessFactor>1.000000</CrownShynessFactor>
 		</TreeParameters>
 	</Instance>
 	<Instance index="1">
@@ -62,7 +63,7 @@
 			<ApicalDominanceDistanceFactor>0.130000</ApicalDominanceDistanceFactor>
 			<ApicalDominanceAgeFactor>0.820000</ApicalDominanceAgeFactor>
 			<GrowthRate>0.980000</GrowthRate>
-			<InternodeLengthBase>1.020000</InternodeLengthBase>
+      <InternodeLengthBase>1.020000</InternodeLengthBase>
 			<InternodeLengthAgeFactor>0.970000</InternodeLengthAgeFactor>
 			<ApicalControlBase>2.400000</ApicalControlBase>
 			<ApicalControlAgeFactor>0.850000</ApicalControlAgeFactor>
@@ -83,6 +84,7 @@
 			<EndNodeThickness>0.010000</EndNodeThickness>
 			<ThicknessControlFactor>0.700000</ThicknessControlFactor>
 			<CrownShynessBase>2.000000</CrownShynessBase>
+			<CrownShynessFactor>1.000000</CrownShynessFactor>
 		</TreeParameters>
 	</Instance>
 </TreeSettings>

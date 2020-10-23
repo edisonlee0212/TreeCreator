@@ -178,6 +178,7 @@ namespace TreeUtilities {
     	
 #pragma region CrownShyness
         float CrownShynessBase;
+        float CrownShynessFactor = 1.0f;
 #pragma endregion
 
         

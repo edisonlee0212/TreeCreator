@@ -93,7 +93,7 @@ namespace TreeUtilities {
 		// Note: read_xyz_points_and_normals() requires an iterator over points
 		// + property maps to access each point's position and normal.
 		
-		void PoissonConstruct(std::vector<glm::vec3>& positions, std::vector<glm::vec3>& normals, std::shared_ptr<Mesh> mesh);
+		//void PoissonConstruct(std::vector<glm::vec3>& positions, std::vector<glm::vec3>& normals, std::shared_ptr<Mesh> mesh);
 		void AdvancingFrontConstruct(std::vector<glm::vec3>& positions, std::shared_ptr<Mesh> mesh);
         void ScaleSpaceConstruct(std::vector<glm::vec3>& positions, std::shared_ptr<Mesh> mesh);
 	};

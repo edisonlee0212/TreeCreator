@@ -61,7 +61,7 @@ namespace SorghumReconstruction {
 				{
 					compressFactor = 0.0f;
 				}
-				return center - Radius * direction - actualHeight * compressFactor * Up + midRibHeight * Up;
+				return center - Radius * direction - actualHeight * compressFactor * Up/* + midRibHeight * Up*/;
 			}
 			auto direction = glm::rotate(Up, glm::radians(angle), Front);
 			return Position - Radius * direction;

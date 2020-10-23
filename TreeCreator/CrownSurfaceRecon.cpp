@@ -1,5 +1,5 @@
 #include "CrownSurfaceRecon.h"
-
+/*
 void TreeUtilities::CrownSurfaceRecon::PoissonConstruct(std::vector<glm::vec3>& positions, std::vector<glm::vec3>& normals, std::shared_ptr<Mesh> mesh)
 {
 	PointList points;
@@ -20,7 +20,7 @@ void TreeUtilities::CrownSurfaceRecon::PoissonConstruct(std::vector<glm::vec3>& 
 		return;
 	// Computes average spacing
 	FT average_spacing = CGAL::compute_average_spacing<CGAL::Sequential_tag>
-		(points, 6 /* knn = 1 ring */,
+		(points, 6  knn = 1 ring
 			CGAL::parameters::point_map(Point_map()));
 	// Gets one point inside the implicit surface
 	// and computes implicit function bounding sphere radius.
@@ -71,7 +71,7 @@ void TreeUtilities::CrownSurfaceRecon::PoissonConstruct(std::vector<glm::vec3>& 
 	}
 	mesh->SetVertices(17, vertices, indices, true);
 }
-
+*/
 void TreeUtilities::CrownSurfaceRecon::AdvancingFrontConstruct(std::vector<glm::vec3>& positions,
 	std::shared_ptr<Mesh> mesh)
 {
