@@ -55,6 +55,7 @@ int main()
 	Translation t;
 	t.Value = glm::vec3(0, 6, 20);
 	Application::GetMainCameraEntity().SetComponentData(t);
+	Application::GetMainCameraComponent()->get()->DrawSkyBox = false;
 	ccs->SetVelocity(15.0f);
 	InitGround();
 #pragma endregion
@@ -89,7 +90,7 @@ int main()
 #pragma endregion
 	auto pss = InitPlantSimulationSystem();
 
-	const bool enableSorghumRecon = true;
+	const bool enableSorghumRecon = false;
 	if (enableSorghumRecon) {
 		auto srSys = InitSorghumReconstructionSystem();
 		Entity plant1 = srSys->ImportPlant("skeleton_procedural_1.txt", 0.01f, "Sorghum 1");
@@ -234,9 +235,9 @@ void InitGround() {
 	mat->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	
 	auto textureDiffuse = AssetManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg");
-	mat->SetTexture(textureDiffuse, TextureType::DIFFUSE);
+	mat->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
 	auto textureNormal = AssetManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg");
-	mat->SetTexture(textureNormal, TextureType::NORMAL);
+	//mat->SetTexture(textureNormal, TextureType::NORMAL);
 	
 	mat->SetMaterialProperty("material.shininess", 32.0f);
 	auto instancedMeshRenderer = std::make_shared<InstancedMeshRenderer>();

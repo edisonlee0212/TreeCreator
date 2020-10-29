@@ -13,9 +13,9 @@ namespace TreeUtilities {
 		public SystemBase
 	{
 #pragma region GUI Related
-		float _DirectionPruningLimitAngle = 70;
+		float _DirectionPruningLimitAngle = 60;
 		bool _DisplayConvexHull = false;
-		bool _EnableDirectionPruning = false;
+		bool _EnableDirectionPruning = true;
 		bool _GravityChanged = false;
 		bool _DisplayFullParam = true;
 		char _CurrentWorkingDir[256] = {};
@@ -48,12 +48,11 @@ namespace TreeUtilities {
 
 		float GetApicalControl(std::shared_ptr<TreeData>& treeInfo, InternodeInfo& internodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
 		inline void DrawGui();
-		void UpdateDistanceToBranchEnd(Entity& internode, TreeParameters& treeParameters);
+		void UpdateDistanceToBranchEnd(Entity& internode, TreeParameters& treeParameters, int treeAge);
 		void UpdateDistanceToBranchStart(Entity& internode);
 		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation);
 		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, std::vector<glm::mat4>& leafTransforms);
 		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
-		static void DeactivateBud(InternodeInfo& internodeInfo, Bud& bud);
 		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
 		void EvaluateRemoval(Entity& internode, TreeParameters& treeParameters);
 		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);

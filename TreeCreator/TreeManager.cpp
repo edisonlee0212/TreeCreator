@@ -28,6 +28,13 @@ std::size_t InternodeData::GetHashCode()
 void InternodeData::OnGui()
 {
 	ImGui::Text(("Leaf count: " + std::to_string(LeafLocalTransforms.size())).c_str());
+	ImGui::Separator();
+	for(int i = 0; i < Buds.size(); i++)
+	{
+		ImGui::Text(("Bud " + std::to_string(i)).c_str());
+		ImGui::Text(Buds[i].IsApical ? "Apical" : "Lateral");
+		ImGui::Spacing();
+	}
 }
 
 std::size_t TreeData::GetHashCode()
@@ -244,26 +251,41 @@ void TreeUtilities::TreeManager::Init()
 		[](ComponentBase* data)
 		{
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
+			ImGui::Text(("StartAge: " + std::to_string(internodeInfo->StartAge)).c_str());
 			ImGui::Text(("Level: " + std::to_string(internodeInfo->Level)).c_str());
+			ImGui::Spacing();
 			ImGui::Text(("DistanceToParent: " + std::to_string(internodeInfo->DistanceToParent)).c_str());
 			ImGui::Text(("DistanceToBranchEnd: " + std::to_string(internodeInfo->DistanceToBranchEnd)).c_str());
 			ImGui::Text(("TotalDistanceToBranchEnd: " + std::to_string(internodeInfo->TotalDistanceToBranchEnd)).c_str());
 			ImGui::Text(("DistanceToBranchStart: " + std::to_string(internodeInfo->DistanceToBranchStart)).c_str());
+			ImGui::Spacing();
 			ImGui::Text(("AccumulatedLength: " + std::to_string(internodeInfo->AccumulatedLength)).c_str());
 			ImGui::Text(("AccumulatedLight: " + std::to_string(internodeInfo->AccumulatedLight)).c_str());
 			ImGui::Text(("AccumulatedActivatedBudsAmount: " + std::to_string(internodeInfo->AccumulatedActivatedBudsAmount)).c_str());
 			ImGui::Text(("AccumulatedGravity: " + std::to_string(internodeInfo->AccumulatedGravity)).c_str());
+			ImGui::Spacing();
 			ImGui::Text(("MaxChildLevel: " + std::to_string(internodeInfo->MaxChildLevel)).c_str());
 			ImGui::Text(("MaxActivatedChildLevel: " + std::to_string(internodeInfo->MaxActivatedChildLevel)).c_str());
 			ImGui::Text(("Inhibitor: " + std::to_string(internodeInfo->Inhibitor)).c_str());
 			ImGui::Text(("ParentInhibitorFactor: " + std::to_string(internodeInfo->ParentInhibitorFactor)).c_str());
 			ImGui::Text(("ActivatedBudsAmount: " + std::to_string(internodeInfo->ActivatedBudsAmount)).c_str());
 			ImGui::Text(("BranchEndInternodeAmount: " + std::to_string(internodeInfo->BranchEndInternodeAmount)).c_str());
-			ImGui::Text(("Pruned: " + std::to_string(internodeInfo->Pruned)).c_str());
-			ImGui::Text(("Pruned reason: " + std::to_string(internodeInfo->PruneReason)).c_str());
+			ImGui::Text((std::string("Pruned: ") + (internodeInfo->Pruned ? "True" : "False")).c_str());
+			std::string reason;
+			switch (internodeInfo->PruneReason)
+			{
+			case 0:
+				reason = "Low Branch";
+				break;
+			case 1:
+				reason = "Pruning Factor";
+				break;
+			}
+			ImGui::Text(("Pruned reason: " + reason).c_str());
 			ImGui::Text(("IsApical: " + std::to_string(internodeInfo->IsApical)).c_str());
 			ImGui::Text(("ApicalBudExist: " + std::to_string(internodeInfo->ApicalBudExist)).c_str());
 			ImGui::Text(("IsActivatedEndNode: " + std::to_string(internodeInfo->IsActivatedEndNode)).c_str());
+			ImGui::Spacing();
 			ImGui::Text(("Length: " + std::to_string(internodeInfo->Length)).c_str());
 			ImGui::Text(("Thickness: " + std::to_string(internodeInfo->Thickness)).c_str());
 			ImGui::Text(("Deformation: " + std::to_string(internodeInfo->Deformation)).c_str());
@@ -273,6 +295,14 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::Text(("ParentAngle: " + std::to_string(internodeInfo->ParentAngle)).c_str());
 			ImGui::Text(("ParentThickness: " + std::to_string(internodeInfo->ParentThickness)).c_str());
 			ImGui::Text(("IsMainChild: " + std::to_string(internodeInfo->IsMainChild)).c_str());
+
+			ImGui::Spacing();
+			ImGui::Text(("CrownShyness: " + std::to_string(internodeInfo->CrownShyness)).c_str());
+			ImGui::Spacing();
+			ImGui::InputFloat4("GT0", (float*)(void*)&internodeInfo->GlobalTransform[0], "%.3f",ImGuiInputTextFlags_ReadOnly);
+			ImGui::InputFloat4("GT1", (float*)(void*)&internodeInfo->GlobalTransform[1], "%.3f", ImGuiInputTextFlags_ReadOnly);
+			ImGui::InputFloat4("GT2", (float*)(void*)&internodeInfo->GlobalTransform[2], "%.3f", ImGuiInputTextFlags_ReadOnly);
+			ImGui::InputFloat4("GT3", (float*)(void*)&internodeInfo->GlobalTransform[3], "%.3f", ImGuiInputTextFlags_ReadOnly);
 		}
 	);
 

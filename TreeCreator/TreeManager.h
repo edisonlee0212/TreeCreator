@@ -37,7 +37,6 @@ namespace TreeUtilities {
     struct Bud {
         bool IsActive;
         bool IsApical;
-        unsigned StartAge;
         glm::vec3 EulerAngles;
     };
 
@@ -64,6 +63,7 @@ namespace TreeUtilities {
     };
     struct InternodeInfo : ComponentBase {
 #pragma region General
+        int StartAge;
         int Level = 0;
         float DistanceToParent = 0;
         //The distance to 
@@ -98,7 +98,6 @@ namespace TreeUtilities {
         float ParentAngle;
 #pragma endregion
 #pragma region Transformation
-        glm::quat DesiredGlobalRotation;
         glm::quat DesiredLocalRotation;
         glm::mat4 GlobalTransform;
         glm::mat4 LocalTransform;
@@ -207,8 +206,6 @@ namespace TreeUtilities {
     public:
         bool MeshGenerated;
         bool FoliageGenerated;
-        std::vector<float> ApicalDominanceTimeVal;
-        std::vector<float> GravitropismLevelVal;
         std::vector<float> ApicalControlTimeVal;
         std::vector<std::vector<float>> ApicalControlTimeLevelVal;
         std::shared_ptr<Mesh> ConvexHull;
