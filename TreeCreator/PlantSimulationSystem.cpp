@@ -537,8 +537,10 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	t.Value = position;
 	Scale s;
 	s.Value = glm::vec3(1.0f);
+	EulerRotation er;
+	er.Value = glm::vec3(0);
 	Rotation r;
-	r.Value = glm::quatLookAt(glm::vec3(0, 0, 1), glm::vec3(0, 1, 0));
+	r.Value = glm::quat(glm::radians(er.Value));
 	LocalToWorld ltw;
 	ltw.Value = glm::translate(glm::mat4(1.0f), t.Value) * glm::mat4_cast(r.Value) * glm::scale(s.Value);
 

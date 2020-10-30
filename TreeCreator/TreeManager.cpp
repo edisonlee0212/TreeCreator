@@ -177,7 +177,7 @@ void TreeUtilities::TreeManager::Init()
 	);
 	_TreeArchetype = EntityManager::CreateEntityArchetype(
 		"Tree",
-		Translation(), Rotation(), Scale(), LocalToWorld(),
+		Translation(), EulerRotation(), Rotation(), Scale(), LocalToWorld(),
 		TreeIndex(), TreeInfo(), TreeAge(),
 		TreeParameters(),
 		RewardEstimation()
@@ -551,9 +551,9 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	}
 
 	std::mutex creationM;
-	
+	glm::mat4 treeTransform = EntityManager::GetComponentData<LocalToWorld>(treeEntity).Value;
 	//Prepare ring mesh.
-	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [&creationM, resolution, subdivision](int i, Entity internode, InternodeInfo* info) 
+	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [&creationM, resolution, subdivision, treeTransform](int i, Entity internode, InternodeInfo* info) 
 		{
 			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(internode))) return;
 			auto list = EntityManager::GetSharedComponent<InternodeData>(internode);
@@ -568,7 +568,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			glm::vec3 translation;
 			glm::vec3 skew;
 			glm::vec4 perspective;
-			glm::decompose(info->GlobalTransform, scale, rotation, translation, skew, perspective);
+			glm::decompose(treeTransform * info->GlobalTransform, scale, rotation, translation, skew, perspective);
 			
 			glm::vec3 parentDir = parentRotation * glm::vec3(0, 0, -1);
 			glm::vec3 dir = rotation * glm::vec3(0, 0, -1);
