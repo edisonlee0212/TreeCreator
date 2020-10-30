@@ -568,7 +568,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			glm::vec3 translation;
 			glm::vec3 skew;
 			glm::vec4 perspective;
-			glm::decompose(treeTransform * info->GlobalTransform, scale, rotation, translation, skew, perspective);
+			glm::decompose(info->GlobalTransform, scale, rotation, translation, skew, perspective);
 			
 			glm::vec3 parentDir = parentRotation * glm::vec3(0, 0, -1);
 			glm::vec3 dir = rotation * glm::vec3(0, 0, -1);

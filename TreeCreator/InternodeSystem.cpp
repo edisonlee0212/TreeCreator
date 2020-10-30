@@ -96,9 +96,7 @@ void TreeUtilities::InternodeSystem::RefreshConnections() const
 		glm::vec3 skew;
 		glm::vec4 perspective;
 		glm::decompose(ltw->Value, scale, rotation, translation, skew, perspective);
-		glm::vec3 parentTranslation = translation + (rotation * glm::vec3(0, 0, 1)) * info->DistanceToParent; //EntityManager::GetComponentData<LocalToWorld>(EntityManager::GetParent(entity)).Value[3];
-		glm::vec3 front;
-		glm::vec3 up;
+		glm::vec3 parentTranslation = translation + (rotation * glm::vec3(0, 0, 1)) * info->DistanceToParent;
 		rotation *= glm::quat(glm::vec3(glm::radians(90.0f), 0.0f, 0.0f));
 		glm::mat4 rotationMat = glm::mat4_cast(rotation);
 		if(EntityManager::HasComponentData<TreeData>(EntityManager::GetParent(entity))) c->Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(0.0f));

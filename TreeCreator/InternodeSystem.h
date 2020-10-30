@@ -24,6 +24,10 @@ namespace TreeUtilities {
         void DrawGui();
         void RaySelection();
     public:
+    	unsigned GetConfigFlags() const
+        {
+            return _ConfigFlags;
+    	}
         void OnCreate() override;
         void OnDestroy() override;
         void Update() override;
