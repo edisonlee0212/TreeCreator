@@ -64,27 +64,30 @@ namespace TreeUtilities {
     struct InternodeInfo : ComponentBase {
 #pragma region General
         int StartAge;
-        int Level = 0;
+        int Order = 0;
         float DistanceToParent = 0;
-        //The distance to 
+        glm::vec3 BranchEndPosition;
+        glm::vec3 BranchStartPosition;
+        //The distance to
         float DistanceToBranchEnd = 0;
-        float TotalDistanceToBranchEnd = 0;
+        float LongestDistanceToEnd = 0;
+        float TotalDistanceToEnd = 0;
         float DistanceToBranchStart = 0;
+        float DistanceToRoot = 0;
         float AccumulatedLength = 0;
         float AccumulatedLight = 0;
         float AccumulatedActivatedBudsAmount = 0;
         float AccumulatedGravity = 0;
 #pragma endregion
 #pragma region Growth
-        int MaxChildLevel;
-        int MaxActivatedChildLevel;
+        int MaxChildOrder;
         float Inhibitor = 0;
         float ParentInhibitorFactor = 1;
         int ActivatedBudsAmount = 0;
         unsigned BranchEndInternodeAmount;
         bool Pruned;
         int PruneReason;
-        bool IsApical;
+        bool IsMaxChild;
         bool ApicalBudExist = false;
         bool IsActivatedEndNode;
 #pragma endregion
@@ -180,7 +183,16 @@ namespace TreeUtilities {
         float CrownShynessFactor = 1.0f;
 #pragma endregion
 
-        
+#pragma region Organs
+        glm::vec2 LeafSize = glm::vec2(0.1f);
+        float LeafIlluminationLimit = 0;
+        float LeafInhibitorFactor = 0;
+        int LeafAmount = 2;
+        float LeafBendAngle = 45;
+        float LeafStartRollAngle = 0;
+        float LeafRollAngle = 180;
+#pragma endregion
+
     };
 
     struct RewardEstimation : ComponentBase {

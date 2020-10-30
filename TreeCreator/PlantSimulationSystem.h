@@ -45,16 +45,16 @@ namespace TreeUtilities {
 		bool _Growing = false;
 		EntityQuery _TreeQuery;
 		EntityQuery _InternodeQuery;
-
+		void ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up) const;
 		float GetApicalControl(std::shared_ptr<TreeData>& treeInfo, InternodeInfo& internodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
 		inline void DrawGui();
 		void UpdateDistanceToBranchEnd(Entity& internode, TreeParameters& treeParameters, int treeAge);
 		void UpdateDistanceToBranchStart(Entity& internode);
-		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::quat& treeRotation);
-		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, std::vector<glm::mat4>& leafTransforms);
+		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW);
+		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms);
 		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex);
 		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
-		void EvaluateRemoval(Entity& internode, TreeParameters& treeParameters);
+		bool EvaluateRemoval(Entity& internode, TreeParameters& treeParameters);
 		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);
 		void ApplyLocalTransform(Entity& treeEntity) const;
 		void CalculateDirectGravityForce(Entity& treeEntity, float gravity) const;
@@ -80,4 +80,18 @@ namespace TreeUtilities {
 		Entity CreateTree(std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters parameters, glm::vec3 position, bool enabled = true);
 		void CreateDefaultTree();
 	};
+
+	inline void PlantSimulationSystem::ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up) const
+	{
+		const glm::vec3 dir = glm::normalize(targetDir);
+		const float dotP = glm::abs(glm::dot(front, dir));
+		if(dotP < 0.98f)
+		{
+			const glm::vec3 left = glm::cross(front, dir);
+			float rotateAngle = (1.0f - dotP) * tropism;
+			float maxAngle = glm::acos(dotP);
+			front = glm::normalize(glm::rotate(front, glm::min(maxAngle, rotateAngle), left));
+			up = glm::normalize(glm::cross(glm::cross(front, up), front));
+		}
+	}
 }

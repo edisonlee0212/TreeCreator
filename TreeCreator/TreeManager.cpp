@@ -243,7 +243,7 @@ void TreeUtilities::TreeManager::Init()
 		[](ComponentBase* data)
 		{
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
-			ImGui::Text(("Level: " + std::to_string(internodeInfo->Level)).c_str());
+			ImGui::Text(("Order: " + std::to_string(internodeInfo->Order)).c_str());
 		}
 	);
 
@@ -252,20 +252,23 @@ void TreeUtilities::TreeManager::Init()
 		{
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
 			ImGui::Text(("StartAge: " + std::to_string(internodeInfo->StartAge)).c_str());
-			ImGui::Text(("Level: " + std::to_string(internodeInfo->Level)).c_str());
-			ImGui::Spacing();
+			ImGui::Text(("Order: " + std::to_string(internodeInfo->Order)).c_str());
 			ImGui::Text(("DistanceToParent: " + std::to_string(internodeInfo->DistanceToParent)).c_str());
+			ImGui::Spacing();
+			ImGui::InputFloat3("BranchEndPosition", (float*)(void*)&internodeInfo->BranchEndPosition);
+			ImGui::InputFloat3("BranchStartPosition", (float*)(void*)&internodeInfo->BranchStartPosition);
 			ImGui::Text(("DistanceToBranchEnd: " + std::to_string(internodeInfo->DistanceToBranchEnd)).c_str());
-			ImGui::Text(("TotalDistanceToBranchEnd: " + std::to_string(internodeInfo->TotalDistanceToBranchEnd)).c_str());
+			ImGui::Text(("LongestDistanceToEnd: " + std::to_string(internodeInfo->LongestDistanceToEnd)).c_str());
+			ImGui::Text(("TotalDistanceToEnd: " + std::to_string(internodeInfo->TotalDistanceToEnd)).c_str());
 			ImGui::Text(("DistanceToBranchStart: " + std::to_string(internodeInfo->DistanceToBranchStart)).c_str());
+			ImGui::Text(("DistanceToRoot: " + std::to_string(internodeInfo->DistanceToRoot)).c_str());
 			ImGui::Spacing();
 			ImGui::Text(("AccumulatedLength: " + std::to_string(internodeInfo->AccumulatedLength)).c_str());
 			ImGui::Text(("AccumulatedLight: " + std::to_string(internodeInfo->AccumulatedLight)).c_str());
 			ImGui::Text(("AccumulatedActivatedBudsAmount: " + std::to_string(internodeInfo->AccumulatedActivatedBudsAmount)).c_str());
 			ImGui::Text(("AccumulatedGravity: " + std::to_string(internodeInfo->AccumulatedGravity)).c_str());
 			ImGui::Spacing();
-			ImGui::Text(("MaxChildLevel: " + std::to_string(internodeInfo->MaxChildLevel)).c_str());
-			ImGui::Text(("MaxActivatedChildLevel: " + std::to_string(internodeInfo->MaxActivatedChildLevel)).c_str());
+			ImGui::Text(("MaxChildOrder: " + std::to_string(internodeInfo->MaxChildOrder)).c_str());
 			ImGui::Text(("Inhibitor: " + std::to_string(internodeInfo->Inhibitor)).c_str());
 			ImGui::Text(("ParentInhibitorFactor: " + std::to_string(internodeInfo->ParentInhibitorFactor)).c_str());
 			ImGui::Text(("ActivatedBudsAmount: " + std::to_string(internodeInfo->ActivatedBudsAmount)).c_str());
@@ -282,7 +285,7 @@ void TreeUtilities::TreeManager::Init()
 				break;
 			}
 			ImGui::Text(("Pruned reason: " + reason).c_str());
-			ImGui::Text(("IsApical: " + std::to_string(internodeInfo->IsApical)).c_str());
+			ImGui::Text(("IsMaxChild: " + std::to_string(internodeInfo->IsMaxChild)).c_str());
 			ImGui::Text(("ApicalBudExist: " + std::to_string(internodeInfo->ApicalBudExist)).c_str());
 			ImGui::Text(("IsActivatedEndNode: " + std::to_string(internodeInfo->IsActivatedEndNode)).c_str());
 			ImGui::Spacing();
@@ -463,7 +466,7 @@ Entity TreeUtilities::TreeManager::CreateInternode(TreeIndex treeIndex, Entity p
 	_InternodeIndex.Value++;
 	InternodeInfo internodeInfo;
 	internodeInfo.IsActivatedEndNode = false;
-	internodeInfo.MaxActivatedChildLevel = 0;
+	internodeInfo.MaxChildOrder = 0;
 	EntityManager::SetComponentData(entity, internodeInfo);
 	return entity;
 }
