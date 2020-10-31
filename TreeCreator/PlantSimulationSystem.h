@@ -51,7 +51,7 @@ namespace TreeUtilities {
 		void UpdateDistanceToBranchEnd(Entity& internode, TreeParameters& treeParameters, int treeAge);
 		void UpdateDistanceToBranchStart(Entity& internode);
 		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::mat4& treeLTW);
-		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms);
+		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
 		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform);
 		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
 		bool EvaluateRemoval(Entity& internode, TreeParameters& treeParameters);
@@ -65,6 +65,7 @@ namespace TreeUtilities {
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);
 		void BuildHullForTree(Entity& tree);
 	public:
+		void RefreshTrees();
 		static TreeParameters ImportTreeParameters(const std::string& path);
 		static void ExportTreeParameters(const std::string& path, TreeParameters& treeParameters);
 		void ExportSettings(const std::string& path);

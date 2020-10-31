@@ -187,10 +187,12 @@ namespace TreeUtilities {
         glm::vec2 LeafSize = glm::vec2(0.1f);
         float LeafIlluminationLimit = 0;
         float LeafInhibitorFactor = 0;
-        int LeafAmount = 2;
-        float LeafBendAngle = 45;
-        float LeafStartRollAngle = 0;
-        float LeafRollAngle = 180;
+        bool IsBothSide = true;
+        int SideLeafAmount = 1;
+        float StartBendingAngle = 45;
+        float BendingAngleIncrement = 0;
+        float LeafPhotoTropism = 1.0f;
+        float LeafDistance = 0;
 #pragma endregion
 
     };

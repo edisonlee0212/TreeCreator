@@ -48,25 +48,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 	}
 	else
 	{
-		TreeManager::CalculateInternodeIllumination();
-		for (auto& treeEntity : trees)
-		{
-			auto rootInternode = EntityManager::GetChildren(treeEntity).at(0);
-			auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
-			auto treeData = EntityManager::GetSharedComponent<TreeData>(treeEntity);
-			auto treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
-			auto treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
-			auto treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(treeEntity);
-			auto immc = EntityManager::GetSharedComponent<InstancedMeshRenderer>(treeEntity);
-			immc->Matrices.clear();
-			UpdateInternodeResource(rootInternode, treeParameters, treeAge, treeLocalToWorld.Value, immc->Matrices);
-			immc->RecalculateBoundingBox();
-			EvaluatePruning(rootInternode, treeParameters, treeAge, treeInfo);
-			EvaluateRemoval(rootInternode, treeParameters);
-			if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
-		}
-		CalculateCrownShyness(10.0f);
-		TreeManager::GetInternodeSystem()->RefreshConnections();
+		RefreshTrees();
 	}
 }
 bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
@@ -378,23 +360,30 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 			{
 			_NewTreeParameters[i].LeafInhibitorFactor = std::atof(parameterNode.first_child().value());
 			}
-			else if (name.compare("LeafAmount") == 0)
+			else if (name.compare("IsBothSide") == 0)
 			{
-			_NewTreeParameters[i].LeafAmount = std::atoi(parameterNode.first_child().value());
+			_NewTreeParameters[i].IsBothSide = std::atoi(parameterNode.first_child().value()) == 1;
 			}
-			else if (name.compare("LeafBendAngle") == 0)
+			else if (name.compare("SideLeafAmount") == 0)
 			{
-			_NewTreeParameters[i].LeafBendAngle = std::atof(parameterNode.first_child().value());
+			_NewTreeParameters[i].SideLeafAmount = std::atoi(parameterNode.first_child().value());
 			}
-			else if (name.compare("LeafStartRollAngle") == 0)
+			else if (name.compare("StartBendingAngle") == 0)
 			{
-			_NewTreeParameters[i].LeafStartRollAngle = std::atof(parameterNode.first_child().value());
+			_NewTreeParameters[i].StartBendingAngle = std::atof(parameterNode.first_child().value());
 			}
-			else if (name.compare("LeafRollAngle") == 0)
+			else if (name.compare("BendingAngleIncrement") == 0)
 			{
-			_NewTreeParameters[i].LeafRollAngle = std::atof(parameterNode.first_child().value());
+			_NewTreeParameters[i].BendingAngleIncrement = std::atof(parameterNode.first_child().value());
 			}
-			
+			else if (name.compare("LeafPhotoTropism") == 0)
+			{
+			_NewTreeParameters[i].LeafPhotoTropism = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LeafDistance") == 0)
+			{
+			_NewTreeParameters[i].LeafDistance = std::atof(parameterNode.first_child().value());
+			}
 		}
 		i++;
 	}
@@ -513,11 +502,13 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 	output += "\t\t\t<LeafSizeY>"; output += std::to_string(treeParameters.LeafSize.y) + "</LeafSizeY>\n";
 	output += "\t\t\t<LeafIlluminationLimit>"; output += std::to_string(treeParameters.LeafIlluminationLimit) + "</LeafIlluminationLimit>\n";
 	output += "\t\t\t<LeafInhibitorFactor>"; output += std::to_string(treeParameters.LeafInhibitorFactor) + "</LeafInhibitorFactor>\n";
-	output += "\t\t\t<LeafAmount>"; output += std::to_string(treeParameters.LeafAmount) + "</LeafAmount>\n";
-	output += "\t\t\t<LeafBendAngle>"; output += std::to_string(treeParameters.LeafBendAngle) + "</LeafBendAngle>\n";
-	output += "\t\t\t<LeafStartRollAngle>"; output += std::to_string(treeParameters.LeafStartRollAngle) + "</LeafStartRollAngle>\n";
-	output += "\t\t\t<LeafRollAngle>"; output += std::to_string(treeParameters.LeafRollAngle) + "</LeafRollAngle>\n";
-	
+	output += "\t\t\t<IsBothSide>"; output += std::string(treeParameters.IsBothSide ? "1" : "0") + "</IsBothSide>\n";
+	output += "\t\t\t<SideLeafAmount>"; output += std::to_string(treeParameters.SideLeafAmount) + "</SideLeafAmount>\n";
+	output += "\t\t\t<StartBendingAngle>"; output += std::to_string(treeParameters.StartBendingAngle) + "</StartBendingAngle>\n";
+	output += "\t\t\t<BendingAngleIncrement>"; output += std::to_string(treeParameters.BendingAngleIncrement) + "</BendingAngleIncrement>\n";
+	output += "\t\t\t<LeafPhotoTropism>"; output += std::to_string(treeParameters.LeafPhotoTropism) + "</LeafPhotoTropism>\n";
+	output += "\t\t\t<LeafDistance>"; output += std::to_string(treeParameters.LeafDistance) + "</LeafDistance>\n";
+
 	output += "\t\t</TreeParameters>\n";
 	ofs.write(output.c_str(), output.size());
 	ofs.flush();
@@ -860,14 +851,16 @@ void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& internode, Tr
 	if (internodeInfo.Pruned) {
 		return;
 	}
-	if (internodeInfo.Order == 0 && treeAge.Value < 3) return;
 	float height = EntityManager::GetComponentData<LocalToWorld>(internode).Value[3].y;
-	
 	if (height > 15)
 	{
 		PruneInternode(internode, &internodeInfo, 2);
 		return;
 	}
+	if (internodeInfo.Order == 0 && treeAge.Value < 3) return;
+	
+	
+	
 	float ratioScale = 1;
 	float factor = ratioScale / glm::sqrt(internodeInfo.AccumulatedLength);
 	factor *= internodeInfo.AccumulatedLight;
@@ -1150,7 +1143,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 
 	EntityManager::SetComponentData(internode, internodeInfo);
 }
-void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms)
+void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	Illumination internodeIllumination = EntityManager::GetComponentData<Illumination>(internode);
@@ -1160,46 +1153,52 @@ void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& inter
 
 	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
 	internodeData->LeafLocalTransforms.clear();
-	float illumination = EntityManager::GetComponentData<Illumination>(internode).Value;
-	if (illumination > treeParameters.LeafIlluminationLimit) {
+	if (internodeIllumination.Value > treeParameters.LeafIlluminationLimit) {
 		if (glm::linearRand(0.0f, 1.0f) >= internodeInfo.Inhibitor * treeParameters.LeafInhibitorFactor)
 		{
-			glm::vec3 lp = glm::vec3(0.0f);
+			glm::vec3 translation;
+			glm::quat rotation;
+			glm::vec3 scale;
+			glm::vec3 skew;
+			glm::vec4 perspective;
+			glm::decompose(treeTransform * internodeInfo.GlobalTransform, scale, rotation, translation, skew, perspective);
 			//x, œÚ—Ù÷·£¨y: ∫·÷·£¨z£∫roll
-			glm::quat lr;
 			glm::vec3 ls = glm::vec3(treeParameters.LeafSize.x, 1.0f, treeParameters.LeafSize.y);
-			glm::mat4 localTransform;
-
-			for(int i = 0; i < treeParameters.LeafAmount; i++)
+			auto branchFront = rotation * glm::vec3(0, 0, -1);
+			auto branchUp = rotation * glm::vec3(0, 1, 0);
+			if (treeParameters.IsBothSide || isLeft)
 			{
-				lr = glm::quat(glm::vec3(glm::radians(treeParameters.LeafBendAngle), 
-					0.0f,
-					glm::radians(treeParameters.LeafStartRollAngle + i * treeParameters.LeafRollAngle)
-					));
-				localTransform = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
-				//Generate leaf here.
-				internodeData->LeafLocalTransforms.push_back(localTransform);
-				leafTransforms.push_back(internodeInfo.GlobalTransform * localTransform);
+				for (int i = 0; i < treeParameters.SideLeafAmount; i++)
+				{
+					branchFront = glm::rotate(branchFront,
+						glm::radians(treeParameters.StartBendingAngle + i * treeParameters.BendingAngleIncrement), branchUp);
+					ApplyTropism(internodeIllumination.LightDir, treeParameters.LeafPhotoTropism, branchUp, branchFront);
+					auto leafTransform = glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(glm::quatLookAt(branchFront, branchUp)) * glm::scale(ls);
+					internodeData->LeafLocalTransforms.push_back(leafTransform);
+					leafTransforms.push_back(leafTransform);
+				}
 			}
-			/*
-			lr = glm::quat(glm::vec3(glm::radians(45.0f), 0.0f, 0.0f));
-			localTransform = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
-			//Generate leaf here.
-			internodeData->LeafLocalTransforms.push_back(localTransform);
-			leafTransforms.push_back(glm::inverse(treeTransform) * internodeInfo.GlobalTransform * localTransform);
-
-			lr = glm::quat(glm::vec3(glm::radians(-45.0f), 0.0f, 0.0f));
-			localTransform = glm::translate(glm::mat4(1.0f), lp) * glm::mat4_cast(lr) * glm::scale(ls);
-			//Generate leaf here.
-			internodeData->LeafLocalTransforms.push_back(localTransform);
-			leafTransforms.push_back(glm::inverse(treeTransform) * internodeInfo.GlobalTransform * localTransform);
-			*/
+			if (treeParameters.IsBothSide || !isLeft)
+			{
+				for (int i = 0; i < treeParameters.SideLeafAmount; i++)
+				{
+					for (int i = 0; i < treeParameters.SideLeafAmount; i++)
+					{
+						branchFront = glm::rotate(branchFront,
+							glm::radians(-treeParameters.StartBendingAngle - i * treeParameters.BendingAngleIncrement), branchUp);
+						ApplyTropism(internodeIllumination.LightDir, treeParameters.LeafPhotoTropism, branchUp, branchFront);
+						auto leafTransform = glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(glm::quatLookAt(branchFront, branchUp)) * glm::scale(ls);
+						internodeData->LeafLocalTransforms.push_back(leafTransform);
+						leafTransforms.push_back(leafTransform);
+					}
+				}
+			}
 		}
 	}
 
-	EntityManager::ForEachChild(internode, [this, &internodeInfo, &treeParameters, &treeAge, &leafTransforms, &treeTransform](Entity child)
+	EntityManager::ForEachChild(internode, [this, &internodeInfo, &treeParameters, &treeAge, &leafTransforms, &treeTransform, isLeft](Entity child)
 		{
-			UpdateInternodeResource(child, treeParameters, treeAge, treeTransform, leafTransforms);
+			UpdateInternodeResource(child, treeParameters, treeAge, treeTransform, leafTransforms, !isLeft);
 			InternodeInfo childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
 			internodeInfo.AccumulatedLight += childNodeInfo.AccumulatedLight;
 			internodeInfo.AccumulatedLength += childNodeInfo.AccumulatedLength;
@@ -1284,6 +1283,31 @@ void PlantSimulationSystem::BuildHullForTree(Entity& tree)
 	treeInfo->ConvexHull->SetVertices(17, vertices, indices, true);
 	*/
 }
+
+void PlantSimulationSystem::RefreshTrees()
+{
+	auto trees = std::vector<Entity>();
+	_TreeQuery.ToEntityArray(trees);
+	TreeManager::CalculateInternodeIllumination();
+	for (auto& treeEntity : trees)
+	{
+		auto rootInternode = EntityManager::GetChildren(treeEntity).at(0);
+		auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
+		auto treeData = EntityManager::GetSharedComponent<TreeData>(treeEntity);
+		auto treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
+		auto treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
+		auto treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(treeEntity);
+		auto immc = EntityManager::GetSharedComponent<InstancedMeshRenderer>(treeEntity);
+		immc->Matrices.clear();
+		UpdateInternodeResource(rootInternode, treeParameters, treeAge, treeLocalToWorld.Value, immc->Matrices, true);
+		immc->RecalculateBoundingBox();
+		EvaluatePruning(rootInternode, treeParameters, treeAge, treeInfo);
+		EvaluateRemoval(rootInternode, treeParameters);
+		if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
+	}
+	CalculateCrownShyness(10.0f);
+}
+
 void TreeUtilities::PlantSimulationSystem::OnCreate()
 {
 	_InternodeSystem = TreeManager::GetInternodeSystem();
@@ -1379,7 +1403,6 @@ void TreeUtilities::PlantSimulationSystem::Update()
 		for(size_t i = 0; i < trees.size(); i++)
 		{
 			ApplyLocalTransform(trees[i]);
-			
 		}
 		if(_InternodeSystem->GetConfigFlags() & InternodeSystem_DrawConnections)
 		{
@@ -1903,13 +1926,17 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 
 					ImGui::DragFloat("LeafInhibitorFactor", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafInhibitorFactor, 0.01f);
 
-					ImGui::DragInt("LeafAmount", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafAmount);
+					ImGui::Checkbox("IsBothSide", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].IsBothSide);
 
-					ImGui::DragFloat("LeafBendAngle", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafBendAngle, 0.01f);
+					ImGui::DragInt("SideLeafAmount", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].SideLeafAmount, 0.01f);
 
-					ImGui::DragFloat("LeafStartRollAngle", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafStartRollAngle, 0.01f);
+					ImGui::DragFloat("StartBendingAngle", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].StartBendingAngle, 0.01f);
 
-					ImGui::DragFloat("LeafRollAngle", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafRollAngle, 0.01f);
+					ImGui::DragFloat("BendingAngleIncrement", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].BendingAngleIncrement, 0.01f);
+
+					ImGui::DragFloat("LeafPhotoTropism", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafPhotoTropism, 0.01f);
+
+					ImGui::DragFloat("LeafDistance", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafDistance, 0.01f);
 #pragma endregion
 
 				}
@@ -1942,6 +1969,10 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 	}
 	ImGui::Begin("Tree Utilities");
 	if (ImGui::CollapsingHeader("Tree Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
+		if(ImGui::Button("Refresh all trees"))
+		{
+			RefreshTrees();
+		}
 		ImGui::InputFloat("Limit angle", &_DirectionPruningLimitAngle, 0.0f, 0.0f, "%.1f");
 		ImGui::Checkbox("Enable direction pruning", &_EnableDirectionPruning);
 		if (ImGui::DragFloat("Gravity", &_Gravity, 0.01f, 0.0f, 10.0f))
