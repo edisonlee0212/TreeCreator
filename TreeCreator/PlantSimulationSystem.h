@@ -57,8 +57,6 @@ namespace TreeUtilities {
 		bool EvaluateRemoval(Entity& internode, TreeParameters& treeParameters);
 		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);
 		void ApplyLocalTransform(Entity& treeEntity) const;
-		void CalculateDirectGravityForce(Entity& treeEntity, float gravity) const;
-		void BackPropagateForce(Entity& internode, float fixedPropagationCoefficient);
 		void CalculateCrownShyness(float detectionDistance = 5.0f);
 		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo, int pruneReason) const;
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);

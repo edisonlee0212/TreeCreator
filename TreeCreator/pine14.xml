@@ -32,25 +32,24 @@
 			<PruningFactor>0.120000</PruningFactor>
 			<LowBranchPruningFactor>1.000000</LowBranchPruningFactor>
 			<ThicknessRemovalFactor>99999.000000</ThicknessRemovalFactor>
-			<GravityBendingStrength>0.200000</GravityBendingStrength>
+			<GravityBendingStrength>0.940000</GravityBendingStrength>
+			<GravityBendingAngleFactor>0.850000</GravityBendingAngleFactor>
 			<ApicalBudLightingFactor>0.040000</ApicalBudLightingFactor>
 			<LateralBudLightingFactor>0.100000</LateralBudLightingFactor>
-			<SaggingFactor>0.097000</SaggingFactor>
-			<SaggingForceBackPropagateFixedCoefficient>1.170000</SaggingForceBackPropagateFixedCoefficient>
 			<EndNodeThickness>0.007000</EndNodeThickness>
 			<ThicknessControlFactor>0.550000</ThicknessControlFactor>
 			<CrownShynessBase>1.000000</CrownShynessBase>
 			<CrownShynessFactor>1.000000</CrownShynessFactor>
-			<LeafSizeX>0.150000</LeafSizeX>
-			<LeafSizeY>0.250000</LeafSizeY>
+			<LeafSizeX>0.100000</LeafSizeX>
+			<LeafSizeY>0.150000</LeafSizeY>
 			<LeafIlluminationLimit>0.000000</LeafIlluminationLimit>
 			<LeafInhibitorFactor>1.000000</LeafInhibitorFactor>
 			<IsBothSide>1</IsBothSide>
 			<SideLeafAmount>1</SideLeafAmount>
-			<StartBendingAngle>45.000000</StartBendingAngle>
+			<StartBendingAngle>80.000000</StartBendingAngle>
 			<BendingAngleIncrement>0.000000</BendingAngleIncrement>
-			<LeafPhotoTropism>999.000000</LeafPhotoTropism>
-			<LeafGravitropism>1.000000</LeafGravitropism>
+			<LeafPhotoTropism>0.160000</LeafPhotoTropism>
+			<LeafGravitropism>0.880000</LeafGravitropism>
 			<LeafDistance>0.000000</LeafDistance>
 		</TreeParameters>
 	</Instance>

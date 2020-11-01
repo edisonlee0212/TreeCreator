@@ -40,10 +40,6 @@ namespace TreeUtilities {
         glm::vec3 EulerAngles;
     };
 
-    struct Gravity : ComponentBase{
-        float Value;
-    };
-
     class InternodeData : public SharedComponentBase {
     public:
         std::vector<Bud> Buds;
@@ -78,7 +74,6 @@ namespace TreeUtilities {
         float AccumulatedLength = 0;
         float AccumulatedLight = 0;
         float AccumulatedActivatedBudsAmount = 0;
-        float AccumulatedGravity = 0;
 #pragma endregion
 #pragma region Growth
         int MaxChildOrder;
@@ -96,6 +91,7 @@ namespace TreeUtilities {
 #pragma region Geometric
         glm::vec3 ChildBranchesMeanPosition = glm::vec3(0.0f);
         float MeanWeight;
+        float Sagging = 0.0f;
         float Length;
         float Thickness;
         float ParentThickness;
@@ -169,14 +165,10 @@ namespace TreeUtilities {
         float ThicknessRemovalFactor;
     	
         float GravityBendingStrength;
-
+        float GravityBendingAngleFactor;
+    	
         float ApicalBudLightingFactor;
         float LateralBudLightingFactor;
-#pragma endregion
-
-#pragma region Sagging
-        float SaggingFactor;
-        float SaggingForceBackPropagateFixedCoefficient;
 #pragma endregion
 
         float EndNodeThickness;

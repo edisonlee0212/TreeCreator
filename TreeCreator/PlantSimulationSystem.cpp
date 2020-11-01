@@ -282,6 +282,10 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 			{
 				_NewTreeParameters[i].GravityBendingStrength = std::atof(parameterNode.first_child().value());
 			}
+			else if (name.compare("GravityBendingAngleFactor") == 0)
+			{
+			_NewTreeParameters[i].GravityBendingAngleFactor = std::atof(parameterNode.first_child().value());
+			}
 			else if (name.compare("ApicalBudLightingFactor") == 0)
 			{
 				_NewTreeParameters[i].ApicalBudLightingFactor = std::atof(parameterNode.first_child().value());
@@ -289,14 +293,6 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 			else if (name.compare("LateralBudLightingFactor") == 0)
 			{
 				_NewTreeParameters[i].LateralBudLightingFactor = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("SaggingFactor") == 0)
-			{
-				_NewTreeParameters[i].SaggingFactor = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("SaggingForceBackPropagateFixedCoefficient") == 0)
-			{
-				_NewTreeParameters[i].SaggingForceBackPropagateFixedCoefficient = std::atof(parameterNode.first_child().value());
 			}
 			else if (name.compare("EndNodeThickness") == 0)
 			{
@@ -399,12 +395,9 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 	output += "\t\t\t<LowBranchPruningFactor>"; output += std::to_string(treeParameters.LowBranchPruningFactor) + "</LowBranchPruningFactor>\n";
 	output += "\t\t\t<ThicknessRemovalFactor>"; output += std::to_string(treeParameters.ThicknessRemovalFactor) + "</ThicknessRemovalFactor>\n";
 	output += "\t\t\t<GravityBendingStrength>"; output += std::to_string(treeParameters.GravityBendingStrength) + "</GravityBendingStrength>\n";
+	output += "\t\t\t<GravityBendingAngleFactor>"; output += std::to_string(treeParameters.GravityBendingAngleFactor) + "</GravityBendingAngleFactor>\n";
 	output += "\t\t\t<ApicalBudLightingFactor>"; output += std::to_string(treeParameters.ApicalBudLightingFactor) + "</ApicalBudLightingFactor>\n";
 	output += "\t\t\t<LateralBudLightingFactor>"; output += std::to_string(treeParameters.LateralBudLightingFactor) + "</LateralBudLightingFactor>\n";
-#pragma endregion
-#pragma region Sagging
-	output += "\t\t\t<SaggingFactor>"; output += std::to_string(treeParameters.SaggingFactor) + "</SaggingFactor>\n";
-	output += "\t\t\t<SaggingForceBackPropagateFixedCoefficient>"; output += std::to_string(treeParameters.SaggingForceBackPropagateFixedCoefficient) + "</SaggingForceBackPropagateFixedCoefficient>\n";
 #pragma endregion
 	output += "\t\t\t<EndNodeThickness>"; output += std::to_string(treeParameters.EndNodeThickness) + "</EndNodeThickness>\n";
 	output += "\t\t\t<ThicknessControlFactor>"; output += std::to_string(treeParameters.ThicknessControlFactor) + "</ThicknessControlFactor>\n";
@@ -879,8 +872,6 @@ void TreeUtilities::PlantSimulationSystem::CalculatePhysics(Entity tree)
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
 	if (EntityManager::GetChildrenAmount(tree) == 0) return;
 	Entity rootInternode = EntityManager::GetChildren(tree).at(0);
-	CalculateDirectGravityForce(tree, _Gravity);
-	BackPropagateForce(rootInternode, treeParameters.SaggingForceBackPropagateFixedCoefficient);
 	auto id = glm::mat4(1.0f);
 	UpdateLocalTransform(rootInternode, treeParameters, id, ltw.Value);
 	ApplyLocalTransform(tree);
@@ -906,28 +897,6 @@ void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntit
 	);
 	treeInfo.Height = treeHeight;
 	EntityManager::SetComponentData(treeEntity, treeInfo);
-}
-void TreeUtilities::PlantSimulationSystem::CalculateDirectGravityForce(Entity& treeEntity, float gravity) const
-{
-	float gravityFactor = EntityManager::GetComponentData<TreeParameters>(treeEntity).SaggingFactor;
-	EntityManager::ForEach<LocalToWorld, InternodeInfo, Gravity>(_InternodeQuery, [gravityFactor, gravity](int i, Entity internode, LocalToWorld* ltw, InternodeInfo* bni, Gravity* fs)
-		{
-			float thickness = bni->Thickness;
-			fs->Value = gravity * gravityFactor * bni->DistanceToParent;
-		});
-}
-void TreeUtilities::PlantSimulationSystem::BackPropagateForce(Entity& internode, float fixedPropagationCoefficient)
-{
-	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
-	float gfs = EntityManager::GetComponentData<Gravity>(internode).Value;
-	internodeInfo.AccumulatedGravity = gfs;
-	EntityManager::ForEachChild(internode, [this, &internodeInfo, fixedPropagationCoefficient](Entity child)
-		{
-			BackPropagateForce(child, fixedPropagationCoefficient);
-			auto childInternodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
-			internodeInfo.AccumulatedGravity += fixedPropagationCoefficient * childInternodeInfo.AccumulatedGravity * childInternodeInfo.Thickness / internodeInfo.Thickness;
-		});
-	EntityManager::SetComponentData(internode, internodeInfo);
 }
 
 #pragma endregion
@@ -970,6 +939,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& int
 				internodeInfo.BranchEndPosition = childNodeInfo.BranchEndPosition;
 			}
 			internodeInfo.BranchEndInternodeAmount += childNodeInfo.BranchEndInternodeAmount;
+		
 			internodeInfo.Thickness += treeParameters.ThicknessControlFactor * childNodeInfo.Thickness;
 			if (childNodeInfo.Thickness > mainChildThickness) {
 				mainChildThickness = childNodeInfo.Thickness;
@@ -1028,7 +998,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchStart(Entity& i
 void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::mat4& treeLTW)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
-	glm::quat actualLocalRotation = internodeInfo.DesiredLocalRotation;
+	
 
 	glm::vec3 scale;
 	glm::vec3 skew;
@@ -1036,16 +1006,29 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 	glm::quat rotation;
 	glm::vec3 translation;
 	glm::decompose(parentLTW, scale, internodeInfo.ParentRotation, internodeInfo.ParentTranslation, skew, perspective);
-
+	glm::quat actualLocalRotation;
 #pragma region Apply force here.
 	glm::decompose(treeLTW, scale, rotation, translation, skew, perspective);
 	glm::quat newGlobalRotation = rotation * internodeInfo.ParentRotation * internodeInfo.DesiredLocalRotation;
 	glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
 	glm::vec3 up = newGlobalRotation * glm::vec3(0, 1, 0);
-	float gravityBending = treeParameters.GravityBendingStrength * internodeInfo.AccumulatedGravity;
-	ApplyTropism(glm::vec3(0, -1, 0), gravityBending, front, up);
+	float strength = glm::vec2(internodeInfo.ChildBranchesMeanPosition.x - translation.x, internodeInfo.ChildBranchesMeanPosition.z - translation.z).length();
+	strength *= glm::pow(internodeInfo.MeanWeight, 2.0f) * treeParameters.GravityBendingStrength * internodeInfo.DistanceToParent;
+	const float dotP = glm::abs(glm::dot(front, glm::vec3(0, -1, 0)));
+	strength *= 1.0f - dotP;
+	float panaltyF = glm::pow(treeParameters.GravityBendingAngleFactor, internodeInfo.MeanWeight);
+	float maxStrength = 90.0f * panaltyF;
+	strength = glm::abs(maxStrength * (1.0f - glm::exp(-glm::abs(strength) / maxStrength)));
+	if (strength > internodeInfo.Sagging && dotP < 0.95f) {
+		const glm::vec3 left = glm::cross(front, glm::vec3(0, -1, 0));
+		float maxAngle = glm::acos(dotP);
+		front = glm::normalize(glm::rotate(front, glm::min(maxAngle, glm::radians(strength - internodeInfo.Sagging)), left));
+		up = glm::normalize(glm::cross(glm::cross(front, up), front));
+		internodeInfo.Sagging = strength;
+	}
 	newGlobalRotation = glm::quatLookAt(front, up);
 	actualLocalRotation = glm::inverse(rotation) * glm::inverse(internodeInfo.ParentRotation) * newGlobalRotation;
+	internodeInfo.DesiredLocalRotation = actualLocalRotation;
 #pragma endregion
 
 	internodeInfo.LocalTransform = glm::translate(glm::mat4(1.0f), actualLocalRotation * glm::vec3(0, 0, -1)
@@ -1421,12 +1404,11 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.LowBranchPruningFactor = 0.639226f;
 		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.2f;
-		tps.SaggingFactor = 0.0506f;
+		tps.GravityBendingAngleFactor = 0.0506f;
 		tps.MaxBudAge = 10;
 
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.65f;
-		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
 
 		tps.CrownShynessBase = 1.0f;
 		tps.CrownShynessFactor = 1.0f;
@@ -1462,11 +1444,10 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.LowBranchPruningFactor = 1.3f;
 		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.73f;
-		tps.SaggingFactor = 0.0506f;
+		tps.GravityBendingAngleFactor = 0.0506f;
 		tps.MaxBudAge = 8;
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
-		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
 		tps.CrownShynessBase = 1.0f;
 		tps.CrownShynessFactor = 1.0f;
 		break;
@@ -1501,11 +1482,10 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.LowBranchPruningFactor = 1.3f;
 		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.73f;
-		tps.SaggingFactor = 0.0506f;
+		tps.GravityBendingAngleFactor = 0.0f;
 		tps.MaxBudAge = 8;
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
-		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
 		tps.CrownShynessBase = 1.0f;
 		tps.CrownShynessFactor = 1.0f;
 		break;
@@ -1534,17 +1514,16 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.ApicalControlAgeFactor = 0.9f;
 		tps.ApicalControlLevelFactor = 1.0f;
 		tps.Phototropism = 0.15f;
-		tps.GravitropismBase = -0.47f;//-0.41f;
+		tps.GravitropismBase = -0.47f;
 		tps.GravitropismLevelFactor = 0.14f;
 		tps.PruningFactor = 0.82f;
 		tps.LowBranchPruningFactor = 2.83f;
 		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.795f;
-		tps.SaggingFactor = 0.0506f;
+		tps.GravityBendingAngleFactor = 0.0f;
 		tps.MaxBudAge = 8;
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
-		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
 		tps.CrownShynessBase = 1.0f;
 		tps.CrownShynessFactor = 1.0f;
 		break;
@@ -1574,17 +1553,16 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.ApicalControlAgeFactor = 0.9f;
 		tps.ApicalControlLevelFactor = 1.0f;
 		tps.Phototropism = 0.42f;
-		tps.GravitropismBase = -0.43f;//-0.43f;
-		tps.GravitropismLevelFactor = 0.73f;
+		tps.GravitropismBase = -0.43f;
+		tps.GravitropismLevelFactor = 0.72f;
 		tps.PruningFactor = 0.12f;
 		tps.LowBranchPruningFactor = 1.25f;
 		tps.ThicknessRemovalFactor = 99999;
-		tps.GravityBendingStrength = 0.73f;
-		tps.SaggingFactor = 0.0506f;
+		tps.GravityBendingStrength = 0.94f;
+		tps.GravityBendingAngleFactor = 0.0f;
 		tps.MaxBudAge = 8;
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
-		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
 		tps.CrownShynessBase = 1.0f;
 		tps.CrownShynessFactor = 1.0f;
 		break;
@@ -1613,17 +1591,16 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.ApicalControlAgeFactor = 0.91f;
 		tps.ApicalControlLevelFactor = 1.0f;
 		tps.Phototropism = 0.32f;
-		tps.GravitropismBase = -0.21f;//-0.43f;
+		tps.GravitropismBase = -0.21f;
 		tps.GravitropismLevelFactor = 0.15f;
 		tps.PruningFactor = 0.48f;
 		tps.LowBranchPruningFactor = 5.5f;
 		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.79f;
-		tps.SaggingFactor = 0.0506f;
+		tps.GravityBendingAngleFactor = 0.0f;
 		tps.MaxBudAge = 8;
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
-		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
 		tps.CrownShynessBase = 1.0f;
 		tps.CrownShynessFactor = 1.0f;
 		break;
@@ -1638,7 +1615,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.RollAngleVariance = 10;
 
 		tps.ApicalBudKillProbability = 0;
-		tps.LateralBudKillProbability = 0.18f;
+		tps.LateralBudKillProbability = 0.018f;
 		tps.ApicalBudLightingFactor = 0.03f;
 		tps.LateralBudLightingFactor = 0.21f;
 		tps.ApicalDominanceBase = 6.5f;
@@ -1658,11 +1635,10 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.LowBranchPruningFactor = 1.11f;
 		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.78f;
-		tps.SaggingFactor = 0.0506f;
+		tps.GravityBendingAngleFactor = 0.0f;
 		tps.MaxBudAge = 8;
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
-		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
 		tps.CrownShynessBase = 1.0f;
 		tps.CrownShynessFactor = 1.0f;
 		break;
@@ -1683,25 +1659,24 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 		tps.ApicalDominanceBase = 0.38f;
 		tps.ApicalDominanceDistanceFactor = 0.9f;
 		tps.ApicalDominanceAgeFactor = 0.31f;
-		tps.GrowthRate = 2.2f;
-		tps.InternodeLengthBase = 0.61f;
+		tps.GrowthRate = 1.9f;
+		tps.InternodeLengthBase = 0.51f;
 		tps.InternodeLengthAgeFactor = 0.98f;
 
 		tps.ApicalControlBase = 3.25f;
 		tps.ApicalControlAgeFactor = 0.7f;
 		tps.ApicalControlLevelFactor = 1.0f;
 		tps.Phototropism = 0.15f;
-		tps.GravitropismBase = -0.13f;//-0.43f;
+		tps.GravitropismBase = -0.13f;
 		tps.GravitropismLevelFactor = 0.14f;
 		tps.PruningFactor = 0.8f;
 		tps.LowBranchPruningFactor = 2.9f;
 		tps.ThicknessRemovalFactor = 99999;
 		tps.GravityBendingStrength = 0.19f;
-		tps.SaggingFactor = 0.0506f;
+		tps.GravityBendingAngleFactor = 0.0f;
 		tps.MaxBudAge = 8;
 		tps.EndNodeThickness = 0.02f;
 		tps.ThicknessControlFactor = 0.6f;
-		tps.SaggingForceBackPropagateFixedCoefficient = 0.5f;
 		tps.CrownShynessBase = 1.0f;
 		tps.CrownShynessFactor = 1.0f;
 		break;
@@ -1859,11 +1834,9 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 
 					ImGui::DragFloat("RemovalFactor Thickness", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].ThicknessRemovalFactor, 0.01f);
 
-					ImGui::DragFloat("GravityBendingStrength", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].GravityBendingStrength, 0.01f);
+					ImGui::DragFloat2("Gravity Strength/Angle", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].GravityBendingStrength, 0.01f);
 
 					ImGui::DragFloat2("Lighting Factor A/L", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].ApicalBudLightingFactor, 0.01f);
-
-					ImGui::DragFloat2("Gravity Base/BPCo", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].SaggingFactor, 0.01f);
 
 					ImGui::DragFloat2("Thickness End/Fac", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].EndNodeThickness, 0.01f);
 

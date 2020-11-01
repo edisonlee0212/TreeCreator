@@ -172,7 +172,7 @@ void TreeUtilities::TreeManager::Init()
 	_InternodeArchetype = EntityManager::CreateEntityArchetype(
 		"Internode",
 		LocalToWorld(), Connection(),
-		Illumination(), Gravity(),
+		Illumination(), 
 		InternodeIndex(), InternodeInfo(), TreeIndex()
 	);
 	_TreeArchetype = EntityManager::CreateEntityArchetype(
@@ -232,9 +232,8 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::DragFloat2("Gravitropism Base/Age", &tps->GravitropismBase);
 			ImGui::DragFloat("PruningFactor", &tps->PruningFactor);
 			ImGui::DragFloat("LowBranchPruningFactor", &tps->LowBranchPruningFactor);
-			ImGui::DragFloat("GravityBendingStrength", &tps->GravityBendingStrength);
+			ImGui::DragFloat2("Gravity Strength/Angle", &tps->GravityBendingStrength);
 			ImGui::DragFloat2("Lighting Factor A/L", &tps->ApicalBudLightingFactor);
-			ImGui::DragFloat2("Gravity Base/BPCo", &tps->SaggingFactor);
 			ImGui::DragFloat2("Thickness End/Fac", &tps->EndNodeThickness);
 			ImGui::Spacing();
 			ImGui::DragFloat2("LeafSize", (float*)(void*)&tps->LeafSize, 0.01f);
@@ -272,7 +271,6 @@ void TreeUtilities::TreeManager::Init()
 				ImGui::Text(("AccumulatedLength: " + std::to_string(internodeInfo->AccumulatedLength)).c_str());
 				ImGui::Text(("AccumulatedLight: " + std::to_string(internodeInfo->AccumulatedLight)).c_str());
 				ImGui::Text(("AccumulatedActivatedBudsAmount: " + std::to_string(internodeInfo->AccumulatedActivatedBudsAmount)).c_str());
-				ImGui::Text(("AccumulatedGravity: " + std::to_string(internodeInfo->AccumulatedGravity)).c_str());
 				ImGui::TreePop();
 			}
 			if (ImGui::TreeNode("Growth")) {
@@ -302,6 +300,7 @@ void TreeUtilities::TreeManager::Init()
 			if (ImGui::TreeNode("Geometric")) {
 				ImGui::InputFloat3("MeanChildPosition", (float*)(void*)&internodeInfo->ChildBranchesMeanPosition, "%.3f", ImGuiInputTextFlags_ReadOnly);
 				ImGui::Text(("MeanWeight: " + std::to_string(internodeInfo->MeanWeight)).c_str());
+				ImGui::Text(("Sagging: " + std::to_string(internodeInfo->Sagging)).c_str());
 				ImGui::Text(("Length: " + std::to_string(internodeInfo->Length)).c_str());
 				ImGui::Text(("Thickness: " + std::to_string(internodeInfo->Thickness)).c_str());
 				ImGui::Text(("ParentThickness: " + std::to_string(internodeInfo->ParentThickness)).c_str());
@@ -355,15 +354,6 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::Text(("Lateral buds count " + std::to_string(info->LateralBudsCount)).c_str());
 		}
 	);
-	
-	EditorManager::AddComponentInspector<Gravity>(
-		[](ComponentBase* data)
-		{
-			auto info = static_cast<Gravity*>(data);
-			ImGui::Text(("Value: " + std::to_string(info->Value)).c_str());
-		}
-	);
-	
 	_Ready = true;
 }
 
