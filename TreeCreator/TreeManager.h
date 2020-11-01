@@ -82,6 +82,7 @@ namespace TreeUtilities {
 #pragma endregion
 #pragma region Growth
         int MaxChildOrder;
+        int MaxChildLevel;
         float Inhibitor = 0;
         float ParentInhibitorFactor = 1;
         int ActivatedBudsAmount = 0;

@@ -255,14 +255,6 @@ void TreeUtilities::TreeManager::Init()
 		[](ComponentBase* data)
 		{
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
-			ImGui::Text(("Order: " + std::to_string(internodeInfo->Order)).c_str());
-		}
-	);
-
-	EditorManager::AddComponentInspector<InternodeInfo>(
-		[](ComponentBase* data)
-		{
-			auto internodeInfo = static_cast<InternodeInfo*>(data);
 			ImGui::Text(("StartAge: " + std::to_string(internodeInfo->StartAge)).c_str());
 			ImGui::Text(("Order: " + std::to_string(internodeInfo->Order)).c_str());
 			ImGui::Text(("Level: " + std::to_string(internodeInfo->Level)).c_str());
@@ -282,6 +274,7 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::Text(("AccumulatedGravity: " + std::to_string(internodeInfo->AccumulatedGravity)).c_str());
 			ImGui::Spacing();
 			ImGui::Text(("MaxChildOrder: " + std::to_string(internodeInfo->MaxChildOrder)).c_str());
+			ImGui::Text(("MaxChildLevel: " + std::to_string(internodeInfo->MaxChildLevel)).c_str());
 			ImGui::Text(("Inhibitor: " + std::to_string(internodeInfo->Inhibitor)).c_str());
 			ImGui::Text(("ParentInhibitorFactor: " + std::to_string(internodeInfo->ParentInhibitorFactor)).c_str());
 			ImGui::Text(("ActivatedBudsAmount: " + std::to_string(internodeInfo->ActivatedBudsAmount)).c_str());
