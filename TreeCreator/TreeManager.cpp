@@ -255,63 +255,85 @@ void TreeUtilities::TreeManager::Init()
 		[](ComponentBase* data)
 		{
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
-			ImGui::Text(("StartAge: " + std::to_string(internodeInfo->StartAge)).c_str());
-			ImGui::Text(("Order: " + std::to_string(internodeInfo->Order)).c_str());
-			ImGui::Text(("Level: " + std::to_string(internodeInfo->Level)).c_str());
-			ImGui::Text(("DistanceToParent: " + std::to_string(internodeInfo->DistanceToParent)).c_str());
-			ImGui::Spacing();
-			ImGui::InputFloat3("BranchEndPosition", (float*)(void*)&internodeInfo->BranchEndPosition);
-			ImGui::InputFloat3("BranchStartPosition", (float*)(void*)&internodeInfo->BranchStartPosition);
-			ImGui::Text(("DistanceToBranchEnd: " + std::to_string(internodeInfo->DistanceToBranchEnd)).c_str());
-			ImGui::Text(("LongestDistanceToEnd: " + std::to_string(internodeInfo->LongestDistanceToEnd)).c_str());
-			ImGui::Text(("TotalDistanceToEnd: " + std::to_string(internodeInfo->TotalDistanceToEnd)).c_str());
-			ImGui::Text(("DistanceToBranchStart: " + std::to_string(internodeInfo->DistanceToBranchStart)).c_str());
-			ImGui::Text(("DistanceToRoot: " + std::to_string(internodeInfo->DistanceToRoot)).c_str());
-			ImGui::Spacing();
-			ImGui::Text(("AccumulatedLength: " + std::to_string(internodeInfo->AccumulatedLength)).c_str());
-			ImGui::Text(("AccumulatedLight: " + std::to_string(internodeInfo->AccumulatedLight)).c_str());
-			ImGui::Text(("AccumulatedActivatedBudsAmount: " + std::to_string(internodeInfo->AccumulatedActivatedBudsAmount)).c_str());
-			ImGui::Text(("AccumulatedGravity: " + std::to_string(internodeInfo->AccumulatedGravity)).c_str());
-			ImGui::Spacing();
-			ImGui::Text(("MaxChildOrder: " + std::to_string(internodeInfo->MaxChildOrder)).c_str());
-			ImGui::Text(("MaxChildLevel: " + std::to_string(internodeInfo->MaxChildLevel)).c_str());
-			ImGui::Text(("Inhibitor: " + std::to_string(internodeInfo->Inhibitor)).c_str());
-			ImGui::Text(("ParentInhibitorFactor: " + std::to_string(internodeInfo->ParentInhibitorFactor)).c_str());
-			ImGui::Text(("ActivatedBudsAmount: " + std::to_string(internodeInfo->ActivatedBudsAmount)).c_str());
-			ImGui::Text(("BranchEndInternodeAmount: " + std::to_string(internodeInfo->BranchEndInternodeAmount)).c_str());
-			ImGui::Text((std::string("Pruned: ") + (internodeInfo->Pruned ? "True" : "False")).c_str());
-			std::string reason;
-			switch (internodeInfo->PruneReason)
-			{
-			case 0:
-				reason = "Low Branch";
-				break;
-			case 1:
-				reason = "Pruning Factor";
-				break;
+			if (ImGui::TreeNode("General")) {
+				ImGui::Text(("StartAge: " + std::to_string(internodeInfo->StartAge)).c_str());
+				ImGui::Text(("Order: " + std::to_string(internodeInfo->Order)).c_str());
+				ImGui::Text(("Level: " + std::to_string(internodeInfo->Level)).c_str());
+				ImGui::Text(("DistanceToParent: " + std::to_string(internodeInfo->DistanceToParent)).c_str());
+				ImGui::Spacing();
+				ImGui::InputFloat3("BranchEndPosition", (float*)(void*)&internodeInfo->BranchEndPosition);
+				ImGui::InputFloat3("BranchStartPosition", (float*)(void*)&internodeInfo->BranchStartPosition);
+				ImGui::Text(("DistanceToBranchEnd: " + std::to_string(internodeInfo->DistanceToBranchEnd)).c_str());
+				ImGui::Text(("LongestDistanceToEnd: " + std::to_string(internodeInfo->LongestDistanceToEnd)).c_str());
+				ImGui::Text(("TotalDistanceToEnd: " + std::to_string(internodeInfo->TotalDistanceToEnd)).c_str());
+				ImGui::Text(("DistanceToBranchStart: " + std::to_string(internodeInfo->DistanceToBranchStart)).c_str());
+				ImGui::Text(("DistanceToRoot: " + std::to_string(internodeInfo->DistanceToRoot)).c_str());
+				ImGui::Spacing();
+				ImGui::Text(("AccumulatedLength: " + std::to_string(internodeInfo->AccumulatedLength)).c_str());
+				ImGui::Text(("AccumulatedLight: " + std::to_string(internodeInfo->AccumulatedLight)).c_str());
+				ImGui::Text(("AccumulatedActivatedBudsAmount: " + std::to_string(internodeInfo->AccumulatedActivatedBudsAmount)).c_str());
+				ImGui::Text(("AccumulatedGravity: " + std::to_string(internodeInfo->AccumulatedGravity)).c_str());
+				ImGui::TreePop();
 			}
-			ImGui::Text(("Pruned reason: " + reason).c_str());
-			ImGui::Text(("IsMaxChild: " + std::to_string(internodeInfo->IsMaxChild)).c_str());
-			ImGui::Text(("ApicalBudExist: " + std::to_string(internodeInfo->ApicalBudExist)).c_str());
-			ImGui::Text(("IsActivatedEndNode: " + std::to_string(internodeInfo->IsActivatedEndNode)).c_str());
-			ImGui::Spacing();
-			ImGui::Text(("Length: " + std::to_string(internodeInfo->Length)).c_str());
-			ImGui::Text(("Thickness: " + std::to_string(internodeInfo->Thickness)).c_str());
-			ImGui::Text(("ParentThickness: " + std::to_string(internodeInfo->ParentThickness)).c_str());
-			ImGui::Text(("Deformation: " + std::to_string(internodeInfo->Deformation)).c_str());
-			ImGui::Text(("Straightness: " + std::to_string(internodeInfo->Straightness)).c_str());
-			ImGui::Text(("Slope: " + std::to_string(internodeInfo->Slope)).c_str());
-			ImGui::Text(("SiblingAngle: " + std::to_string(internodeInfo->SiblingAngle)).c_str());
-			ImGui::Text(("ParentAngle: " + std::to_string(internodeInfo->ParentAngle)).c_str());
-			ImGui::Text(("IsMainChild: " + std::to_string(internodeInfo->IsMainChild)).c_str());
+			if (ImGui::TreeNode("Growth")) {
+				ImGui::Text(("MaxChildOrder: " + std::to_string(internodeInfo->MaxChildOrder)).c_str());
+				ImGui::Text(("MaxChildLevel: " + std::to_string(internodeInfo->MaxChildLevel)).c_str());
+				ImGui::Text(("Inhibitor: " + std::to_string(internodeInfo->Inhibitor)).c_str());
+				ImGui::Text(("ParentInhibitorFactor: " + std::to_string(internodeInfo->ParentInhibitorFactor)).c_str());
+				ImGui::Text(("ActivatedBudsAmount: " + std::to_string(internodeInfo->ActivatedBudsAmount)).c_str());
+				ImGui::Text(("BranchEndInternodeAmount: " + std::to_string(internodeInfo->BranchEndInternodeAmount)).c_str());
+				ImGui::Text((std::string("Pruned: ") + (internodeInfo->Pruned ? "Yes" : "No")).c_str());
+				std::string reason;
+				switch (internodeInfo->PruneReason)
+				{
+				case 0:
+					reason = "Low Branch";
+					break;
+				case 1:
+					reason = "Pruning Factor";
+					break;
+				}
+				ImGui::Text(("Pruned reason: " + reason).c_str());
+				ImGui::Text(("IsMaxChild: " + std::string(internodeInfo->IsMaxChild ? "Yes" : "No")).c_str());
+				ImGui::Text(("ApicalBudExist: " + std::to_string(internodeInfo->ApicalBudExist)).c_str());
+				ImGui::Text(("IsActivatedEndNode: " + std::to_string(internodeInfo->IsActivatedEndNode)).c_str());
+				ImGui::TreePop();
+			}
+			if (ImGui::TreeNode("Geometric")) {
+				ImGui::InputFloat3("MeanChildPosition", (float*)(void*)&internodeInfo->ChildBranchesMeanPosition, "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::Text(("MeanWeight: " + std::to_string(internodeInfo->MeanWeight)).c_str());
+				ImGui::Text(("Length: " + std::to_string(internodeInfo->Length)).c_str());
+				ImGui::Text(("Thickness: " + std::to_string(internodeInfo->Thickness)).c_str());
+				ImGui::Text(("ParentThickness: " + std::to_string(internodeInfo->ParentThickness)).c_str());
+				ImGui::Text(("Deformation: " + std::to_string(internodeInfo->Deformation)).c_str());
+				ImGui::Text(("Straightness: " + std::to_string(internodeInfo->Straightness)).c_str());
+				ImGui::Text(("Slope: " + std::to_string(internodeInfo->Slope)).c_str());
+				ImGui::Text(("SiblingAngle: " + std::to_string(internodeInfo->SiblingAngle)).c_str());
+				ImGui::Text(("ParentAngle: " + std::to_string(internodeInfo->ParentAngle)).c_str());
+				ImGui::TreePop();
+			}
+			
+			if (ImGui::TreeNode("Transform related")) {
+				ImGui::Text(("IsMainChild: " + std::string(internodeInfo->IsMainChild ? "Yes" : "No")).c_str());
+				ImGui::InputFloat4("Parent translation", (float*)(void*)&internodeInfo->ParentTranslation.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputFloat4("LT0", (float*)(void*)&internodeInfo->LocalTransform[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputFloat4("LT1", (float*)(void*)&internodeInfo->LocalTransform[1], "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputFloat4("LT2", (float*)(void*)&internodeInfo->LocalTransform[2], "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputFloat4("LT3", (float*)(void*)&internodeInfo->LocalTransform[3], "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::Spacing();
 
-			ImGui::Spacing();
-			ImGui::Text(("CrownShyness: " + std::to_string(internodeInfo->CrownShyness)).c_str());
-			ImGui::Spacing();
-			ImGui::InputFloat4("GT0", (float*)(void*)&internodeInfo->GlobalTransform[0], "%.3f",ImGuiInputTextFlags_ReadOnly);
-			ImGui::InputFloat4("GT1", (float*)(void*)&internodeInfo->GlobalTransform[1], "%.3f", ImGuiInputTextFlags_ReadOnly);
-			ImGui::InputFloat4("GT2", (float*)(void*)&internodeInfo->GlobalTransform[2], "%.3f", ImGuiInputTextFlags_ReadOnly);
-			ImGui::InputFloat4("GT3", (float*)(void*)&internodeInfo->GlobalTransform[3], "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputFloat4("GT0", (float*)(void*)&internodeInfo->GlobalTransform[0], "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputFloat4("GT1", (float*)(void*)&internodeInfo->GlobalTransform[1], "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputFloat4("GT2", (float*)(void*)&internodeInfo->GlobalTransform[2], "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputFloat4("GT3", (float*)(void*)&internodeInfo->GlobalTransform[3], "%.3f", ImGuiInputTextFlags_ReadOnly);
+
+				ImGui::TreePop();
+			}
+			if(ImGui::TreeNode("Crown Shyness"))
+			{
+				ImGui::Text(("CrownShyness: " + std::to_string(internodeInfo->CrownShyness)).c_str());
+				ImGui::TreePop();
+			}
 		}
 	);
 

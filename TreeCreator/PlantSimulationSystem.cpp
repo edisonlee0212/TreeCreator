@@ -582,6 +582,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 				glm::vec4 perspective;
 				glm::decompose(internodeInfo.GlobalTransform, scale, rotation, trans, skew, perspective);
 				prevInternodeRotation = rotation;
+				glm::vec3 prevInternodeTranslation = trans;
 #pragma region Create internodes
 				for (int selectedNewNodeIndex = 0; selectedNewNodeIndex < internodesToGrow; selectedNewNodeIndex++) {
 #pragma region Setup internode
@@ -603,7 +604,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 					newInternodeInfo.Pruned = false;
 					newInternodeInfo.StartAge = treeAge.Value;
 					newInternodeInfo.ParentInhibitorFactor = glm::pow(treeParameters.ApicalDominanceDistanceFactor, newInternodeInfo.DistanceToParent);
-
+					newInternodeInfo.ParentTranslation = prevInternodeTranslation;
 #pragma endregion
 #pragma region Transforms for internode
 					newInternodeInfo.DesiredLocalRotation = glm::quat(prevEulerAngle);
@@ -632,6 +633,9 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 					globalRawRotation = glm::quatLookAt(desiredFront, desiredUp);
 					newInternodeInfo.DesiredLocalRotation = glm::inverse(rotation) * glm::inverse(prevInternodeRotation) * globalRawRotation;
 					prevInternodeRotation = globalRawRotation;
+					prevInternodeTranslation = prevInternodeTranslation + newInternodeInfo.DistanceToParent * desiredFront;
+					newInternodeInfo.GlobalTransform = glm::translate(prevInternodeTranslation);
+					
 #pragma endregion
 #pragma endregion
 					prevEulerAngle = glm::vec3(glm::gaussRand(0.0f, glm::radians(treeParameters.VarianceApicalAngle)), glm::gaussRand(0.0f, glm::radians(treeParameters.VarianceApicalAngle)), 0.0f);
@@ -939,6 +943,10 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& int
 	internodeInfo.LongestDistanceToEnd = 0;
 	internodeInfo.TotalDistanceToEnd = 0;
 	internodeInfo.BranchEndInternodeAmount = EntityManager::GetChildrenAmount(internode) == 0 ? 1 : 0;
+	internodeInfo.MeanWeight = 0;
+	const float localWeight = 1.0f + glm::max(0, treeAge - internodeInfo.Level);
+	internodeInfo.ChildBranchesMeanPosition = internodeInfo.GlobalTransform[3];
+	internodeInfo.ChildBranchesMeanPosition *= localWeight * internodeInfo.DistanceToParent;
 	if (EntityManager::GetChildrenAmount(internode) == 0) {
 		internodeInfo.Thickness = treeParameters.EndNodeThickness;
 	}
@@ -946,15 +954,16 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& int
 		internodeInfo.Thickness = 0;
 	}
 	float mainChildThickness = 0.0f;
-	EntityManager::ForEachChild(internode, [this, &internodeInfo, &mainChildThickness, &treeParameters, treeAge](Entity child)
+	float totalChildWeight = 0.0f;
+	EntityManager::ForEachChild(internode, [this, &internodeInfo, &mainChildThickness, &treeParameters, treeAge, &totalChildWeight](Entity child)
 		{
 			UpdateDistanceToBranchEnd(child, treeParameters, treeAge);
 			const InternodeInfo childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
 			if (childNodeInfo.MaxChildOrder > internodeInfo.MaxChildOrder) internodeInfo.MaxChildOrder = childNodeInfo.MaxChildOrder;
 			if (childNodeInfo.MaxChildLevel > internodeInfo.MaxChildLevel) internodeInfo.MaxChildLevel = childNodeInfo.MaxChildLevel;
-			float d = childNodeInfo.LongestDistanceToEnd + childNodeInfo.DistanceToParent;
+			const float currentDistanceToBranchEnd = childNodeInfo.LongestDistanceToEnd + childNodeInfo.DistanceToParent;
 			internodeInfo.TotalDistanceToEnd += childNodeInfo.DistanceToParent + childNodeInfo.TotalDistanceToEnd;
-			if (d > internodeInfo.LongestDistanceToEnd) internodeInfo.LongestDistanceToEnd = d;
+			if (currentDistanceToBranchEnd > internodeInfo.LongestDistanceToEnd) internodeInfo.LongestDistanceToEnd = currentDistanceToBranchEnd;
 			if (childNodeInfo.IsMaxChild == internodeInfo.IsMaxChild)
 			{
 				internodeInfo.DistanceToBranchEnd = childNodeInfo.DistanceToBranchEnd + childNodeInfo.DistanceToParent;
@@ -965,8 +974,16 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& int
 			if (childNodeInfo.Thickness > mainChildThickness) {
 				mainChildThickness = childNodeInfo.Thickness;
 			}
+			totalChildWeight += childNodeInfo.MeanWeight;
+			internodeInfo.ChildBranchesMeanPosition += childNodeInfo.MeanWeight * childNodeInfo.ChildBranchesMeanPosition;
 		}
 	);
+	
+	internodeInfo.MeanWeight = localWeight * internodeInfo.DistanceToParent + totalChildWeight;
+	if(internodeInfo.MeanWeight > 0)
+	{
+		internodeInfo.ChildBranchesMeanPosition /= internodeInfo.MeanWeight;
+	}
 	if (mainChildThickness > internodeInfo.Thickness) internodeInfo.Thickness = mainChildThickness;
 	EntityManager::SetComponentData(internode, internodeInfo);
 }
@@ -979,7 +996,6 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchStart(Entity& i
 	EntityManager::ForEachChild(internode, [this, &maxChild, &maxChildLength](Entity child)
 		{
 			const InternodeInfo childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
-			if (childNodeInfo.Pruned) return;
 			const float childTotalDistance = childNodeInfo.TotalDistanceToEnd + childNodeInfo.DistanceToParent;
 			if (childTotalDistance > maxChildLength) {
 				maxChildLength = childTotalDistance;
@@ -987,7 +1003,6 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchStart(Entity& i
 			}
 		}
 	);
-	int maxChildLevel = internodeInfo.Level;
 	EntityManager::ForEachChild(internode, [this, &internodeInfo, &maxChild](Entity child)
 		{
 			InternodeInfo childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);

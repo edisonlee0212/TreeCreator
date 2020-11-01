@@ -94,6 +94,8 @@ namespace TreeUtilities {
         bool IsActivatedEndNode;
 #pragma endregion
 #pragma region Geometric
+        glm::vec3 ChildBranchesMeanPosition = glm::vec3(0.0f);
+        float MeanWeight;
         float Length;
         float Thickness;
         float ParentThickness;
