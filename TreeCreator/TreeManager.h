@@ -65,6 +65,7 @@ namespace TreeUtilities {
 #pragma region General
         int StartAge;
         int Order = 0;
+        int Level = 0;
         float DistanceToParent = 0;
         glm::vec3 BranchEndPosition;
         glm::vec3 BranchStartPosition;
@@ -94,6 +95,7 @@ namespace TreeUtilities {
 #pragma region Geometric
         float Length;
         float Thickness;
+        float ParentThickness;
         float Deformation;
         float Straightness;
         float Slope;
@@ -109,7 +111,6 @@ namespace TreeUtilities {
 #pragma region Mesh generation
         glm::vec3 ParentTranslation;
         glm::quat ParentRotation;
-        float ParentThickness;
         glm::quat MainChildRotation;
         glm::quat ParentMainChildRotation;
         bool IsMainChild = false;
@@ -191,7 +192,8 @@ namespace TreeUtilities {
         int SideLeafAmount = 1;
         float StartBendingAngle = 45;
         float BendingAngleIncrement = 0;
-        float LeafPhotoTropism = 1.0f;
+        float LeafPhotoTropism = 999.0f;
+        float LeafGravitropism = 1.0f;
         float LeafDistance = 0;
 #pragma endregion
 
@@ -220,6 +222,7 @@ namespace TreeUtilities {
     public:
         bool MeshGenerated;
         bool FoliageGenerated;
+        float ActiveLength;
         std::vector<float> ApicalControlTimeVal;
         std::vector<std::vector<float>> ApicalControlTimeLevelVal;
         std::shared_ptr<Mesh> ConvexHull;

@@ -52,7 +52,7 @@ namespace TreeUtilities {
 		void UpdateDistanceToBranchStart(Entity& internode);
 		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::mat4& treeLTW);
 		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
-		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeInfo, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform);
+		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform);
 		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
 		bool EvaluateRemoval(Entity& internode, TreeParameters& treeParameters);
 		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);
@@ -61,13 +61,10 @@ namespace TreeUtilities {
 		void BackPropagateForce(Entity& internode, float fixedPropagationCoefficient);
 		void CalculateCrownShyness(float detectionDistance = 5.0f);
 		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo, int pruneReason) const;
-		static inline void TreeParameterImportHelper(std::ifstream& ifs, TreeParameters& treeParameters);
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);
 		void BuildHullForTree(Entity& tree);
 	public:
 		void RefreshTrees();
-		static TreeParameters ImportTreeParameters(const std::string& path);
-		static void ExportTreeParameters(const std::string& path, TreeParameters& treeParameters);
 		void ExportSettings(const std::string& path);
 		void ImportSettings(const std::string& path);
 		static void LoadDefaultTreeParameters(int preset, TreeParameters& tps);
@@ -86,7 +83,7 @@ namespace TreeUtilities {
 	{
 		const glm::vec3 dir = glm::normalize(targetDir);
 		const float dotP = glm::abs(glm::dot(front, dir));
-		if(dotP < 0.98f)
+		if(dotP < 0.999f)
 		{
 			const glm::vec3 left = glm::cross(front, dir);
 			float rotateAngle = (1.0f - dotP) * tropism;

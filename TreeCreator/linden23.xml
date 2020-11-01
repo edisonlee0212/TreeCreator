@@ -43,12 +43,15 @@
 			<CrownShynessFactor>1.000000</CrownShynessFactor>
 			<LeafSizeX>0.150000</LeafSizeX>
 			<LeafSizeY>0.200000</LeafSizeY>
-			<LeafIlluminationLimit>0.002000</LeafIlluminationLimit>
-			<LeafInhibitorFactor>0.040000</LeafInhibitorFactor>
-			<LeafAmount>3</LeafAmount>
-			<LeafBendAngle>60.000000</LeafBendAngle>
-			<LeafStartRollAngle>0.000000</LeafStartRollAngle>
-			<LeafRollAngle>180.000000</LeafRollAngle>
+			<LeafIlluminationLimit>0.050000</LeafIlluminationLimit>
+			<LeafInhibitorFactor>0.014000</LeafInhibitorFactor>
+			<IsBothSide>1</IsBothSide>
+			<SideLeafAmount>2</SideLeafAmount>
+			<StartBendingAngle>30.000000</StartBendingAngle>
+			<BendingAngleIncrement>30.000000</BendingAngleIncrement>
+			<LeafPhotoTropism>1.000000</LeafPhotoTropism>
+			<LeafGravitropism>1.000000</LeafGravitropism>
+			<LeafDistance>0.150000</LeafDistance>
 		</TreeParameters>
 	</Instance>
 </TreeSettings>

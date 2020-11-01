@@ -236,6 +236,18 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::DragFloat2("Lighting Factor A/L", &tps->ApicalBudLightingFactor);
 			ImGui::DragFloat2("Gravity Base/BPCo", &tps->SaggingFactor);
 			ImGui::DragFloat2("Thickness End/Fac", &tps->EndNodeThickness);
+			ImGui::Spacing();
+			ImGui::DragFloat2("LeafSize", (float*)(void*)&tps->LeafSize, 0.01f);
+			ImGui::DragFloat("LeafIlluminationLimit", &tps->LeafIlluminationLimit, 0.001f);
+			ImGui::DragFloat("LeafInhibitorFactor", &tps->LeafInhibitorFactor, 0.001f);
+			ImGui::Checkbox("IsBothSize", &tps->IsBothSide);
+			ImGui::DragInt("Side Leaf Amount", &tps->SideLeafAmount);
+			ImGui::DragFloat("StartBendingAngle", &tps->StartBendingAngle);
+			ImGui::DragFloat("BendingAngleIncrement", &tps->BendingAngleIncrement);
+			ImGui::DragFloat("LeafPhotoTropism", &tps->LeafPhotoTropism, 0.01f);
+			ImGui::DragFloat("LeafGravitropism", &tps->LeafGravitropism, 0.01f);
+			ImGui::DragFloat("LeafDistance", &tps->LeafDistance, 0.01f);
+			
 		}
 	);
 
@@ -253,6 +265,7 @@ void TreeUtilities::TreeManager::Init()
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
 			ImGui::Text(("StartAge: " + std::to_string(internodeInfo->StartAge)).c_str());
 			ImGui::Text(("Order: " + std::to_string(internodeInfo->Order)).c_str());
+			ImGui::Text(("Level: " + std::to_string(internodeInfo->Level)).c_str());
 			ImGui::Text(("DistanceToParent: " + std::to_string(internodeInfo->DistanceToParent)).c_str());
 			ImGui::Spacing();
 			ImGui::InputFloat3("BranchEndPosition", (float*)(void*)&internodeInfo->BranchEndPosition);
@@ -291,12 +304,12 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::Spacing();
 			ImGui::Text(("Length: " + std::to_string(internodeInfo->Length)).c_str());
 			ImGui::Text(("Thickness: " + std::to_string(internodeInfo->Thickness)).c_str());
+			ImGui::Text(("ParentThickness: " + std::to_string(internodeInfo->ParentThickness)).c_str());
 			ImGui::Text(("Deformation: " + std::to_string(internodeInfo->Deformation)).c_str());
 			ImGui::Text(("Straightness: " + std::to_string(internodeInfo->Straightness)).c_str());
 			ImGui::Text(("Slope: " + std::to_string(internodeInfo->Slope)).c_str());
 			ImGui::Text(("SiblingAngle: " + std::to_string(internodeInfo->SiblingAngle)).c_str());
 			ImGui::Text(("ParentAngle: " + std::to_string(internodeInfo->ParentAngle)).c_str());
-			ImGui::Text(("ParentThickness: " + std::to_string(internodeInfo->ParentThickness)).c_str());
 			ImGui::Text(("IsMainChild: " + std::to_string(internodeInfo->IsMainChild)).c_str());
 
 			ImGui::Spacing();
