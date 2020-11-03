@@ -254,6 +254,10 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 			{
 				_NewTreeParameters[i].MaxBudAge = std::atoi(parameterNode.first_child().value());
 			}
+			else if (name.compare("InternodeSize") == 0)
+			{
+				_NewTreeParameters[i].InternodeSize = std::atof(parameterNode.first_child().value());
+			}
 			else if (name.compare("Phototropism") == 0)
 			{
 				_NewTreeParameters[i].Phototropism = std::atof(parameterNode.first_child().value());
@@ -284,7 +288,7 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 			}
 			else if (name.compare("GravityBendingAngleFactor") == 0)
 			{
-			_NewTreeParameters[i].GravityBendingAngleFactor = std::atof(parameterNode.first_child().value());
+				_NewTreeParameters[i].GravityBendingAngleFactor = std::atof(parameterNode.first_child().value());
 			}
 			else if (name.compare("ApicalBudLightingFactor") == 0)
 			{
@@ -388,6 +392,7 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 	output += "\t\t\t<MaxBudAge>"; output += std::to_string(treeParameters.MaxBudAge) + "</MaxBudAge>\n";
 #pragma endregion
 #pragma region Environmental
+	output += "\t\t\t<InternodeSize>"; output += std::to_string(treeParameters.InternodeSize) + "</InternodeSize>\n";
 	output += "\t\t\t<Phototropism>"; output += std::to_string(treeParameters.Phototropism) + "</Phototropism>\n";
 	output += "\t\t\t<GravitropismBase>"; output += std::to_string(treeParameters.GravitropismBase) + "</GravitropismBase>\n";
 	output += "\t\t\t<GravitropismLevelFactor>"; output += std::to_string(treeParameters.GravitropismLevelFactor) + "</GravitropismLevelFactor>\n";
@@ -476,7 +481,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	EntityManager::SetComponentData(internode, internodeInfo);
 	auto treeInfo = EntityManager::GetSharedComponent<TreeData>(treeEntity);
 	treeInfo->MeshGenerated = false;
-	auto id = glm::mat4(1.0f);
+	auto id = glm::translate(glm::vec3(0.0f)) * glm::mat4_cast(glm::quat(glm::vec3(0.0f))) * glm::scale(glm::vec3(1.0f));
 	UpdateLocalTransform(internode, treeParameters, id, ltw.Value);
 	EntityManager::SetComponentData(treeEntity, treeParameters);
 	EntityManager::SetComponentData(treeEntity, age);
@@ -488,7 +493,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	internodeInfo.Inhibitor = 0;
 	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
-	
+
 #pragma region Grow child
 	bool ret = false;
 	EntityManager::ForEachChild(internode, [&ret, this, &internodeInfo, &treeData, &treeAge, &treeParameters, &treeIndex, &treeTransform](Entity childNode)
@@ -536,7 +541,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 		// now take into consideration the light on the bud
 		float illumination = internodeIllumination.Value;
 		if (illumination < 1.0f) {
-			budGrowProbability *= glm::pow(illumination, 
+			budGrowProbability *= glm::pow(illumination,
 				bud.IsApical ? treeParameters.ApicalBudLightingFactor : treeParameters.LateralBudLightingFactor);
 		}
 		budGrowProbability *= internodeInfo.CrownShyness;
@@ -585,7 +590,8 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 					if (selectedNewNodeIndex == internodesToGrow - 1) {
 						newInternodeInfo.ApicalBudExist = true;
 						newInternodeInfo.ActivatedBudsAmount = treeParameters.LateralBudPerNode + 1;
-					}else
+					}
+					else
 					{
 						newInternodeInfo.ApicalBudExist = false;
 						newInternodeInfo.ActivatedBudsAmount = treeParameters.LateralBudPerNode;
@@ -628,7 +634,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 					prevInternodeRotation = globalRawRotation;
 					prevInternodeTranslation = prevInternodeTranslation + newInternodeInfo.DistanceToParent * desiredFront;
 					newInternodeInfo.GlobalTransform = glm::translate(prevInternodeTranslation);
-					
+
 #pragma endregion
 #pragma endregion
 					prevEulerAngle = glm::vec3(glm::gaussRand(0.0f, glm::radians(treeParameters.VarianceApicalAngle)), glm::gaussRand(0.0f, glm::radians(treeParameters.VarianceApicalAngle)), 0.0f);
@@ -660,10 +666,11 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 				}
 #pragma endregion
 				bud.IsActive = false;
-				if(isLateral)
+				if (isLateral)
 				{
 					lateralBudsInhibitorToAdd += treeParameters.ApicalDominanceBase * static_cast<float>(internodeInfo.ActivatedBudsAmount) * glm::pow(treeParameters.ApicalDominanceAgeFactor, treeAge.Value);
-				}else
+				}
+				else
 				{
 					internodeInfo.Inhibitor += treeParameters.ApicalDominanceBase * static_cast<float>(internodeInfo.ActivatedBudsAmount) * glm::pow(treeParameters.ApicalDominanceAgeFactor, treeAge.Value);
 				}
@@ -872,7 +879,7 @@ void TreeUtilities::PlantSimulationSystem::CalculatePhysics(Entity tree)
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
 	if (EntityManager::GetChildrenAmount(tree) == 0) return;
 	Entity rootInternode = EntityManager::GetChildren(tree).at(0);
-	auto id = glm::mat4(1.0f);
+	auto id = glm::translate(glm::vec3(0.0f)) * glm::mat4_cast(glm::quat(glm::vec3(0.0f))) * glm::scale(glm::vec3(1.0f));
 	UpdateLocalTransform(rootInternode, treeParameters, id, ltw.Value);
 	ApplyLocalTransform(tree);
 }
@@ -881,13 +888,14 @@ void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntit
 	glm::mat4 treeTransform = EntityManager::GetComponentData<LocalToWorld>(treeEntity).Value;
 	auto treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity).Value;
 	auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
+	auto internodeSize = EntityManager::GetComponentData<TreeParameters>(treeEntity).InternodeSize;
 	std::mutex heightMutex;
 	float treeHeight = 0.0f;
 	EntityManager::ForEach<TreeIndex, LocalToWorld, InternodeInfo>(_InternodeQuery,
-		[treeTransform, treeIndex, &treeHeight, &heightMutex](int i, Entity internode, TreeIndex* index, LocalToWorld* ltw, InternodeInfo* info)
+		[treeTransform, treeIndex, &treeHeight, &heightMutex, &internodeSize](int i, Entity internode, TreeIndex* index, LocalToWorld* ltw, InternodeInfo* info)
 		{
 			if (index->Value == treeIndex) {
-				ltw->Value = treeTransform * info->GlobalTransform;
+				ltw->Value = treeTransform * info->GlobalTransform * glm::scale(glm::vec3(internodeSize));
 				if (info->GlobalTransform[3].y > treeHeight) {
 					std::lock_guard<std::mutex> lock(heightMutex);
 					treeHeight = info->GlobalTransform[3].y;
@@ -939,7 +947,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& int
 				internodeInfo.BranchEndPosition = childNodeInfo.BranchEndPosition;
 			}
 			internodeInfo.BranchEndInternodeAmount += childNodeInfo.BranchEndInternodeAmount;
-		
+
 			internodeInfo.Thickness += treeParameters.ThicknessControlFactor * childNodeInfo.Thickness;
 			if (childNodeInfo.Thickness > mainChildThickness) {
 				mainChildThickness = childNodeInfo.Thickness;
@@ -948,9 +956,9 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& int
 			internodeInfo.ChildBranchesMeanPosition += childNodeInfo.MeanWeight * childNodeInfo.ChildBranchesMeanPosition;
 		}
 	);
-	
+
 	internodeInfo.MeanWeight = localWeight * internodeInfo.DistanceToParent + totalChildWeight;
-	if(internodeInfo.MeanWeight > 0)
+	if (internodeInfo.MeanWeight > 0)
 	{
 		internodeInfo.ChildBranchesMeanPosition /= internodeInfo.MeanWeight;
 	}
@@ -998,7 +1006,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchStart(Entity& i
 void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::mat4& treeLTW)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
-	
+
 
 	glm::vec3 scale;
 	glm::vec3 skew;
@@ -1134,7 +1142,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& inter
 					}
 				}
 			}
-			if(internodeInfo.Level == internodeInfo.MaxChildLevel)
+			if (internodeInfo.Level == internodeInfo.MaxChildLevel)
 			{
 				auto front = branchFront;
 				auto up = branchUp;
@@ -1803,69 +1811,40 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 				if (_DisplayFullParam) {
 #pragma region Show params
 					ImGui::DragInt("Seed", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].Seed);
-
 					ImGui::DragInt("Lateral Bud Number", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LateralBudPerNode);
-
 					ImGui::DragFloat("Apical Angle Var", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].VarianceApicalAngle, 0.01f);
-
 					ImGui::DragFloat2("Branching Angle M/Var", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].BranchingAngleMean, 0.01f);
-
 					ImGui::DragFloat2("Roll Angle M/Var", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].RollAngleMean, 0.01f);
-
 					ImGui::DragFloat2("Extinction Prob A/L", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].ApicalBudKillProbability, 0.01f);
-
 					ImGui::DragFloat3("AD Base/Dis/Age", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].ApicalDominanceBase, 0.01f);
-
 					ImGui::DragFloat("Growth Rate", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].GrowthRate, 0.01f);
-
 					ImGui::DragFloat2("Node Len Base/Age", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].InternodeLengthBase, 0.01f);
-
 					ImGui::DragFloat4("AC Base/Age/Lvl/Dist", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].ApicalControlBase, 0.01f);
-
 					ImGui::DragInt("Max Bud Age", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].MaxBudAge);
-
+					ImGui::DragFloat("InternodeSize", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].InternodeSize, 0.01f);
 					ImGui::DragFloat("Phototropism", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].Phototropism, 0.01f);
-
 					ImGui::DragFloat2("Gravitropism Base/Dist", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].GravitropismBase, 0.01f);
-
 					ImGui::DragFloat("PruningFactor", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].PruningFactor, 0.01f);
-
 					ImGui::DragFloat("LowBranchPruningFactor", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LowBranchPruningFactor, 0.01f);
-
 					ImGui::DragFloat("RemovalFactor Thickness", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].ThicknessRemovalFactor, 0.01f);
-
 					ImGui::DragFloat2("Gravity Strength/Angle", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].GravityBendingStrength, 0.01f);
-
 					ImGui::DragFloat2("Lighting Factor A/L", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].ApicalBudLightingFactor, 0.01f);
-
 					ImGui::DragFloat2("Thickness End/Fac", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].EndNodeThickness, 0.01f);
-
 					ImGui::DragFloat2("Crown Shyness Base/Factor", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].CrownShynessBase, 0.01f);
-
 					ImGui::DragFloat2("Leaf Size XY", (float*)(void*)&_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafSize, 0.01f);
-
 					ImGui::DragFloat("LeafIlluminationLimit", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafIlluminationLimit, 0.01f);
-
 					ImGui::DragFloat("LeafInhibitorFactor", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafInhibitorFactor, 0.01f);
-
 					ImGui::Checkbox("IsBothSide", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].IsBothSide);
-
 					ImGui::DragInt("SideLeafAmount", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].SideLeafAmount, 0.01f);
-
 					ImGui::DragFloat("StartBendingAngle", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].StartBendingAngle, 0.01f);
-
 					ImGui::DragFloat("BendingAngleIncrement", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].BendingAngleIncrement, 0.01f);
-
 					ImGui::DragFloat("LeafPhotoTropism", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafPhotoTropism, 0.01f);
-
 					ImGui::DragFloat("LeafGravitropism", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafGravitropism, 0.01f);
-					
 					ImGui::DragFloat("LeafDistance", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafDistance, 0.01f);
 #pragma endregion
-
 				}
 				else {
-
+					ImGui::DragInt("Seed", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].Seed);
 				}
 				ImGui::PopItemWidth();
 

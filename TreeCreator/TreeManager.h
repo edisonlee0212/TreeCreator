@@ -155,6 +155,8 @@ namespace TreeUtilities {
         int MaxBudAge;
 #pragma endregion
 #pragma region Environmental
+        float InternodeSize = 0.3f;
+    	
         float Phototropism;
         float GravitropismBase;
         float GravitropismLevelFactor;

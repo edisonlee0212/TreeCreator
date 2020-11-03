@@ -26,6 +26,7 @@
 			<ApicalControlLevelFactor>1.000000</ApicalControlLevelFactor>
 			<ApicalControlDistanceFactor>0.000000</ApicalControlDistanceFactor>
 			<MaxBudAge>10</MaxBudAge>
+			<InternodeSize>0.300000</InternodeSize>
 			<Phototropism>0.424451</Phototropism>
 			<GravitropismBase>0.239603</GravitropismBase>
 			<GravitropismLevelFactor>0.000000</GravitropismLevelFactor>

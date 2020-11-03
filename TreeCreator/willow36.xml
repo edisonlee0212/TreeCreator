@@ -18,7 +18,7 @@
 			<ApicalDominanceBase>0.380000</ApicalDominanceBase>
 			<ApicalDominanceDistanceFactor>0.900000</ApicalDominanceDistanceFactor>
 			<ApicalDominanceAgeFactor>0.310000</ApicalDominanceAgeFactor>
-			<GrowthRate>1.900000</GrowthRate>
+			<GrowthRate>2.300000</GrowthRate>
 			<InternodeLengthBase>0.800000</InternodeLengthBase>
 			<InternodeLengthAgeFactor>0.980000</InternodeLengthAgeFactor>
 			<ApicalControlBase>3.250000</ApicalControlBase>
@@ -26,14 +26,14 @@
 			<ApicalControlLevelFactor>1.000000</ApicalControlLevelFactor>
 			<ApicalControlDistanceFactor>0.000000</ApicalControlDistanceFactor>
 			<MaxBudAge>8</MaxBudAge>
-			<InternodeSize>0.300000</InternodeSize>
+			<InternodeSize>0.400000</InternodeSize>
 			<Phototropism>0.150000</Phototropism>
 			<GravitropismBase>-0.160000</GravitropismBase>
-			<GravitropismLevelFactor>-0.060000</GravitropismLevelFactor>
+			<GravitropismLevelFactor>-0.090000</GravitropismLevelFactor>
 			<PruningFactor>0.800000</PruningFactor>
 			<LowBranchPruningFactor>2.900000</LowBranchPruningFactor>
 			<ThicknessRemovalFactor>99999.000000</ThicknessRemovalFactor>
-			<GravityBendingStrength>0.130000</GravityBendingStrength>
+			<GravityBendingStrength>0.140000</GravityBendingStrength>
 			<GravityBendingAngleFactor>0.850000</GravityBendingAngleFactor>
 			<ApicalBudLightingFactor>0.540000</ApicalBudLightingFactor>
 			<LateralBudLightingFactor>0.940000</LateralBudLightingFactor>

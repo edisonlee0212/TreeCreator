@@ -109,16 +109,9 @@ TreeUtilities::LightSnapShot::~LightSnapShot()
 	delete(_SnapShotTexture);
 }
 
-
-
 void TreeUtilities::LightEstimator::SetMaxIllumination(float value)
 {
 	_MaxIllumination = value;
-}
-
-void TreeUtilities::LightEstimator::SetBranchNodeSize(float value)
-{
-	_BranchNodeSize = value;
 }
 
 glm::vec3 TreeUtilities::LightEstimator::GetCenterPosition()
@@ -263,7 +256,6 @@ void TreeUtilities::LightEstimator::TakeSnapShot(bool storeSnapshot)
 		glClearColor(0, 0, 0, 1);
 		_SnapShotProgram->SetFloat4x4("lightSpaceMatrix", ss->GetLightSpaceMatrix());
 		_SnapShotProgram->SetFloat4x4("model", model);
-		_SnapShotProgram->SetFloat4x4("scaleMatrix", glm::scale(glm::identity<glm::mat4>(), glm::vec3(_BranchNodeSize)));
 		if (matrices.size() != 0) glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)mesh->Size(), GL_UNSIGNED_INT, 0, (GLsizei)count);
 	}
 	
@@ -320,10 +312,6 @@ float TreeUtilities::LightEstimator::GetMaxIllumination()
 	return _MaxIllumination;
 }
 
-float TreeUtilities::LightEstimator::GetBranchNodeSize()
-{
-	return _BranchNodeSize;
-}
 
 float TreeUtilities::LightEstimator::CalculateScore()
 {

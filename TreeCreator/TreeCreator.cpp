@@ -63,7 +63,6 @@ int main()
 #pragma region Light estimator setup
 	//The smaller the branch node's size, the more branching for tree.
 	TreeManager::GetLightEstimator()->ResetResolution(512);
-	TreeManager::GetLightEstimator()->SetBranchNodeSize(0.3f);
 	TreeManager::GetLightEstimator()->ResetCenterDistance(60);
 	TreeManager::GetLightEstimator()->ResetSnapShotWidth(30);
 	//From top

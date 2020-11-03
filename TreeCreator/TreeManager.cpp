@@ -228,6 +228,7 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::DragFloat2("Node Len Base/Age", &tps->InternodeLengthBase);
 			ImGui::DragFloat4("AC Base/Age/Lvl/Dist", &tps->ApicalControlBase);
 			ImGui::DragInt("Max Bud Age", &tps->MaxBudAge);
+			ImGui::DragFloat("InternodeSize", &tps->InternodeSize);
 			ImGui::DragFloat("Phototropism", &tps->Phototropism);
 			ImGui::DragFloat2("Gravitropism Base/Age", &tps->GravitropismBase);
 			ImGui::DragFloat("PruningFactor", &tps->PruningFactor);

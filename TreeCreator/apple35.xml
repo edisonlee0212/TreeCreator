@@ -18,7 +18,7 @@
 			<ApicalDominanceBase>3.130000</ApicalDominanceBase>
 			<ApicalDominanceDistanceFactor>0.130000</ApicalDominanceDistanceFactor>
 			<ApicalDominanceAgeFactor>0.820000</ApicalDominanceAgeFactor>
-			<GrowthRate>2.980000</GrowthRate>
+			<GrowthRate>3.000000</GrowthRate>
 			<InternodeLengthBase>0.550000</InternodeLengthBase>
 			<InternodeLengthAgeFactor>0.970000</InternodeLengthAgeFactor>
 			<ApicalControlBase>2.200000</ApicalControlBase>
@@ -26,10 +26,10 @@
 			<ApicalControlLevelFactor>1.000000</ApicalControlLevelFactor>
 			<ApicalControlDistanceFactor>0.000000</ApicalControlDistanceFactor>
 			<MaxBudAge>20</MaxBudAge>
-			<InternodeSize>0.300000</InternodeSize>
+			<InternodeSize>0.370000</InternodeSize>
 			<Phototropism>0.320000</Phototropism>
-			<GravitropismBase>-0.410000</GravitropismBase>
-			<GravitropismLevelFactor>0.150000</GravitropismLevelFactor>
+			<GravitropismBase>0.050000</GravitropismBase>
+			<GravitropismLevelFactor>-0.030000</GravitropismLevelFactor>
 			<PruningFactor>0.700000</PruningFactor>
 			<LowBranchPruningFactor>1.300000</LowBranchPruningFactor>
 			<ThicknessRemovalFactor>99999.000000</ThicknessRemovalFactor>
