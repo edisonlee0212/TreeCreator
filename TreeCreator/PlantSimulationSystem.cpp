@@ -927,7 +927,6 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& int
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	internodeInfo.MaxChildOrder = internodeInfo.Order;
-	internodeInfo.MaxChildLevel = internodeInfo.Level;
 	internodeInfo.BranchEndPosition = internodeInfo.GlobalTransform[3];
 	internodeInfo.DistanceToBranchEnd = 0;
 	internodeInfo.LongestDistanceToEnd = 0;
@@ -950,7 +949,6 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& int
 			UpdateDistanceToBranchEnd(child, treeParameters, treeAge);
 			const InternodeInfo childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
 			if (childNodeInfo.MaxChildOrder > internodeInfo.MaxChildOrder) internodeInfo.MaxChildOrder = childNodeInfo.MaxChildOrder;
-			if (childNodeInfo.MaxChildLevel > internodeInfo.MaxChildLevel) internodeInfo.MaxChildLevel = childNodeInfo.MaxChildLevel;
 			const float currentDistanceToBranchEnd = childNodeInfo.LongestDistanceToEnd + childNodeInfo.DistanceToParent;
 			internodeInfo.TotalDistanceToEnd += childNodeInfo.DistanceToParent + childNodeInfo.TotalDistanceToEnd;
 			if (currentDistanceToBranchEnd > internodeInfo.LongestDistanceToEnd) internodeInfo.LongestDistanceToEnd = currentDistanceToBranchEnd;
@@ -981,6 +979,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& int
 void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchStart(Entity& internode)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
+	internodeInfo.MaxChildLevel = internodeInfo.Level;
 	// go through node children and update their level accordingly
 	float maxChildLength = 0;
 	Entity maxChild;
@@ -1012,6 +1011,8 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchStart(Entity& i
 			}
 			EntityManager::SetComponentData(child, childNodeInfo);
 			UpdateDistanceToBranchStart(child);
+			childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
+			if (childNodeInfo.MaxChildLevel > internodeInfo.MaxChildLevel) internodeInfo.MaxChildLevel = childNodeInfo.MaxChildLevel;
 		}
 	);
 	EntityManager::SetComponentData(internode, internodeInfo);
@@ -1019,8 +1020,6 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchStart(Entity& i
 void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::mat4& treeLTW)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
-
-
 	glm::vec3 scale;
 	glm::vec3 skew;
 	glm::vec4 perspective;
