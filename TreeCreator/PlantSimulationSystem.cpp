@@ -14,19 +14,25 @@
 
 void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
-	
+
 }
 void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& trees)
 {
 	bool growed = false;
-	if (_Growing) {
-		for (auto& tree : trees) {
-			growed = growed || GrowTree(tree);
-		}
-		if (!growed) {
-			_Growing = false;
-		}
-		else RefreshTrees();
+
+	for (auto& tree : trees) {
+		growed = growed || GrowTree(tree);
+	}
+	RefreshTrees();
+	if (!growed) {
+		_Growing = false;
+		float timer = Application::EngineTime() - _GrowthTimer;
+		Debug::Log("Structural growth completed in " + std::to_string(timer) + " seconds.");
+		Debug::Log("Generating leaves...");
+		timer = Application::EngineTime();
+		GenerateLeavesForAllTrees(trees);
+		timer = Application::EngineTime() - timer;
+		Debug::Log("Leaves generation completed in " + std::to_string(timer) + " seconds.");
 	}
 }
 bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
@@ -474,7 +480,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	UpdateLocalTransform(internode, treeParameters, id, ltw.Value);
 	EntityManager::SetComponentData(treeEntity, treeParameters);
 	EntityManager::SetComponentData(treeEntity, age);
-	_Growing = true;
+	ResumeGrowth();
 	return treeEntity;
 }
 bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform)
@@ -1184,8 +1190,25 @@ void PlantSimulationSystem::BuildHullForTree(Entity& tree)
 	*/
 }
 
-void PlantSimulationSystem::GenerateLeaves(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge,
-	glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft)
+void PlantSimulationSystem::ResumeGrowth()
+{
+	_Growing = true;
+	_GrowthTimer = Application::EngineTime();
+}
+
+void PlantSimulationSystem::GenerateLeavesForAllTrees(std::vector<Entity>& trees)
+{
+	for (auto& tree : trees) {
+		TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
+		LocalToWorld treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(tree);
+		auto immc = EntityManager::GetSharedComponent<InstancedMeshRenderer>(tree);
+		GenerateLeaves(EntityManager::GetChildren(tree)[0], treeParameters, treeLocalToWorld.Value, immc->Matrices, true);
+		Debug::Log(std::to_string(immc->Matrices.size()));
+	}
+}
+
+void PlantSimulationSystem::GenerateLeaves(Entity& internode, TreeParameters& treeParameters,
+                                           glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	Illumination internodeIllumination = EntityManager::GetComponentData<Illumination>(internode);
@@ -1250,6 +1273,10 @@ void PlantSimulationSystem::GenerateLeaves(Entity& internode, TreeParameters& tr
 			}
 		}
 	}
+	EntityManager::ForEachChild(internode, [&treeParameters, &treeTransform, &leafTransforms, isLeft, this](Entity child)
+		{
+			GenerateLeaves(child, treeParameters, treeTransform, leafTransforms, !isLeft);
+		});
 }
 
 void PlantSimulationSystem::RefreshTrees()
@@ -1347,37 +1374,40 @@ void TreeUtilities::PlantSimulationSystem::Update()
 {
 	auto trees = std::vector<Entity>();
 	_TreeQuery.ToEntityArray(trees);
-	TryGrowAllTrees(trees);
-	
-	if (_DisplayConvexHull)
-	{
-		std::vector<LocalToWorld> ltws;
-		std::vector<Entity> trees;
-
-		_TreeQuery.ToComponentDataArray(ltws);
-		_TreeQuery.ToEntityArray(trees);
-
-
-		for (size_t i = 0; i < trees.size(); i++)
-		{
-			auto data = EntityManager::GetSharedComponent<TreeData>(trees[i]);
-			if (data->ConvexHull != nullptr) {
-				RenderManager::DrawMesh(data->ConvexHull.get(), _DefaultConvexHullSurfaceMaterial.get(), ltws[i].Value, Application::GetMainCameraComponent()->get()->Value.get(), false);
-			}
-		}
-
+	if (_Growing) {
+		TryGrowAllTrees(trees);
 	}
-	if (_InternodeSystem->GetConfigFlags() & InternodeSystem_DrawInternodes || _InternodeSystem->GetConfigFlags() & InternodeSystem_DrawConnections)
-	{
-		std::vector<Entity> trees;
-		_TreeQuery.ToEntityArray(trees);
-		for (size_t i = 0; i < trees.size(); i++)
+	else {
+		if (_DisplayConvexHull)
 		{
-			ApplyLocalTransform(trees[i]);
+			std::vector<LocalToWorld> ltws;
+			std::vector<Entity> trees;
+
+			_TreeQuery.ToComponentDataArray(ltws);
+			_TreeQuery.ToEntityArray(trees);
+
+
+			for (size_t i = 0; i < trees.size(); i++)
+			{
+				auto data = EntityManager::GetSharedComponent<TreeData>(trees[i]);
+				if (data->ConvexHull != nullptr) {
+					RenderManager::DrawMesh(data->ConvexHull.get(), _DefaultConvexHullSurfaceMaterial.get(), ltws[i].Value, Application::GetMainCameraComponent()->get()->Value.get(), false);
+				}
+			}
+
 		}
-		if (_InternodeSystem->GetConfigFlags() & InternodeSystem_DrawConnections)
+		if (_InternodeSystem->GetConfigFlags() & InternodeSystem_DrawInternodes || _InternodeSystem->GetConfigFlags() & InternodeSystem_DrawConnections)
 		{
-			_InternodeSystem->RefreshConnections();
+			std::vector<Entity> trees;
+			_TreeQuery.ToEntityArray(trees);
+			for (size_t i = 0; i < trees.size(); i++)
+			{
+				ApplyLocalTransform(trees[i]);
+			}
+			if (_InternodeSystem->GetConfigFlags() & InternodeSystem_DrawConnections)
+			{
+				_InternodeSystem->RefreshConnections();
+			}
 		}
 	}
 	DrawGui();
@@ -1888,6 +1918,12 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 		if (ImGui::Button("Refresh all trees"))
 		{
 			RefreshTrees();
+			auto trees = std::vector<Entity>();
+			_TreeQuery.ToEntityArray(trees);
+			for (auto& tree : trees)
+			{
+				GenerateLeavesForAllTrees(trees);
+			}
 		}
 		ImGui::InputFloat("Limit angle", &_DirectionPruningLimitAngle, 0.0f, 0.0f, "%.1f");
 		ImGui::Checkbox("Enable direction pruning", &_EnableDirectionPruning);
@@ -1924,8 +1960,8 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 					age->ToGrowIteration += _NewPushIteration;
 				});
 		}
-		if (ImGui::Button(_Growing ? "Pause growing" : "Resume growing")) {
-			_Growing = !_Growing;
+		if (ImGui::Button("Resume growth")) {
+			ResumeGrowth();
 		}
 		ImGui::Separator();
 		if (ImGui::Button("Delete all trees")) {

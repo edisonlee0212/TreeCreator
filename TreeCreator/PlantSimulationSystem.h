@@ -12,7 +12,9 @@ namespace TreeUtilities {
 	class PlantSimulationSystem :
 		public SystemBase
 	{
+		float _GrowthTimer;
 #pragma region GUI Related
+		
 		float _DirectionPruningLimitAngle = 60;
 		bool _DisplayConvexHull = false;
 		bool _EnableDirectionPruning = true;
@@ -60,8 +62,10 @@ namespace TreeUtilities {
 		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo, int pruneReason) const;
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);
 		void BuildHullForTree(Entity& tree);
+		void ResumeGrowth();
 	public:
-		void GenerateLeaves(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
+		void GenerateLeavesForAllTrees(std::vector<Entity>& trees);
+		void GenerateLeaves(Entity& internode, TreeParameters& treeParameters, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
 		void RefreshTrees();
 		void ExportSettings(const std::string& path);
 		void ImportSettings(const std::string& path);
