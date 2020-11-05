@@ -218,6 +218,7 @@ void TreeUtilities::TreeManager::Init()
 		{
 			auto tps = static_cast<TreeParameters*>(data);
 			ImGui::DragInt("Seed", &tps->Seed);
+			ImGui::DragInt("Age", &tps->Age);
 			ImGui::DragInt("Lateral Bud Number", &tps->LateralBudPerNode);
 			ImGui::DragFloat("Apical Angle Var", &tps->VarianceApicalAngle);
 			ImGui::DragFloat2("Branching Angle M/Var", &tps->BranchingAngleMean);

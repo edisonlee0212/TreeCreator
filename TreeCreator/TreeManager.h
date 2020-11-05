@@ -121,7 +121,7 @@ namespace TreeUtilities {
 #pragma region Tree
     struct TreeParameters : ComponentBase {
         int Seed;
-
+        int Age = 0;
 #pragma region Geometric
         int LateralBudPerNode;
 

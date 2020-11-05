@@ -14,42 +14,19 @@
 
 void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
-	auto trees = std::vector<Entity>();
-	_TreeQuery.ToEntityArray(trees);
-
-	TryGrowAllTrees(trees);
-
-	if (_GravityChanged)
-	{
-		_GravityChanged = false;
-		for (auto& tree : trees) CalculatePhysics(tree);
-		TreeManager::GetInternodeSystem()->RefreshConnections();
-	}
+	
 }
 void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& trees)
 {
 	bool growed = false;
 	if (_Growing) {
 		for (auto& tree : trees) {
-			Rotation rotation = EntityManager::GetComponentData<Rotation>(tree);
-			LocalToWorld ltw = EntityManager::GetComponentData<LocalToWorld>(tree);
-			TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
-			
-			if (GrowTree(tree)) {
-				growed = true;
-			}
+			growed = growed || GrowTree(tree);
 		}
-	}
-	if (growed == false) {
-		if (_Growing)
-		{
+		if (!growed) {
 			_Growing = false;
 		}
-
-	}
-	else
-	{
-		RefreshTrees();
+		else RefreshTrees();
 	}
 }
 bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
@@ -180,6 +157,10 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 			if (name.compare("Seed") == 0)
 			{
 				_NewTreeParameters[i].Seed = std::atoi(parameterNode.first_child().value());
+			}
+			else if (name.compare("Age") == 0)
+			{
+				_NewTreeParameters[i].Age = std::atoi(parameterNode.first_child().value());
 			}
 			else if (name.compare("LateralBudPerNode") == 0)
 			{
@@ -371,6 +352,7 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 	std::string output;
 	output += "\t\t<TreeParameters>\n";
 	output += "\t\t\t<Seed>"; output += std::to_string(treeParameters.Seed) + "</Seed>\n";
+	output += "\t\t\t<Age>"; output += std::to_string(treeParameters.Age) + "</Age>\n";
 #pragma region Geometric
 	output += "\t\t\t<LateralBudPerNode>"; output += std::to_string(treeParameters.LateralBudPerNode) + "</LateralBudPerNode>\n";
 	output += "\t\t\t<VarianceApicalAngle>";  output += std::to_string(treeParameters.VarianceApicalAngle) + "</VarianceApicalAngle>\n";
@@ -458,7 +440,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 #pragma endregion
 	TreeAge age;
 	age.Value = 0;
-	age.ToGrowIteration = 0;
+	age.ToGrowIteration = treeParameters.Age;
 	age.Enable = enabled;
 
 	Bud bud;
@@ -474,6 +456,10 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	internodeInfo.IsMaxChild = true;
 	internodeInfo.ApicalBudExist = true;
 	internodeInfo.Order = 0;
+	internodeInfo.Level = 0;
+	internodeInfo.MaxChildLevel = 0;
+	internodeInfo.StartAge = 0;
+	internodeInfo.BranchEndInternodeAmount = 0;
 	internodeInfo.MaxChildOrder = 0;
 	internodeInfo.DistanceToBranchStart = 0;
 	internodeInfo.MaxChildOrder = 0;
@@ -640,7 +626,9 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 
 #pragma endregion
 #pragma endregion
-					prevEulerAngle = glm::vec3(glm::gaussRand(0.0f, glm::radians(treeParameters.VarianceApicalAngle)), glm::gaussRand(0.0f, glm::radians(treeParameters.VarianceApicalAngle)), 0.0f);
+					prevEulerAngle = glm::vec3(
+						glm::gaussRand(glm::vec2(0.0f), glm::vec2(glm::radians(treeParameters.VarianceApicalAngle))),
+						0.0f);
 #pragma region Create Apical Bud
 					if (selectedNewNodeIndex == internodesToGrow - 1) {
 						Bud newApicalBud;
@@ -792,7 +780,7 @@ void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& internode, Tr
 		return;
 	}
 
-	
+
 	auto ltw = EntityManager::GetComponentData<LocalToWorld>(internode);
 	float height = ltw.Value[3].y;
 	if (height > 15)
@@ -855,7 +843,7 @@ bool PlantSimulationSystem::EvaluateRemoval(Entity& internode, TreeParameters& t
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	bool childLowCutoff = false;
 	auto children = EntityManager::GetChildren(internode);
-	for(auto child : children)
+	for (auto child : children)
 	{
 		InternodeInfo childInternodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
 		if (internodeInfo.Level != 0 && EntityManager::GetComponentData<LocalToWorld>(child).Value[3].y < treeParameters.LowBranchPruningFactor)
@@ -1106,67 +1094,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& inter
 	internodeInfo.AccumulatedLength = internodeInfo.DistanceToParent;
 	internodeInfo.AccumulatedActivatedBudsAmount = internodeInfo.ActivatedBudsAmount;
 
-	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
-	internodeData->LeafLocalTransforms.clear();
-	if (internodeIllumination.Value > treeParameters.LeafIlluminationLimit) {
-		if (glm::linearRand(0.0f, 1.0f) >= internodeInfo.Inhibitor * treeParameters.LeafInhibitorFactor)
-		{
-			glm::vec3 translation;
-			glm::quat rotation;
-			glm::vec3 scale;
-			glm::vec3 skew;
-			glm::vec4 perspective;
-			glm::decompose(treeTransform * internodeInfo.GlobalTransform, scale, rotation, translation, skew, perspective);
-			//x, œÚ—Ù÷·£¨y: ∫·÷·£¨z£∫roll
-			glm::vec3 ls = glm::vec3(treeParameters.LeafSize.x, 1.0f, treeParameters.LeafSize.y);
-			auto branchFront = rotation * glm::vec3(0, 0, -1);
-			auto branchUp = rotation * glm::vec3(0, 1, 0);
-			if (treeParameters.IsBothSide || isLeft)
-			{
-				for (int i = 0; i < treeParameters.SideLeafAmount; i++)
-				{
-					auto front = glm::rotate(branchFront,
-						glm::radians(treeParameters.StartBendingAngle + i * treeParameters.BendingAngleIncrement), branchUp);
-					auto up = branchUp;
-					ApplyTropism(internodeIllumination.LightDir, treeParameters.LeafPhotoTropism, up, front);
-					ApplyTropism(glm::vec3(0, -1, 0), treeParameters.LeafGravitropism, front, up);
-					auto localPosition = treeParameters.LeafDistance * front;
-					auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
-					internodeData->LeafLocalTransforms.push_back(leafTransform);
-					leafTransforms.push_back(leafTransform);
-				}
-			}
-			if (treeParameters.IsBothSide || !isLeft)
-			{
-				for (int i = 0; i < treeParameters.SideLeafAmount; i++)
-				{
-					for (int i = 0; i < treeParameters.SideLeafAmount; i++)
-					{
-						auto front = glm::rotate(branchFront,
-							glm::radians(-(treeParameters.StartBendingAngle + i * treeParameters.BendingAngleIncrement)), branchUp);
-						auto up = branchUp;
-						ApplyTropism(internodeIllumination.LightDir, treeParameters.LeafPhotoTropism, up, front);
-						ApplyTropism(glm::vec3(0, -1, 0), treeParameters.LeafGravitropism, front, up);
-						auto localPosition = treeParameters.LeafDistance * front;
-						auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
-						internodeData->LeafLocalTransforms.push_back(leafTransform);
-						leafTransforms.push_back(leafTransform);
-					}
-				}
-			}
-			if (internodeInfo.Level == internodeInfo.MaxChildLevel)
-			{
-				auto front = branchFront;
-				auto up = branchUp;
-				ApplyTropism(internodeIllumination.LightDir, treeParameters.LeafPhotoTropism, up, front);
-				ApplyTropism(glm::vec3(0, -1, 0), treeParameters.LeafGravitropism, front, up);
-				auto localPosition = treeParameters.LeafDistance * front;
-				auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
-				internodeData->LeafLocalTransforms.push_back(leafTransform);
-				leafTransforms.push_back(leafTransform);
-			}
-		}
-	}
+
 
 	EntityManager::ForEachChild(internode, [this, &internodeInfo, &treeParameters, &treeAge, &leafTransforms, &treeTransform, isLeft](Entity child)
 		{
@@ -1254,6 +1182,74 @@ void PlantSimulationSystem::BuildHullForTree(Entity& tree)
 	treeInfo->ConvexHull = std::make_shared<Mesh>();
 	treeInfo->ConvexHull->SetVertices(17, vertices, indices, true);
 	*/
+}
+
+void PlantSimulationSystem::GenerateLeaves(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge,
+	glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft)
+{
+	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
+	Illumination internodeIllumination = EntityManager::GetComponentData<Illumination>(internode);
+	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
+	internodeData->LeafLocalTransforms.clear();
+	if (internodeIllumination.Value > treeParameters.LeafIlluminationLimit) {
+		if (glm::linearRand(0.0f, 1.0f) >= internodeInfo.Inhibitor * treeParameters.LeafInhibitorFactor)
+		{
+			glm::vec3 translation;
+			glm::quat rotation;
+			glm::vec3 scale;
+			glm::vec3 skew;
+			glm::vec4 perspective;
+			glm::decompose(treeTransform * internodeInfo.GlobalTransform, scale, rotation, translation, skew, perspective);
+			//x, œÚ—Ù÷·£¨y: ∫·÷·£¨z£∫roll
+			glm::vec3 ls = glm::vec3(treeParameters.LeafSize.x, 1.0f, treeParameters.LeafSize.y);
+			auto branchFront = rotation * glm::vec3(0, 0, -1);
+			auto branchUp = rotation * glm::vec3(0, 1, 0);
+			if (treeParameters.IsBothSide || isLeft)
+			{
+				for (int i = 0; i < treeParameters.SideLeafAmount; i++)
+				{
+					auto front = glm::rotate(branchFront,
+						glm::radians(treeParameters.StartBendingAngle + i * treeParameters.BendingAngleIncrement), branchUp);
+					auto up = branchUp;
+					ApplyTropism(internodeIllumination.LightDir, treeParameters.LeafPhotoTropism, up, front);
+					ApplyTropism(glm::vec3(0, -1, 0), treeParameters.LeafGravitropism, front, up);
+					auto localPosition = treeParameters.LeafDistance * front;
+					auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
+					internodeData->LeafLocalTransforms.push_back(leafTransform);
+					leafTransforms.push_back(leafTransform);
+				}
+			}
+			if (treeParameters.IsBothSide || !isLeft)
+			{
+				for (int i = 0; i < treeParameters.SideLeafAmount; i++)
+				{
+					for (int i = 0; i < treeParameters.SideLeafAmount; i++)
+					{
+						auto front = glm::rotate(branchFront,
+							glm::radians(-(treeParameters.StartBendingAngle + i * treeParameters.BendingAngleIncrement)), branchUp);
+						auto up = branchUp;
+						ApplyTropism(internodeIllumination.LightDir, treeParameters.LeafPhotoTropism, up, front);
+						ApplyTropism(glm::vec3(0, -1, 0), treeParameters.LeafGravitropism, front, up);
+						auto localPosition = treeParameters.LeafDistance * front;
+						auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
+						internodeData->LeafLocalTransforms.push_back(leafTransform);
+						leafTransforms.push_back(leafTransform);
+					}
+				}
+			}
+			if (internodeInfo.Level == internodeInfo.MaxChildLevel)
+			{
+				auto front = branchFront;
+				auto up = branchUp;
+				ApplyTropism(internodeIllumination.LightDir, treeParameters.LeafPhotoTropism, up, front);
+				ApplyTropism(glm::vec3(0, -1, 0), treeParameters.LeafGravitropism, front, up);
+				auto localPosition = treeParameters.LeafDistance * front;
+				auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
+				internodeData->LeafLocalTransforms.push_back(leafTransform);
+				leafTransforms.push_back(leafTransform);
+			}
+		}
+	}
 }
 
 void PlantSimulationSystem::RefreshTrees()
@@ -1349,6 +1345,10 @@ void TreeUtilities::PlantSimulationSystem::OnDestroy()
 }
 void TreeUtilities::PlantSimulationSystem::Update()
 {
+	auto trees = std::vector<Entity>();
+	_TreeQuery.ToEntityArray(trees);
+	TryGrowAllTrees(trees);
+	
 	if (_DisplayConvexHull)
 	{
 		std::vector<LocalToWorld> ltws;
@@ -1822,6 +1822,7 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 				if (_DisplayFullParam) {
 #pragma region Show params
 					ImGui::DragInt("Seed", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].Seed);
+					ImGui::DragInt("Age", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].Age);
 					ImGui::DragInt("Lateral Bud Number", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LateralBudPerNode);
 					ImGui::DragFloat("Apical Angle Var", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].VarianceApicalAngle, 0.01f);
 					ImGui::DragFloat2("Branching Angle M/Var", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].BranchingAngleMean, 0.01f);
@@ -1856,6 +1857,7 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 				}
 				else {
 					ImGui::DragInt("Seed", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].Seed);
+					ImGui::DragInt("Age", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].Age);
 				}
 				ImGui::PopItemWidth();
 
@@ -1889,10 +1891,6 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 		}
 		ImGui::InputFloat("Limit angle", &_DirectionPruningLimitAngle, 0.0f, 0.0f, "%.1f");
 		ImGui::Checkbox("Enable direction pruning", &_EnableDirectionPruning);
-		if (ImGui::DragFloat("Gravity", &_Gravity, 0.01f, 0.0f, 10.0f))
-		{
-			_GravityChanged = true;
-		}
 		ImGui::InputFloat("Mesh resolution", &_MeshGenerationResolution, 0.0f, 0.0f, "%.5f");
 		ImGui::InputFloat("Branch subdivision", &_MeshGenerationSubdivision, 0.0f, 0.0f, "%.5f");
 		if (ImGui::Button("Generate mesh for all trees")) {

@@ -56,6 +56,7 @@ int main()
 	t.Value = glm::vec3(0, 6, 20);
 	Application::GetMainCameraEntity().SetComponentData(t);
 	Application::GetMainCameraComponent()->get()->DrawSkyBox = false;
+	Application::GetMainCameraComponent()->get()->ClearColor = glm::vec3(1.0f);
 	ccs->SetVelocity(15.0f);
 	InitGround();
 #pragma endregion

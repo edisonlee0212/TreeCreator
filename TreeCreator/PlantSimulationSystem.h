@@ -16,7 +16,6 @@ namespace TreeUtilities {
 		float _DirectionPruningLimitAngle = 60;
 		bool _DisplayConvexHull = false;
 		bool _EnableDirectionPruning = true;
-		bool _GravityChanged = false;
 		bool _DisplayFullParam = true;
 		char _CurrentWorkingDir[256] = {};
 		char _TempImportFilePath[256] = {};
@@ -62,6 +61,7 @@ namespace TreeUtilities {
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);
 		void BuildHullForTree(Entity& tree);
 	public:
+		void GenerateLeaves(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
 		void RefreshTrees();
 		void ExportSettings(const std::string& path);
 		void ImportSettings(const std::string& path);
