@@ -34,6 +34,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 			Rotation rotation = EntityManager::GetComponentData<Rotation>(tree);
 			LocalToWorld ltw = EntityManager::GetComponentData<LocalToWorld>(tree);
 			TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
+			
 			if (GrowTree(tree)) {
 				growed = true;
 			}
@@ -102,6 +103,8 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 #pragma endregion
 #pragma region Update branch structure information
 	Entity rootInternode = EntityManager::GetChildren(treeEntity).at(0);
+	bool anyRemoved = false;
+	EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
 	const bool growed = GrowShoots(rootInternode, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value);
 	if (growed) {
 		UpdateDistanceToBranchEnd(rootInternode, treeParameters, treeAge.Value);
@@ -509,7 +512,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::sh
 		internodeInfo.ActivatedBudsAmount = 0;
 		internodeInfo.ApicalBudExist = false;
 		EntityManager::SetComponentData(internode, internodeInfo);
-		return false;
+		return ret;
 	}
 	if (internodeInfo.ActivatedBudsAmount == 0) {
 		EntityManager::SetComponentData(internode, internodeInfo);
@@ -788,16 +791,23 @@ void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& internode, Tr
 	if (internodeInfo.Pruned) {
 		return;
 	}
-	float height = EntityManager::GetComponentData<LocalToWorld>(internode).Value[3].y;
+
+	
+	auto ltw = EntityManager::GetComponentData<LocalToWorld>(internode);
+	float height = ltw.Value[3].y;
 	if (height > 15)
 	{
 		PruneInternode(internode, &internodeInfo, 2);
 		return;
 	}
 	if (internodeInfo.Level == 0 && treeAge.Value < 3) return;
-
-
-
+	/*
+	if (internodeInfo.Order != 0 && height < treeParameters.LowBranchPruningFactor)
+	{
+		PruneInternode(internode, &internodeInfo, 0);
+		return;
+	}
+	*/
 	float ratioScale = 1;
 	float factor = ratioScale / glm::sqrt(internodeInfo.AccumulatedLength);
 	factor *= internodeInfo.AccumulatedLight;
@@ -840,35 +850,38 @@ inline void PlantSimulationSystem::PruneInternode(Entity& internode, InternodeIn
 }
 #pragma endregion
 #pragma region Removal
-bool PlantSimulationSystem::EvaluateRemoval(Entity& internode, TreeParameters& treeParameters)
+bool PlantSimulationSystem::EvaluateRemoval(Entity& internode, TreeParameters& treeParameters, bool& anyRemoved)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	bool childLowCutoff = false;
-	EntityManager::ForEachChild(internode, [&internodeInfo, this, &treeParameters, &childLowCutoff](Entity child)
+	auto children = EntityManager::GetChildren(internode);
+	for(auto child : children)
+	{
+		InternodeInfo childInternodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
+		if (internodeInfo.Level != 0 && EntityManager::GetComponentData<LocalToWorld>(child).Value[3].y < treeParameters.LowBranchPruningFactor)
 		{
-			InternodeInfo childInternodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
-			if (internodeInfo.Level != 0 && EntityManager::GetComponentData<LocalToWorld>(child).Value[3].y < treeParameters.LowBranchPruningFactor)
+			EntityManager::DeleteEntity(child);
+			anyRemoved = true;
+			childLowCutoff = true;
+			continue;
+		}
+		if (internodeInfo.Thickness - childInternodeInfo.Thickness > treeParameters.ThicknessRemovalFactor)
+		{
+			EntityManager::DeleteEntity(child);
+			anyRemoved = true;
+			continue;
+		}
+		childLowCutoff = EvaluateRemoval(child, treeParameters, anyRemoved);
+		if (childLowCutoff)
+		{
+			EntityManager::DeleteEntity(child);
+			anyRemoved = true;
+			if (internodeInfo.Level == 0)
 			{
-				EntityManager::DeleteEntity(child);
-				childLowCutoff = true;
-				return;
-			}
-			if (internodeInfo.Thickness - childInternodeInfo.Thickness > treeParameters.ThicknessRemovalFactor)
-			{
-				EntityManager::DeleteEntity(child);
-				return;
-			}
-			childLowCutoff = EvaluateRemoval(child, treeParameters);
-			if (childLowCutoff)
-			{
-				EntityManager::DeleteEntity(child);
-				if (internodeInfo.Level == 0)
-				{
-					childLowCutoff = false;
-				}
+				childLowCutoff = false;
 			}
 		}
-	);
+	}
 	return childLowCutoff;
 }
 #pragma endregion
@@ -1262,7 +1275,6 @@ void PlantSimulationSystem::RefreshTrees()
 		UpdateInternodeResource(rootInternode, treeParameters, treeAge, treeLocalToWorld.Value, immc->Matrices, true);
 		immc->RecalculateBoundingBox();
 		EvaluatePruning(rootInternode, treeParameters, treeAge, treeInfo);
-		EvaluateRemoval(rootInternode, treeParameters);
 		if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
 	}
 	CalculateCrownShyness(10.0f);

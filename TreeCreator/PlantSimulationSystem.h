@@ -54,7 +54,7 @@ namespace TreeUtilities {
 		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
 		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform);
 		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
-		bool EvaluateRemoval(Entity& internode, TreeParameters& treeParameters);
+		bool EvaluateRemoval(Entity& internode, TreeParameters& treeParameters, bool& anyRemoved);
 		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);
 		void ApplyLocalTransform(Entity& treeEntity) const;
 		void CalculateCrownShyness(float detectionDistance = 5.0f);
