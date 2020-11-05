@@ -96,6 +96,9 @@
     <ClCompile Include="CrownSurfaceRecon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FoliageGeneratorBase.cpp">
+      <Filter>Source Files\TreeUtilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkSystem.h">
@@ -178,6 +181,9 @@
     </ClInclude>
     <ClInclude Include="CrownSurfaceRecon.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FoliageGeneratorBase.h">
+      <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

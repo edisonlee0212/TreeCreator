@@ -219,6 +219,7 @@ void TreeUtilities::TreeManager::Init()
 			auto tps = static_cast<TreeParameters*>(data);
 			ImGui::DragInt("Seed", &tps->Seed);
 			ImGui::DragInt("Age", &tps->Age);
+			
 			ImGui::DragInt("Lateral Bud Number", &tps->LateralBudPerNode);
 			ImGui::DragFloat("Apical Angle Var", &tps->VarianceApicalAngle);
 			ImGui::DragFloat2("Branching Angle M/Var", &tps->BranchingAngleMean);
@@ -238,6 +239,7 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::DragFloat2("Lighting Factor A/L", &tps->ApicalBudLightingFactor);
 			ImGui::DragFloat2("Thickness End/Fac", &tps->EndNodeThickness);
 			ImGui::Spacing();
+			ImGui::DragInt("FoliageType", &tps->FoliageType);
 			ImGui::DragFloat2("LeafSize", (float*)(void*)&tps->LeafSize, 0.01f);
 			ImGui::DragFloat("LeafIlluminationLimit", &tps->LeafIlluminationLimit, 0.001f);
 			ImGui::DragFloat("LeafInhibitorFactor", &tps->LeafInhibitorFactor, 0.001f);

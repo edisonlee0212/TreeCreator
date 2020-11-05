@@ -122,6 +122,7 @@ namespace TreeUtilities {
     struct TreeParameters : ComponentBase {
         int Seed;
         int Age = 0;
+        
 #pragma region Geometric
         int LateralBudPerNode;
 
@@ -182,6 +183,7 @@ namespace TreeUtilities {
 #pragma endregion
 
 #pragma region Organs
+        int FoliageType = 0;
         glm::vec2 LeafSize = glm::vec2(0.1f);
         float LeafIlluminationLimit = 0;
         float LeafInhibitorFactor = 0;

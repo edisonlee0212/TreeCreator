@@ -1,6 +1,7 @@
 #pragma once
 #include "UniEngine.h"
 #include "TreeManager.h"
+#include "FoliageGeneratorBase.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
 namespace TreeUtilities {
@@ -12,6 +13,7 @@ namespace TreeUtilities {
 	class PlantSimulationSystem :
 		public SystemBase
 	{
+		std::vector<std::shared_ptr<FoliageGeneratorBase>> _FoliageGenerators;
 		float _GrowthTimer;
 #pragma region GUI Related
 		
@@ -46,7 +48,7 @@ namespace TreeUtilities {
 		bool _Growing = false;
 		EntityQuery _TreeQuery;
 		EntityQuery _InternodeQuery;
-		void ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up) const;
+		
 		float GetApicalControl(std::shared_ptr<TreeData>& treeInfo, InternodeInfo& internodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
 		inline void DrawGui();
 		void UpdateDistanceToBranchEnd(Entity& internode, TreeParameters& treeParameters, int treeAge);
@@ -64,8 +66,8 @@ namespace TreeUtilities {
 		void BuildHullForTree(Entity& tree);
 		void ResumeGrowth();
 	public:
+		static void ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up);
 		void GenerateLeavesForAllTrees(std::vector<Entity>& trees);
-		void GenerateLeaves(Entity& internode, TreeParameters& treeParameters, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
 		void RefreshTrees();
 		void ExportSettings(const std::string& path);
 		void ImportSettings(const std::string& path);
@@ -81,17 +83,5 @@ namespace TreeUtilities {
 		void CreateDefaultTree();
 	};
 
-	inline void PlantSimulationSystem::ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up) const
-	{
-		const glm::vec3 dir = glm::normalize(targetDir);
-		const float dotP = glm::abs(glm::dot(front, dir));
-		if(dotP < 0.999f)
-		{
-			const glm::vec3 left = glm::cross(front, dir);
-			float rotateAngle = (1.0f - dotP) * tropism;
-			float maxAngle = glm::acos(dotP);
-			front = glm::normalize(glm::rotate(front, glm::min(maxAngle, rotateAngle), left));
-			up = glm::normalize(glm::cross(glm::cross(front, up), front));
-		}
-	}
+	
 }
