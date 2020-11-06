@@ -198,10 +198,6 @@ namespace TreeUtilities {
 
     };
 
-    struct RewardEstimation : ComponentBase {
-        float LightEstimationResult = 0.0f;
-    };
-
     struct TreeAge : ComponentBase {
         
         int Value;
@@ -272,7 +268,5 @@ namespace TreeUtilities {
         static void ExportMeshToOBJ(Entity treeEntity, std::string filename);
 
         static LightEstimator* GetLightEstimator();
-
-        static void CalculateRewards(Entity treeEntity, float snapShotWidth = 100.0f);
     };
 }

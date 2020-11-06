@@ -20,15 +20,11 @@ namespace TreeUtilities {
         unsigned int _ConfigFlags = 0;
         EntityQuery _LeafQuery;
         EntityQuery _TreeQuery;
-
-        std::vector<Entity> _TreeEntities;
-
         void DrawGUI();
     public:
         void OnCreate() override;
         void OnDestroy() override;
         void Update() override;
         void FixedUpdate() override;
-        std::vector<Entity>* GetTreeEntities();
     };
 }

@@ -44,7 +44,9 @@ std::size_t TreeData::GetHashCode()
 
 void TreeData::OnGui()
 {
-	
+	ImGui::Text(("MeshGenerated: " + std::string(MeshGenerated ? "Yes" : "No")).c_str());
+	ImGui::Text(("FoliageGenerated: " + std::string(FoliageGenerated ? "Yes" : "No")).c_str());
+	ImGui::Text(("ActiveLength: " + std::to_string(ActiveLength)).c_str());
 }
 
 void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& internode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep)
@@ -179,8 +181,7 @@ void TreeUtilities::TreeManager::Init()
 		"Tree",
 		Translation(), EulerRotation(), Rotation(), Scale(), LocalToWorld(),
 		TreeIndex(), TreeInfo(), TreeAge(),
-		TreeParameters(),
-		RewardEstimation()
+		TreeParameters()
 		);
 
 	_InternodeQuery = EntityManager::CreateEntityQuery();
@@ -540,14 +541,6 @@ void TreeUtilities::TreeManager::ExportMeshToOBJ(Entity treeEntity, std::string 
 LightEstimator* TreeUtilities::TreeManager::GetLightEstimator()
 {
 	return _LightEstimator;
-}
-
-void TreeUtilities::TreeManager::CalculateRewards(Entity treeEntity, float snapShotWidth)
-{
-	RewardEstimation estimation = EntityManager::GetComponentData<RewardEstimation>(treeEntity);
-	estimation.LightEstimationResult = _LightEstimator->CalculateScore();
-
-	EntityManager::SetComponentData(treeEntity, estimation);
 }
 
 std::shared_ptr<Mesh> TreeUtilities::TreeManager::GetMeshForTree(Entity treeEntity)
