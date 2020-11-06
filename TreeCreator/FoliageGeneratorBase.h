@@ -16,6 +16,21 @@ namespace TreeUtilities {
 	{
 		void GenerateLeaves(Entity& internode, TreeParameters& treeParameters, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
 	public:
+		
+		void Generate(Entity tree) override;
+		void OnGui() override;
+	};
+
+	class AcaciaFoliageGenerator : public FoliageGeneratorBase
+	{
+	public:
+		void Generate(Entity tree) override;
+		void OnGui() override;
+	};
+
+	class WillowFoliageGenerator : public FoliageGeneratorBase
+	{
+	public:
 		void Generate(Entity tree) override;
 		void OnGui() override;
 	};

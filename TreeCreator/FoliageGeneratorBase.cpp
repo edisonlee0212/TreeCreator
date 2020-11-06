@@ -89,3 +89,19 @@ void TreeUtilities::DefaultFoliageGenerator::OnGui()
 {
 	
 }
+
+void AcaciaFoliageGenerator::Generate(Entity tree)
+{
+}
+
+void AcaciaFoliageGenerator::OnGui()
+{
+}
+
+void WillowFoliageGenerator::Generate(Entity tree)
+{
+}
+
+void WillowFoliageGenerator::OnGui()
+{
+}

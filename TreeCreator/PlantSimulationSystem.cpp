@@ -1249,6 +1249,9 @@ void PlantSimulationSystem::RefreshTrees()
 void TreeUtilities::PlantSimulationSystem::OnCreate()
 {
 	_FoliageGenerators.push_back(std::make_shared<DefaultFoliageGenerator>());
+	_FoliageGenerators.push_back(std::make_shared<AcaciaFoliageGenerator>());
+	_FoliageGenerators.push_back(std::make_shared<WillowFoliageGenerator>());
+	
 	_InternodeSystem = TreeManager::GetInternodeSystem();
 	_getcwd(_CurrentWorkingDir, 256);
 	_TreeQuery = TreeManager::GetTreeQuery();
@@ -1819,7 +1822,11 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 					ImGui::DragFloat2("Lighting Factor A/L", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].ApicalBudLightingFactor, 0.01f);
 					ImGui::DragFloat2("Thickness End/Fac", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].EndNodeThickness, 0.01f);
 					ImGui::DragFloat2("Crown Shyness Base/Factor", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].CrownShynessBase, 0.01f);
-					ImGui::DragInt("FoliageType", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType);
+					ImGui::Spacing();
+					ImGui::Separator();
+					ImGui::Text("Foliage Type:");
+					static const char* FoliageTypes[]{ "Default", "Acacia", "Willow" };
+					ImGui::Combo("Display mode", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType, FoliageTypes, IM_ARRAYSIZE(FoliageTypes));
 					if (_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType == 0)
 					{
 						ImGui::DragFloat2("Leaf Size XY", (float*)(void*)&_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafSize, 0.01f);
@@ -1832,7 +1839,6 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 						ImGui::DragFloat("LeafPhotoTropism", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafPhotoTropism, 0.01f);
 						ImGui::DragFloat("LeafGravitropism", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafGravitropism, 0.01f);
 						ImGui::DragFloat("LeafDistance", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafDistance, 0.01f);
-
 					}
 					else
 					{
