@@ -9,8 +9,8 @@ void TreeUtilities::DefaultFoliageGenerator::GenerateLeaves(Entity& internode, T
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	Illumination internodeIllumination = EntityManager::GetComponentData<Illumination>(internode);
-	auto internodeData = EntityManager::GetSharedComponent<InternodeData>(internode);
-	internodeData->LeafLocalTransforms.clear();
+	auto internodeData = EntityManager::GetPrivateComponent<InternodeData>(internode);
+	internodeData->get()->LeafLocalTransforms.clear();
 	if (internodeIllumination.Value > treeParameters.LeafIlluminationLimit) {
 		if (glm::linearRand(0.0f, 1.0f) >= internodeInfo.Inhibitor * treeParameters.LeafInhibitorFactor)
 		{
@@ -35,7 +35,8 @@ void TreeUtilities::DefaultFoliageGenerator::GenerateLeaves(Entity& internode, T
 					PlantSimulationSystem::ApplyTropism(glm::vec3(0, -1, 0), treeParameters.LeafGravitropism, front, up);
 					auto localPosition = treeParameters.LeafDistance * front;
 					auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
-					internodeData->LeafLocalTransforms.push_back(leafTransform);
+					leafTransform = glm::inverse(treeTransform) * leafTransform;
+					internodeData->get()->LeafLocalTransforms.push_back(leafTransform);
 					leafTransforms.push_back(leafTransform);
 				}
 			}
@@ -52,7 +53,8 @@ void TreeUtilities::DefaultFoliageGenerator::GenerateLeaves(Entity& internode, T
 						PlantSimulationSystem::ApplyTropism(glm::vec3(0, -1, 0), treeParameters.LeafGravitropism, front, up);
 						auto localPosition = treeParameters.LeafDistance * front;
 						auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
-						internodeData->LeafLocalTransforms.push_back(leafTransform);
+						leafTransform = glm::inverse(treeTransform) * leafTransform;
+						internodeData->get()->LeafLocalTransforms.push_back(leafTransform);
 						leafTransforms.push_back(leafTransform);
 					}
 				}
@@ -65,7 +67,8 @@ void TreeUtilities::DefaultFoliageGenerator::GenerateLeaves(Entity& internode, T
 				PlantSimulationSystem::ApplyTropism(glm::vec3(0, -1, 0), treeParameters.LeafGravitropism, front, up);
 				auto localPosition = treeParameters.LeafDistance * front;
 				auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
-				internodeData->LeafLocalTransforms.push_back(leafTransform);
+				leafTransform = glm::inverse(treeTransform) * leafTransform;
+				internodeData->get()->LeafLocalTransforms.push_back(leafTransform);
 				leafTransforms.push_back(leafTransform);
 			}
 		}
@@ -80,9 +83,9 @@ void TreeUtilities::DefaultFoliageGenerator::Generate(Entity tree)
 {
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
 	LocalToWorld treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(tree);
-	auto immc = EntityManager::GetSharedComponent<InstancedMeshRenderer>(tree);
-	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeParameters, treeLocalToWorld.Value, immc->Matrices, true);
-	Debug::Log(std::to_string(immc->Matrices.size()));
+	auto particleSystem = EntityManager::GetPrivateComponent<ParticleSystem>(tree);
+	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeParameters, treeLocalToWorld.Value, particleSystem->get()->Matrices, true);
+	//Debug::Log(std::to_string(particleSystem->get()->Matrices.size()));
 }
 
 void TreeUtilities::DefaultFoliageGenerator::OnGui()

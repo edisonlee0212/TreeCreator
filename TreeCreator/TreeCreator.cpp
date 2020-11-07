@@ -240,9 +240,9 @@ void InitGround() {
 	//mat->SetTexture(textureNormal, TextureType::NORMAL);
 	
 	mat->SetMaterialProperty("material.shininess", 32.0f);
-	auto instancedMeshRenderer = std::make_shared<InstancedMeshRenderer>();
-	instancedMeshRenderer->Mesh = Default::Primitives::Quad;
-	instancedMeshRenderer->Material = mat;
+	auto particleSystem = std::make_unique<ParticleSystem>();
+	particleSystem->Mesh = Default::Primitives::Quad;
+	particleSystem->Material = mat;
 	Translation translation = Translation();
 	Scale scale = Scale();
 	auto baseEntity = EntityManager::CreateEntity(archetype, "Ground");
@@ -258,11 +258,11 @@ void InitGround() {
 		{
 			auto position = glm::vec3(size * 2 * i, 0.0f, size * 2 * j);
 			auto scale = glm::vec3(size * 1.0f);
-			instancedMeshRenderer->Matrices.emplace_back(glm::translate(glm::identity<glm::mat4>(), position) * glm::scale(glm::identity<glm::mat4>(), scale));
+			particleSystem->Matrices.emplace_back(glm::translate(glm::identity<glm::mat4>(), position) * glm::scale(glm::identity<glm::mat4>(), scale));
 		}
 	}
-	instancedMeshRenderer->RecalculateBoundingBox();
-	baseEntity.SetSharedComponent<InstancedMeshRenderer>(instancedMeshRenderer);
+	particleSystem->RecalculateBoundingBox();
+	baseEntity.SetPrivateComponent<ParticleSystem>(std::move(particleSystem));
 
 }
 

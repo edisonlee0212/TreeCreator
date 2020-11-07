@@ -49,19 +49,19 @@ namespace TreeUtilities {
 		EntityQuery _TreeQuery;
 		EntityQuery _InternodeQuery;
 		
-		float GetApicalControl(std::shared_ptr<TreeData>& treeInfo, InternodeInfo& internodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
+		float GetApicalControl(std::unique_ptr<TreeData>& treeInfo, InternodeInfo& internodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
 		inline void DrawGui();
 		void UpdateDistanceToBranchEnd(Entity& internode, TreeParameters& treeParameters, int treeAge);
 		void UpdateDistanceToBranchStart(Entity& internode);
 		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::mat4& treeLTW);
 		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
-		bool GrowShoots(Entity& internode, std::shared_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform);
+		bool GrowShoots(Entity& internode, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform);
 		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
 		bool EvaluateRemoval(Entity& internode, TreeParameters& treeParameters, bool& anyRemoved);
 		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);
 		void ApplyLocalTransform(Entity& treeEntity) const;
 		void CalculateCrownShyness(float detectionDistance = 5.0f);
-		inline void PruneInternode(Entity& internode, InternodeInfo* internodeInfo, int pruneReason) const;
+		inline void PruneInternode(Entity& internode, int pruneReason) const;
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);
 		void BuildHullForTree(Entity& tree);
 		void ResumeGrowth();

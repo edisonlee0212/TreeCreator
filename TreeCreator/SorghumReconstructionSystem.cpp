@@ -10,11 +10,11 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant() const
 	EntityManager::SetSharedComponent(ret, spline);
 	EntityManager::SetComponentData(ret, s);
 	
-	auto mmc = std::make_shared<MeshRenderer>();
+	auto mmc = std::make_unique<MeshRenderer>();
 	mmc->Material = _StemMaterial;
 	mmc->Mesh = std::make_shared<Mesh>();
 	mmc->BackCulling = false;
-	EntityManager::SetSharedComponent(ret, mmc);
+	EntityManager::SetPrivateComponent(ret, std::move(mmc));
 
 	return ret;
 }
@@ -29,11 +29,11 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateLeafForPlant(En
 	EntityManager::SetSharedComponent(ret, spline);
 	EntityManager::SetComponentData(ret, ls);
 
-	auto mmc = std::make_shared<MeshRenderer>();
+	auto mmc = std::make_unique<MeshRenderer>();
 	mmc->Material = _LeafMaterial;
 	mmc->Mesh = std::make_shared<Mesh>();
 	mmc->BackCulling = false;
-	EntityManager::SetSharedComponent(ret, mmc);
+	EntityManager::SetPrivateComponent(ret, std::move(mmc));
 
 	return ret;
 }
@@ -107,7 +107,12 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CopyPlant(Entity orig
 	plant.SetComponentData(EntityManager::GetComponentData<Rotation>(original));
 	plant.SetComponentData(EntityManager::GetComponentData<Scale>(original));
 	plant.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(original));
-	plant.SetSharedComponent(EntityManager::GetSharedComponent<MeshRenderer>(original));
+	auto* mmc = original.GetPrivateComponent<MeshRenderer>();
+	auto newmmc = std::unique_ptr<MeshRenderer>();
+	newmmc->Material = mmc->get()->Material;
+	newmmc->BackCulling = false;
+	newmmc->Mesh = mmc->get()->Mesh;
+	plant.SetPrivateComponent(std::move(newmmc));
 	EntityManager::ForEachChild(original, [this, &plant](Entity child)
 		{
 			Entity newChild = EntityManager::CreateEntity(_LeafArchetype);
@@ -116,7 +121,12 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CopyPlant(Entity orig
 			newChild.SetComponentData(EntityManager::GetComponentData<LocalRotation>(child));
 			newChild.SetComponentData(EntityManager::GetComponentData<LocalScale>(child));
 			newChild.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(child));
-			newChild.SetSharedComponent(EntityManager::GetSharedComponent<MeshRenderer>(child));
+			auto* mmc = newChild.GetPrivateComponent<MeshRenderer>();
+			auto newmmc = std::unique_ptr<MeshRenderer>();
+			newmmc->Material = mmc->get()->Material;
+			newmmc->BackCulling = false;
+			newmmc->Mesh = mmc->get()->Mesh;
+			newChild.SetPrivateComponent(std::move(newmmc));
 			EntityManager::SetParent(newChild, plant);
 		});
 	return plant;
@@ -130,15 +140,15 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateGridPlant(Entit
 	plant.SetComponentData(EntityManager::GetComponentData<Rotation>(original));
 	plant.SetComponentData(EntityManager::GetComponentData<Scale>(original));
 	plant.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(original));
-	auto imr = std::make_shared<InstancedMeshRenderer>();
-	const auto mr = EntityManager::GetSharedComponent<MeshRenderer>(original);
-	imr->Mesh = mr->Mesh;
+	auto imr = std::make_unique<ParticleSystem>();
+	auto* mr = EntityManager::GetPrivateComponent<MeshRenderer>(original);
+	imr->Mesh = mr->get()->Mesh;
 	imr->BackCulling = false;
 	imr->Material = _InstancedStemMaterial;
 	imr->Matrices.clear();
 	imr->Matrices.insert(imr->Matrices.begin(), matrices.begin(), matrices.end());
 	imr->RecalculateBoundingBox();
-	plant.SetSharedComponent(imr);
+	plant.SetPrivateComponent(std::move(imr));
 	EntityManager::ForEachChild(original, [this, &plant, &matrices](Entity child)
 		{
 			Entity newChild = EntityManager::CreateEntity(_LeafArchetype);
@@ -147,15 +157,15 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateGridPlant(Entit
 			newChild.SetComponentData(EntityManager::GetComponentData<LocalRotation>(child));
 			newChild.SetComponentData(EntityManager::GetComponentData<LocalScale>(child));
 			newChild.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(child));
-			auto imr = std::make_shared<InstancedMeshRenderer>();
-			const auto mr = EntityManager::GetSharedComponent<MeshRenderer>(child);
-			imr->Mesh = mr->Mesh;
+			auto imr = std::make_unique<ParticleSystem>();
+			const auto mr = EntityManager::GetPrivateComponent<MeshRenderer>(child);
+			imr->Mesh = mr->get()->Mesh;
 			imr->BackCulling = false;
 			imr->Material = _InstancedLeafMaterial;
 			imr->Matrices.clear();
 			imr->Matrices.insert(imr->Matrices.begin(), matrices.begin(), matrices.end());
 			imr->RecalculateBoundingBox();
-			newChild.SetSharedComponent(imr);
+			newChild.SetPrivateComponent(std::move(imr));
 			EntityManager::SetParent(newChild, plant);
 		});
 	return plant;
@@ -168,7 +178,6 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 	EntityManager::ForEach<LocalToWorld>(_SplineQuery, [&meshMutex, segmentAmount, step]
 	(int index, Entity entity, LocalToWorld* ltw)
 		{
-
 			auto spline = EntityManager::GetSharedComponent<Spline>(entity);
 			spline->Nodes.clear();
 			int stemNodeCount = 0;
@@ -290,14 +299,14 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 	std::vector<Entity> plants;
 	_PlantQuery.ToEntityArray(plants);
 	for (auto& plant : plants) {
-		auto pmmc = EntityManager::GetSharedComponent<MeshRenderer>(plant);
+		auto* pmmc = EntityManager::GetPrivateComponent<MeshRenderer>(plant);
 		auto spline = EntityManager::GetSharedComponent<Spline>(plant);
-		pmmc->Mesh->SetVertices(17, spline->Vertices, spline->Indices, true);
+		pmmc->get()->Mesh->SetVertices(17, spline->Vertices, spline->Indices, true);
 		EntityManager::ForEachChild(plant, [](Entity child)
 			{
-				auto mmc = EntityManager::GetSharedComponent<MeshRenderer>(child);
+				auto* mmc = EntityManager::GetPrivateComponent<MeshRenderer>(child);
 				auto childSpline = EntityManager::GetSharedComponent<Spline>(child);
-				mmc->Mesh->SetVertices(17, childSpline->Vertices, childSpline->Indices, true);
+				mmc->get()->Mesh->SetVertices(17, childSpline->Vertices, childSpline->Indices, true);
 			}
 		);
 	}
@@ -367,13 +376,13 @@ void SorghumReconstruction::SorghumReconstructionSystem::ExportPlant(Entity plan
 
 		unsigned startIndex = 1;
 
-		auto mesh = EntityManager::GetSharedComponent<MeshRenderer>(plant)->Mesh;
+		auto mesh = EntityManager::GetPrivateComponent<MeshRenderer>(plant)->get()->Mesh;
 		ObjExportHelper(glm::vec3(0.0f), mesh, of, startIndex);
 		
 		EntityManager::ForEachChild(plant, [this, &of, &startIndex](Entity child)
 			{
 				auto lt = EntityManager::GetComponentData<LocalTranslation>(child).Value;
-				auto mesh = EntityManager::GetSharedComponent<MeshRenderer>(child)->Mesh;
+				auto mesh = EntityManager::GetPrivateComponent<MeshRenderer>(child)->get()->Mesh;
 				ObjExportHelper(lt, mesh, of, startIndex);
 			}
 		);

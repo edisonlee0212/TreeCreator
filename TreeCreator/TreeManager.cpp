@@ -20,10 +20,6 @@ InternodeIndex TreeUtilities::TreeManager::_InternodeIndex;
 
 bool TreeUtilities::TreeManager::_Ready;
 #pragma region Helpers
-std::size_t InternodeData::GetHashCode()
-{
-	return (size_t)this;
-}
 
 void InternodeData::OnGui()
 {
@@ -35,11 +31,6 @@ void InternodeData::OnGui()
 		ImGui::Text(Buds[i].IsApical ? "Apical" : "Lateral");
 		ImGui::Spacing();
 	}
-}
-
-std::size_t TreeData::GetHashCode()
-{
-	return (size_t)this;
 }
 
 void TreeData::OnGui()
@@ -56,18 +47,18 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& internode, std::vec
 	//glm::vec3 dir = info.DesiredGlobalRotation * glm::vec3(0.0f, 0.0f, -1.0f);
 	//newNormalDir = glm::cross(glm::cross(dir, newNormalDir), dir);
 	
-	auto list = EntityManager::GetSharedComponent<InternodeData>(internode);
-	auto step = list->step;
+	auto list = EntityManager::GetPrivateComponent<InternodeData>(internode);
+	auto step = list->get()->step;
 	//For stitching
 	int pStep = parentStep > 0 ? parentStep : step;
 
-	list->NormalDir = newNormalDir;
+	list->get()->NormalDir = newNormalDir;
 	float angleStep = 360.0f / (float)(pStep);
 	int vertexIndex = vertices.size();
 	Vertex archetype;
 	float textureXstep = 1.0f / pStep * 4.0f;
 	for (int i = 0; i < pStep; i++) {
-		archetype.Position = list->Rings.at(0).GetPoint(newNormalDir, angleStep * i, true);
+		archetype.Position = list->get()->Rings.at(0).GetPoint(newNormalDir, angleStep * i, true);
 		float x = i < (pStep / 2) ? i * textureXstep : (pStep - i) * textureXstep;
 		archetype.TexCoords0 = glm::vec2(x, 0.0f);
 		vertices.push_back(archetype);
@@ -131,10 +122,10 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& internode, std::vec
 
 	vertexIndex += pStep;
 	textureXstep = 1.0f / step * 4.0f;
-	int ringSize = list->Rings.size();
+	int ringSize = list->get()->Rings.size();
 	for (int ringIndex = 0; ringIndex < ringSize; ringIndex++) {
 		for (int i = 0; i < step; i++) {
-			archetype.Position = list->Rings.at(ringIndex).GetPoint(newNormalDir, angleStep * i, false);
+			archetype.Position = list->get()->Rings.at(ringIndex).GetPoint(newNormalDir, angleStep * i, false);
 			float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
 			float y = ringIndex % 2 == 0 ? 1.0f : 0.0f;
 			archetype.TexCoords0 = glm::vec2(x, y);
@@ -451,17 +442,21 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh)
 {
 	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
-	auto instancedMeshRenderer = std::make_shared<InstancedMeshRenderer>();
-	instancedMeshRenderer->Matrices.clear();
-	instancedMeshRenderer->Material = std::move(treeLeafMaterial);
-	instancedMeshRenderer->Mesh = std::move(treeLeafMesh);
-	instancedMeshRenderer->BackCulling = false;
-	EntityManager::SetSharedComponent(entity, std::move(instancedMeshRenderer));
-	EntityManager::SetSharedComponent(entity, std::make_shared<TreeData>());
+	auto particleSystem = std::make_unique<ParticleSystem>();
+	particleSystem->Matrices.clear();
+	particleSystem->Material = std::move(treeLeafMaterial);
+	particleSystem->Mesh = std::move(treeLeafMesh);
+	particleSystem->BackCulling = false;
+	EntityManager::SetPrivateComponent(entity, std::move(particleSystem));
+	EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<TreeData>()));
+	Bound bound;
+	bound.Center = glm::vec3(0.0f);
+	bound.Size = glm::vec3(5.0f);
+	EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<CubeTreeVolume>(bound)));
 	EntityManager::SetComponentData(entity, _TreeIndex);
-	auto mmc = std::make_shared<MeshRenderer>();
+	auto mmc = std::make_unique<MeshRenderer>();
 	mmc->Material = std::move(treeSurfaceMaterial);
-	EntityManager::SetSharedComponent(entity, std::move(mmc));
+	EntityManager::SetPrivateComponent(entity, std::move(mmc));
 	_TreeIndex.Value++;
 	return entity;
 }
@@ -481,11 +476,11 @@ void TreeManager::DeleteAllTrees()
 Entity TreeUtilities::TreeManager::CreateInternode(TreeIndex treeIndex, Entity parentEntity)
 {
 	auto entity = EntityManager::CreateEntity(_InternodeArchetype);
-	auto internodeData = std::make_shared<InternodeData>();
+	auto internodeData = std::make_unique<InternodeData>();
 	EntityManager::SetComponentData(entity, treeIndex);
 	EntityManager::SetParent(entity, parentEntity);
 	EntityManager::SetComponentData(entity, _InternodeIndex);
-	EntityManager::SetSharedComponent(entity, internodeData);
+	EntityManager::SetPrivateComponent(entity, std::move(internodeData));
 	_InternodeIndex.Value++;
 	InternodeInfo internodeInfo;
 	internodeInfo.IsActivatedEndNode = false;
@@ -549,7 +544,7 @@ std::shared_ptr<Mesh> TreeUtilities::TreeManager::GetMeshForTree(Entity treeEnti
 		Debug::Error("TreeManager: Not initialized!");
 		return nullptr;
 	}
-	return EntityManager::GetSharedComponent<MeshRenderer>(treeEntity)->Mesh;
+	return EntityManager::GetPrivateComponent<MeshRenderer>(treeEntity)->get()->Mesh;
 }
 #pragma endregion
 
@@ -571,9 +566,9 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [&creationM, resolution, subdivision, treeTransform](int i, Entity internode, InternodeInfo* info) 
 		{
 			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(internode))) return;
-			auto list = EntityManager::GetSharedComponent<InternodeData>(internode);
+			auto list = EntityManager::GetPrivateComponent<InternodeData>(internode);
 		
-			list->Rings.clear();
+			list->get()->Rings.clear();
 			glm::quat parentRotation = info->ParentRotation;
 			glm::vec3 parentTranslation = info->ParentTranslation;
 			float parentThickness = info->ParentThickness;
@@ -597,7 +592,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			int step = (parentThickness / resolution);
 			if (step < 4) step = 4;
 			if (step % 2 != 0) step++;
-			list->step = step;
+			list->get()->step = step;
 			int amount = (int)(0.5f + distance / ((info->Thickness + parentThickness) / 2.0f) * subdivision);
 			if (amount % 2 != 0) amount++;
 			BezierCurve curve = BezierCurve(parentTranslation, parentTranslation + distance / 3.0f * fromDir, translation - distance / 3.0f * dir, translation);
@@ -608,20 +603,20 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			//list->NormalDir = fromDir == dir ? glm::cross(dir, glm::vec3(0, 0, 1)) : glm::cross(fromDir, dir);
 
 			for (int i = 1; i < amount; i++) {
-				list->Rings.emplace_back(
+				list->get()->Rings.emplace_back(
 					curve.GetPoint(posStep * (i - 1)), curve.GetPoint(posStep * i),
 					fromDir + (float)(i - 1) * dirStep, fromDir + (float)i * dirStep,
 					parentThickness + (float)(i - 1) * radiusStep, parentThickness + (float)i * radiusStep);
 			}
-			if (amount > 1)list->Rings.emplace_back(curve.GetPoint(1.0f - posStep), translation, dir - dirStep, dir, info->Thickness - radiusStep, info->Thickness);
-			else list->Rings.emplace_back(parentTranslation, translation, fromDir, dir, parentThickness, info->Thickness);
+			if (amount > 1)list->get()->Rings.emplace_back(curve.GetPoint(1.0f - posStep), translation, dir - dirStep, dir, info->Thickness - radiusStep, info->Thickness);
+			else list->get()->Rings.emplace_back(parentTranslation, translation, fromDir, dir, parentThickness, info->Thickness);
 #pragma endregion
 		}
 
 	);
 
-	auto mmc = EntityManager::GetSharedComponent<MeshRenderer>(treeEntity);
-	auto treeData = EntityManager::GetSharedComponent<TreeData>(treeEntity);
+	auto* mmc = EntityManager::GetPrivateComponent<MeshRenderer>(treeEntity);
+	auto treeData = EntityManager::GetPrivateComponent<TreeData>(treeEntity);
 	std::vector<Vertex> vertices;
 	std::vector<unsigned> indices;
 
@@ -629,8 +624,8 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	
 	if(EntityManager::GetChildrenAmount(internodeEntity) != 0){
 		SimpleMeshGenerator(EntityManager::GetChildren(internodeEntity).at(0), vertices, indices, glm::vec3(1, 0, 0), resolution);
-		mmc->Mesh = std::make_shared<Mesh>();
-		mmc->Mesh->SetVertices(17, vertices, indices, true);
-		treeData->MeshGenerated = true;
+		mmc->get()->Mesh = std::make_shared<Mesh>();
+		mmc->get()->Mesh->SetVertices(17, vertices, indices, true);
+		treeData->get()->MeshGenerated = true;
 	}
 }

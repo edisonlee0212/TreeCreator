@@ -6,7 +6,7 @@ void TreeUtilities::TreeSystem::DrawGUI()
 	auto treeEntity = EditorManager::GetSelectedEntity();
 	ImGui::Begin("Tree Inspector");
 	
-	if (!treeEntity.IsNull() && EntityManager::HasSharedComponent<TreeData>(treeEntity)) {
+	if (!treeEntity.IsNull() && EntityManager::HasPrivateComponent<TreeData>(treeEntity)) {
 		TreeIndex index = EntityManager::GetComponentData<TreeIndex>(treeEntity);
 		std::string title = "Tree ";
 		title += std::to_string(index.Value);
