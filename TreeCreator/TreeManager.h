@@ -86,7 +86,7 @@ namespace TreeUtilities {
 		int PruneReason = 0;
 		bool IsMaxChild = false;
 		bool ApicalBudExist = false;
-		bool IsActivatedEndNode = false;
+		bool IsEndNode = false;
 #pragma endregion
 #pragma region Geometric
 		glm::vec3 ChildBranchesMeanPosition = glm::vec3(0.0f);

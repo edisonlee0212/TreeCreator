@@ -88,7 +88,7 @@ void TreeUtilities::DefaultFoliageGenerator::Generate(Entity tree)
 	//Debug::Log(std::to_string(particleSystem->get()->Matrices.size()));
 }
 
-void TreeUtilities::DefaultFoliageGenerator::OnGui()
+void TreeUtilities::DefaultFoliageGenerator::OnParamGui()
 {
 	
 }
@@ -97,14 +97,7 @@ void AcaciaFoliageGenerator::Generate(Entity tree)
 {
 }
 
-void AcaciaFoliageGenerator::OnGui()
+void AcaciaFoliageGenerator::OnParamGui()
 {
 }
 
-void WillowFoliageGenerator::Generate(Entity tree)
-{
-}
-
-void WillowFoliageGenerator::OnGui()
-{
-}

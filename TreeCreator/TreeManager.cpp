@@ -291,7 +291,7 @@ void TreeUtilities::TreeManager::Init()
 				ImGui::Text(("Pruned reason: " + reason).c_str());
 				ImGui::Text(("IsMaxChild: " + std::string(internodeInfo->IsMaxChild ? "Yes" : "No")).c_str());
 				ImGui::Text(("ApicalBudExist: " + std::to_string(internodeInfo->ApicalBudExist)).c_str());
-				ImGui::Text(("IsActivatedEndNode: " + std::to_string(internodeInfo->IsActivatedEndNode)).c_str());
+				ImGui::Text(("IsEndNode: " + std::to_string(internodeInfo->IsEndNode)).c_str());
 				ImGui::TreePop();
 			}
 			if (ImGui::TreeNode("Geometric")) {
@@ -481,7 +481,7 @@ Entity TreeUtilities::TreeManager::CreateInternode(TreeIndex treeIndex, Entity p
 	EntityManager::SetPrivateComponent(entity, std::move(internodeData));
 	_InternodeIndex.Value++;
 	InternodeInfo internodeInfo;
-	internodeInfo.IsActivatedEndNode = false;
+	internodeInfo.IsEndNode = false;
 	internodeInfo.MaxChildOrder = 0;
 	EntityManager::SetComponentData(entity, internodeInfo);
 	return entity;

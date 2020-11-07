@@ -11,6 +11,7 @@
 #include <CGAL/Point_set_3.h>
 
 #include "CrownSurfaceRecon.h"
+#include "WillowFoliageGenerator.h"
 
 void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
@@ -466,7 +467,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	internodeData->get()->Buds.push_back(bud);
 
 	InternodeInfo internodeInfo;
-	internodeInfo.IsActivatedEndNode = false;
+	internodeInfo.IsEndNode = false;
 	internodeInfo.IsMaxChild = true;
 	internodeInfo.ApicalBudExist = true;
 	internodeInfo.Order = 0;
@@ -757,7 +758,7 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 				info->CrownShyness = 1.0f;
 				return;
 			}
-			//if (!info->IsActivatedEndNode) return;
+			//if (!info->IsEndNode) return;
 			float crownShynessLimit = 0;
 			float crownShynessFactor = 1.0f;
 			for (size_t ii = 0; ii < treeIndices.size(); ii++)
@@ -790,19 +791,6 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 void TreeUtilities::PlantSimulationSystem::EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
-	if (EntityManager::GetChildrenAmount(internode) == 0)
-	{
-		internodeInfo.IsActivatedEndNode = true;
-		EntityManager::SetComponentData(internode, internodeInfo);
-	}
-
-	auto ltw = EntityManager::GetComponentData<LocalToWorld>(internode);
-	float height = ltw.Value[3].y;
-	if (height > 15)
-	{
-		PruneInternode(internode, 2);
-		return;
-	}
 	if (internodeInfo.Pruned) {
 		return;
 	}
@@ -844,7 +832,6 @@ inline void PlantSimulationSystem::PruneInternode(Entity& internode, int pruneRe
 {
 	auto internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	internodeInfo.Pruned = true;
-	internodeInfo.IsActivatedEndNode = false;
 	internodeInfo.PruneReason = pruneReason;
 	EntityManager::SetComponentData(internode, internodeInfo);
 	EntityManager::ForEachChild(internode, [pruneReason, this](Entity child)
@@ -930,17 +917,21 @@ void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntit
 void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchEnd(Entity& internode, TreeParameters& treeParameters, int treeAge)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
+	if (EntityManager::GetChildrenAmount(internode) == 0)
+	{
+		internodeInfo.IsEndNode = true;
+	}
 	internodeInfo.MaxChildOrder = internodeInfo.Order;
 	internodeInfo.BranchEndPosition = internodeInfo.GlobalTransform[3];
 	internodeInfo.DistanceToBranchEnd = 0;
 	internodeInfo.LongestDistanceToEnd = 0;
 	internodeInfo.TotalDistanceToEnd = 0;
-	internodeInfo.BranchEndInternodeAmount = EntityManager::GetChildrenAmount(internode) == 0 ? 1 : 0;
+	internodeInfo.BranchEndInternodeAmount = internodeInfo.IsEndNode ? 1 : 0;
 	internodeInfo.MeanWeight = 0;
 	const float localWeight = 1.0f + glm::max(0, treeAge - internodeInfo.Level);
 	internodeInfo.ChildBranchesMeanPosition = internodeInfo.GlobalTransform[3];
 	internodeInfo.ChildBranchesMeanPosition *= localWeight * internodeInfo.DistanceToParent;
-	if (EntityManager::GetChildrenAmount(internode) == 0) {
+	if (internodeInfo.IsEndNode) {
 		internodeInfo.Thickness = treeParameters.EndNodeThickness;
 	}
 	else {
@@ -1086,7 +1077,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 			EntityManager::SetComponentData(child, childInternodeInfo);
 		}
 	);
-	if (EntityManager::GetChildrenAmount(internode) == 0) internodeInfo.MainChildRotation = newGlobalRotation;
+	if (internodeInfo.IsEndNode) internodeInfo.MainChildRotation = newGlobalRotation;
 	else {
 		EntityManager::SetComponentData(mainChildEntityIndex, mainChildInfo);
 	}
@@ -1857,7 +1848,7 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 					}
 					else
 					{
-						_FoliageGenerators[_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType]->OnGui();
+						_FoliageGenerators[_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType]->OnParamGui();
 					}
 #pragma endregion
 				}
