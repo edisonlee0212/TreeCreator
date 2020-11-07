@@ -38,11 +38,11 @@
 			<GravityBendingAngleFactor>0.850000</GravityBendingAngleFactor>
 			<ApicalBudLightingFactor>0.540000</ApicalBudLightingFactor>
 			<LateralBudLightingFactor>0.940000</LateralBudLightingFactor>
-			<EndNodeThickness>0.020000</EndNodeThickness>
+			<EndNodeThickness>0.010000</EndNodeThickness>
 			<ThicknessControlFactor>0.630000</ThicknessControlFactor>
 			<CrownShynessBase>1.000000</CrownShynessBase>
 			<CrownShynessFactor>1.000000</CrownShynessFactor>
-			<FoliageType>0</FoliageType>
+			<FoliageType>2</FoliageType>
 			<LeafSizeX>0.100000</LeafSizeX>
 			<LeafSizeY>0.100000</LeafSizeY>
 			<LeafIlluminationLimit>0.000000</LeafIlluminationLimit>
