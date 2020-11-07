@@ -15,11 +15,11 @@ namespace TreeUtilities {
 		bool operator ==(const TreeIndex& other) const {
 			return other.Value == Value;
 		}
-	};    
+	};
 #pragma endregion
 
 #pragma region Internode
-	
+
 
 	struct Connection : ComponentBase {
 		glm::mat4 Value;
@@ -49,7 +49,7 @@ namespace TreeUtilities {
 		int step;
 		void OnGui() override;
 	};
-	
+
 	struct InternodeIndex : ComponentBase {
 		unsigned Value;
 		bool operator ==(const InternodeIndex& other) const {
@@ -57,6 +57,7 @@ namespace TreeUtilities {
 		}
 	};
 	struct InternodeInfo : ComponentBase {
+		bool Activated = true;
 #pragma region General
 		int StartAge;
 		int Order = 0;
@@ -118,46 +119,75 @@ namespace TreeUtilities {
 	};
 #pragma endregion
 #pragma region Tree
-	class TreeVolumeBase : public PrivateComponentBase
+	enum class TreeVolumeType
 	{
+		Default,
+		Cube,
+		Sphere
+	};
+	class TreeVolume : public PrivateComponentBase
+	{
+		Bound _Bound;
+		glm::vec4 _DisplayColor = glm::vec4(0.0f, 0.0f, 1.0f, 0.5f);
+		bool _Display = true;
+		TreeVolumeType _Type = TreeVolumeType::Default;
 	public:
-		virtual bool InVolume(glm::vec3 position) { return true; }
+		bool InVolume(glm::vec3 position)
+		{
+			switch (_Type)
+			{
+			case TreeVolumeType::Cube:
+				return _Bound.InBound(position);
+			case TreeVolumeType::Sphere:
+				return glm::distance(position, _Bound.Center) <= _Bound.Radius;
+			}
+			return true;
+		}
 		void OnGui() override
 		{
-			ImGui::Text("Type: Default");
+			static const char* TVTypes[]{ "Default", "Cube", "Sphere" };
+			ImGui::Combo("Display mode", (int*)(void*)&_Type, TVTypes, IM_ARRAYSIZE(TVTypes));
+			switch (_Type)
+			{
+			case TreeVolumeType::Cube:
+				ImGui::Text("Type: Cube");
+				ImGui::Checkbox("Display bounds", &_Display);
+				if (_Display)
+				{
+					ImGui::ColorEdit4("Color: ", (float*)(void*)&_DisplayColor);
+					RenderManager::DrawGizmoCube(_DisplayColor,
+						Application::GetMainCameraComponent()->get()->Value.get(), glm::translate(_Bound.Center) * glm::scale(_Bound.Size), 1);
+				}
+				ImGui::DragFloat3("Center: ", (float*)(void*)&_Bound.Center);
+				ImGui::DragFloat3("Size: ", (float*)(void*)&_Bound.Size);
+				break;
+			case TreeVolumeType::Sphere:
+				ImGui::Text("Type: Sphere");
+				ImGui::Checkbox("Display bounds", &_Display);
+				if (_Display)
+				{
+					ImGui::ColorEdit4("Color: ", (float*)(void*)&_DisplayColor);
+					RenderManager::DrawGizmoPoint(_DisplayColor,
+						Application::GetMainCameraComponent()->get()->Value.get(), glm::translate(_Bound.Center) * glm::scale(glm::vec3(_Bound.Radius)), 1);
+				}
+				ImGui::DragFloat3("Center: ", (float*)(void*)&_Bound.Center);
+				ImGui::DragFloat("Radius: ", (float*)(void*)&_Bound.Radius);
+				break;
+			default:
+				ImGui::Text("Type: Default");
+				break;
+			}
 		}
 	};
 
-	class CubeTreeVolume : public TreeVolumeBase
-	{
-		Bound _Bound;
-		glm::vec4 _DisplayColor;
-		bool _Display;
-	public:
-		CubeTreeVolume(Bound bound) : _Bound(bound){}
-		bool InVolume(glm::vec3 position) override { return _Bound.InBound(position); }
-		void OnGui() override
-		{
-			ImGui::Checkbox("Display bounds", &_Display);
-			if(_Display)
-			{
-				ImGui::ColorEdit4("Color: ", (float*)(void*)&_DisplayColor);
-				RenderManager::DrawGizmoCube(_DisplayColor,
-					Application::GetMainCameraComponent()->get()->Value.get(), glm::translate(_Bound.Center) * glm::scale(_Bound.Size), 1);
-			}
-			ImGui::DragFloat3("Center: ", (float*)(void*)&_Bound.Center);
-			ImGui::DragFloat3("Size: ", (float*)(void*)&_Bound.Size);
-		}
-	};
-	
 	struct TreeParameters : ComponentBase {
 		int Seed;
 		int Age = 0;
-		
+
 #pragma region Geometric
 		int LateralBudPerNode;
 
-		float VarianceApicalAngle; 
+		float VarianceApicalAngle;
 
 		float BranchingAngleMean;
 		float BranchingAngleVariance;
@@ -188,26 +218,26 @@ namespace TreeUtilities {
 #pragma endregion
 #pragma region Environmental
 		float InternodeSize = 0.3f;
-		
+
 		float Phototropism;
 		float GravitropismBase;
 		float GravitropismLevelFactor;
 
 		float PruningFactor;
 		float LowBranchPruningFactor;
-		
+
 		float ThicknessRemovalFactor;
-		
+
 		float GravityBendingStrength;
 		float GravityBendingAngleFactor;
-		
+
 		float ApicalBudLightingFactor;
 		float LateralBudLightingFactor;
 #pragma endregion
 
 		float EndNodeThickness;
 		float ThicknessControlFactor;
-		
+
 #pragma region CrownShyness
 		float CrownShynessBase;
 		float CrownShynessFactor = 1.0f;
@@ -230,7 +260,7 @@ namespace TreeUtilities {
 	};
 
 	struct TreeAge : ComponentBase {
-		
+
 		int Value;
 		int ToGrowIteration;
 		bool Enable;
@@ -243,7 +273,7 @@ namespace TreeUtilities {
 		int MaxBranchingDepth;
 		int LateralBudsCount;
 	};
-	
+
 	class TreeData : public PrivateComponentBase {
 	public:
 		bool MeshGenerated;
@@ -262,7 +292,7 @@ namespace TreeUtilities {
 
 		static TreeSystem* _TreeSystem;
 		static InternodeSystem* _InternodeSystem;
-		
+
 		static EntityArchetype _InternodeArchetype;
 		static EntityArchetype _TreeArchetype;
 
@@ -273,7 +303,7 @@ namespace TreeUtilities {
 		static InternodeIndex _InternodeIndex;
 
 		static bool _Ready;
-		
+
 		static void SimpleMeshGenerator(Entity& internode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep = -1);
 	public:
 		static void Init();
@@ -286,7 +316,7 @@ namespace TreeUtilities {
 		static TreeSystem* GetTreeSystem();
 
 		static void GetAllTrees(std::vector<Entity>& container);
-		
+
 		static void CalculateInternodeIllumination();
 
 		static std::shared_ptr<Mesh> GetMeshForTree(Entity treeEntity);

@@ -88,15 +88,16 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	Entity rootInternode = EntityManager::GetChildren(treeEntity).at(0);
 	bool anyRemoved = false;
 	EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
-	const bool growed = GrowShoots(rootInternode, *treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value);
+	auto* treeVolume = treeEntity.GetPrivateComponent<TreeVolume>();
+	const bool growed = GrowShoots(rootInternode, *treeVolume, *treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value);
 	if (growed) {
 		UpdateDistanceToBranchEnd(rootInternode, treeParameters, treeAge.Value);
 		UpdateDistanceToBranchStart(rootInternode);
 		CalculatePhysics(treeEntity);
-		treeAge.Value++;
-		treeAge.ToGrowIteration--;
-		EntityManager::SetComponentData(treeEntity, treeAge);
 	}
+	treeAge.Value++;
+	treeAge.ToGrowIteration--;
+	EntityManager::SetComponentData(treeEntity, treeAge);
 #pragma endregion
 	return growed;
 }
@@ -490,7 +491,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	ResumeGrowth();
 	return treeEntity;
 }
-bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform)
+bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::unique_ptr<TreeVolume>& treeVolume, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	internodeInfo.Inhibitor = 0;
@@ -498,13 +499,18 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 
 #pragma region Grow child
 	bool ret = false;
-	EntityManager::ForEachChild(internode, [&ret, this, &internodeInfo, &treeData, &treeAge, &treeParameters, &treeIndex, &treeTransform](Entity childNode)
+	EntityManager::ForEachChild(internode, [&ret, this, &internodeInfo, &treeData, &treeAge, &treeParameters, &treeIndex, &treeTransform, &treeVolume](Entity childNode)
 		{
-			if (GrowShoots(childNode, treeData, treeAge, treeParameters, treeIndex, treeTransform)) ret = true;
+			if (GrowShoots(childNode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeTransform)) ret = true;
 			auto childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(childNode);
 			internodeInfo.Inhibitor += childNodeInfo.Inhibitor * childNodeInfo.ParentInhibitorFactor;
 		}
 	);
+	if(treeVolume->IsEnabled() && !treeVolume->InVolume((treeTransform * internodeInfo.GlobalTransform)[3]))
+	{
+		return ret;
+	}
+	if (!internodeInfo.Activated) return ret;
 	if (internodeInfo.Pruned)
 	{
 		internodeData->get()->Buds.clear();
@@ -1212,6 +1218,19 @@ void PlantSimulationSystem::ResumeGrowth()
 	_GrowthTimer = Application::EngineTime();
 }
 
+void PlantSimulationSystem::SetAllInternodeActivated(Entity tree, bool value)
+{
+	TreeIndex treeIndex = tree.GetComponentData<TreeIndex>();
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [treeIndex, value](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+		{
+			if(index->Value == treeIndex.Value)
+			{
+				info->Activated = value;
+			}
+		}
+	);
+}
+
 void PlantSimulationSystem::GenerateLeavesForAllTrees(std::vector<Entity>& trees)
 {
 	for (auto& tree : trees) {
@@ -1354,7 +1373,7 @@ void TreeUtilities::PlantSimulationSystem::Update()
 			}
 		}
 	}
-	DrawGui();
+	OnGui();
 }
 void PlantSimulationSystem::CreateDefaultTree()
 {
@@ -1676,7 +1695,7 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 	}
 }
 #pragma endregion
-inline void TreeUtilities::PlantSimulationSystem::DrawGui()
+inline void TreeUtilities::PlantSimulationSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Plant Simulation")) {
@@ -1872,6 +1891,22 @@ inline void TreeUtilities::PlantSimulationSystem::DrawGui()
 	}
 	ImGui::Begin("Tree Utilities");
 	if (ImGui::CollapsingHeader("Tree Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
+		if (ImGui::Button("Enable nodes for all trees"))
+		{
+			EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity internode, InternodeInfo* info)
+				{
+					info->Activated = true;
+				}
+			);
+		}
+		if(ImGui::Button("Disable nodes for all trees"))
+		{
+			EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity internode, InternodeInfo* info)
+				{
+					info->Activated = false;
+				}
+			);
+		}
 		if (ImGui::Button("Refresh all trees"))
 		{
 			RefreshTrees();

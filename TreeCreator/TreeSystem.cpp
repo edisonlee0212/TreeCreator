@@ -1,7 +1,7 @@
 #include "TreeSystem.h"
 #include "TreeManager.h"
-
-void TreeUtilities::TreeSystem::DrawGUI()
+#include "PlantSimulationSystem.h"
+void TreeUtilities::TreeSystem::OnGui()
 {
 	auto treeEntity = EditorManager::GetSelectedEntity();
 	ImGui::Begin("Tree Inspector");
@@ -11,6 +11,19 @@ void TreeUtilities::TreeSystem::DrawGUI()
 		std::string title = "Tree ";
 		title += std::to_string(index.Value);
 		ImGui::Text(title.c_str());
+
+		if (ImGui::Button("Enable all nodes"))
+		{
+			PlantSimulationSystem::SetAllInternodeActivated(treeEntity, true);
+		}
+		if (ImGui::Button("Disable all nodes"))
+		{
+			PlantSimulationSystem::SetAllInternodeActivated(treeEntity, false);
+		}
+
+		ImGui::Spacing();
+		ImGui::Separator();
+		
 		ImGui::InputFloat("Mesh resolution", &_MeshGenerationResolution, 0.0f, 0.0f, "%.5f");
 		ImGui::InputFloat("Branch subdivision", &_MeshGenerationSubdivision, 0.0f, 0.0f, "%.5f");
 		if (ImGui::Button("Regenerate mesh")) {
@@ -48,7 +61,7 @@ void TreeUtilities::TreeSystem::OnDestroy()
 
 void TreeUtilities::TreeSystem::Update()
 {
-	DrawGUI();
+	OnGui();
 }
 
 void TreeUtilities::TreeSystem::FixedUpdate()

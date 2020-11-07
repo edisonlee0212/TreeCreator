@@ -251,6 +251,7 @@ void TreeUtilities::TreeManager::Init()
 		{
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
 			if (ImGui::TreeNode("General")) {
+				ImGui::Checkbox("Activated", &internodeInfo->Activated);
 				ImGui::Text(("StartAge: " + std::to_string(internodeInfo->StartAge)).c_str());
 				ImGui::Text(("Order: " + std::to_string(internodeInfo->Order)).c_str());
 				ImGui::Text(("Level: " + std::to_string(internodeInfo->Level)).c_str());
@@ -449,10 +450,7 @@ Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurf
 	particleSystem->BackCulling = false;
 	EntityManager::SetPrivateComponent(entity, std::move(particleSystem));
 	EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<TreeData>()));
-	Bound bound;
-	bound.Center = glm::vec3(0.0f);
-	bound.Size = glm::vec3(5.0f);
-	EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<CubeTreeVolume>(bound)));
+	EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<TreeVolume>()));
 	EntityManager::SetComponentData(entity, _TreeIndex);
 	auto mmc = std::make_unique<MeshRenderer>();
 	mmc->Material = std::move(treeSurfaceMaterial);
