@@ -38,7 +38,7 @@
 			<GravityBendingAngleFactor>0.910000</GravityBendingAngleFactor>
 			<ApicalBudLightingFactor>0.850000</ApicalBudLightingFactor>
 			<LateralBudLightingFactor>0.200000</LateralBudLightingFactor>
-			<EndNodeThickness>0.015000</EndNodeThickness>
+			<EndNodeThickness>0.010000</EndNodeThickness>
 			<ThicknessControlFactor>0.620000</ThicknessControlFactor>
 			<CrownShynessBase>1.000000</CrownShynessBase>
 			<CrownShynessFactor>1.000000</CrownShynessFactor>
