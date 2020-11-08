@@ -8,16 +8,19 @@
 
 TreeUtilities::WillowFoliageGenerator::WillowFoliageGenerator()
 {
+	_DefaultFoliageInfo = WillowFoliageInfo();
 	_Archetype = EntityManager::CreateEntityArchetype("Willow Foliage", LocalToParent(), LocalToWorld(), TreeIndex(), WillowFoliageInfo());
 
 	_BranchletMaterial = std::make_shared<Material>();
 	_BranchletMaterial->SetMaterialProperty("material.shininess", 32.0f);
 	_BranchletMaterial->SetProgram(Default::GLPrograms::StandardProgram);
+	_BranchletSurfaceTex = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_baseColor.jpg"));
 	_BranchletMaterial->SetTexture(_BranchletSurfaceTex, TextureType::DIFFUSE);
 
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
+	_LeafSurfaceTex = AssetManager::LoadTexture("../Resources/Textures/Leaf/Willow/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
 }
 
@@ -43,15 +46,16 @@ void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
 
 		auto particleSys = std::make_unique<ParticleSystem>();
 		particleSys->Material = _LeafMaterial;
+		particleSys->Mesh = Default::Primitives::Quad;
+		particleSys->ForwardRendering = true;
+		particleSys->BackCulling = false;
 
-		WillowFoliageInfo info;
-		
 		LocalToParent ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(mmc));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
 		foliageEntity.SetComponentData(ltp);
-		foliageEntity.SetComponentData(info);
+		foliageEntity.SetComponentData(_DefaultFoliageInfo);
 		foliageEntity.SetComponentData(ti);
 		EntityManager::SetParent(foliageEntity, tree);
 	}
@@ -60,9 +64,10 @@ void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
 	particleSys->get()->Matrices.clear();
 	std::vector<Entity> internodes;
 	std::mutex m;
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodes](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+	WillowFoliageInfo wfInfo = foliageEntity.GetComponentData<WillowFoliageInfo>();
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodes, &wfInfo](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
 		{
-			if (!info->IsEndNode) return;
+			if (info->Inhibitor > wfInfo.InhibitorLimit) return;
 			if (ti.Value != index->Value) return;
 			std::lock_guard<std::mutex> lock(m);
 			internodes.push_back(internode);
@@ -88,25 +93,52 @@ void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
 		branchlets[i].Normal = glm::cross(up, fromDir);
 		glm::vec3 dir = glm::vec3(0, -1, 0);
 		glm::vec3 parentTranslation = translation;
-		translation = parentTranslation + glm::vec3(fromDir.x, -2.0f, fromDir.z);
+		float downDistance = glm::gaussRand(wfInfo.DownDistanceMean, wfInfo.DownDistanceVariance);
+		float pushDistance = wfInfo.PushDistance;
+		if(translation.y - downDistance < wfInfo.LowLimit)
+		{
+			float newDownDistance = translation.y - wfInfo.LowLimit;
+			pushDistance *= newDownDistance / downDistance;
+			downDistance = newDownDistance;
+		}
+		translation = parentTranslation + glm::vec3(fromDir.x * pushDistance, -downDistance, fromDir.z * pushDistance);
 		float distance = glm::distance(parentTranslation, translation);
-		int amount = 6;
+		int amount = wfInfo.SubdivisionAmount;
 		if (amount % 2 != 0) amount++;
 		BezierCurve curve = BezierCurve(parentTranslation, parentTranslation + distance / 3.0f * fromDir, translation - distance / 3.0f * dir, translation);
 		float posStep = 1.0f / (float)amount;
 		glm::vec3 dirStep = (dir - fromDir) / (float)amount;
-		float thickness = 0.01f;
-		
+		float thickness = wfInfo.Thickness;
 		for (int j = 1; j < amount; j++) {
-			branchlets[i].Rings.emplace_back(
-				curve.GetPoint(posStep * (j - 1)), curve.GetPoint(posStep * j),
-				fromDir + (float)(j - 1) * dirStep, fromDir + (float)j * dirStep,
+			auto startPos = curve.GetPoint(posStep * (j - 1));
+			auto endPos = curve.GetPoint(posStep * j);
+			auto startDir = fromDir + (float)(j - 1) * dirStep;
+			auto endDir = fromDir + (float)j * dirStep;
+			branchlets[i].Rings.emplace_back(startPos, endPos,
+				startDir, endDir,
 				thickness, thickness);
 		}
 		if (amount > 1)branchlets[i].Rings.emplace_back(curve.GetPoint(1.0f - posStep), translation, dir - dirStep, dir, thickness, thickness);
 		else branchlets[i].Rings.emplace_back(parentTranslation, translation, fromDir, dir, thickness, thickness);
+		
+		amount = wfInfo.LeafAmount;
+		posStep = 1.0f / (float)amount;
+		dirStep = (dir - fromDir) / (float)amount;
+		for (int j = 1; j < amount; j++) {
+			auto endPos = curve.GetPoint(posStep * j);
+			auto endDir = fromDir + (float)j * dirStep;
+			auto currUp = glm::cross(endDir, branchlets[i].Normal);
+			auto l = glm::rotate(endDir, glm::radians(wfInfo.BendAngle), currUp);
+			auto r = glm::rotate(endDir, glm::radians(-wfInfo.BendAngle), currUp);
+			glm::vec3 s = wfInfo.LeafSize;
+			branchlets[i].LeafLocalTransforms.push_back(glm::translate(endPos + s.z * 2.0f * l) * glm::mat4_cast(glm::quatLookAt(-l, currUp)) * glm::scale(s));
+			branchlets[i].LeafLocalTransforms.push_back(glm::translate(endPos + s.z * 2.0f * r) * glm::mat4_cast(glm::quatLookAt(-r, currUp)) * glm::scale(s));
+		}
 	}
-
+	for (int i = 0; i < internodes.size(); i++)
+	{
+		particleSys->get()->Matrices.insert(particleSys->get()->Matrices.end(), branchlets[i].LeafLocalTransforms.begin(), branchlets[i].LeafLocalTransforms.end());
+	}
 	std::vector<Vertex> vertices;
 	std::vector<unsigned> indices;
 	vertices.clear();
@@ -169,4 +201,14 @@ void TreeUtilities::WillowFoliageGenerator::SimpleMeshGenerator(Branchlet& branc
 
 void TreeUtilities::WillowFoliageGenerator::OnParamGui()
 {
+	ImGui::DragFloat("Inhibitor Limit", &_DefaultFoliageInfo.InhibitorLimit);
+	ImGui::DragFloat("Dist Mean", &_DefaultFoliageInfo.DownDistanceMean);
+	ImGui::DragFloat("Dist Var", &_DefaultFoliageInfo.DownDistanceVariance);
+	ImGui::DragFloat("Low Limit", &_DefaultFoliageInfo.LowLimit);
+	ImGui::DragFloat("Push Dist", &_DefaultFoliageInfo.PushDistance);
+	ImGui::DragFloat("Thickness", &_DefaultFoliageInfo.Thickness);
+	ImGui::DragFloat("Bend Angle", &_DefaultFoliageInfo.BendAngle);
+	ImGui::DragInt("Subdiv Amount", &_DefaultFoliageInfo.SubdivisionAmount);
+	ImGui::DragInt("Leaf Amount", &_DefaultFoliageInfo.LeafAmount);
+	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize);
 }

@@ -7,50 +7,50 @@
 		</Position>
 		<TreeParameters>
 			<Seed>1</Seed>
-			<Age>17</Age>
+			<Age>11</Age>
 			<LateralBudPerNode>2</LateralBudPerNode>
 			<VarianceApicalAngle>2.000000</VarianceApicalAngle>
 			<BranchingAngleMean>30.000000</BranchingAngleMean>
 			<BranchingAngleVariance>5.000000</BranchingAngleVariance>
-			<RollAngleMean>113.110001</RollAngleMean>
-			<RollAngleVariance>13.090000</RollAngleVariance>
-			<ApicalBudKillProbability>0.900000</ApicalBudKillProbability>
-			<LateralBudKillProbability>0.006269</LateralBudKillProbability>
-			<ApicalDominanceBase>3.500000</ApicalDominanceBase>
-			<ApicalDominanceDistanceFactor>0.900000</ApicalDominanceDistanceFactor>
-			<ApicalDominanceAgeFactor>0.900000</ApicalDominanceAgeFactor>
-			<GrowthRate>1.500000</GrowthRate>
-			<InternodeLengthBase>0.923827</InternodeLengthBase>
-			<InternodeLengthAgeFactor>0.955900</InternodeLengthAgeFactor>
-			<ApicalControlBase>0.935760</ApicalControlBase>
-			<ApicalControlAgeFactor>0.918157</ApicalControlAgeFactor>
-			<ApicalControlLevelFactor>1.000000</ApicalControlLevelFactor>
+			<RollAngleMean>130.000000</RollAngleMean>
+			<RollAngleVariance>30.000000</RollAngleVariance>
+			<ApicalBudKillProbability>0.000000</ApicalBudKillProbability>
+			<LateralBudKillProbability>0.010000</LateralBudKillProbability>
+			<ApicalDominanceBase>4.870000</ApicalDominanceBase>
+			<ApicalDominanceDistanceFactor>0.979000</ApicalDominanceDistanceFactor>
+			<ApicalDominanceAgeFactor>0.420000</ApicalDominanceAgeFactor>
+			<GrowthRate>4.250000</GrowthRate>
+			<InternodeLengthBase>0.930000</InternodeLengthBase>
+			<InternodeLengthAgeFactor>0.950000</InternodeLengthAgeFactor>
+			<ApicalControlBase>3.640000</ApicalControlBase>
+			<ApicalControlAgeFactor>0.870000</ApicalControlAgeFactor>
+			<ApicalControlLevelFactor>0.920000</ApicalControlLevelFactor>
 			<ApicalControlDistanceFactor>0.000000</ApicalControlDistanceFactor>
-			<MaxBudAge>10</MaxBudAge>
-			<InternodeSize>0.500000</InternodeSize>
-			<Phototropism>0.424451</Phototropism>
-			<GravitropismBase>0.360000</GravitropismBase>
-			<GravitropismLevelFactor>-0.150000</GravitropismLevelFactor>
-			<PruningFactor>0.050000</PruningFactor>
-			<LowBranchPruningFactor>0.639226</LowBranchPruningFactor>
+			<MaxBudAge>8</MaxBudAge>
+			<InternodeSize>0.600000</InternodeSize>
+			<Phototropism>0.450000</Phototropism>
+			<GravitropismBase>0.200000</GravitropismBase>
+			<GravitropismLevelFactor>0.000000</GravitropismLevelFactor>
+			<PruningFactor>0.100000</PruningFactor>
+			<LowBranchPruningFactor>4.500000</LowBranchPruningFactor>
 			<ThicknessRemovalFactor>99999.000000</ThicknessRemovalFactor>
-			<GravityBendingStrength>0.360000</GravityBendingStrength>
-			<GravityBendingAngleFactor>0.850000</GravityBendingAngleFactor>
-			<ApicalBudLightingFactor>1.000000</ApicalBudLightingFactor>
-			<LateralBudLightingFactor>1.000600</LateralBudLightingFactor>
-			<EndNodeThickness>0.020000</EndNodeThickness>
-			<ThicknessControlFactor>0.690000</ThicknessControlFactor>
+			<GravityBendingStrength>0.130000</GravityBendingStrength>
+			<GravityBendingAngleFactor>0.930000</GravityBendingAngleFactor>
+			<ApicalBudLightingFactor>0.850000</ApicalBudLightingFactor>
+			<LateralBudLightingFactor>0.200000</LateralBudLightingFactor>
+			<EndNodeThickness>0.010000</EndNodeThickness>
+			<ThicknessControlFactor>0.620000</ThicknessControlFactor>
 			<CrownShynessBase>1.000000</CrownShynessBase>
 			<CrownShynessFactor>1.000000</CrownShynessFactor>
 			<FoliageType>0</FoliageType>
-			<LeafSizeX>0.100000</LeafSizeX>
-			<LeafSizeY>0.100000</LeafSizeY>
+			<LeafSizeX>0.140000</LeafSizeX>
+			<LeafSizeY>0.140000</LeafSizeY>
 			<LeafIlluminationLimit>0.000000</LeafIlluminationLimit>
 			<LeafInhibitorFactor>0.000000</LeafInhibitorFactor>
 			<IsBothSide>1</IsBothSide>
-			<SideLeafAmount>1</SideLeafAmount>
-			<StartBendingAngle>45.000000</StartBendingAngle>
-			<BendingAngleIncrement>0.000000</BendingAngleIncrement>
+			<SideLeafAmount>2</SideLeafAmount>
+			<StartBendingAngle>30.000000</StartBendingAngle>
+			<BendingAngleIncrement>30.000000</BendingAngleIncrement>
 			<LeafPhotoTropism>999.000000</LeafPhotoTropism>
 			<LeafGravitropism>1.000000</LeafGravitropism>
 			<LeafDistance>0.000000</LeafDistance>

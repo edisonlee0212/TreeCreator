@@ -2,6 +2,8 @@
 #include "LightEstimator.h"
 #include <gtx/matrix_decompose.hpp>
 #include <utility>
+
+#include "WillowFoliageGenerator.h"
 using namespace TreeUtilities;
 
 LightEstimator* TreeUtilities::TreeManager::_LightEstimator;
@@ -245,7 +247,22 @@ void TreeUtilities::TreeManager::Init()
 			
 		}
 	);
-
+	EditorManager::AddComponentInspector<WillowFoliageInfo>(
+		[](ComponentBase* data)
+		{
+			auto foliageInfo = static_cast<WillowFoliageInfo*>(data);
+			ImGui::DragFloat("Inhibitor Limit", &foliageInfo->InhibitorLimit);
+			ImGui::DragFloat("Dist Mean", &foliageInfo->DownDistanceMean);
+			ImGui::DragFloat("Dist Var", &foliageInfo->DownDistanceVariance);
+			ImGui::DragFloat("Low Limit", &foliageInfo->LowLimit);
+			ImGui::DragFloat("Push Dist", &foliageInfo->PushDistance);
+			ImGui::DragFloat("Thickness", &foliageInfo->Thickness);
+			ImGui::DragFloat("Bend Angle", &foliageInfo->BendAngle);
+			ImGui::DragInt("Subdiv Amount", &foliageInfo->SubdivisionAmount);
+			ImGui::DragInt("Leaf Amount", &foliageInfo->LeafAmount);
+			ImGui::DragFloat3("Leaf Size", (float*)(void*)&foliageInfo->LeafSize);
+		}
+	);
 	EditorManager::AddComponentInspector<InternodeInfo>(
 		[](ComponentBase* data)
 		{
