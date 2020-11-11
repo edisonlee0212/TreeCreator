@@ -509,6 +509,13 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 	);
 	if(treeVolume->IsEnabled() && !treeVolume->InVolume((treeTransform * internodeInfo.GlobalTransform)[3]))
 	{
+		if(treeVolume->PruneBuds())
+		{
+			internodeData->get()->Buds.clear();
+			internodeInfo.ActivatedBudsAmount = 0;
+			internodeInfo.ApicalBudExist = false;
+			EntityManager::SetComponentData(internode, internodeInfo);
+		}
 		return ret;
 	}
 	if (!internodeInfo.Activated) return ret;
@@ -1345,7 +1352,7 @@ void TreeUtilities::PlantSimulationSystem::Update()
 			{
 				auto data = EntityManager::GetPrivateComponent<TreeData>(trees[i]);
 				if (data->get()->ConvexHull != nullptr) {
-					RenderManager::DrawMesh(data->get()->ConvexHull.get(), _DefaultConvexHullSurfaceMaterial.get(), ltws[i].Value, Application::GetMainCameraComponent()->get()->Value.get(), false);
+					RenderManager::DrawMesh(data->get()->ConvexHull.get(), _DefaultConvexHullSurfaceMaterial.get(), ltws[i].Value, RenderManager::GetMainCamera(), false);
 				}
 			}
 

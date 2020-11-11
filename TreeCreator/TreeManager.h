@@ -130,9 +130,12 @@ namespace TreeUtilities {
 		Bound _Bound;
 		glm::vec4 _DisplayColor = glm::vec4(0.0f, 0.0f, 1.0f, 0.5f);
 		bool _Display = true;
+		bool _PruneBuds = false;
 		TreeVolumeType _Type = TreeVolumeType::Default;
 	public:
-		bool InVolume(glm::vec3 position)
+		void SetPruneBuds(bool value) { _PruneBuds = value; }
+		bool PruneBuds() const { return _PruneBuds; }
+		bool InVolume(glm::vec3 position) const
 		{
 			switch (_Type)
 			{
@@ -145,6 +148,7 @@ namespace TreeUtilities {
 		}
 		void OnGui() override
 		{
+			ImGui::Checkbox("Prune Buds", &_PruneBuds);
 			static const char* TVTypes[]{ "Default", "Cube", "Sphere" };
 			ImGui::Combo("Display mode", (int*)(void*)&_Type, TVTypes, IM_ARRAYSIZE(TVTypes));
 			switch (_Type)
@@ -155,8 +159,7 @@ namespace TreeUtilities {
 				if (_Display)
 				{
 					ImGui::ColorEdit4("Color: ", (float*)(void*)&_DisplayColor);
-					RenderManager::DrawGizmoCube(_DisplayColor,
-						Application::GetMainCameraComponent()->get()->Value.get(), glm::translate(_Bound.Center) * glm::scale(_Bound.Size), 1);
+					RenderManager::DrawGizmoCube(_DisplayColor, glm::translate(_Bound.Center) * glm::scale(_Bound.Size), 1);
 				}
 				ImGui::DragFloat3("Center: ", (float*)(void*)&_Bound.Center);
 				ImGui::DragFloat3("Size: ", (float*)(void*)&_Bound.Size);
@@ -167,8 +170,7 @@ namespace TreeUtilities {
 				if (_Display)
 				{
 					ImGui::ColorEdit4("Color: ", (float*)(void*)&_DisplayColor);
-					RenderManager::DrawGizmoPoint(_DisplayColor,
-						Application::GetMainCameraComponent()->get()->Value.get(), glm::translate(_Bound.Center) * glm::scale(glm::vec3(_Bound.Radius)), 1);
+					RenderManager::DrawGizmoPoint(_DisplayColor, glm::translate(_Bound.Center) * glm::scale(glm::vec3(_Bound.Radius)), 1);
 				}
 				ImGui::DragFloat3("Center: ", (float*)(void*)&_Bound.Center);
 				ImGui::DragFloat("Radius: ", (float*)(void*)&_Bound.Radius);
