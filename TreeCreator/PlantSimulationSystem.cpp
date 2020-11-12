@@ -46,7 +46,6 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
 	TreeIndex treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity);
 	LocalToWorld treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(treeEntity);
-	Rotation treeRotation = EntityManager::GetComponentData<Rotation>(treeEntity);
 #pragma endregion
 	if (treeAge.ToGrowIteration == 0) {
 		return false;
@@ -437,20 +436,10 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	auto treeEntity = TreeManager::CreateTree(mat, treeLeafMaterial, treeLeafMesh);
 	Entity internode = TreeManager::CreateInternode(EntityManager::GetComponentData<TreeIndex>(treeEntity), treeEntity);
 #pragma region Position & Style
-	Translation t;
-	t.Value = position;
-	Scale s;
-	s.Value = glm::vec3(1.0f);
-	EulerRotation er;
-	er.Value = glm::vec3(0);
-	Rotation r;
-	r.Value = glm::quat(glm::radians(er.Value));
-	LocalToWorld ltw;
-	ltw.Value = glm::translate(glm::mat4(1.0f), t.Value) * glm::mat4_cast(r.Value) * glm::scale(s.Value);
 
-	EntityManager::SetComponentData(treeEntity, t);
-	EntityManager::SetComponentData(treeEntity, s);
-	EntityManager::SetComponentData(treeEntity, r);
+	LocalToWorld ltw;
+	ltw.Value = glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(glm::quat(glm::vec3(0))) * glm::scale(glm::vec3(1.0f));
+
 	EntityManager::SetComponentData(treeEntity, ltw);
 #pragma endregion
 	TreeAge age;
@@ -519,7 +508,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 		return ret;
 	}
 	if (!internodeInfo.Activated) return ret;
-	if (internodeInfo.Pruned)
+	if (internodeInfo.Pruned || internodeInfo.CrownShyness == 0.0f)
 	{
 		internodeData->get()->Buds.clear();
 		internodeInfo.ActivatedBudsAmount = 0;
@@ -560,7 +549,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 			budGrowProbability *= glm::pow(illumination,
 				bud.IsApical ? treeParameters.ApicalBudLightingFactor : treeParameters.LateralBudLightingFactor);
 		}
-		budGrowProbability *= internodeInfo.CrownShyness;
+		//budGrowProbability *= internodeInfo.CrownShyness;
 		// now check whether the bud is going to flush or not
 		bool flush = treeAge.Value < 2 ? true : budGrowProbability >= glm::linearRand(0.0f, 1.0f);
 #pragma endregion
@@ -758,7 +747,6 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 	EntityManager::ForEach<LocalToWorld, InternodeInfo, TreeIndex>(_InternodeQuery, [detectionDistance, &treeIndices, &treeParameters, &internodesLTWs, &internodesTreeIndices, this](int i, Entity branchNode, LocalToWorld* ltw, InternodeInfo* info, TreeIndex* index)
 		{
 			if (info->Pruned) {
-				info->CrownShyness = 1.0f;
 				return;
 			}
 			if (info->LongestDistanceToEnd > detectionDistance) {
@@ -766,18 +754,18 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 				return;
 			}
 			//if (!info->IsEndNode) return;
-			float crownShynessLimit = 0;
+			float crownShynessBase = 0;
 			float crownShynessFactor = 1.0f;
 			for (size_t ii = 0; ii < treeIndices.size(); ii++)
 			{
 				if (treeIndices[ii].Value == index->Value)
 				{
-					crownShynessLimit = treeParameters[ii].CrownShynessBase;
+					crownShynessBase = treeParameters[ii].CrownShynessBase;
 					crownShynessFactor = treeParameters[ii].CrownShynessFactor;
 					break;
 				}
 			}
-			if (crownShynessLimit <= 0) return;
+			if (crownShynessBase <= 0) return;
 			float minDistance = FLT_MAX;
 			for (size_t bi = 0; bi < internodesLTWs.size(); bi++)
 			{
@@ -789,7 +777,7 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 					if (minDistance > d) minDistance = d;
 				}
 			}
-			minDistance /= crownShynessLimit;
+			minDistance /= crownShynessBase;
 			if (minDistance < 1.0f) minDistance = 1.0f;
 			info->CrownShyness = glm::pow(1.0f - 1.0f / minDistance, crownShynessFactor);
 		}
@@ -1085,7 +1073,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 		}
 	);
 	if (internodeInfo.IsEndNode) internodeInfo.MainChildRotation = newGlobalRotation;
-	else {
+	else if(mainChildEntityIndex != 0){
 		EntityManager::SetComponentData(mainChildEntityIndex, mainChildInfo);
 	}
 	EntityManager::ForEachChild(internode, [this, &internodeInfo](Entity child)
@@ -1216,6 +1204,13 @@ void PlantSimulationSystem::ResumeGrowth()
 	_GrowthTimer = Application::EngineTime();
 }
 
+void PlantSimulationSystem::PauseGrowth()
+{
+	_Growing = false;
+	Debug::Log("Paused growth, growth time since last start: " + std::to_string(Application::EngineTime() - _GrowthTimer));
+	_GrowthTimer = 0;
+}
+
 void PlantSimulationSystem::SetAllInternodeActivated(Entity tree, bool value)
 {
 	TreeIndex treeIndex = tree.GetComponentData<TreeIndex>();
@@ -1249,7 +1244,7 @@ void PlantSimulationSystem::RefreshTrees()
 		auto treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
 		auto treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
 		auto treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(treeEntity);
-		auto particleSystem = EntityManager::GetPrivateComponent<ParticleSystem>(treeEntity);
+		auto particleSystem = EntityManager::GetPrivateComponent<Particles>(treeEntity);
 		particleSystem->get()->Matrices.clear();
 		UpdateInternodeResource(rootInternode, treeParameters, treeAge, treeLocalToWorld.Value, particleSystem->get()->Matrices, true);
 		particleSystem->get()->RecalculateBoundingBox();
@@ -1269,7 +1264,6 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_getcwd(_CurrentWorkingDir, 256);
 	_TreeQuery = TreeManager::GetTreeQuery();
 	_InternodeQuery = TreeManager::GetInternodeQuery();
-	_Gravity = 0;
 	for (int i = 0; i < 256; i++) {
 		_TempImportFilePath[i] = 0;
 	}
@@ -1323,7 +1317,6 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 
 	//_DefaultTreeLeafMesh = Default::Primitives::Quad;
 
-	_Gravity = 1.0f;
 	_NewTreeParameters.resize(1);
 	LoadDefaultTreeParameters(1, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);
 	Enable();
@@ -1743,7 +1736,7 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 					_NewTreeParameters.resize(_NewTreeAmount);
 					for (auto i = currentSize; i < _NewTreeAmount; i++)
 					{
-						LoadDefaultTreeParameters(1, _NewTreeParameters[i]);
+						_NewTreeParameters[i] = _NewTreeParameters[0];
 					}
 					_NewTreePositions.resize(_NewTreeAmount);
 				}
@@ -1943,15 +1936,30 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 
 		ImGui::Separator();
 		ImGui::InputInt("Iterations", &_NewPushIteration);
-		if (ImGui::Button("Push iterations to all trees"))
+		if (ImGui::Button("Push iteration to all"))
 		{
 			EntityManager::ForEach<TreeAge>(_TreeQuery, [this](int i, Entity tree, TreeAge* age)
 				{
 					age->ToGrowIteration += _NewPushIteration;
 				});
 		}
-		if (ImGui::Button("Resume growth")) {
-			ResumeGrowth();
+		if (!_Growing) {
+			if (ImGui::Button("Resume growth")) {
+				ResumeGrowth();
+			}
+			if (ImGui::Button("Grow 1 iteration"))
+			{
+				EntityManager::ForEach<TreeAge>(_TreeQuery, [this](int i, Entity tree, TreeAge* age)
+					{
+						age->ToGrowIteration += 1;
+					});
+				ResumeGrowth();
+			}
+		}else
+		{
+			if (ImGui::Button("Pause growth")) {
+				PauseGrowth();
+			}
 		}
 		ImGui::Separator();
 		if (ImGui::Button("Delete all trees")) {

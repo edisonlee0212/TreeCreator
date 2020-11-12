@@ -19,7 +19,7 @@ namespace TreeUtilities {
 		
 		float _DirectionPruningLimitAngle = 60;
 		bool _DisplayConvexHull = false;
-		bool _EnableDirectionPruning = true;
+		bool _EnableDirectionPruning = false;
 		bool _DisplayFullParam = true;
 		char _CurrentWorkingDir[256] = {};
 		char _TempImportFilePath[256] = {};
@@ -44,7 +44,6 @@ namespace TreeUtilities {
 #pragma endregion
 		InternodeSystem* _InternodeSystem = nullptr;
 		unsigned int _ConfigFlags = 0;
-		float _Gravity = 0;
 		bool _Growing = false;
 		EntityQuery _TreeQuery;
 		EntityQuery _InternodeQuery;
@@ -65,6 +64,7 @@ namespace TreeUtilities {
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);
 		void BuildHullForTree(Entity& tree);
 		void ResumeGrowth();
+		void PauseGrowth();
 	public:
 		static void SetAllInternodeActivated(Entity tree, bool value);
 		static void ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up);

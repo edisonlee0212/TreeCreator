@@ -83,7 +83,7 @@ void TreeUtilities::DefaultFoliageGenerator::Generate(Entity tree)
 {
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
 	LocalToWorld treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(tree);
-	auto particleSystem = EntityManager::GetPrivateComponent<ParticleSystem>(tree);
+	auto particleSystem = EntityManager::GetPrivateComponent<Particles>(tree);
 	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeParameters, treeLocalToWorld.Value, particleSystem->get()->Matrices, true);
 	//Debug::Log(std::to_string(particleSystem->get()->Matrices.size()));
 }

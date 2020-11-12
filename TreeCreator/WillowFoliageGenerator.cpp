@@ -44,7 +44,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
 		auto mmc = std::make_unique<MeshRenderer>();
 		mmc->Material = _BranchletMaterial;
 
-		auto particleSys = std::make_unique<ParticleSystem>();
+		auto particleSys = std::make_unique<Particles>();
 		particleSys->Material = _LeafMaterial;
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
@@ -60,7 +60,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
 		EntityManager::SetParent(foliageEntity, tree);
 	}
 	auto* mmc = foliageEntity.GetPrivateComponent<MeshRenderer>();
-	auto* particleSys = foliageEntity.GetPrivateComponent<ParticleSystem>();
+	auto* particleSys = foliageEntity.GetPrivateComponent<Particles>();
 	particleSys->get()->Matrices.clear();
 	std::vector<Entity> internodes;
 	std::mutex m;

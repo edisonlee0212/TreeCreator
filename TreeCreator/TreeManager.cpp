@@ -172,7 +172,7 @@ void TreeUtilities::TreeManager::Init()
 	);
 	_TreeArchetype = EntityManager::CreateEntityArchetype(
 		"Tree",
-		Translation(), EulerRotation(), Rotation(), Scale(), LocalToWorld(),
+		LocalToWorld(),
 		TreeIndex(), TreeInfo(), TreeAge(),
 		TreeParameters()
 		);
@@ -193,7 +193,7 @@ void TreeUtilities::TreeManager::Init()
 	_LightEstimator = new LightEstimator();
 
 	EditorManager::AddComponentInspector<TreeAge>(
-		[](ComponentBase* data)
+		[](ComponentBase* data, bool isRoot)
 		{
 			ImGui::Text(("Current age: " + std::to_string(*(int*)data)).c_str());
 			ImGui::DragInt("Iterations left", (int*)((char*)data + sizeof(int)));
@@ -201,14 +201,14 @@ void TreeUtilities::TreeManager::Init()
 	);
 	
 	EditorManager::AddComponentInspector<TreeIndex>(
-		[](ComponentBase* data)
+		[](ComponentBase* data, bool isRoot)
 		{
 			ImGui::Text(("Value: " + std::to_string(*(int*)data)).c_str());
 		}
 	);
 
 	EditorManager::AddComponentInspector<TreeParameters>(
-		[](ComponentBase* data)
+		[](ComponentBase* data, bool isRoot)
 		{
 			auto tps = static_cast<TreeParameters*>(data);
 			ImGui::DragInt("Seed", &tps->Seed);
@@ -248,7 +248,7 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 	EditorManager::AddComponentInspector<WillowFoliageInfo>(
-		[](ComponentBase* data)
+		[](ComponentBase* data, bool isRoot)
 		{
 			auto foliageInfo = static_cast<WillowFoliageInfo*>(data);
 			ImGui::DragFloat("Inhibitor Limit", &foliageInfo->InhibitorLimit);
@@ -264,7 +264,7 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 	EditorManager::AddComponentInspector<InternodeInfo>(
-		[](ComponentBase* data)
+		[](ComponentBase* data, bool isRoot)
 		{
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
 			if (ImGui::TreeNode("General")) {
@@ -351,7 +351,7 @@ void TreeUtilities::TreeManager::Init()
 	);
 
 	EditorManager::AddComponentInspector<Illumination>(
-		[](ComponentBase* data)
+		[](ComponentBase* data, bool isRoot)
 		{
 			auto illumination = static_cast<Illumination*>(data);
 			ImGui::Text(("Value: " + std::to_string(illumination->Value)).c_str());
@@ -359,7 +359,7 @@ void TreeUtilities::TreeManager::Init()
 	);
 
 	EditorManager::AddComponentInspector<TreeInfo>(
-		[](ComponentBase* data)
+		[](ComponentBase* data, bool isRoot)
 		{
 			auto info = static_cast<TreeInfo*>(data);
 			ImGui::Text(("Current seed " + std::to_string(info->CurrentSeed)).c_str());
@@ -460,7 +460,7 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh)
 {
 	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
-	auto particleSystem = std::make_unique<ParticleSystem>();
+	auto particleSystem = std::make_unique<Particles>();
 	particleSystem->Matrices.clear();
 	particleSystem->Material = std::move(treeLeafMaterial);
 	particleSystem->Mesh = std::move(treeLeafMesh);

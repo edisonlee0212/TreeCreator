@@ -32,31 +32,31 @@ int main()
 	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
 #pragma region Lights
-	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", EulerRotation(), Rotation(), DirectionalLightComponent());
-	DirectionalLightComponent dlc;
+	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), LocalToWorld(), LocalToParent());
+	DirectionalLight dlc;
 	dlc.diffuseBrightness = 1.1f;
 	dlc.depthBias = 0.001;
 	dlc.normalOffset = 0.001;
 	dlc.lightSize = 5.2;
-	EulerRotation er;
-	er.Value = glm::vec3(60, 0, 0);
+	LocalToWorld ltw;
+	ltw.SetEulerRotation(glm::vec3(60, 0, 0));
 	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
 	EntityManager::SetComponentData(dle, dlc);
-	EntityManager::SetComponentData(dle, er);
+	EntityManager::SetComponentData(dle, ltw);
 #pragma endregion
 #pragma region Preparations
 	Application::SetTimeStep(0.016f);
 	auto world = Application::GetWorld();
 	WorldTime* time = world->Time();
 
-	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());
+	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToWorld(), LocalToParent());
 	CameraControlSystem* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);
 	ccs->Enable();
-	Translation t;
-	t.Value = glm::vec3(0, 6, 20);
+	ltw = LocalToWorld();
+	ltw.SetPosition(glm::vec3(0, 6, 20));
 	auto mainCamera = RenderManager::GetMainCamera();
 	if (mainCamera) {
-		mainCamera->GetOwner().SetComponentData(t);
+		mainCamera->GetOwner().SetComponentData(ltw);
 		mainCamera->DrawSkyBox = false;
 		mainCamera->ClearColor = glm::vec3(1.0f);
 	}
@@ -166,47 +166,32 @@ int main()
 			Entity gridPlant4 = srSys->CreateGridPlant(plant4, matricesList[3]);
 			gridPlant4.SetName("Grid 4");
 		}
-		Translation t1;
-		Translation t2;
-		Translation t3;
-		Translation t4;
-		Rotation r1;
-		Rotation r2;
-		Rotation r3;
-		Rotation r4;
-		Scale s1;
-		Scale s2;
-		Scale s3;
-		Scale s4;
-		s1.Value = glm::vec3(1.0f, 1.0f, 1.0f);
-		s2.Value = glm::vec3(1.0f, 1.0f, 1.0f);
-		s3.Value = glm::vec3(1.0f, 1.0f, 1.0f);
-		s4.Value = glm::vec3(1.0f, 1.0f, 1.0f);
+		LocalToWorld t1;
+		LocalToWorld t2;
+		LocalToWorld t3;
+		LocalToWorld t4;
 		
-		t1.Value = glm::vec3(-5.0f, 0.0, 0);
-		t2.Value = glm::vec3(0.0f, 0.0, 0);
-		t3.Value = glm::vec3(5.0f, 0.0, 0);
-		t4.Value = glm::vec3(10.0f, 0.0, 0);
+		t1.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+		t2.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+		t3.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
+		t4.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 		
-		r1.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(42.0f), 0));
-		r2.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(30.0f), 0));
-		r3.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(40.0f), 0));
-		r4.Value = glm::quat(glm::vec3(glm::radians(-90.0f), glm::radians(-110.0f), 0));
+		t1.SetPosition(glm::vec3(-5.0f, 0.0, 0));
+		t2.SetPosition(glm::vec3(0.0f, 0.0, 0));
+		t3.SetPosition(glm::vec3(5.0f, 0.0, 0));
+		t4.SetPosition(glm::vec3(10.0f, 0.0, 0));
+		
+		t1.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(42.0f), 0));
+		t2.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(30.0f), 0));
+		t3.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(40.0f), 0));
+		t4.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(-110.0f), 0));
 		EntityManager::SetComponentData(plant1, t1);
-		EntityManager::SetComponentData(plant1, r1);
-		EntityManager::SetComponentData(plant1, s1);
 		
 		EntityManager::SetComponentData(plant2, t2);
-		EntityManager::SetComponentData(plant2, r2);
-		EntityManager::SetComponentData(plant2, s2);
 		
 		EntityManager::SetComponentData(plant3, t3);
-		EntityManager::SetComponentData(plant3, r3);
-		EntityManager::SetComponentData(plant3, s3);
 		
 		EntityManager::SetComponentData(plant4, t4);
-		EntityManager::SetComponentData(plant4, r4);
-		EntityManager::SetComponentData(plant4, s4);
 	}
 	
 #pragma region Engine Loop
@@ -232,7 +217,7 @@ SorghumReconstructionSystem* InitSorghumReconstructionSystem()
 	return Application::GetWorld()->CreateSystem<SorghumReconstructionSystem>(SystemGroup::SimulationSystemGroup);
 }
 void InitGround() {
-	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Translation(), Rotation(), Scale(), LocalToWorld());
+	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToParent(), LocalToWorld());
 
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardInstancedProgram);
@@ -243,16 +228,14 @@ void InitGround() {
 	//mat->SetTexture(textureNormal, TextureType::NORMAL);
 	
 	mat->SetMaterialProperty("material.shininess", 32.0f);
-	auto particleSystem = std::make_unique<ParticleSystem>();
+	auto particleSystem = std::make_unique<Particles>();
 	particleSystem->Mesh = Default::Primitives::Quad;
 	particleSystem->Material = mat;
-	Translation translation = Translation();
-	Scale scale = Scale();
+	LocalToWorld ltw;
 	auto baseEntity = EntityManager::CreateEntity(archetype, "Ground");
-	translation.Value = glm::vec3(0.0f);
-	scale.Value = glm::vec3(1.0f);
-	baseEntity.SetComponentData(translation);
-	baseEntity.SetComponentData(scale);
+	ltw.SetPosition(glm::vec3(0.0f));
+	ltw.SetScale(glm::vec3(1.0f));
+	baseEntity.SetComponentData(ltw);
 	int radius = 6;
 	float size = 6.0f;
 	for(int i = -radius; i <= radius; i++)
@@ -265,7 +248,7 @@ void InitGround() {
 		}
 	}
 	particleSystem->RecalculateBoundingBox();
-	baseEntity.SetPrivateComponent<ParticleSystem>(std::move(particleSystem));
+	baseEntity.SetPrivateComponent<Particles>(std::move(particleSystem));
 
 }
 

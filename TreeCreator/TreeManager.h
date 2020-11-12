@@ -115,7 +115,7 @@ namespace TreeUtilities {
 		bool IsMainChild = false;
 #pragma endregion
 
-		float CrownShyness;
+		float CrownShyness = 1.0f;
 	};
 #pragma endregion
 #pragma region Tree
