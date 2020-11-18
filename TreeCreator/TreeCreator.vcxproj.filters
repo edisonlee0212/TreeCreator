@@ -87,9 +87,6 @@
     <ClCompile Include="BranchSystem.cpp">
       <Filter>Source Files\TreeUtilities</Filter>
     </ClCompile>
-    <ClCompile Include="PlantSimulationSystem.cpp">
-      <Filter>Source Files\TreeUtilities</Filter>
-    </ClCompile>
     <ClCompile Include="InternodeSystem.cpp">
       <Filter>Source Files\TreeUtilities</Filter>
     </ClCompile>
@@ -107,6 +104,15 @@
     </ClCompile>
     <ClCompile Include="WillowFoliageGenerator.cpp">
       <Filter>Source Files\TreeUtilities\Foliage</Filter>
+    </ClCompile>
+    <ClCompile Include="MapleFoliageGenerator.cpp">
+      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+    </ClCompile>
+    <ClCompile Include="PlantSimulationSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageCollectionSystem.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -173,9 +179,6 @@
     <ClInclude Include="TreeUtilities.h">
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
-    <ClInclude Include="PlantSimulationSystem.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
     <ClInclude Include="InternodeSystem.h">
       <Filter>Header Files\TreeUtilities</Filter>
     </ClInclude>
@@ -196,6 +199,15 @@
     </ClInclude>
     <ClInclude Include="WillowFoliageGenerator.h">
       <Filter>Header Files\TreeUtilities\Foliage</Filter>
+    </ClInclude>
+    <ClInclude Include="MapleFoliageGenerator.h">
+      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+    </ClInclude>
+    <ClInclude Include="PlantSimulationSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageCollectionSystem.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

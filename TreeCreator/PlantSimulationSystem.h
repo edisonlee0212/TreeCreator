@@ -13,6 +13,7 @@ namespace TreeUtilities {
 	class PlantSimulationSystem :
 		public SystemBase
 	{
+		friend class ImageCollectionSystem;
 		std::vector<std::shared_ptr<FoliageGeneratorBase>> _FoliageGenerators;
 		float _GrowthTimer;
 #pragma region GUI Related
@@ -72,6 +73,7 @@ namespace TreeUtilities {
 		void RefreshTrees();
 		void ExportSettings(const std::string& path);
 		void ImportSettings(const std::string& path);
+		TreeParameters LoadParameters(const std::string& path);
 		static void LoadDefaultTreeParameters(int preset, TreeParameters& tps);
 		void TryGrowAllTrees(std::vector<Entity>& trees);
 		bool GrowTree(Entity& treeEntity);
@@ -81,6 +83,7 @@ namespace TreeUtilities {
 		void Update() override;
 		void FixedUpdate() override;
 		Entity CreateTree(std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters parameters, glm::vec3 position, bool enabled = true);
+		Entity CreateTree(TreeParameters parameters, glm::vec3 position, bool enabled = true);
 		void CreateDefaultTree();
 	};
 

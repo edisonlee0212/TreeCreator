@@ -1,3 +1,4 @@
+#include <direct.h>
 #include <iostream>
 
 #include "UniEngine.h"
@@ -5,12 +6,13 @@
 #include "PlantSimulationSystem.h"
 #include "TreeManager.h"
 #include "SorghumReconstructionSystem.h"
-
+#include "ImageCollectionSystem.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
 using namespace SorghumReconstruction;
 void InitGround();
 PlantSimulationSystem* InitPlantSimulationSystem();
+ImageCollectionSystem* InitImageCollectionSystem();
 SorghumReconstructionSystem* InitSorghumReconstructionSystem();
 
 int main()
@@ -20,7 +22,7 @@ int main()
 	RenderManager::SetSSAOKernelBias(0.08);
 	RenderManager::SetSSAOKernelRadius(0.05f);
 	RenderManager::SetSSAOSampleSize(32);
-	RenderManager::SetAmbientLight(0.3f);
+	RenderManager::SetAmbientLight(0.4f);
 	RenderManager::SetSSAOFactor(10.0f);
 	RenderManager::SetEnableShadow(true);
 	RenderManager::SetShadowMapResolution(4096);
@@ -39,7 +41,7 @@ int main()
 	dlc.normalOffset = 0.001;
 	dlc.lightSize = 1.0;
 	LocalToWorld ltw;
-	ltw.SetEulerRotation(glm::radians(glm::vec3(60, 0, 0)));
+	ltw.SetEulerRotation(glm::radians(glm::vec3(60, -89, 0)));
 	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
 	EntityManager::SetComponentData(dle, dlc);
 	EntityManager::SetComponentData(dle, ltw);
@@ -92,7 +94,23 @@ int main()
 	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(-tilt, -1, 0), 0.1f);
 #pragma endregion
 	auto pss = InitPlantSimulationSystem();
-
+	auto ics = InitImageCollectionSystem();
+	ics->AttachToPlantSimulationSystem(pss);
+	
+	char dir[256] = {};
+	_getcwd(dir, 256);
+	if(false)
+	{
+		ics->SetCameraPose(glm::vec3(0, 2, 30), glm::vec3(10, 0, 0));
+		TreeParameters appleParam = pss->LoadParameters(std::string(dir) + "\\apple");
+		ics->CreateCaptureSequence(appleParam, 100, "../Pictures/Apple/");
+	}
+	if (true)
+	{
+		ics->SetCameraPose(glm::vec3(0, 2, 35), glm::vec3(15, 0, 0));
+		TreeParameters appleParam = pss->LoadParameters(std::string(dir) + "\\willow");
+		ics->CreateCaptureSequence(appleParam, 20, "../Pictures/Willow/");
+	}
 	const bool enableSorghumRecon = false;
 	if (enableSorghumRecon) {
 		auto srSys = InitSorghumReconstructionSystem();
@@ -212,6 +230,12 @@ int main()
 PlantSimulationSystem* InitPlantSimulationSystem() {
 	return Application::GetWorld()->CreateSystem<PlantSimulationSystem>(SystemGroup::SimulationSystemGroup);
 }
+
+ImageCollectionSystem* InitImageCollectionSystem()
+{
+	return Application::GetWorld()->CreateSystem<ImageCollectionSystem>(SystemGroup::SimulationSystemGroup);
+}
+
 SorghumReconstructionSystem* InitSorghumReconstructionSystem()
 {
 	return Application::GetWorld()->CreateSystem<SorghumReconstructionSystem>(SystemGroup::SimulationSystemGroup);
@@ -278,11 +302,15 @@ void InitGround() {
 	auto meshMaterial = std::make_unique<MeshRenderer>();
 	meshMaterial->Mesh = Default::Primitives::Quad;
 	meshMaterial->Material = mat;
+	meshMaterial->ReceiveShadow = false;
+	meshMaterial->ForwardRendering = true;
 	EntityManager::SetPrivateComponent<MeshRenderer>(entity, std::move(meshMaterial));
+	/*
 	auto rigidBody = std::make_unique<RigidBody>();
 	rigidBody->SetShapeType(ShapeType::Box);
 	rigidBody->SetShapeParam(glm::vec3(50, 1, 50));
 	rigidBody->SetStatic(true);
 	entity.SetPrivateComponent(std::move(rigidBody));
+	*/
 }
 

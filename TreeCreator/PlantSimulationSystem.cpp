@@ -359,6 +359,219 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 	}
 }
 
+TreeParameters PlantSimulationSystem::LoadParameters(const std::string& path)
+{
+	pugi::xml_document doc;
+	pugi::xml_parse_result result = doc.load_file((path + ".xml").c_str());
+	if (!result) {
+		Debug::Error("Can't open file!");
+		return TreeParameters();
+	}
+	TreeParameters retVal;
+	for (const auto& instanceNode : doc.child("TreeSettings"))
+	{
+		const auto& treeParametersNode = instanceNode.child("TreeParameters");
+		for (const auto& parameterNode : treeParametersNode.children())
+		{
+			std::string name = parameterNode.name();
+			if (name.compare("Seed") == 0)
+			{
+				retVal.Seed = std::atoi(parameterNode.first_child().value());
+			}
+			else if (name.compare("Age") == 0)
+			{
+				retVal.Age = std::atoi(parameterNode.first_child().value());
+			}
+
+			else if (name.compare("LateralBudPerNode") == 0)
+			{
+				retVal.LateralBudPerNode = std::atoi(parameterNode.first_child().value());
+			}
+			else if (name.compare("VarianceApicalAngle") == 0)
+			{
+				retVal.VarianceApicalAngle = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("BranchingAngleMean") == 0)
+			{
+				retVal.BranchingAngleMean = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("BranchingAngleVariance") == 0)
+			{
+				retVal.BranchingAngleVariance = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("RollAngleMean") == 0)
+			{
+				retVal.RollAngleMean = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("RollAngleVariance") == 0)
+			{
+				retVal.RollAngleVariance = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalBudKillProbability") == 0)
+			{
+				retVal.ApicalBudKillProbability = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LateralBudKillProbability") == 0)
+			{
+				retVal.LateralBudKillProbability = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalDominanceBase") == 0)
+			{
+				retVal.ApicalDominanceBase = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalDominanceDistanceFactor") == 0)
+			{
+				retVal.ApicalDominanceDistanceFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalDominanceAgeFactor") == 0)
+			{
+				retVal.ApicalDominanceAgeFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("GrowthRate") == 0)
+			{
+				retVal.GrowthRate = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("InternodeLengthBase") == 0)
+			{
+				retVal.InternodeLengthBase = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("InternodeLengthAgeFactor") == 0)
+			{
+				retVal.InternodeLengthAgeFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalControlBase") == 0)
+			{
+				retVal.ApicalControlBase = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalControlAgeFactor") == 0)
+			{
+				retVal.ApicalControlAgeFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalControlLevelFactor") == 0)
+			{
+				retVal.ApicalControlLevelFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalControlDistanceFactor") == 0)
+			{
+				retVal.ApicalControlDistanceFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("MaxBudAge") == 0)
+			{
+				retVal.MaxBudAge = std::atoi(parameterNode.first_child().value());
+			}
+			else if (name.compare("InternodeSize") == 0)
+			{
+				retVal.InternodeSize = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("Phototropism") == 0)
+			{
+				retVal.Phototropism = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("GravitropismBase") == 0)
+			{
+				retVal.GravitropismBase = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("GravitropismLevelFactor") == 0)
+			{
+				retVal.GravitropismLevelFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("PruningFactor") == 0)
+			{
+				retVal.PruningFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LowBranchPruningFactor") == 0)
+			{
+				retVal.LowBranchPruningFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ThicknessRemovalFactor") == 0)
+			{
+				retVal.ThicknessRemovalFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("GravityBendingStrength") == 0)
+			{
+				retVal.GravityBendingStrength = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("GravityBendingAngleFactor") == 0)
+			{
+				retVal.GravityBendingAngleFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ApicalBudLightingFactor") == 0)
+			{
+				retVal.ApicalBudLightingFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LateralBudLightingFactor") == 0)
+			{
+				retVal.LateralBudLightingFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("EndNodeThickness") == 0)
+			{
+				retVal.EndNodeThickness = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("ThicknessControlFactor") == 0)
+			{
+				retVal.ThicknessControlFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("CrownShynessBase") == 0)
+			{
+				retVal.CrownShynessBase = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("CrownShynessFactor") == 0)
+			{
+				retVal.CrownShynessFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("FoliageType") == 0)
+			{
+				retVal.FoliageType = std::atoi(parameterNode.first_child().value());
+			}
+			else if (name.compare("LeafSizeX") == 0)
+			{
+				retVal.LeafSize.x = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LeafSizeY") == 0)
+			{
+				retVal.LeafSize.y = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LeafIlluminationLimit") == 0)
+			{
+				retVal.LeafIlluminationLimit = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LeafInhibitorFactor") == 0)
+			{
+				retVal.LeafInhibitorFactor = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("IsBothSide") == 0)
+			{
+				retVal.IsBothSide = std::atoi(parameterNode.first_child().value()) == 1;
+			}
+			else if (name.compare("SideLeafAmount") == 0)
+			{
+				retVal.SideLeafAmount = std::atoi(parameterNode.first_child().value());
+			}
+			else if (name.compare("StartBendingAngle") == 0)
+			{
+				retVal.StartBendingAngle = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("BendingAngleIncrement") == 0)
+			{
+				retVal.BendingAngleIncrement = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LeafPhotoTropism") == 0)
+			{
+				retVal.LeafPhotoTropism = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LeafGravitropism") == 0)
+			{
+				retVal.LeafGravitropism = std::atof(parameterNode.first_child().value());
+			}
+			else if (name.compare("LeafDistance") == 0)
+			{
+				retVal.LeafDistance = std::atof(parameterNode.first_child().value());
+			}
+		}
+	}
+	return retVal;
+}
+
 void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters)
 {
 	std::string output;
@@ -481,6 +694,12 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	ResumeGrowth();
 	return treeEntity;
 }
+
+Entity PlantSimulationSystem::CreateTree(TreeParameters parameters, glm::vec3 position, bool enabled)
+{
+	return CreateTree(_DefaultTreeLeafMaterial1, _DefaultTreeLeafMesh, parameters, position, enabled);
+}
+
 bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::unique_ptr<TreeVolume>& treeVolume, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);

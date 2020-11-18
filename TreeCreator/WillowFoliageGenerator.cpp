@@ -128,8 +128,8 @@ void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
 			auto endPos = curve.GetPoint(posStep * j);
 			auto endDir = fromDir + (float)j * dirStep;
 			auto currUp = glm::cross(endDir, branchlets[i].Normal);
-			auto l = glm::rotate(endDir, glm::radians(wfInfo.BendAngle), currUp);
-			auto r = glm::rotate(endDir, glm::radians(-wfInfo.BendAngle), currUp);
+			auto l = glm::rotate(endDir, glm::radians(glm::gaussRand(wfInfo.BendAngleMean, wfInfo.BendAngleVariance)), currUp);
+			auto r = glm::rotate(endDir, glm::radians(-glm::gaussRand(wfInfo.BendAngleMean, wfInfo.BendAngleVariance)), currUp);
 			glm::vec3 s = wfInfo.LeafSize;
 			branchlets[i].LeafLocalTransforms.push_back(glm::translate(endPos + s.z * 2.0f * l) * glm::mat4_cast(glm::quatLookAt(-l, currUp)) * glm::scale(s));
 			branchlets[i].LeafLocalTransforms.push_back(glm::translate(endPos + s.z * 2.0f * r) * glm::mat4_cast(glm::quatLookAt(-r, currUp)) * glm::scale(s));
@@ -201,14 +201,15 @@ void TreeUtilities::WillowFoliageGenerator::SimpleMeshGenerator(Branchlet& branc
 
 void TreeUtilities::WillowFoliageGenerator::OnParamGui()
 {
-	ImGui::DragFloat("Inhibitor Limit", &_DefaultFoliageInfo.InhibitorLimit);
-	ImGui::DragFloat("Dist Mean", &_DefaultFoliageInfo.DownDistanceMean);
-	ImGui::DragFloat("Dist Var", &_DefaultFoliageInfo.DownDistanceVariance);
-	ImGui::DragFloat("Low Limit", &_DefaultFoliageInfo.LowLimit);
-	ImGui::DragFloat("Push Dist", &_DefaultFoliageInfo.PushDistance);
-	ImGui::DragFloat("Thickness", &_DefaultFoliageInfo.Thickness);
-	ImGui::DragFloat("Bend Angle", &_DefaultFoliageInfo.BendAngle);
+	ImGui::DragFloat("Inhibitor Limit", &_DefaultFoliageInfo.InhibitorLimit, 0.01f);
+	ImGui::DragFloat("Dist Mean", &_DefaultFoliageInfo.DownDistanceMean, 0.01f);
+	ImGui::DragFloat("Dist Var", &_DefaultFoliageInfo.DownDistanceVariance, 0.01f);
+	ImGui::DragFloat("Low Limit", &_DefaultFoliageInfo.LowLimit, 0.01f);
+	ImGui::DragFloat("Push Dist", &_DefaultFoliageInfo.PushDistance, 0.01f);
+	ImGui::DragFloat("Thickness", &_DefaultFoliageInfo.Thickness, 0.01f);
+	ImGui::DragFloat("Bend Angle", &_DefaultFoliageInfo.BendAngleMean, 0.01f);
+	ImGui::DragFloat("Bend Var", &_DefaultFoliageInfo.BendAngleVariance, 0.01f);
 	ImGui::DragInt("Subdiv Amount", &_DefaultFoliageInfo.SubdivisionAmount);
 	ImGui::DragInt("Leaf Amount", &_DefaultFoliageInfo.LeafAmount);
-	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize);
+	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f);
 }

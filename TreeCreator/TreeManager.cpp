@@ -257,7 +257,7 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::DragFloat("Low Limit", &foliageInfo->LowLimit);
 			ImGui::DragFloat("Push Dist", &foliageInfo->PushDistance);
 			ImGui::DragFloat("Thickness", &foliageInfo->Thickness);
-			ImGui::DragFloat("Bend Angle", &foliageInfo->BendAngle);
+			ImGui::DragFloat("Bend Angle", &foliageInfo->BendAngleMean);
 			ImGui::DragInt("Subdiv Amount", &foliageInfo->SubdivisionAmount);
 			ImGui::DragInt("Leaf Amount", &foliageInfo->LeafAmount);
 			ImGui::DragFloat3("Leaf Size", (float*)(void*)&foliageInfo->LeafSize);
