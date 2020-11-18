@@ -16,18 +16,18 @@ SorghumReconstructionSystem* InitSorghumReconstructionSystem();
 int main()
 {
 #pragma region Global light settings
-	RenderManager::SetPCSSScaleFactor(0.03f);
+	RenderManager::SetPCSSScaleFactor(1.0f);
 	RenderManager::SetSSAOKernelBias(0.08);
 	RenderManager::SetSSAOKernelRadius(0.05f);
 	RenderManager::SetSSAOSampleSize(32);
 	RenderManager::SetAmbientLight(0.3f);
 	RenderManager::SetSSAOFactor(10.0f);
 	RenderManager::SetEnableShadow(true);
-	RenderManager::SetDirectionalLightResolution(8192);
-	RenderManager::SetStableFit(true);
-	RenderManager::SetMaxShadowDistance(800.0f);
+	RenderManager::SetShadowMapResolution(4096);
+	RenderManager::SetStableFit(false);
 	RenderManager::SetSeamFixRatio(0.05f);
-	RenderManager::SetSplitRatio(0.05f, 0.2f, 0.4f, 1.0f);
+	RenderManager::SetMaxShadowDistance(300);
+	RenderManager::SetSplitRatio(0.15f, 0.3f, 0.5f, 1.0f);
 #pragma endregion
 	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
@@ -35,11 +35,11 @@ int main()
 	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), LocalToWorld(), LocalToParent());
 	DirectionalLight dlc;
 	dlc.diffuseBrightness = 1.1f;
-	dlc.depthBias = 0.001;
+	dlc.depthBias = 0.1;
 	dlc.normalOffset = 0.001;
-	dlc.lightSize = 5.2;
+	dlc.lightSize = 1.0;
 	LocalToWorld ltw;
-	ltw.SetEulerRotation(glm::vec3(60, 0, 0));
+	ltw.SetEulerRotation(glm::radians(glm::vec3(60, 0, 0)));
 	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
 	EntityManager::SetComponentData(dle, dlc);
 	EntityManager::SetComponentData(dle, ltw);
@@ -218,37 +218,71 @@ SorghumReconstructionSystem* InitSorghumReconstructionSystem()
 }
 void InitGround() {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToParent(), LocalToWorld());
-
-	auto mat = std::make_shared<Material>();
-	mat->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	
-	auto textureDiffuse = AssetManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg");
-	mat->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
-	auto textureNormal = AssetManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg");
-	//mat->SetTexture(textureNormal, TextureType::NORMAL);
-	
-	mat->SetMaterialProperty("material.shininess", 32.0f);
-	auto particleSystem = std::make_unique<Particles>();
-	particleSystem->Mesh = Default::Primitives::Quad;
-	particleSystem->Material = mat;
+	auto entity = EntityManager::CreateEntity(archetype);
+	entity.SetName("Ground");
 	LocalToWorld ltw;
-	auto baseEntity = EntityManager::CreateEntity(archetype, "Ground");
-	ltw.SetPosition(glm::vec3(0.0f));
-	ltw.SetScale(glm::vec3(1.0f));
-	baseEntity.SetComponentData(ltw);
-	int radius = 6;
-	float size = 6.0f;
-	for(int i = -radius; i <= radius; i++)
-	{
-		for(int j = -radius; j <= radius; j++)
-		{
-			auto position = glm::vec3(size * 2 * i, 0.0f, size * 2 * j);
-			auto scale = glm::vec3(size * 1.0f);
-			particleSystem->Matrices.emplace_back(glm::translate(glm::identity<glm::mat4>(), position) * glm::scale(glm::identity<glm::mat4>(), scale));
-		}
-	}
-	particleSystem->RecalculateBoundingBox();
-	baseEntity.SetPrivateComponent<Particles>(std::move(particleSystem));
+	ltw.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	ltw.SetScale(glm::vec3(100.0f));
+	EntityManager::SetComponentData(entity, ltw);
+	/*
+	auto entity1 = EntityManager::CreateEntity(archetype);
+	translation.Value = glm::vec3(-100.0f, 0.0f, 0.0f);
+	scale.Value = glm::vec3(100.0f, 1.0f, 20.0f);
+	Rotation rotation;
+	rotation.Value = glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(1, 0, 0));
+	EntityManager::SetComponentData<Translation>(entity1, translation);
+	EntityManager::SetComponentData<Scale>(entity1, scale);
+	EntityManager::SetComponentData<Rotation>(entity1, rotation);
 
+	auto entity2 = EntityManager::CreateEntity(archetype);
+	translation.Value = glm::vec3(100.0f, 0.0f, 0.0f);
+	scale.Value = glm::vec3(100.0f, 1.0f, 20.0f);
+	rotation.Value = glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(-1, 0, 0));
+
+	EntityManager::SetComponentData<Translation>(entity2, translation);
+	EntityManager::SetComponentData<Scale>(entity2, scale);
+	EntityManager::SetComponentData<Rotation>(entity2, rotation);
+
+
+	auto entity3 = EntityManager::CreateEntity(archetype);
+	translation.Value = glm::vec3(0.0f, 0.0f, -100.0f);
+	scale.Value = glm::vec3(100.0f, 1.0f, 20.0f);
+	rotation.Value = glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
+
+	EntityManager::SetComponentData<Translation>(entity3, translation);
+	EntityManager::SetComponentData<Scale>(entity3, scale);
+	EntityManager::SetComponentData<Rotation>(entity3, rotation);
+
+	auto entity4 = EntityManager::CreateEntity(archetype);
+	translation.Value = glm::vec3(0.0f, 0.0f, 100.0f);
+	scale.Value = glm::vec3(100.0f, 1.0f, 20.0f);
+	rotation.Value = glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, -1));
+
+	EntityManager::SetComponentData<Translation>(entity4, translation);
+	EntityManager::SetComponentData<Scale>(entity4, scale);
+	EntityManager::SetComponentData<Rotation>(entity4, rotation);
+
+	*/
+	auto mat = std::make_shared<Material>();
+	mat->SetProgram(Default::GLPrograms::StandardProgram);
+	/*
+	auto textureD = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/bricks2.jpg"));
+	mat->SetTexture(textureD, TextureType::DIFFUSE);
+	auto textureN = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/bricks2_normal.jpg"));
+	mat->SetTexture(textureN, TextureType::NORMAL);
+	auto textureH = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/bricks2_disp.jpg"));
+	mat->SetTexture(textureH, TextureType::DISPLACEMENT);
+	*/
+
+	mat->SetShininess(32.0f);
+	auto meshMaterial = std::make_unique<MeshRenderer>();
+	meshMaterial->Mesh = Default::Primitives::Quad;
+	meshMaterial->Material = mat;
+	EntityManager::SetPrivateComponent<MeshRenderer>(entity, std::move(meshMaterial));
+	auto rigidBody = std::make_unique<RigidBody>();
+	rigidBody->SetShapeType(ShapeType::Box);
+	rigidBody->SetShapeParam(glm::vec3(50, 1, 50));
+	rigidBody->SetStatic(true);
+	entity.SetPrivateComponent(std::move(rigidBody));
 }
 

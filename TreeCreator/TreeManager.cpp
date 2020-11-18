@@ -192,7 +192,7 @@ void TreeUtilities::TreeManager::Init()
 
 	_LightEstimator = new LightEstimator();
 
-	EditorManager::AddComponentInspector<TreeAge>(
+	EditorManager::RegisterComponentDataInspector<TreeAge>(
 		[](ComponentBase* data, bool isRoot)
 		{
 			ImGui::Text(("Current age: " + std::to_string(*(int*)data)).c_str());
@@ -200,14 +200,14 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 	
-	EditorManager::AddComponentInspector<TreeIndex>(
+	EditorManager::RegisterComponentDataInspector<TreeIndex>(
 		[](ComponentBase* data, bool isRoot)
 		{
 			ImGui::Text(("Value: " + std::to_string(*(int*)data)).c_str());
 		}
 	);
 
-	EditorManager::AddComponentInspector<TreeParameters>(
+	EditorManager::RegisterComponentDataInspector<TreeParameters>(
 		[](ComponentBase* data, bool isRoot)
 		{
 			auto tps = static_cast<TreeParameters*>(data);
@@ -247,7 +247,7 @@ void TreeUtilities::TreeManager::Init()
 			
 		}
 	);
-	EditorManager::AddComponentInspector<WillowFoliageInfo>(
+	EditorManager::RegisterComponentDataInspector<WillowFoliageInfo>(
 		[](ComponentBase* data, bool isRoot)
 		{
 			auto foliageInfo = static_cast<WillowFoliageInfo*>(data);
@@ -263,7 +263,7 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::DragFloat3("Leaf Size", (float*)(void*)&foliageInfo->LeafSize);
 		}
 	);
-	EditorManager::AddComponentInspector<InternodeInfo>(
+	EditorManager::RegisterComponentDataInspector<InternodeInfo>(
 		[](ComponentBase* data, bool isRoot)
 		{
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
@@ -350,7 +350,7 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 
-	EditorManager::AddComponentInspector<Illumination>(
+	EditorManager::RegisterComponentDataInspector<Illumination>(
 		[](ComponentBase* data, bool isRoot)
 		{
 			auto illumination = static_cast<Illumination*>(data);
@@ -358,7 +358,7 @@ void TreeUtilities::TreeManager::Init()
 		}
 	);
 
-	EditorManager::AddComponentInspector<TreeInfo>(
+	EditorManager::RegisterComponentDataInspector<TreeInfo>(
 		[](ComponentBase* data, bool isRoot)
 		{
 			auto info = static_cast<TreeInfo*>(data);
