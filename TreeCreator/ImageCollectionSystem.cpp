@@ -1,5 +1,11 @@
 #include "ImageCollectionSystem.h"
 
+void ImageCollectionSystem::PushImageCaptureSequence(ImageCaptureSequence sequence)
+{
+	_ImageCaptureSequences.push(sequence);
+	_Capturing = true;
+}
+
 void ImageCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation)
 {
 	_CameraPosition = position;
@@ -46,12 +52,34 @@ void ImageCollectionSystem::Update()
 {
 	if(_Capturing)
 	{
-		_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->GetCamera()->StoreToJpg(_StorePath + std::to_string(_RemainingAmount) + ".jpg");
 		_Capturing = false;
-		TreeManager::DeleteAllTrees();
-		_RemainingAmount--;
-		_CurrentTreeParameters.Seed = _RemainingAmount;
-		_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
+		if (_Running) {
+			_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->GetCamera()->StoreToJpg(_StorePath + std::to_string(_RemainingAmount) + ".jpg", 320, 320);
+			TreeManager::DeleteAllTrees();
+			_RemainingAmount--;
+		}
+		if (_RemainingAmount != 0) {
+			_CurrentTreeParameters.Seed = _RemainingAmount;
+			_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
+		}
+		else {
+			if (!_ImageCaptureSequences.empty())
+			{
+				ImageCaptureSequence seq = _ImageCaptureSequences.front();
+				_ImageCaptureSequences.pop();
+				_RemainingAmount = seq.Amount;
+				SetCameraPose(seq.CameraPos, seq.CameraEulerDegreeRot);
+				_CurrentTreeParameters = _PlantSimulationSystem->LoadParameters(seq.ParamPath);
+				_StorePath = seq.OutputPath;
+				_CurrentTreeParameters.Seed = _RemainingAmount;
+				_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
+				_Running = true;
+			}
+			else
+			{
+				_Running = false;
+			}
+		}
 	}
 	else if(_RemainingAmount != 0)
 	{
