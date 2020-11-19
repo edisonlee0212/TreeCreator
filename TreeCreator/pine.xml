@@ -39,7 +39,7 @@
 			<ApicalBudLightingFactor>0.040000</ApicalBudLightingFactor>
 			<LateralBudLightingFactor>0.100000</LateralBudLightingFactor>
 			<EndNodeThickness>0.010000</EndNodeThickness>
-			<ThicknessControlFactor>0.450000</ThicknessControlFactor>
+			<ThicknessControlFactor>0.430000</ThicknessControlFactor>
 			<CrownShynessBase>1.000000</CrownShynessBase>
 			<CrownShynessFactor>1.000000</CrownShynessFactor>
 			<FoliageType>3</FoliageType>

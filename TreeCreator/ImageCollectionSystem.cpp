@@ -25,7 +25,7 @@ void ImageCollectionSystem::OnCreate()
 	ltw.SetEulerRotation(_CameraEulerRotation);
 	_CameraEntity.SetComponentData(ltw);
 	auto cameraComponent = std::make_unique<CameraComponent>();
-	cameraComponent->ResizeResolution(640, 640);
+	cameraComponent->ResizeResolution(960, 960);
 	cameraComponent->DrawSkyBox = false;
 	cameraComponent->ClearColor = glm::vec3(1.0f);
 	_CameraEntity.SetPrivateComponent(std::move(cameraComponent));
@@ -85,7 +85,7 @@ void ImageCollectionSystem::Update()
 	{
 		if(!_PlantSimulationSystem->_Growing)
 		{
-			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.05f, 1.0);
+			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.01f, 1.0);
 			_Capturing = true;
 		}
 	}

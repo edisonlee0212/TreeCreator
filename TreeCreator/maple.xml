@@ -42,7 +42,7 @@
 			<ThicknessControlFactor>0.620000</ThicknessControlFactor>
 			<CrownShynessBase>1.000000</CrownShynessBase>
 			<CrownShynessFactor>1.000000</CrownShynessFactor>
-			<FoliageType>0</FoliageType>
+			<FoliageType>4</FoliageType>
 			<LeafSizeX>0.140000</LeafSizeX>
 			<LeafSizeY>0.140000</LeafSizeY>
 			<LeafIlluminationLimit>0.000000</LeafIlluminationLimit>

@@ -8,10 +8,9 @@ namespace TreeUtilities {
 	{
 		float InhibitorLimit;
 		float IlluminationLimit;
-		float BendAngleMean = 25.0f;
-		float BendAngleVariance = 5.0f;
-		int LeafAmount = 25;
-		glm::vec3 LeafSize = glm::vec3(0.01f, 1.0f, 0.05f);
+		int LeafAmount = 10;
+		float GenerationRadius = 0.4f;
+		glm::vec3 LeafSize = glm::vec3(0.14f, 1.0f, 0.14f);
 	};
 	
     class MapleFoliageGenerator :

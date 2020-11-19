@@ -7,8 +7,9 @@ namespace TreeUtilities {
 	struct PineFoliageInfo : ComponentBase
 	{
 		float InhibitorLimit = 0.001f;
-		glm::vec3 LeafSize = glm::vec3(0.1f, 1.0f, 0.2f);
-		int SideLeafAmount = 3;
+		float IlluminationLimit = 0.001f;
+		glm::vec3 LeafSize = glm::vec3(0.1f, 1.0f, 0.15f);
+		int SideLeafAmount = 5;
 		float BendAngleMean = 60;
 		float BendAngleVariance = 10;
 	};

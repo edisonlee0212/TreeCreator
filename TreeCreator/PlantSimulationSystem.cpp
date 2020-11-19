@@ -11,6 +11,7 @@
 #include <CGAL/Point_set_3.h>
 
 #include "CrownSurfaceRecon.h"
+#include "MapleFoliageGenerator.h"
 #include "PineFoliageGenerator.h"
 #include "WillowFoliageGenerator.h"
 
@@ -1480,6 +1481,7 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_FoliageGenerators.push_back(std::make_shared<AcaciaFoliageGenerator>());
 	_FoliageGenerators.push_back(std::make_shared<WillowFoliageGenerator>());
 	_FoliageGenerators.push_back(std::make_shared<PineFoliageGenerator>());
+	_FoliageGenerators.push_back(std::make_shared<MapleFoliageGenerator>());
 	_InternodeSystem = TreeManager::GetInternodeSystem();
 	_getcwd(_CurrentWorkingDir, 256);
 	_TreeQuery = TreeManager::GetTreeQuery();
@@ -1500,6 +1502,9 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultTreeSurfaceNTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
 
 	_DefaultTreeLeafMaterial1 = std::make_shared<Material>();
+	_DefaultTreeLeafMaterial1->SetTransparentDiscard(true);
+	_DefaultTreeLeafMaterial1->SetTransparentDiscardLimit(0.1f);
+
 	_DefaultTreeLeafMaterial1->SetMaterialProperty("material.shininess", 32.0f);
 	_DefaultTreeLeafMaterial1->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	auto textureDiffuseLeaf1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/Leaf/PrunusAvium/A/level0.png"));
@@ -2051,7 +2056,7 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 					ImGui::Spacing();
 					ImGui::Separator();
 					ImGui::Text("Foliage Type:");
-					static const char* FoliageTypes[]{ "Default", "Acacia", "Willow", "Pine" };
+					static const char* FoliageTypes[]{ "Default", "Acacia", "Willow", "Pine", "Maple" };
 					ImGui::Combo("Display mode", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType, FoliageTypes, IM_ARRAYSIZE(FoliageTypes));
 					if (_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType == 0)
 					{

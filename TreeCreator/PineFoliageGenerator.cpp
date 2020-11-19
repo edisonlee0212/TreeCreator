@@ -8,6 +8,8 @@ TreeUtilities::PineFoliageGenerator::PineFoliageGenerator()
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
+	_LeafMaterial->SetTransparentDiscard(true);
+	_LeafMaterial->SetTransparentDiscardLimit(0.1f);
 	_LeafSurfaceTex = AssetManager::LoadTexture("../Resources/Textures/Leaf/Pine/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
 }
@@ -49,9 +51,10 @@ void TreeUtilities::PineFoliageGenerator::Generate(Entity tree)
 	std::vector<InternodeInfo> internodeInfos;
 	std::mutex m;
 	PineFoliageInfo pineFoliageInfo = foliageEntity.GetComponentData<PineFoliageInfo>();
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, &pineFoliageInfo](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, &pineFoliageInfo](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
 		{
 			if (info->Inhibitor > pineFoliageInfo.InhibitorLimit) return;
+			if (illumination->Value < pineFoliageInfo.IlluminationLimit) return;
 			if (ti.Value != index->Value) return;
 			std::lock_guard<std::mutex> lock(m);
 			internodeInfos.push_back(*info);
@@ -96,9 +99,10 @@ void TreeUtilities::PineFoliageGenerator::Generate(Entity tree)
 
 void TreeUtilities::PineFoliageGenerator::OnParamGui()
 {
-	ImGui::DragFloat("Inhibitor Limit", &_DefaultFoliageInfo.InhibitorLimit, 0.01f);
-	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f);
-	ImGui::DragInt("Side Leaf Amount", &_DefaultFoliageInfo.SideLeafAmount);
+	ImGui::DragFloat("Inhibitor Limit", &_DefaultFoliageInfo.InhibitorLimit, 0.01f, 0);
+	ImGui::DragFloat("Illumination Limit", &_DefaultFoliageInfo.IlluminationLimit, 0.01f, 0);
+	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f, 0);
+	ImGui::DragInt("Side Leaf Amount", &_DefaultFoliageInfo.SideLeafAmount, 1, 0);
 	ImGui::DragFloat("BendAngleMean", &_DefaultFoliageInfo.BendAngleMean, 0.01f);
 	ImGui::DragFloat("BendAngleVar", &_DefaultFoliageInfo.BendAngleVariance, 0.01f);
 }

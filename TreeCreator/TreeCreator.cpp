@@ -22,7 +22,7 @@ int main()
 	RenderManager::SetSSAOKernelBias(0.08);
 	RenderManager::SetSSAOKernelRadius(0.05f);
 	RenderManager::SetSSAOSampleSize(32);
-	RenderManager::SetAmbientLight(0.3f);
+	RenderManager::SetAmbientLight(0.35f);
 	RenderManager::SetSSAOFactor(10.0f);
 	RenderManager::SetEnableShadow(true);
 	RenderManager::SetShadowMapResolution(4096);
@@ -38,7 +38,7 @@ int main()
 	DirectionalLight dlc;
 	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
 	//dlc.specular = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
-	dlc.diffuseBrightness = 1.0f;
+	dlc.diffuseBrightness = 1.2f;
 	dlc.specularBrightness = 1.0f;
 	dlc.depthBias = 0.1;
 	dlc.normalOffset = 0.001;
@@ -100,7 +100,7 @@ int main()
 	auto pss = InitPlantSimulationSystem();
 	auto ics = InitImageCollectionSystem();
 	ics->AttachToPlantSimulationSystem(pss);
-	if (false) {
+	if (true) {
 		char dir[256] = {};
 		_getcwd(dir, 256);
 		ImageCaptureSequence sequence;
