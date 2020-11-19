@@ -11,6 +11,7 @@
 #include <CGAL/Point_set_3.h>
 
 #include "CrownSurfaceRecon.h"
+#include "PineFoliageGenerator.h"
 #include "WillowFoliageGenerator.h"
 
 void TreeUtilities::PlantSimulationSystem::FixedUpdate()
@@ -1478,7 +1479,7 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_FoliageGenerators.push_back(std::make_shared<DefaultFoliageGenerator>());
 	_FoliageGenerators.push_back(std::make_shared<AcaciaFoliageGenerator>());
 	_FoliageGenerators.push_back(std::make_shared<WillowFoliageGenerator>());
-	
+	_FoliageGenerators.push_back(std::make_shared<PineFoliageGenerator>());
 	_InternodeSystem = TreeManager::GetInternodeSystem();
 	_getcwd(_CurrentWorkingDir, 256);
 	_TreeQuery = TreeManager::GetTreeQuery();
@@ -2050,7 +2051,7 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 					ImGui::Spacing();
 					ImGui::Separator();
 					ImGui::Text("Foliage Type:");
-					static const char* FoliageTypes[]{ "Default", "Acacia", "Willow" };
+					static const char* FoliageTypes[]{ "Default", "Acacia", "Willow", "Pine" };
 					ImGui::Combo("Display mode", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType, FoliageTypes, IM_ARRAYSIZE(FoliageTypes));
 					if (_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType == 0)
 					{

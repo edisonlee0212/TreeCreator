@@ -114,6 +114,9 @@
     <ClCompile Include="ImageCollectionSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PineFoliageGenerator.cpp">
+      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkSystem.h">
@@ -208,6 +211,9 @@
     </ClInclude>
     <ClInclude Include="ImageCollectionSystem.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PineFoliageGenerator.h">
+      <Filter>Header Files\TreeUtilities\Foliage</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

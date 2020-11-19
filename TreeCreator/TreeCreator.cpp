@@ -22,7 +22,7 @@ int main()
 	RenderManager::SetSSAOKernelBias(0.08);
 	RenderManager::SetSSAOKernelRadius(0.05f);
 	RenderManager::SetSSAOSampleSize(32);
-	RenderManager::SetAmbientLight(0.5f);
+	RenderManager::SetAmbientLight(0.3f);
 	RenderManager::SetSSAOFactor(10.0f);
 	RenderManager::SetEnableShadow(true);
 	RenderManager::SetShadowMapResolution(4096);
@@ -36,13 +36,15 @@ int main()
 #pragma region Lights
 	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), LocalToWorld(), LocalToParent());
 	DirectionalLight dlc;
-	dlc.diffuseBrightness = 2.5f;
-	dlc.specularBrightness = 2.0f;
+	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
+	//dlc.specular = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
+	dlc.diffuseBrightness = 1.0f;
+	dlc.specularBrightness = 1.0f;
 	dlc.depthBias = 0.1;
 	dlc.normalOffset = 0.001;
 	dlc.lightSize = 1.0;
 	LocalToWorld ltw;
-	ltw.SetEulerRotation(glm::radians(glm::vec3(60, -89, 0)));
+	ltw.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
 	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
 	EntityManager::SetComponentData(dle, dlc);
 	EntityManager::SetComponentData(dle, ltw);
@@ -65,7 +67,7 @@ int main()
 		mainCamera->ClearColor = glm::vec3(1.0f);
 	}
 	ccs->SetVelocity(15.0f);
-	InitGround();
+	//InitGround();
 #pragma endregion
 	TreeManager::Init();
 #pragma region Light estimator setup
@@ -98,43 +100,43 @@ int main()
 	auto pss = InitPlantSimulationSystem();
 	auto ics = InitImageCollectionSystem();
 	ics->AttachToPlantSimulationSystem(pss);
-	
-	char dir[256] = {};
-	_getcwd(dir, 256);
-	ImageCaptureSequence sequence;
-	sequence.Amount = 2;
-	
-	sequence.CameraPos = glm::vec3(0, 2, 30);
-	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-	sequence.ParamPath = std::string(dir) + "\\apple";
-	sequence.OutputPath = "../Pictures/Apple/";
-	ics->PushImageCaptureSequence(sequence);
-	sequence.CameraPos = glm::vec3(0, 2, 35);
-	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-	sequence.ParamPath = std::string(dir) + "\\willow";
-	sequence.OutputPath = "../Pictures/Willow/";
-	ics->PushImageCaptureSequence(sequence);
-	sequence.CameraPos = glm::vec3(0, 2, 45);
-	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-	sequence.ParamPath = std::string(dir) + "\\maple";
-	sequence.OutputPath = "../Pictures/Maple/";
-	ics->PushImageCaptureSequence(sequence);
-	sequence.CameraPos = glm::vec3(0, 2, 45);
-	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-	sequence.ParamPath = std::string(dir) + "\\birch";
-	sequence.OutputPath = "../Pictures/Birch/";
-	ics->PushImageCaptureSequence(sequence);
-	sequence.CameraPos = glm::vec3(0, 2, 50);
-	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-	sequence.ParamPath = std::string(dir) + "\\oak";
-	sequence.OutputPath = "../Pictures/Oak/";
-	ics->PushImageCaptureSequence(sequence);
-	sequence.CameraPos = glm::vec3(0, 2, 20);
-	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-	sequence.ParamPath = std::string(dir) + "\\pine";
-	sequence.OutputPath = "../Pictures/Pine/";
-	ics->PushImageCaptureSequence(sequence);
-	
+	if (false) {
+		char dir[256] = {};
+		_getcwd(dir, 256);
+		ImageCaptureSequence sequence;
+		sequence.Amount = 5;
+
+		sequence.CameraPos = glm::vec3(0, 2, 30);
+		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+		sequence.ParamPath = std::string(dir) + "\\apple";
+		sequence.OutputPath = "../Pictures/Apple/";
+		ics->PushImageCaptureSequence(sequence);
+		sequence.CameraPos = glm::vec3(0, 2, 35);
+		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+		sequence.ParamPath = std::string(dir) + "\\willow";
+		sequence.OutputPath = "../Pictures/Willow/";
+		ics->PushImageCaptureSequence(sequence);
+		sequence.CameraPos = glm::vec3(0, 2, 45);
+		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+		sequence.ParamPath = std::string(dir) + "\\maple";
+		sequence.OutputPath = "../Pictures/Maple/";
+		ics->PushImageCaptureSequence(sequence);
+		sequence.CameraPos = glm::vec3(0, 2, 45);
+		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+		sequence.ParamPath = std::string(dir) + "\\birch";
+		sequence.OutputPath = "../Pictures/Birch/";
+		ics->PushImageCaptureSequence(sequence);
+		sequence.CameraPos = glm::vec3(0, 2, 50);
+		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+		sequence.ParamPath = std::string(dir) + "\\oak";
+		sequence.OutputPath = "../Pictures/Oak/";
+		ics->PushImageCaptureSequence(sequence);
+		sequence.CameraPos = glm::vec3(0, 2, 20);
+		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+		sequence.ParamPath = std::string(dir) + "\\pine";
+		sequence.OutputPath = "../Pictures/Pine/";
+		ics->PushImageCaptureSequence(sequence);
+	}
 	const bool enableSorghumRecon = false;
 	if (enableSorghumRecon) {
 		auto srSys = InitSorghumReconstructionSystem();
