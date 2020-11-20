@@ -27,10 +27,7 @@ namespace TreeUtilities {
 		float Width();
 		float Weight();
 		float Resolution();
-
-		float GetBlockerDistance(glm::vec3& position);
 		unsigned GetEntityIndex(size_t x, size_t y);
-		glm::vec3 GetDepth(size_t x, size_t y);
 		~LightSnapShot();
 	};
 
@@ -40,11 +37,6 @@ namespace TreeUtilities {
 		size_t _Resolution = 2048;
 		std::vector<LightSnapShot*> _SnapShots;
 		GLProgram* _SnapShotProgram = nullptr;
-		
-		RenderTarget* _BlurFilterRenderTarget = nullptr;
-		GLProgram* _SnapShotVBlurProgram = nullptr;
-		GLProgram* _SnapShotHBlurProgram = nullptr;
-		GLTexture2D* _BlurFilter = nullptr;
 
 		GLRenderBuffer* _DepthBuffer = nullptr;
 		float _LightEstimationScore = 0;

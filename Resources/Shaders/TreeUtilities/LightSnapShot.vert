@@ -4,7 +4,6 @@ layout (location = 12) in mat4 aInstanceMatrix;
 
 uniform mat4 model;
 uniform mat4 lightSpaceMatrix;
-uniform mat4 scaleMatrix;
 
 out VS_OUT {
     flat uint LeafIndex;
@@ -14,6 +13,6 @@ out VS_OUT {
 void main()
 {
     vs_out.LeafIndex = aLeafIndex.x;
-    gl_Position = lightSpaceMatrix * (model * aInstanceMatrix * scaleMatrix) * vec4(aPos, 1.0);
+    gl_Position = lightSpaceMatrix * (model * aInstanceMatrix) * vec4(aPos, 1.0);
     vs_out.distance = gl_Position.z;
 }
