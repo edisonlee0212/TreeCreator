@@ -4,12 +4,15 @@
 #include "quickhull/QuickHull.hpp"
 #include <gtx/vector_angle.hpp>
 #include <gtx/matrix_decompose.hpp>
+#include <utility>
 #include <direct.h>
 
 #include "pugixml/pugixml.hpp"
 
 #include <CGAL/Point_set_3.h>
 
+
+#include "AcaciaFoliageGenerator.h"
 #include "CrownSurfaceRecon.h"
 #include "MapleFoliageGenerator.h"
 #include "PineFoliageGenerator.h"
@@ -19,6 +22,9 @@ void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
 
 }
+
+
+
 void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& trees)
 {
 	bool growed = false;
@@ -642,13 +648,19 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 }
 #pragma endregion
 #pragma region Growth
-Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters treeParameters, glm::vec3 position, bool enabled)
+Entity PlantSimulationSystem::CreateTree(std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh,
+	TreeParameters treeParameters, glm::vec3 position, bool enabled)
 {
 	auto mat = std::make_shared<Material>();
 	mat->SetTexture(_DefaultTreeSurfaceTex1, TextureType::DIFFUSE);
 	mat->SetTexture(_DefaultTreeSurfaceNTex1, TextureType::NORMAL);
 	mat->SetTexture(_DefaultTreeSurfaceSTex1, TextureType::SPECULAR);
-	auto treeEntity = TreeManager::CreateTree(mat, treeLeafMaterial, treeLeafMesh);
+	return CreateTree(mat, treeLeafMaterial, treeLeafMesh, treeParameters, position, enabled);
+}
+
+Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters treeParameters, glm::vec3 position, bool enabled)
+{
+	auto treeEntity = TreeManager::CreateTree(treeSurfaceMaterial, treeLeafMaterial, treeLeafMesh);
 	Entity internode = TreeManager::CreateInternode(EntityManager::GetComponentData<TreeIndex>(treeEntity), treeEntity);
 #pragma region Position & Style
 
