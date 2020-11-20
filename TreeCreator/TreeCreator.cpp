@@ -100,12 +100,12 @@ int main()
 	auto pss = InitPlantSimulationSystem();
 	auto ics = InitImageCollectionSystem();
 	ics->AttachToPlantSimulationSystem(pss);
-	if (false) {
+	if (true) {
 		char dir[256] = {};
 		_getcwd(dir, 256);
 		ImageCaptureSequence sequence;
-		sequence.Amount = 1;
-		sequence.EnableSemanticOutput = false;
+		sequence.Amount = 5;
+		sequence.EnableSemanticOutput = true;
 		sequence.CameraPos = glm::vec3(0, 2, 30);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\acacia";

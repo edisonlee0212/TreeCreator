@@ -50,7 +50,7 @@ void ImageCollectionSystem::Update()
 		if (_RemainingAmount != 0) {
 			_CurrentTreeParameters.Seed = _RemainingAmount;
 			_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
-			if(false)
+			if(_EnableSemanticMask)
 			{
 				TreeInfo treeInfo = _CurrentTree.GetComponentData<TreeInfo>();
 				treeInfo.EnableSemanticOutput = true;
@@ -75,6 +75,18 @@ void ImageCollectionSystem::Update()
 				_CurrentTreeParameters.Seed = _RemainingAmount;
 				_EnableSemanticMask = seq.EnableSemanticOutput;
 				_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
+				if (_EnableSemanticMask)
+				{
+					TreeInfo treeInfo = _CurrentTree.GetComponentData<TreeInfo>();
+					treeInfo.EnableSemanticOutput = true;
+					_CurrentTree.SetComponentData(treeInfo);
+					auto mmc = _CurrentTree.GetPrivateComponent<MeshRenderer>();
+					mmc->get()->ForwardRendering = true;
+					mmc->get()->Material = TreeManager::SemanticTreeBranchMaterial;
+					auto p = _CurrentTree.GetPrivateComponent<Particles>();
+					p->get()->ForwardRendering = true;
+					p->get()->Material = TreeManager::SemanticTreeLeafMaterial;
+				}
 				_Running = true;
 			}
 			else
