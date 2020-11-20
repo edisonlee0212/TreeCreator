@@ -100,7 +100,6 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AcaciaFoliageGenerator.cpp" />
     <ClCompile Include="BezierCurve.cpp" />
     <ClCompile Include="FoliageGeneratorBase.cpp" />
     <ClCompile Include="ImageCollectionSystem.cpp" />
@@ -125,7 +124,6 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClCompile Include="WillowFoliageGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AcaciaFoliageGenerator.h" />
     <ClInclude Include="BezierCurve.h" />
     <ClInclude Include="FoliageGeneratorBase.h" />
     <ClInclude Include="ImageCollectionSystem.h" />

@@ -19,8 +19,7 @@ EntityQuery TreeUtilities::TreeManager::_InternodeQuery;
 
 TreeIndex TreeUtilities::TreeManager::_TreeIndex;
 InternodeIndex TreeUtilities::TreeManager::_InternodeIndex;
-std::shared_ptr<Material> TreeUtilities::TreeManager::SemanticTreeBranchMaterial;
-std::shared_ptr<Material> TreeUtilities::TreeManager::SemanticTreeLeafMaterial;
+
 bool TreeUtilities::TreeManager::_Ready;
 #pragma region Helpers
 
@@ -165,50 +164,6 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& internode, std::vec
 
 void TreeUtilities::TreeManager::Init()
 {
-	std::string vertShaderCode = std::string("#version 460 core\n")
-		+ *Default::ShaderIncludes::Uniform +
-		+"\n"
-		+ FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/Standard.vert"));
-	std::string fragShaderCode = std::string("#version 460 core\n")
-		+ *Default::ShaderIncludes::Uniform
-		+ "\n"
-		+ FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SemanticBranch.frag");
-
-	GLShader* standardvert = new GLShader(ShaderType::Vertex);
-	standardvert->SetCode(&vertShaderCode);
-	GLShader* standardfrag = new GLShader(ShaderType::Fragment);
-	standardfrag->SetCode(&fragShaderCode);
-	auto branchProgram = std::make_shared<GLProgram>();
-	branchProgram->Attach(ShaderType::Vertex, standardvert);
-	branchProgram->Attach(ShaderType::Fragment, standardfrag);
-	branchProgram->Link();
-	delete standardvert;
-	delete standardfrag;
-
-	vertShaderCode = std::string("#version 460 core\n")
-		+ *Default::ShaderIncludes::Uniform +
-		+"\n"
-		+ FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/StandardInstanced.vert"));
-	fragShaderCode = std::string("#version 460 core\n")
-		+ *Default::ShaderIncludes::Uniform
-		+ "\n"
-		+ FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SemanticLeaf.frag");
-	standardvert = new GLShader(ShaderType::Vertex);
-	standardvert->SetCode(&vertShaderCode);
-	standardfrag = new GLShader(ShaderType::Fragment);
-	standardfrag->SetCode(&fragShaderCode);
-	auto leafProgram = std::make_shared<GLProgram>();
-	leafProgram->Attach(ShaderType::Vertex, standardvert);
-	leafProgram->Attach(ShaderType::Fragment, standardfrag);
-	leafProgram->Link();
-	delete standardvert;
-	delete standardfrag;
-	
-	SemanticTreeBranchMaterial = std::make_shared<Material>();
-	SemanticTreeBranchMaterial->SetProgram(branchProgram);
-	SemanticTreeLeafMaterial = std::make_shared<Material>();
-	SemanticTreeLeafMaterial->SetProgram(leafProgram);
-	
 	_InternodeArchetype = EntityManager::CreateEntityArchetype(
 		"Internode",
 		LocalToWorld(), Connection(),

@@ -42,8 +42,6 @@ namespace TreeUtilities {
 		std::shared_ptr<Material> _DefaultTreeLeafMaterial2;
 
 		std::shared_ptr<Mesh> _DefaultTreeLeafMesh;
-
-		
 #pragma endregion
 		InternodeSystem* _InternodeSystem = nullptr;
 		unsigned int _ConfigFlags = 0;
@@ -69,7 +67,6 @@ namespace TreeUtilities {
 		void ResumeGrowth();
 		void PauseGrowth();
 	public:
-		
 		static void SetAllInternodeActivated(Entity tree, bool value);
 		static void ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up);
 		void GenerateLeavesForAllTrees(std::vector<Entity>& trees);
@@ -85,8 +82,7 @@ namespace TreeUtilities {
 		void OnDestroy() override;
 		void Update() override;
 		void FixedUpdate() override;
-		Entity CreateTree(std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters treeParameters, glm::vec3 position, bool enabled);
-		Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters parameters, glm::vec3 position, bool enabled = true);
+		Entity CreateTree(std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters parameters, glm::vec3 position, bool enabled = true);
 		Entity CreateTree(TreeParameters parameters, glm::vec3 position, bool enabled = true);
 		void CreateDefaultTree();
 	};

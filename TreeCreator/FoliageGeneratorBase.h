@@ -26,4 +26,13 @@ namespace TreeUtilities {
 		void Generate(Entity tree) override;
 		void OnParamGui() override;
 	};
+
+	class AcaciaFoliageGenerator : public FoliageGeneratorBase
+	{
+	public:
+		void Generate(Entity tree) override;
+		void OnParamGui() override;
+	};
+
+	
 }
