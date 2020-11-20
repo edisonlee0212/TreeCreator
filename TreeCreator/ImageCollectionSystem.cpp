@@ -37,17 +37,6 @@ void ImageCollectionSystem::AttachToPlantSimulationSystem(PlantSimulationSystem*
 	_PlantSimulationSystem = value;
 }
 
-void ImageCollectionSystem::CreateCaptureSequence(TreeParameters& treeParameters, int amount, std::string path)
-{
-	if (_RemainingAmount != 0 || _PlantSimulationSystem == nullptr) return;
-	_StorePath = path;
-	_RemainingAmount = amount;
-	_CurrentTreeParameters = treeParameters;
-	TreeManager::DeleteAllTrees();
-	_CurrentTreeParameters.Seed = _RemainingAmount;
-	_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
-}
-
 void ImageCollectionSystem::Update()
 {
 	if(_Capturing)
@@ -61,6 +50,18 @@ void ImageCollectionSystem::Update()
 		if (_RemainingAmount != 0) {
 			_CurrentTreeParameters.Seed = _RemainingAmount;
 			_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
+			if(false)
+			{
+				TreeInfo treeInfo = _CurrentTree.GetComponentData<TreeInfo>();
+				treeInfo.EnableSemanticOutput = true;
+				_CurrentTree.SetComponentData(treeInfo);
+				auto mmc = _CurrentTree.GetPrivateComponent<MeshRenderer>();
+				mmc->get()->ForwardRendering = true;
+				mmc->get()->Material = TreeManager::SemanticTreeBranchMaterial;
+				auto p = _CurrentTree.GetPrivateComponent<Particles>();
+				p->get()->ForwardRendering = true;
+				p->get()->Material = TreeManager::SemanticTreeLeafMaterial;
+			}
 		}
 		else {
 			if (!_ImageCaptureSequences.empty())
@@ -72,6 +73,7 @@ void ImageCollectionSystem::Update()
 				_CurrentTreeParameters = _PlantSimulationSystem->LoadParameters(seq.ParamPath);
 				_StorePath = seq.OutputPath;
 				_CurrentTreeParameters.Seed = _RemainingAmount;
+				_EnableSemanticMask = seq.EnableSemanticOutput;
 				_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
 				_Running = true;
 			}

@@ -117,6 +117,9 @@
     <ClCompile Include="PineFoliageGenerator.cpp">
       <Filter>Source Files\TreeUtilities\Foliage</Filter>
     </ClCompile>
+    <ClCompile Include="AcaciaFoliageGenerator.cpp">
+      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkSystem.h">
@@ -213,6 +216,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PineFoliageGenerator.h">
+      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+    </ClInclude>
+    <ClInclude Include="AcaciaFoliageGenerator.h">
       <Filter>Header Files\TreeUtilities\Foliage</Filter>
     </ClInclude>
   </ItemGroup>

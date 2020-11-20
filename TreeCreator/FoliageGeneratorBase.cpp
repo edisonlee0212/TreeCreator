@@ -85,19 +85,10 @@ void TreeUtilities::DefaultFoliageGenerator::Generate(Entity tree)
 	LocalToWorld treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(tree);
 	auto particleSystem = EntityManager::GetPrivateComponent<Particles>(tree);
 	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeParameters, treeLocalToWorld.Value, particleSystem->get()->Matrices, true);
-	//Debug::Log(std::to_string(particleSystem->get()->Matrices.size()));
 }
 
 void TreeUtilities::DefaultFoliageGenerator::OnParamGui()
 {
 	
-}
-
-void AcaciaFoliageGenerator::Generate(Entity tree)
-{
-}
-
-void AcaciaFoliageGenerator::OnParamGui()
-{
 }
 
