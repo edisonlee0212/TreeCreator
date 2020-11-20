@@ -127,27 +127,27 @@ TreeUtilities::LightEstimator::LightEstimator(size_t resolution, float centerDis
 	_RenderTarget->AttachRenderBuffer(_DepthBuffer, GL_DEPTH_ATTACHMENT);
 
 	std::string vertShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString("Shaders/TreeUtilities/LightSnapShot.vert");
+		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/TreeUtilities/LightSnapShot.vert"));
 	std::string fragShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString("Shaders/TreeUtilities/LightSnapShot.frag");
+		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/TreeUtilities/LightSnapShot.frag"));
 
 	_SnapShotProgram = new GLProgram(
 		new GLShader(ShaderType::Vertex, &vertShaderCode),
 		new GLShader(ShaderType::Fragment, &fragShaderCode));
 
 	vertShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString("Shaders/Vertex/TexturePassThrough.vert");
+		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/TexturePassThrough.vert"));
 	fragShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString("Shaders/TreeUtilities/LightSnapShotVBlur.frag");
+		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/TreeUtilities/LightSnapShotVBlur.frag"));
 
 	_SnapShotVBlurProgram = new GLProgram(
 		new GLShader(ShaderType::Vertex, &vertShaderCode),
 		new GLShader(ShaderType::Fragment, &fragShaderCode));
 
 	vertShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString("Shaders/Vertex/TexturePassThrough.vert");
+		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/TexturePassThrough.vert"));
 	fragShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString("Shaders/TreeUtilities/LightSnapShotHBlur.frag");
+		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/TreeUtilities/LightSnapShotHBlur.frag"));
 
 	_SnapShotHBlurProgram = new GLProgram(
 		new GLShader(ShaderType::Vertex, &vertShaderCode),
