@@ -100,22 +100,24 @@ int main()
 	auto pss = InitPlantSimulationSystem();
 	auto ics = InitImageCollectionSystem();
 	ics->AttachToPlantSimulationSystem(pss);
-	if (true) {
+	if (false) {
 		char dir[256] = {};
 		_getcwd(dir, 256);
 		ImageCaptureSequence sequence;
 		sequence.Amount = 5;
-		sequence.EnableSemanticOutput = true;
+		sequence.EnableSemanticOutput = false;
+		sequence.EnableRandomBackground = false;
+		
 		sequence.CameraPos = glm::vec3(0, 2, 30);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\acacia";
 		sequence.OutputPath = "../Pictures/Acacia/";
-		ics->PushImageCaptureSequence(sequence);
+		//ics->PushImageCaptureSequence(sequence);
 		sequence.CameraPos = glm::vec3(0, 2, 30);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\apple";
 		sequence.OutputPath = "../Pictures/Apple/";
-		ics->PushImageCaptureSequence(sequence);
+		//ics->PushImageCaptureSequence(sequence);
 		sequence.CameraPos = glm::vec3(0, 2, 35);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\willow";
@@ -125,22 +127,22 @@ int main()
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\maple";
 		sequence.OutputPath = "../Pictures/Maple/";
-		ics->PushImageCaptureSequence(sequence);
+		//ics->PushImageCaptureSequence(sequence);
 		sequence.CameraPos = glm::vec3(0, 2, 45);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\birch";
 		sequence.OutputPath = "../Pictures/Birch/";
-		ics->PushImageCaptureSequence(sequence);
+		//ics->PushImageCaptureSequence(sequence);
 		sequence.CameraPos = glm::vec3(0, 2, 50);
-		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+		sequence.CameraEulerDegreeRot = glm::vec3(13, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\oak";
 		sequence.OutputPath = "../Pictures/Oak/";
-		ics->PushImageCaptureSequence(sequence);
+		//ics->PushImageCaptureSequence(sequence);
 		sequence.CameraPos = glm::vec3(0, 2, 20);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\pine";
 		sequence.OutputPath = "../Pictures/Pine/";
-		ics->PushImageCaptureSequence(sequence);
+		//ics->PushImageCaptureSequence(sequence);
 	}
 	const bool enableSorghumRecon = false;
 	if (enableSorghumRecon) {

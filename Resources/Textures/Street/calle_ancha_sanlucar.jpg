@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html class="h-full antialiased">
+  <head>
+      <script type="text/javascript">
+        !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t){var e=document.createElement("script");e.type="text/javascript";e.async=!0;e.src=("https:"===document.location.protocol?"https://":"http://")+"cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(e,n)};analytics.SNIPPET_VERSION="4.0.0";
+        analytics.load("4LVNeTeQY3ndP3sKN2yXevI7MCM2xoCh");
+        //analytics.page();
+        }}();
+      </script>
+ 
+
+      <!-- Google Tag Manager -->
+      <script>
+        document.addEventListener('turbolinks:load', function(event) {
+    var url = event.data.url;  dataLayer.push({
+      'event':'pageView',
+      'virtualUrl': url
+    });
+  });(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-MD3LVXP');</script>
+      <!-- End Google Tag Manager -->
+
+    <title>Manuel García</title>
+    <meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="Ih8htMwy7N4DoT/z95C3VfeaK+/Y74PtVbL81LxVXpEXnX04d/BZziAvMUwNyaQ2MC6BI8jF526wWV5FLwUBUA==" />
+    <meta name="csp-nonce" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="/packs/js/application-18dcfae1de30afc4b39d.js" data-turbolinks-track="reload"></script>
+    <link rel="stylesheet" media="all" href="/packs/css/application-e27b65fe.css" data-turbolinks-track="reload" />
+    <link rel="stylesheet" media="all" href="/assets/application-4ac688a07841007446a746522732c4734f1e51499dbeb87eed1f8b299b507c6b.css" data-turbolinks-track="reload" />
+
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="alternate" type="application/rss+xml" title="Manuel García - Feed artículos" href="/feed"/>
+
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#fef851">
+<meta name="msapplication-TileColor" content="#fef851">
+<meta name="theme-color" content="#ffffff">
+
+
+    
+
+
+
+
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+
+    
+  </head>
+
+  <body class="font-sans font-normal leading-normal h-full antialiased">
+      <script>analytics.page();</script>
+      <!-- Google Tag Manager (noscript) -->
+      <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MD3LVXP"
+      height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+      <!-- End Google Tag Manager (noscript) -->
+    <div class="main   ">
+      
+
+
+      <div id="sidebar" class="w-full lg:w-1/5 border-b border-yellow-500 lg:border-r lg:border-gray-800 mr-10 mx-2 py-2 lg:fixed lg:h-screen ">
+  <div class="flex items-center flex-shrink-0 ">
+    <img class="rounded-full h-16 w-16 flex items-center justify-center" src="https://storage.googleapis.com/manuelgarcia/assets/manuel-garcia.jpg" />
+    <a href="/">
+      <span class=" text-2xl text-black "><span class="font-bold">MANUEL</span> GARCÍA</span>
+      <span class="sr-only">MANUEL GARCÍA</span>
+</a>  </div>
+</div>
+
+
+      <div id="content-container" class="w-full lg:w-4/5 mx-2 py-2 lg:ml-64 lg:pl-24 lg:pr-48 ">
+        <div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="la-conexion-humana">La conexión humana</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>En la época de la autoexpresión, del autobombo, de los bots que parecen que te escuchan, permanecer humano se convertirá en excepción.</div><div><br></div><div>Creo que nunca como en la actualidad, ha sido más necesario establecer conexión humana.</div><div><br></div><div>Cada término, palabra de búsqueda, concepto, idea está absolutamente machacada en los diferentes canales de difusión.</div><div><br></div><div>Establecer conexiones reales con personas, parece la mejor estrategia para cualquier proyecto, organización que puedes obtener.</div><div><br></div><div>Mostrar interés genuino por la personas te llevará más lejos.</div><div><br></div><div><br></div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  17,981 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="hecho-es-mejor-que-perfecto">Hecho es mejor que perfecto</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>Hecho es mejor que perfecto. </div><div><br></div><div>No está clara la atribución de esta frase pero en algunos momentos, me parece correcta.</div><div><br></div><div>Si estás desarrollando una aplicación web, una app, un contenido, siempre existe la tentación de lanzar sólo lo mejor. Lo excelente. Lo perfecto.</div><div><br></div><div>Hecho / lanzado es mejor que perfecto / en tu ordenador. </div><div><br></div><div>Las cosas ocurren a partir que le das a publicar, desplegar, fotografiar, escribir….</div><div><br></div><div>Me surge esto ahora mismo porque ando perfeccionando funciones en una web, que para ser honestos, nadie se dará cuenta.</div><div><br></div><div>Es la perfección que te autoexijas para lanzar la mejor versión de todo y que te frena para mostrar al mundo lo que haces. </div><div><br></div><div>Abraza la imperfección. </div><div>Adora la mejora continua.</div><div><br></div><div>Cuesta mucho pero lanza y luego mejoras. </div><div><br></div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  20,589 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="la-transparencia-incentiva-el-talento">La transparencia incentiva el talento</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>Buscando un ángulo para entender qué lleva a una organización a funcionar bien, se me viene a la cabeza la transparencia.</div><div><br></div><div>Son muchos los factores que inciden, pero los mejores resultados que he visto en empresas casi siempre han tenido que ver con el grado de transparencia.</div><div><br></div><div><strong>Respecto al equipo</strong></div><div>Analizando las veces que he visto a un equipo motivado por un reto, he comprendido que hacer llegar información es la forma de más sencilla de tener un equipo alineado. </div><div><br></div><div>Al tener todos la mayoría de la información, el equipo directivo se ahorra mucha energía en dar explicaciones, motivar, etc..</div><div><br></div><ul>
+<li>La transparencia en el acceso a la información</li>
+<li>La transparencia respecto a la toma de decisiones</li>
+<li>La transparencia respecto a la visión</li>
+<li>La transparencia respecto a las expectativas</li>
+<li>La transparencia respecto a los salarios</li>
+<li>La transparencia respecto a los ingresos</li>
+</ul><div><br></div><div>En definitiva la <strong>transparencia como fórmula de atracción y retención de talento.</strong>
+</div><div><br></div><div>Por otro lado, lo contrario, la falta de transparencia es lo que ha contribuido a las más desastrosas formas de afrontar un reto. </div><div><br></div><div>No puedes atraer a gente talentosa a tu equipo si no tienes algún grado de transparencia. Simplemente no funciona así. <br>Los buenos se cuestionan cosas, quieren saber cual es el rumbo y quieren saber cómo se miden los resultados.</div><div>
+<br><br>
+</div><div>Piénsalo. Transparencia vs opacidad… </div><div><br></div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  21,052 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="nicheate">Nicheate</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>No sé esta palabra existe.<br><br>
+</div><div>Pero quiero potenciar la idea de nicho de especialización.</div><div><br></div><div>El nicho como fórmula para ayudar a algunos. No a todos.</div><div><br></div><div>Centrarse en un nicho es la única manera de competir con las multinacionales.</div><div><br></div><div>Centrarse en un pequeño grupo de personas a las que podamos aportar valor.</div><div><br></div><div>Hay demasiado ruido ahí fuera. Nicheate!</div><div><br></div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  21,176 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="cambiar-a-las-personas">Cambiar a las personas</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>Intentar cambiar a una persona es un rollo.<br><br>
+</div><div>Estamos continuamente intentar cambiar a nuestros hijos, parejas, familiares, compañero de trabajo, jefes, etc..</div><div><br></div><div>Ya hace tiempo que me di de baja de esto por una sencilla razón. NO funciona.</div><div><br></div><div><br></div><div>
+<br>Los humanos somos únicos en la voluntad de cambiar cuando queremos. Podemos ser capaces de cambiar la actitud, nuestras habilidades y la apariencia.<br><br>La parte difícil entonces no es cambiar. <br><br>Es querer hacerlo.<br><br>Si de verdad quieres cambiar a alguien, empieza por cambiar tú.</div><div><br></div><div>Si quieres que tu hijo/a lea, lee tú</div><div>Si quieres que estudie, estudia tú</div><div><br></div><div>Inspira a otros con tu comportamiento y con suerte te seguirán<br><br>
+</div><div>Es lo único que puedes hacer.</div><div><br></div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  21,322 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="la-atencion">La atención</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>Piensa un momento en el valor de tener la atención de una persona por unos segundos.</div><div><br></div><div>Piensa en no defraudar a esa persona con basura, con ruido. </div><div><br></div><div>La atención es tan escasa en la actualidad, que lo que digas, tiene que ser brillante, único pero sobre todo auténtico.</div><div><br></div><div>La autenticidad como concepto holístico de marketing. Piénsalo</div><div><br></div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  21,563 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="la-importancia-de-los-extremos">La importancia de los extremos</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>Lo raro, los raros, los atrevidos, los locos, los visionarios … </div><div>Todo lo interesante empieza siempre por los extremos.</div><div><br></div><div>En la economía de la abundancia, todo se crea para la masa del centro. Todos los esfuerzos de creación de productos y servicios, siempre ha tenido como objetivo el centro de la campana de distribución.</div><div><br></div><div>La creación de un movimiento siempre estuvo precedida de críticas y sorna.</div><div><br></div><div>Esos locos pioneros con ideas descabelladas, serán los inspiradores del futuro.</div><div><br></div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  21,905 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="reinventarse">Reinventarse</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>Toca reinventarse. </div><div>Siempre estuvo bien hacerlo de forma periódica, pero hoy se vuelve imprescindible.</div><div><br></div><div>Hubo que reinventarse en el 2.000 con la crisis de las punto com</div><div>Hubo que reinventarse en la crisis financiera de 2.008</div><div>Ahora toca reinventarse después de la pandemia que está asolando nuestra humanidad.</div><div><br></div><div>En todas esas crisis se produjo una purga de modelos, empresas y dirigentes. </div><div><br></div><div>Aprovechemos esta para sacar lo una nueva versión mejorada de nosotros mismos.</div><div><br></div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  23,703 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="lanzamiento-de-trabajoenremoto-com">Lanzamiento de TrabajoenRemoto.com</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>Hace algunos años que decidí, que nunca más trabajaría en un organización en la que la premisa de estar un determinado tiempo en una oficina, fuese obligatoria.<br><br>
+</div><div>De esta reflexión inicié un proceso de pensar cómo ayudar a otras personas que están en la misma situación. <br><br>
+</div><div>Se levantan cada día, y después de sus rutina bajan a la calle y comienzan la locura que supone en una gran ciudad llegar a tu oficina o puesta de trabajo. Metros, coches, atascos, …… y debes pensar que tiene que haber otra manera de estar en el mundo profesional.<br><br>
+</div><div>De esa inquietud, nace <a href="https://trabajoenremoto.com/">Trabajo en Remoto</a>. Una plataforma para conectar trabajadores del conocimiento deslocalizados de las ubicaciones habituales como grandes ciudades, capitales europeas, etc… con organizaciones que buscan cubrir posiciones específicas con roles especialistas.<br><br>
+</div><div>
+<strong>Misión del proyecto<br></strong><br>
+</div><div>Acercar en la medida de lo posible, a las personas que buscan poder desarrollar su actividad profesional sin tener que estar en una ubicación concreta con las empresas que buscan el mejor talento allá donde esté.<br><br>
+</div><div>Si eres reclutador en una empresa del sector de las nuevas tecnologías, estarás de acuerdo conmigo en que reclutar determinados perfiles se ha vuelto casi imposible. <br><br>
+</div><div>La propuesta es utilizar esta plataforma para lanzar a personas dispersas por todo el mundo y que puedas cubrir tu posición con personas que no van a ir a tu oficina.<br><br>
+</div><div>Afortunadamente muchas organizaciones ya han dado el paso a este tipo de contratación para suplir la falta de personas a nivel local.<br><br>
+</div><div>Dos recomendaciones para probar la plataforma:<br><br>
+</div><div>
+<strong>Si buscas ofertas de teletrabajo:<br></strong><br>
+</div><ol>
+<li>Entra en trabajoenremoto.com y elige las categorías del desplegable que te interesen<br><br>
+</li>
+<li>Confirma la suscripción pulsando el correo que te llegará a tu bandeja.<br><br>
+</li>
+<li>Recibe cada día a las 10 de la mañana (UTC +1) las ofertas generadas el día anterior<br><br>
+</li>
+<li>Si además usas lector de RSS para estar al día, agrega los diferentes feed que podrás encontrar en <a href="https://trabajoenremoto.com/trabajo-remoto-feed-rss">https://trabajoenremoto.com/trabajo-remoto-feed-rss<br></a><br>
+</li>
+</ol><div><br></div><div>
+<strong>Si eres un reclutar o una empresa que busca candidatos:<br></strong><br>
+</div><ol>
+<li>Entra en la web y regístrate<br><br>
+</li>
+<li>Confirma la creación de la cuenta con el enlace que te llegará por email<br><br>
+</li>
+<li>Una vez dentro en el sistema, pulsa “Publicar Oferta”<br><br>
+</li>
+</ol><div><br></div><div>Sigue los pasos para lanzar tu posición y llegará a todos los suscritos a esa categoría.<br><br>
+</div><div>
+<strong>Tip adicional:<br></strong><br>
+</div><div>Completa la creación de tu organización dentro de la sección de compañías. Allí puedes completar la descripción de tu empresa, poner la url de tu sitio web y tu logotipo. Esto mejorará la visibilidad de tus anuncios.<br><br>
+</div><div><br></div><div>Esperando que te unas al movimiento de #trabajoremoto aprovecho para que compartas conmigo cualquier aspecto de mejora que se te ocurra que sería interesante<br><br>
+</div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  24,222 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="que-es-la-transformacion-digital">¿Qué es la Transformación Digital?</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>La transformación digital es la oportunidad estratégica de liderar un sector aprovechando las nuevas tecnologías, pero sobre todo nuevas dinámicas de trabajo. La transformación digital busca mejorar la eficiencia de las empresas y poder aprovechar las nuevas oportunidades que aparecen constantemente en el cambiante entorno digital.<br><br>
+</div><div>Cuando hablamos de Transformación Digital, hablamos de incorporar a la estrategia empresarial el vector tecnológico, las mejoras de procesos y las personas.<br><br>
+</div><div>Entender que es necesario reinventarse y definitivamente entrar en el siglo XXI con los nuevos paradigmas, se ha convertido en una necesidad estratégica para las organizaciones.<br><br>
+</div><div>Es importante entender que no se trata de incorporar nuevas tecnologías a los sistemas de información de las empresa, se trata de pensar a nivel estratégico, que impacto tiene o tendrá a corto o medio plazo la digitalización en nuestro sector.<br><br>
+</div><div>Sea cual sea tu sector, tienes un reto por delante ante la aparición de nuevos actores digitales en prácticamente cualquier sector de actividad.<br><br>
+</div><div>En los últimos años hay ejemplos extremos de compañías que han surgido y que ahora lideran sus sectores a través de un radical cambio en la prestación del servicio, el la concepción de un sector y sin las anclas de o ataduras de las empresas que tienen una trayectoria.<br><br>
+</div><div>Por un lado hay que pensar en términos de modelos de negocio, en el impacto en nuestro sector de activida. En cómo aprovechar todo esto para dinamizar nuestra actividad.<br><br>
+</div><div>Por otro lado hay que decir que todo esto es posible también por el increíble avance producido por el Cloud Computing y por las plataformas de pago por uso a todos los niveles.<br><br>
+</div><div>Del lado del usuario, están brillando las plataformas que favorecen la colaboración y la productividad personal para equipos de talento digital.<br><br>
+</div><div>Del lado de los sistemas, reseñar que la virtualización progresiva de los servicios que típicamente eran necesarios para poder afrontar estas innovaciones, ha mejorado mucho la velocidad en la que podemos lanzar los productos y servicios sin tener que afrontar las inversiones en servidores, hardware, etc.. que eran necesarios para todo esto.<br><br>
+</div><div>Al final queda claro que no podemos obviar estos cambios que se están produciendo. Seguramente a tu sector ya ha llegado algún player 100% digital con planteamientos innovadores y  aprovechando las innumerables opciones que ofrece la tecnología o la economía colaborativa.<br><br>
+</div><div>En este contexto, lo importante es entendemos las organizaciones y su cultura, para poder detectar las oportunidades digitales y posteriormente poner los medios necesarios para poder orientar la actividad hacia los resultados medibles.<br><br>
+</div><div>En definitiva, se trata de pensar al más alto nivel, tener de la visión por donde vendrán los cambios y poner los mecanismos  a nivel organizativo para ir adaptándonos a esos cambios<br><br>
+</div><div>La combinación de procesos, personas y tecnología bien gestionadas y con una visión estratégica clara, producirá la innovación en tu organización.<br><br>
+</div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  26,153 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="que-es-la-gestion-del-cambio">¿Qué es la gestión del cambio?</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>La <strong>gestión del cambio organizacional</strong> es básicamente, tener en cuenta a las personas en los procesos de cambios, que inevitablemente ocurren en las empresas.<br><br>
+</div><div>Cada vez que se implementa un cambio en los procesos internos, se incorpora una nueva tecnología en la empresa, se cambia la manera que se hacía cualquier cosa, habría que tener en cuenta a las personas.<br><br>
+</div><div>Muchas veces veo en organizaciones grandes como, ante un cambio realmente importante de tecnología o cualquier otro, en el mejor de los casos, se manda un correo de este tipo:<br><br>
+</div><div>
+<em>"Apreciado Xxxx<br></em><br>
+</div><div>
+<em>El próximo lunes día xx, empezamos a utilizar el nuevo lo que sea  (cambiar lo que sea por  erp, crm, workflow, nuevo cms) - Necesitamos que no se paralicen las operaciones. Gracias<br></em><br>
+</div><div>
+<em>Saludos cordiales, Director General"<br></em><br>
+</div><div>Como te puedes imaginar, un frío sudor te recorre la espalda pensando en las semanas (meses) que vas a pasar hasta que todo funcione / nada se rompa / se resuelvan dudas, etc… y vuelvas a tener la misma habilidad que tenías con el sistema antiguo<br><br>
+</div><div>Hay que entender que en general a nadie le gusta cambiar y que en general somos altamente resistentes al cambio, sobre todo si no se explica por qué y el sentido.<br><br>
+</div><div>Por eso, si vas a liderar cualquier proyecto en tu organización que cambie aunque sea mínimamente la forma de trabajar o proceder, ten en cuenta a las personas y ten previsto mecanismos de gestión del cambio para todas las etapas del proceso.<br><br>
+</div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  25,850 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="por-que-deberia-automatizar-mis-procesos">¿Por qué debería automatizar mis procesos?</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>La automatización de procesos debería de estar bastante arriba en las prioridades de cualquier trabajador del conocimiento o de cualquier persona que necesite aumentar su rendimiento y/o productividad.<br><br>
+</div><div>Me pasa que cada vez que hago la misma cosa aburrida durante unas cuantas veces, inmediatamente me pongo a pensar si no podría automatizarse y desde luego busco la manera de que se realice en la nube.<br><br>
+</div><div>La realidad es que a día de hoy, tanto para el entorno personal como para al trabajo, hay muchísimas opciones para esto. Desde una simple hoja de cálculo en Google por ejemplo que me formule cualquier aspecto que quiera medir en base a datos que se recopilan en los sistemas de información personales o de la empresa, generar informes periódicos y enviar a clientes o hasta automatizar la presencia en redes sociales, etc.., todo esto con soluciones en la nube, accesibles desde donde estés. Algunas ideas.<br><br>
+</div><div>
+<strong>Ideas para automatizar el trabajo<br></strong><br>
+</div><ol>
+<li>Automatizar informes. Graba los datos en Spreadsheet de Google y presenta los datos en Google Docs y enviar a los clientes.<br><br>
+</li>
+<li>Haz Web Scraping. Si necesitas analizar competidores, precios del comercio electrónico de la competencia haz o encarga que te hagan Web Scraping de las webs que necesites.</li>
+<li>Extraer datos de tu ERP y montar un cuadro de mando en una hoja de cálculo de Google</li>
+<li>Diseña WorkFlows. Genera flujos de trabajo definiendo en cada paso que persona debe dar el siguiente paso para finalizar el flow.</li>
+</ol><div>
+<strong>Ideas para automatizar la vida personal<br></strong><br>
+</div><ol>
+<li>Recordatorios de ubicación. Crear alertas basadas en la ubicación para que cuando pases por un sitio determinado (o cerca del mismo), te avise de que tenías que hacer tal cosa.</li>
+<li>Recordatorios de tareas. Eso...</li>
+<li>Recibir artículos en tu correo de la publicación / blog / red social que sean de tu interés.</li>
+</ol><div>Hay cientos de ejemplos de cosas que ya son posibles automatizar en internet. Algunas más sencillas que otras, pero el caso es que el tiempo es un bien escaso y a nadie le gusta perderlo en cosas que parecen rutinarias y que seguramente no te aporten gran valor.<br><br>
+</div><div>Es por eso que te invito a reflexionar que cada vez que veas que hagas lo mismo una y otra vez, le des una vuelta. En internet hay cientos de soluciones basadas en la nube cada vez más, te permite explorar nuevas formas de hacer estas cosas.<br><br>
+</div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  26,273 lecturas
+</div>
+
+   
+</div>
+<div class="article w-full lg:w-3/5 mb-8">
+
+  <h2><a class="text-gray-900 mb-10 font-bold" href="digitalizacion-de-la-vida-personal-y-del-trabajo">Digitalización de la vida personal y del trabajo</a></h2>
+<div class="font-serif text-gray-800 leading-loose mt-6 text-lg mb-10"><div class="trix-content">
+  <div>Cada vez que usamos nuestro smartphone, nuestra tableta, cada vez que si me apuras, nos levantamos, estamos interactuando con sistemas digitales, principalmente basados en la nube.<br><br>
+</div><div>Esto que ha nivel personal está suponiendo una disrupción en cuanto a nuestras costumbres de no hace demasiados años, es definitivamente así también para nuestros entornos de trabajo.<br><br>
+</div><div>Las nuevas tecnologías están cambiando la forma que también desarrollamos nuestro trabajo. <br><br>
+</div><div>Cada día es más necesario acceder a nuestros documentos, nuestros sistemas de información en la nube independiente de donde estemos.<br><br>
+</div><div>Ya no tiene sentido pensar en términos de si la información está más o menos segura en según que entornos (on-premise, en la nube, nube híbrida, etc...). Afortunadamente estamos en el siguiente nivel, como aprovechar ese caudal de nuevos recursos tanto para nuestra vida personal como para nuestro trabajo diario.<br><br>
+</div><div>El mundo se está transformando y desde luego pienso que estamos en una fascinante etapa de nuestra historia, en la que muchas personas van a poder aprovechar todas estas nuevas herramientas, metodologías para hacer sus vidas y sus desempeños laborales mucho más eficientes y atractivos<br><br>
+</div>
+</div>
+</div>
+<hr class="border-gray-700">
+<div class="text-gray-800 text-sm py-3 mb-10">
+  26,460 lecturas
+</div>
+
+   
+</div>
+
+      </div>
+    </div>
+
+  </body>
+</html>

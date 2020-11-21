@@ -31,6 +31,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
 	Entity foliageEntity;
 	bool found = false;
 	TreeIndex ti = EntityManager::GetComponentData<TreeIndex>(tree);
+	bool semantic = tree.GetComponentData<TreeInfo>().EnableSemanticOutput;
 	EntityManager::ForEachChild(tree, [&found, &foliageEntity](Entity child)
 		{
 			if(child.HasComponentData<WillowFoliageInfo>())
@@ -43,7 +44,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
 	if (!found)
 	{
 		foliageEntity = EntityManager::CreateEntity(_Archetype, "Foliage");
-		bool semantic = tree.GetComponentData<TreeInfo>().EnableSemanticOutput;
+		
 		auto mmc = std::make_unique<MeshRenderer>();
 		mmc->Material = semantic ? TreeManager::SemanticTreeBranchMaterial : _BranchletMaterial;
 
@@ -52,7 +53,6 @@ void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
 		particleSys->BackCulling = false;
-
 		LocalToParent ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(mmc));
@@ -133,7 +133,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
 			auto currUp = glm::cross(endDir, branchlets[i].Normal);
 			auto l = glm::rotate(endDir, glm::radians(glm::gaussRand(wfInfo.BendAngleMean, wfInfo.BendAngleVariance)), currUp);
 			auto r = glm::rotate(endDir, glm::radians(-glm::gaussRand(wfInfo.BendAngleMean, wfInfo.BendAngleVariance)), currUp);
-			glm::vec3 s = wfInfo.LeafSize;
+			glm::vec3 s = wfInfo.LeafSize;// *(semantic ? 2.0f : 1.0f);
 			branchlets[i].LeafLocalTransforms.push_back(glm::translate(endPos + s.z * 2.0f * l) * glm::mat4_cast(glm::quatLookAt(-l, currUp)) * glm::scale(s));
 			branchlets[i].LeafLocalTransforms.push_back(glm::translate(endPos + s.z * 2.0f * r) * glm::mat4_cast(glm::quatLookAt(-r, currUp)) * glm::scale(s));
 		}
