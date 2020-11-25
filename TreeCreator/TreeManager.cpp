@@ -2,8 +2,15 @@
 #include "LightEstimator.h"
 #include <gtx/matrix_decompose.hpp>
 #include <utility>
-
+#include "AcaciaFoliageGenerator.h"
+#include "CrownSurfaceRecon.h"
+#include "MapleFoliageGenerator.h"
+#include "PineFoliageGenerator.h"
 #include "WillowFoliageGenerator.h"
+#include "AppleFoliageGenerator.h"
+#include "OakFoliageGenerator.h"
+#include "BirchFoliageGenerator.h"
+
 using namespace TreeUtilities;
 
 LightEstimator* TreeUtilities::TreeManager::_LightEstimator;
@@ -26,7 +33,7 @@ bool TreeUtilities::TreeManager::_Ready;
 
 void InternodeData::OnGui()
 {
-	for(int i = 0; i < Buds.size(); i++)
+	for (int i = 0; i < Buds.size(); i++)
 	{
 		ImGui::Text(("Bud " + std::to_string(i)).c_str());
 		ImGui::Text(Buds[i].IsApical ? "Apical" : "Lateral");
@@ -47,7 +54,7 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& internode, std::vec
 	glm::vec3 newNormalDir = normal;
 	//glm::vec3 dir = info.DesiredGlobalRotation * glm::vec3(0.0f, 0.0f, -1.0f);
 	//newNormalDir = glm::cross(glm::cross(dir, newNormalDir), dir);
-	
+
 	auto list = EntityManager::GetPrivateComponent<InternodeData>(internode);
 	auto step = list->get()->step;
 	//For stitching
@@ -137,23 +144,23 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& internode, std::vec
 				//Down triangle
 				indices.push_back(vertexIndex + (ringIndex - 1) * step + i);
 				indices.push_back(vertexIndex + (ringIndex - 1) * step + i + 1);
-				indices.push_back(vertexIndex + (ringIndex) * step + i);
+				indices.push_back(vertexIndex + (ringIndex)*step + i);
 				//Up triangle
-				indices.push_back(vertexIndex + (ringIndex) * step + i + 1);
-				indices.push_back(vertexIndex + (ringIndex) * step + i);
+				indices.push_back(vertexIndex + (ringIndex)*step + i + 1);
+				indices.push_back(vertexIndex + (ringIndex)*step + i);
 				indices.push_back(vertexIndex + (ringIndex - 1) * step + i + 1);
 			}
 			//Down triangle
 			indices.push_back(vertexIndex + (ringIndex - 1) * step + step - 1);
 			indices.push_back(vertexIndex + (ringIndex - 1) * step);
-			indices.push_back(vertexIndex + (ringIndex) * step + step - 1);
+			indices.push_back(vertexIndex + (ringIndex)*step + step - 1);
 			//Up triangle
-			indices.push_back(vertexIndex + (ringIndex) * step);
-			indices.push_back(vertexIndex + (ringIndex) * step + step - 1);
+			indices.push_back(vertexIndex + (ringIndex)*step);
+			indices.push_back(vertexIndex + (ringIndex)*step + step - 1);
 			indices.push_back(vertexIndex + (ringIndex - 1) * step);
 		}
 	}
-	
+
 	EntityManager::ForEachChild(internode, [&vertices, &indices, &newNormalDir, resolution, step](Entity child)
 		{
 			SimpleMeshGenerator(child, vertices, indices, newNormalDir, resolution, step);
@@ -201,16 +208,16 @@ void TreeUtilities::TreeManager::Init()
 	leafProgram->Link();
 	delete standardvert;
 	delete standardfrag;
-	
+
 	SemanticTreeBranchMaterial = std::make_shared<Material>();
 	SemanticTreeBranchMaterial->SetProgram(branchProgram);
 	SemanticTreeLeafMaterial = std::make_shared<Material>();
 	SemanticTreeLeafMaterial->SetProgram(leafProgram);
-	
+
 	_InternodeArchetype = EntityManager::CreateEntityArchetype(
 		"Internode",
 		LocalToWorld(), Connection(),
-		Illumination(), 
+		Illumination(),
 		InternodeIndex(), InternodeInfo(), TreeIndex()
 	);
 	_TreeArchetype = EntityManager::CreateEntityArchetype(
@@ -218,7 +225,7 @@ void TreeUtilities::TreeManager::Init()
 		LocalToWorld(),
 		TreeIndex(), TreeInfo(), TreeAge(),
 		TreeParameters()
-		);
+	);
 
 	_InternodeQuery = EntityManager::CreateEntityQuery();
 	EntityManager::SetEntityQueryAllFilters(_InternodeQuery, InternodeInfo());
@@ -242,7 +249,7 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::DragInt("Iterations left", (int*)((char*)data + sizeof(int)));
 		}
 	);
-	
+
 	EditorManager::RegisterComponentDataInspector<TreeIndex>(
 		[](ComponentBase* data, bool isRoot)
 		{
@@ -256,7 +263,7 @@ void TreeUtilities::TreeManager::Init()
 			auto tps = static_cast<TreeParameters*>(data);
 			ImGui::DragInt("Seed", &tps->Seed);
 			ImGui::DragInt("Age", &tps->Age);
-			
+
 			ImGui::DragInt("Lateral Bud Number", &tps->LateralBudPerNode);
 			ImGui::DragFloat("Apical Angle Var", &tps->VarianceApicalAngle);
 			ImGui::DragFloat2("Branching Angle M/Var", &tps->BranchingAngleMean);
@@ -276,25 +283,10 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::DragFloat2("Lighting Factor A/L", &tps->ApicalBudLightingFactor);
 			ImGui::DragFloat2("Thickness End/Fac", &tps->EndNodeThickness);
 			ImGui::Spacing();
-			ImGui::DragInt("FoliageType", &tps->FoliageType);			
+			ImGui::DragInt("FoliageType", &tps->FoliageType);
 		}
 	);
-	EditorManager::RegisterComponentDataInspector<WillowFoliageInfo>(
-		[](ComponentBase* data, bool isRoot)
-		{
-			auto foliageInfo = static_cast<WillowFoliageInfo*>(data);
-			ImGui::DragFloat("Inhibitor Limit", &foliageInfo->InhibitorLimit);
-			ImGui::DragFloat("Dist Mean", &foliageInfo->DownDistanceMean);
-			ImGui::DragFloat("Dist Var", &foliageInfo->DownDistanceVariance);
-			ImGui::DragFloat("Low Limit", &foliageInfo->LowLimit);
-			ImGui::DragFloat("Push Dist", &foliageInfo->PushDistance);
-			ImGui::DragFloat("Thickness", &foliageInfo->Thickness);
-			ImGui::DragFloat("Bend Angle", &foliageInfo->BendAngleMean);
-			ImGui::DragInt("Subdiv Amount", &foliageInfo->SubdivisionAmount);
-			ImGui::DragInt("Leaf Amount", &foliageInfo->LeafAmount);
-			ImGui::DragFloat3("Leaf Size", (float*)(void*)&foliageInfo->LeafSize);
-		}
-	);
+
 	EditorManager::RegisterComponentDataInspector<InternodeInfo>(
 		[](ComponentBase* data, bool isRoot)
 		{
@@ -357,7 +349,7 @@ void TreeUtilities::TreeManager::Init()
 				ImGui::Text(("ParentAngle: " + std::to_string(internodeInfo->ParentAngle)).c_str());
 				ImGui::TreePop();
 			}
-			
+
 			if (ImGui::TreeNode("Transform related")) {
 				ImGui::Text(("IsMainChild: " + std::string(internodeInfo->IsMainChild ? "Yes" : "No")).c_str());
 				ImGui::InputFloat4("Parent translation", (float*)(void*)&internodeInfo->ParentTranslation.x, "%.3f", ImGuiInputTextFlags_ReadOnly);
@@ -374,7 +366,7 @@ void TreeUtilities::TreeManager::Init()
 
 				ImGui::TreePop();
 			}
-			if(ImGui::TreeNode("Crown Shyness"))
+			if (ImGui::TreeNode("Crown Shyness"))
 			{
 				ImGui::Text(("CrownShyness: " + std::to_string(internodeInfo->CrownShyness)).c_str());
 				ImGui::TreePop();
@@ -444,7 +436,7 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 	std::vector<Entity> internodes;
 	_InternodeQuery.ToEntityArray(internodes);
 	GetLightEstimator()->TakeSnapShot(true);
-	EntityManager::ForEach<Illumination, TreeIndex>(_InternodeQuery, [](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index) 
+	EntityManager::ForEach<Illumination, TreeIndex>(_InternodeQuery, [](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index)
 		{
 			illumination->LightDir = glm::vec3(0);
 			illumination->Value = 0;
@@ -489,7 +481,7 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 }
 
 
-Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial)
+Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters& treeParameters)
 {
 	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
 	EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<TreeData>()));
@@ -498,6 +490,33 @@ Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurf
 	auto mmc = std::make_unique<MeshRenderer>();
 	mmc->Material = std::move(treeSurfaceMaterial);
 	EntityManager::SetPrivateComponent(entity, std::move(mmc));
+	switch (treeParameters.FoliageType)
+	{
+	case 0:
+		EntityManager::SetPrivateComponent(entity, std::make_unique<DefaultFoliageGenerator>());
+		break;
+	case 1:
+		EntityManager::SetPrivateComponent(entity, std::make_unique<AcaciaFoliageGenerator>());
+		break;
+	case 2:
+		EntityManager::SetPrivateComponent(entity, std::make_unique<WillowFoliageGenerator>());
+		break;
+	case 3:
+		EntityManager::SetPrivateComponent(entity, std::make_unique<PineFoliageGenerator>());
+		break;
+	case 4:
+		EntityManager::SetPrivateComponent(entity, std::make_unique<MapleFoliageGenerator>());
+		break;
+	case 5:
+		EntityManager::SetPrivateComponent(entity, std::make_unique<AppleFoliageGenerator>());
+		break;
+	case 6:
+		EntityManager::SetPrivateComponent(entity, std::make_unique<OakFoliageGenerator>());
+		break;
+	case 7:
+		EntityManager::SetPrivateComponent(entity, std::make_unique<BirchFoliageGenerator>());
+		break;
+	}
 	_TreeIndex.Value++;
 	return entity;
 }
@@ -508,7 +527,7 @@ void TreeManager::DeleteAllTrees()
 {
 	std::vector<Entity> trees;
 	_TreeQuery.ToEntityArray(trees);
-	for(auto& tree : trees)
+	for (auto& tree : trees)
 	{
 		EntityManager::DeleteEntity(tree);
 	}
@@ -604,11 +623,11 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	std::mutex creationM;
 	glm::mat4 treeTransform = EntityManager::GetComponentData<LocalToWorld>(treeEntity).Value;
 	//Prepare ring mesh.
-	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [&creationM, resolution, subdivision, treeTransform](int i, Entity internode, InternodeInfo* info) 
+	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [&creationM, resolution, subdivision, treeTransform](int i, Entity internode, InternodeInfo* info)
 		{
 			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(internode))) return;
 			auto list = EntityManager::GetPrivateComponent<InternodeData>(internode);
-		
+
 			list->get()->Rings.clear();
 			glm::quat parentRotation = info->ParentRotation;
 			glm::vec3 parentTranslation = info->ParentTranslation;
@@ -620,7 +639,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			glm::vec3 skew;
 			glm::vec4 perspective;
 			glm::decompose(info->GlobalTransform, scale, rotation, translation, skew, perspective);
-			
+
 			glm::vec3 parentDir = parentRotation * glm::vec3(0, 0, -1);
 			glm::vec3 dir = rotation * glm::vec3(0, 0, -1);
 			glm::vec3 mainChildDir = info->MainChildRotation * glm::vec3(0, 0, -1);
@@ -662,8 +681,8 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	std::vector<unsigned> indices;
 
 	auto internodeEntity = EntityManager::GetChildren(treeEntity).at(0);
-	
-	if(EntityManager::GetChildrenAmount(internodeEntity) != 0){
+
+	if (EntityManager::GetChildrenAmount(internodeEntity) != 0) {
 		SimpleMeshGenerator(EntityManager::GetChildren(internodeEntity).at(0), vertices, indices, glm::vec3(1, 0, 0), resolution);
 		mmc->get()->Mesh = std::make_shared<Mesh>();
 		mmc->get()->Mesh->SetVertices(17, vertices, indices, true);

@@ -14,8 +14,9 @@ TreeUtilities::PineFoliageGenerator::PineFoliageGenerator()
 	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
 }
 
-void TreeUtilities::PineFoliageGenerator::Generate(Entity tree)
+void TreeUtilities::PineFoliageGenerator::Generate()
 {
+	const auto tree = GetOwner();
 	Entity foliageEntity;
 	LocalToWorld treeTransform = EntityManager::GetComponentData<LocalToWorld>(tree);
 	bool found = false;
@@ -96,7 +97,7 @@ void TreeUtilities::PineFoliageGenerator::Generate(Entity tree)
 	}
 }
 
-void TreeUtilities::PineFoliageGenerator::OnParamGui()
+void TreeUtilities::PineFoliageGenerator::OnGui()
 {
 	ImGui::DragFloat("Inhibitor Limit", &_DefaultFoliageInfo.InhibitorLimit, 0.01f, 0);
 	ImGui::DragFloat("Illumination Limit", &_DefaultFoliageInfo.IlluminationLimit, 0.01f, 0);

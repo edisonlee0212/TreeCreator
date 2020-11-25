@@ -89,9 +89,9 @@ TreeUtilities::OakFoliageGenerator::OakFoliageGenerator()
 }
 
 
-void TreeUtilities::OakFoliageGenerator::Generate(Entity tree)
-
+void TreeUtilities::OakFoliageGenerator::Generate()
 {
+	const auto tree = GetOwner();
 	LocalToWorld treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(tree);
 	Entity foliageEntity;
 	LocalToWorld treeTransform = EntityManager::GetComponentData<LocalToWorld>(tree);
@@ -127,7 +127,7 @@ void TreeUtilities::OakFoliageGenerator::Generate(Entity tree)
 	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeLocalToWorld.Value, particleSys->get()->Matrices, true);
 }
 
-void TreeUtilities::OakFoliageGenerator::OnParamGui()
+void TreeUtilities::OakFoliageGenerator::OnGui()
 {
 	ImGui::DragFloat2("Leaf Size XY", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f);
 	ImGui::DragFloat("LeafIlluminationLimit", &_DefaultFoliageInfo.LeafIlluminationLimit, 0.01f);

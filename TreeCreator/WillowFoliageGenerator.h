@@ -31,7 +31,7 @@ namespace TreeUtilities {
 		void SimpleMeshGenerator(Branchlet& branchlet, std::vector<Vertex>& vertices, std::vector<unsigned>& indices);
 	public:
 		WillowFoliageGenerator();
-		void Generate(Entity tree) override;
-		void OnParamGui() override;
+		void Generate() override;
+		void OnGui() override;
 	};
 }

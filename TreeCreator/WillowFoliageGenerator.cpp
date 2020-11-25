@@ -26,8 +26,9 @@ TreeUtilities::WillowFoliageGenerator::WillowFoliageGenerator()
 	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
 }
 
-void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
+void TreeUtilities::WillowFoliageGenerator::Generate()
 {
+	const auto tree = GetOwner();
 	Entity foliageEntity;
 	bool found = false;
 	TreeIndex ti = EntityManager::GetComponentData<TreeIndex>(tree);
@@ -201,7 +202,7 @@ void TreeUtilities::WillowFoliageGenerator::SimpleMeshGenerator(Branchlet& branc
 	}
 }
 
-void TreeUtilities::WillowFoliageGenerator::OnParamGui()
+void TreeUtilities::WillowFoliageGenerator::OnGui()
 {
 	ImGui::DragFloat("Inhibitor Limit", &_DefaultFoliageInfo.InhibitorLimit, 0.01f);
 	ImGui::DragFloat("Dist Mean", &_DefaultFoliageInfo.DownDistanceMean, 0.01f);

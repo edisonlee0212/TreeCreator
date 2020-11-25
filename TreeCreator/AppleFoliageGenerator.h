@@ -28,8 +28,8 @@ namespace TreeUtilities {
 		void GenerateLeaves(Entity& internode, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
 	public:
 		AppleFoliageGenerator();
-		void Generate(Entity tree) override;
-		void OnParamGui() override;
+		void Generate() override;
+		void OnGui() override;
     };
 
 }

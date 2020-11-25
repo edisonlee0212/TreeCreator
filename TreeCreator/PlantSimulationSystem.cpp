@@ -556,7 +556,7 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 
 Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters treeParameters, glm::vec3 position, bool enabled)
 {
-	auto treeEntity = TreeManager::CreateTree(std::move(treeSurfaceMaterial));
+	auto treeEntity = TreeManager::CreateTree(std::move(treeSurfaceMaterial), treeParameters);
 	Entity internode = TreeManager::CreateInternode(EntityManager::GetComponentData<TreeIndex>(treeEntity), treeEntity);
 #pragma region Position & Style
 
@@ -1361,7 +1361,33 @@ void PlantSimulationSystem::GenerateLeavesForAllTrees(std::vector<Entity>& trees
 {
 	for (auto& tree : trees) {
 		TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
-		_FoliageGenerators[treeParameters.FoliageType]->Generate(tree);
+		switch (treeParameters.FoliageType)
+		{
+		case 0:
+			EntityManager::GetPrivateComponent<DefaultFoliageGenerator>(tree)->get()->Generate();
+			break;
+		case 1:
+			EntityManager::GetPrivateComponent<AcaciaFoliageGenerator>(tree)->get()->Generate();
+			break;
+		case 2:
+			EntityManager::GetPrivateComponent<WillowFoliageGenerator>(tree)->get()->Generate();
+			break;
+		case 3:
+			EntityManager::GetPrivateComponent<PineFoliageGenerator>(tree)->get()->Generate();
+			break;
+		case 4:
+			EntityManager::GetPrivateComponent<MapleFoliageGenerator>(tree)->get()->Generate();
+			break;
+		case 5:
+			EntityManager::GetPrivateComponent<AppleFoliageGenerator>(tree)->get()->Generate();
+			break;
+		case 6:
+			EntityManager::GetPrivateComponent<OakFoliageGenerator>(tree)->get()->Generate();
+			break;
+		case 7:
+			EntityManager::GetPrivateComponent<BirchFoliageGenerator>(tree)->get()->Generate();
+			break;
+		}
 	}
 }
 
@@ -1386,14 +1412,6 @@ void PlantSimulationSystem::RefreshTrees()
 
 void TreeUtilities::PlantSimulationSystem::OnCreate()
 {
-	_FoliageGenerators.push_back(std::make_shared<DefaultFoliageGenerator>());
-	_FoliageGenerators.push_back(std::make_shared<AcaciaFoliageGenerator>());
-	_FoliageGenerators.push_back(std::make_shared<WillowFoliageGenerator>());
-	_FoliageGenerators.push_back(std::make_shared<PineFoliageGenerator>());
-	_FoliageGenerators.push_back(std::make_shared<MapleFoliageGenerator>());
-	_FoliageGenerators.push_back(std::make_shared<AppleFoliageGenerator>());
-	_FoliageGenerators.push_back(std::make_shared<OakFoliageGenerator>());
-	_FoliageGenerators.push_back(std::make_shared<BirchFoliageGenerator>());
 	_InternodeSystem = TreeManager::GetInternodeSystem();
 	_getcwd(_CurrentWorkingDir, 256);
 	_TreeQuery = TreeManager::GetTreeQuery();
@@ -1928,9 +1946,7 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 					ImGui::Separator();
 					ImGui::Text("Foliage Type:");
 					static const char* FoliageTypes[]{ "Default", "Acacia", "Willow", "Pine", "Maple", "Apple", "Oak", "Birch" };
-					ImGui::Combo("Display mode", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType, FoliageTypes, IM_ARRAYSIZE(FoliageTypes));
-					_FoliageGenerators[_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType]->OnParamGui();
-					
+					ImGui::Combo("Foliage type", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType, FoliageTypes, IM_ARRAYSIZE(FoliageTypes));
 #pragma endregion
 				}
 				else {

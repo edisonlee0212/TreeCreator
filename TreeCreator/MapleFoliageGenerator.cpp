@@ -14,8 +14,9 @@ TreeUtilities::MapleFoliageGenerator::MapleFoliageGenerator()
 	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
 }
 
-void TreeUtilities::MapleFoliageGenerator::Generate(Entity tree)
+void TreeUtilities::MapleFoliageGenerator::Generate()
 {
+	const auto tree = GetOwner();
 	Entity foliageEntity;
 	LocalToWorld treeTransform = EntityManager::GetComponentData<LocalToWorld>(tree);
 	bool found = false;
@@ -92,7 +93,7 @@ void TreeUtilities::MapleFoliageGenerator::Generate(Entity tree)
 	}
 }
 
-void TreeUtilities::MapleFoliageGenerator::OnParamGui()
+void TreeUtilities::MapleFoliageGenerator::OnGui()
 {
 	ImGui::DragFloat("Inhibitor Limit", &_DefaultFoliageInfo.InhibitorLimit, 0.01f, 0);
 	ImGui::DragFloat("Illumination Limit", &_DefaultFoliageInfo.IlluminationLimit, 0.01f, 0);

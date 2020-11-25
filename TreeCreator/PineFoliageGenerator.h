@@ -21,7 +21,7 @@ namespace TreeUtilities {
 		std::shared_ptr<Material> _LeafMaterial;
 	public:
 		PineFoliageGenerator();
-		void Generate(Entity tree) override;
-		void OnParamGui() override;
+		void Generate() override;
+		void OnGui() override;
 	};
 }

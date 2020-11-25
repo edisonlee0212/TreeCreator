@@ -14,7 +14,6 @@ namespace TreeUtilities {
 		public SystemBase
 	{
 		friend class ImageCollectionSystem;
-		std::vector<std::shared_ptr<FoliageGeneratorBase>> _FoliageGenerators;
 		float _GrowthTimer;
 #pragma region GUI Related
 		
@@ -64,7 +63,6 @@ namespace TreeUtilities {
 		void ResumeGrowth();
 		void PauseGrowth();
 	public:
-		
 		static void SetAllInternodeActivated(Entity tree, bool value);
 		static void ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up);
 		void GenerateLeavesForAllTrees(std::vector<Entity>& trees);
@@ -84,6 +82,4 @@ namespace TreeUtilities {
 		Entity CreateTree(TreeParameters parameters, glm::vec3 position, bool enabled = true);
 		void CreateDefaultTree();
 	};
-
-	
 }

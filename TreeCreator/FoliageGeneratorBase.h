@@ -10,11 +10,10 @@ namespace TreeUtilities {
 		std::vector<glm::mat4> LeafLocalTransforms;
 		glm::vec3 Normal;
 	};
-	class FoliageGeneratorBase
+	class FoliageGeneratorBase : public PrivateComponentBase
 	{
 	public:
-		virtual void Generate(Entity treeEntity) = 0;
-		virtual void OnParamGui() = 0;
+		virtual void Generate() = 0;
 	};
 
 	struct DefaultFoliageInfo : ComponentBase
@@ -40,7 +39,7 @@ namespace TreeUtilities {
 		void GenerateLeaves(Entity& internode, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
 	public:
 		DefaultFoliageGenerator();
-		void Generate(Entity tree) override;
-		void OnParamGui() override;
+		void Generate() override;
+		void OnGui() override;
 	};
 }

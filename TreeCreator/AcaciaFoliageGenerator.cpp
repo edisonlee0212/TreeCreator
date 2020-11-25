@@ -15,8 +15,9 @@ TreeUtilities::AcaciaFoliageGenerator::AcaciaFoliageGenerator()
 	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
 }
 
-void TreeUtilities::AcaciaFoliageGenerator::Generate(Entity tree)
+void TreeUtilities::AcaciaFoliageGenerator::Generate()
 {
+	const auto tree = GetOwner();
 	Entity foliageEntity;
 	LocalToWorld treeTransform = EntityManager::GetComponentData<LocalToWorld>(tree);
 	bool found = false;
@@ -89,7 +90,7 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate(Entity tree)
 	}
 }
 
-void TreeUtilities::AcaciaFoliageGenerator::OnParamGui()
+void TreeUtilities::AcaciaFoliageGenerator::OnGui()
 {
 	ImGui::DragInt("Order Limit", &_DefaultFoliageInfo.OrderLimit, 0.01f, 0);
 	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f, 0);

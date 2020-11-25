@@ -315,7 +315,7 @@ namespace TreeUtilities {
 		static std::shared_ptr<Mesh> GetMeshForTree(Entity treeEntity);
 		static void GenerateSimpleMeshForTree(Entity treeEntity, float resolution, float subdivision = 1.0f);
 		static void DeleteAllTrees();
-		static Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial);
+		static Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters& treeParameters);
 		static Entity CreateInternode(TreeIndex treeIndex, Entity parentEntity);
 
 		static void ExportMeshToOBJ(Entity treeEntity, std::string filename);
