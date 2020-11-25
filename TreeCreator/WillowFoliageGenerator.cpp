@@ -44,10 +44,10 @@ void TreeUtilities::WillowFoliageGenerator::Generate(Entity tree)
 	if (!found)
 	{
 		foliageEntity = EntityManager::CreateEntity(_Archetype, "Foliage");
-		
 		auto mmc = std::make_unique<MeshRenderer>();
 		mmc->Material = semantic ? TreeManager::SemanticTreeBranchMaterial : _BranchletMaterial;
-
+		mmc->ForwardRendering = true;
+		
 		auto particleSys = std::make_unique<Particles>();
 		particleSys->Material = semantic ? TreeManager::SemanticTreeLeafMaterial : _LeafMaterial;
 		particleSys->Mesh = Default::Primitives::Quad;

@@ -1,24 +1,10 @@
-﻿#pragma once
-#include "InternodeRingSegment.h"
+#pragma once
+#include "FoliageGeneratorBase.h"
 #include "UniEngine.h"
-#include "pugixml/pugixml.hpp"
+
 using namespace UniEngine;
 namespace TreeUtilities {
-	struct TreeParameters;
-	struct Branchlet
-	{
-		std::vector<InternodeRingSegment> Rings;
-		std::vector<glm::mat4> LeafLocalTransforms;
-		glm::vec3 Normal;
-	};
-	class FoliageGeneratorBase
-	{
-	public:
-		virtual void Generate(Entity treeEntity) = 0;
-		virtual void OnParamGui() = 0;
-	};
-
-	struct DefaultFoliageInfo : ComponentBase
+	struct AppleFoliageInfo : ComponentBase
 	{
 		glm::vec2 LeafSize = glm::vec2(0.1f);
 		float LeafIlluminationLimit = 0;
@@ -31,17 +17,19 @@ namespace TreeUtilities {
 		float LeafGravitropism = 1.0f;
 		float LeafDistance = 0;
 	};
-
-	class DefaultFoliageGenerator : public FoliageGeneratorBase
-	{
-		DefaultFoliageInfo _DefaultFoliageInfo;
+	
+    class AppleFoliageGenerator :
+        public FoliageGeneratorBase
+    {
+		AppleFoliageInfo _DefaultFoliageInfo;
 		EntityArchetype _Archetype;
 		std::shared_ptr<Texture2D> _LeafSurfaceTex;
 		std::shared_ptr<Material> _LeafMaterial;
 		void GenerateLeaves(Entity& internode, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
 	public:
-		DefaultFoliageGenerator();
+		AppleFoliageGenerator();
 		void Generate(Entity tree) override;
 		void OnParamGui() override;
-	};
+    };
+
 }

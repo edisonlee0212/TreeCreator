@@ -120,6 +120,15 @@
     <ClCompile Include="AcaciaFoliageGenerator.cpp">
       <Filter>Source Files\TreeUtilities\Foliage</Filter>
     </ClCompile>
+    <ClCompile Include="AppleFoliageGenerator.cpp">
+      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+    </ClCompile>
+    <ClCompile Include="BirchFoliageGenerator.cpp">
+      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+    </ClCompile>
+    <ClCompile Include="OakFoliageGenerator.cpp">
+      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkSystem.h">
@@ -219,6 +228,15 @@
       <Filter>Header Files\TreeUtilities\Foliage</Filter>
     </ClInclude>
     <ClInclude Include="AcaciaFoliageGenerator.h">
+      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+    </ClInclude>
+    <ClInclude Include="AppleFoliageGenerator.h">
+      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+    </ClInclude>
+    <ClInclude Include="BirchFoliageGenerator.h">
+      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+    </ClInclude>
+    <ClInclude Include="OakFoliageGenerator.h">
       <Filter>Header Files\TreeUtilities\Foliage</Filter>
     </ClInclude>
   </ItemGroup>

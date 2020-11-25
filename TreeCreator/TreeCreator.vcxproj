@@ -101,7 +101,9 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AcaciaFoliageGenerator.cpp" />
+    <ClCompile Include="AppleFoliageGenerator.cpp" />
     <ClCompile Include="BezierCurve.cpp" />
+    <ClCompile Include="BirchFoliageGenerator.cpp" />
     <ClCompile Include="FoliageGeneratorBase.cpp" />
     <ClCompile Include="ImageCollectionSystem.cpp" />
     <ClCompile Include="InternodeSystem.cpp" />
@@ -110,6 +112,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClCompile Include="LeafSegment.cpp" />
     <ClCompile Include="LightEstimator.cpp" />
     <ClCompile Include="MapleFoliageGenerator.cpp" />
+    <ClCompile Include="OakFoliageGenerator.cpp" />
     <ClCompile Include="PineFoliageGenerator.cpp" />
     <ClCompile Include="PlantSimulationSystem.cpp" />
     <ClCompile Include="NetworkSystem.cpp" />
@@ -126,7 +129,9 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AcaciaFoliageGenerator.h" />
+    <ClInclude Include="AppleFoliageGenerator.h" />
     <ClInclude Include="BezierCurve.h" />
+    <ClInclude Include="BirchFoliageGenerator.h" />
     <ClInclude Include="FoliageGeneratorBase.h" />
     <ClInclude Include="ImageCollectionSystem.h" />
     <ClInclude Include="InternodeSystem.h" />
@@ -136,6 +141,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClInclude Include="LightEstimator.h" />
     <ClInclude Include="MapleFoliageGenerator.h" />
     <ClInclude Include="NetworkSystem.h" />
+    <ClInclude Include="OakFoliageGenerator.h" />
     <ClInclude Include="PineFoliageGenerator.h" />
     <ClInclude Include="PlantSimulationSystem.h" />
     <ClInclude Include="CrownSurfaceRecon.h" />

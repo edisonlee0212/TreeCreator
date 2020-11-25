@@ -20,6 +20,7 @@ namespace TreeUtilities {
 		std::shared_ptr<Material> _LeafMaterial;
 	public:
 		AcaciaFoliageGenerator();
+		
 		void Generate(Entity tree) override;
 		void OnParamGui() override;
 	};

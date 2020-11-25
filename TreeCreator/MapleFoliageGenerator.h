@@ -21,6 +21,7 @@ namespace TreeUtilities {
 		std::shared_ptr<Texture2D> _LeafSurfaceTex;
 		std::shared_ptr<Material> _LeafMaterial;
     public:
+    	
 		MapleFoliageGenerator();
 		void Generate(Entity tree) override;
 		void OnParamGui() override;

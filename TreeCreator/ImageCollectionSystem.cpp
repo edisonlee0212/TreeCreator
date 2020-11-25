@@ -92,6 +92,7 @@ void ImageCollectionSystem::Update()
 				mmc->get()->Material = TreeManager::SemanticTreeBranchMaterial;
 				auto p = _CurrentTree.GetPrivateComponent<Particles>();
 				p->get()->ForwardRendering = true;
+				p->get()->BackCulling = false;
 				p->get()->Material = TreeManager::SemanticTreeLeafMaterial;
 			}
 			if(_EnableRandomBackground)
@@ -128,6 +129,7 @@ void ImageCollectionSystem::Update()
 					mmc->get()->Material = TreeManager::SemanticTreeBranchMaterial;
 					auto p = _CurrentTree.GetPrivateComponent<Particles>();
 					p->get()->ForwardRendering = true;
+					p->get()->BackCulling = false;
 					p->get()->Material = TreeManager::SemanticTreeLeafMaterial;
 				}
 				if (_EnableRandomBackground)
@@ -159,7 +161,7 @@ void ImageCollectionSystem::Update()
 				_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->ResizeResolution(320, 320);
 			}else
 			{
-				_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->ResizeResolution(320, 320);
+				_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->ResizeResolution(960, 960);
 			}
 			_Capturing = true;
 		}

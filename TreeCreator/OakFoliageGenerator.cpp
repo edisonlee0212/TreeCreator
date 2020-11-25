@@ -1,11 +1,10 @@
-Ôªø#include "FoliageGeneratorBase.h"
+#include "OakFoliageGenerator.h"
+
 #include "PlantSimulationSystem.h"
-#include <gtx/matrix_decompose.hpp>
 
-#include "TreeManager.h"
+void TreeUtilities::OakFoliageGenerator::GenerateLeaves(Entity& internode, glm::mat4& treeTransform,
+                                                        std::vector<glm::mat4>& leafTransforms, bool isLeft)
 
-void TreeUtilities::DefaultFoliageGenerator::GenerateLeaves(Entity& internode, 
-	glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	Illumination internodeIllumination = EntityManager::GetComponentData<Illumination>(internode);
@@ -18,7 +17,7 @@ void TreeUtilities::DefaultFoliageGenerator::GenerateLeaves(Entity& internode,
 			glm::vec3 skew;
 			glm::vec4 perspective;
 			glm::decompose(treeTransform * internodeInfo.GlobalTransform, scale, rotation, translation, skew, perspective);
-			//x, ÂêëÈò≥ËΩ¥Ôºåy: Ê®™ËΩ¥ÔºåzÔºöroll
+			//x, œÚ—Ù÷·£¨y: ∫·÷·£¨z£∫roll
 			glm::vec3 ls = glm::vec3(_DefaultFoliageInfo.LeafSize.x, 1.0f, _DefaultFoliageInfo.LeafSize.y);
 			auto branchFront = rotation * glm::vec3(0, 0, -1);
 			auto branchUp = rotation * glm::vec3(0, 1, 0);
@@ -74,10 +73,11 @@ void TreeUtilities::DefaultFoliageGenerator::GenerateLeaves(Entity& internode,
 		});
 }
 
-DefaultFoliageGenerator::DefaultFoliageGenerator()
+TreeUtilities::OakFoliageGenerator::OakFoliageGenerator()
+
 {
-	_DefaultFoliageInfo = DefaultFoliageInfo();
-	_Archetype = EntityManager::CreateEntityArchetype("Pine Foliage", LocalToParent(), LocalToWorld(), TreeIndex(), DefaultFoliageInfo());
+	_DefaultFoliageInfo = OakFoliageInfo();
+	_Archetype = EntityManager::CreateEntityArchetype("Pine Foliage", LocalToParent(), LocalToWorld(), TreeIndex(), OakFoliageInfo());
 
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
@@ -88,7 +88,9 @@ DefaultFoliageGenerator::DefaultFoliageGenerator()
 	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
 }
 
-void TreeUtilities::DefaultFoliageGenerator::Generate(Entity tree)
+
+void TreeUtilities::OakFoliageGenerator::Generate(Entity tree)
+
 {
 	LocalToWorld treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(tree);
 	Entity foliageEntity;
@@ -126,7 +128,7 @@ void TreeUtilities::DefaultFoliageGenerator::Generate(Entity tree)
 	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeLocalToWorld.Value, particleSys->get()->Matrices, true);
 }
 
-void TreeUtilities::DefaultFoliageGenerator::OnParamGui()
+void TreeUtilities::OakFoliageGenerator::OnParamGui()
 {
 	ImGui::DragFloat2("Leaf Size XY", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f);
 	ImGui::DragFloat("LeafIlluminationLimit", &_DefaultFoliageInfo.LeafIlluminationLimit, 0.01f);
@@ -139,4 +141,3 @@ void TreeUtilities::DefaultFoliageGenerator::OnParamGui()
 	ImGui::DragFloat("LeafGravitropism", &_DefaultFoliageInfo.LeafGravitropism, 0.01f);
 	ImGui::DragFloat("LeafDistance", &_DefaultFoliageInfo.LeafDistance, 0.01f);
 }
-

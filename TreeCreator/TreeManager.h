@@ -247,16 +247,6 @@ namespace TreeUtilities {
 
 #pragma region Organs
 		int FoliageType = 0;
-		glm::vec2 LeafSize = glm::vec2(0.1f);
-		float LeafIlluminationLimit = 0;
-		float LeafInhibitorFactor = 0;
-		bool IsBothSide = true;
-		int SideLeafAmount = 1;
-		float StartBendingAngle = 45;
-		float BendingAngleIncrement = 0;
-		float LeafPhotoTropism = 999.0f;
-		float LeafGravitropism = 1.0f;
-		float LeafDistance = 0;
 #pragma endregion
 
 	};

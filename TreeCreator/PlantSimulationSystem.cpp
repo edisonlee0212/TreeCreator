@@ -17,7 +17,9 @@
 #include "MapleFoliageGenerator.h"
 #include "PineFoliageGenerator.h"
 #include "WillowFoliageGenerator.h"
-
+#include "AppleFoliageGenerator.h"
+#include "OakFoliageGenerator.h"
+#include "BirchFoliageGenerator.h"
 void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
 
@@ -318,50 +320,6 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 			{
 			_NewTreeParameters[i].FoliageType = std::atoi(parameterNode.first_child().value());
 			}
-			else if (name.compare("LeafSizeX") == 0)
-			{
-				_NewTreeParameters[i].LeafSize.x = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafSizeY") == 0)
-			{
-				_NewTreeParameters[i].LeafSize.y = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafIlluminationLimit") == 0)
-			{
-				_NewTreeParameters[i].LeafIlluminationLimit = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafInhibitorFactor") == 0)
-			{
-				_NewTreeParameters[i].LeafInhibitorFactor = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("IsBothSide") == 0)
-			{
-				_NewTreeParameters[i].IsBothSide = std::atoi(parameterNode.first_child().value()) == 1;
-			}
-			else if (name.compare("SideLeafAmount") == 0)
-			{
-				_NewTreeParameters[i].SideLeafAmount = std::atoi(parameterNode.first_child().value());
-			}
-			else if (name.compare("StartBendingAngle") == 0)
-			{
-				_NewTreeParameters[i].StartBendingAngle = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("BendingAngleIncrement") == 0)
-			{
-				_NewTreeParameters[i].BendingAngleIncrement = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafPhotoTropism") == 0)
-			{
-				_NewTreeParameters[i].LeafPhotoTropism = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafGravitropism") == 0)
-			{
-				_NewTreeParameters[i].LeafGravitropism = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafDistance") == 0)
-			{
-				_NewTreeParameters[i].LeafDistance = std::atof(parameterNode.first_child().value());
-			}
 		}
 		i++;
 	}
@@ -531,50 +489,7 @@ TreeParameters PlantSimulationSystem::LoadParameters(const std::string& path)
 			{
 				retVal.FoliageType = std::atoi(parameterNode.first_child().value());
 			}
-			else if (name.compare("LeafSizeX") == 0)
-			{
-				retVal.LeafSize.x = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafSizeY") == 0)
-			{
-				retVal.LeafSize.y = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafIlluminationLimit") == 0)
-			{
-				retVal.LeafIlluminationLimit = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafInhibitorFactor") == 0)
-			{
-				retVal.LeafInhibitorFactor = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("IsBothSide") == 0)
-			{
-				retVal.IsBothSide = std::atoi(parameterNode.first_child().value()) == 1;
-			}
-			else if (name.compare("SideLeafAmount") == 0)
-			{
-				retVal.SideLeafAmount = std::atoi(parameterNode.first_child().value());
-			}
-			else if (name.compare("StartBendingAngle") == 0)
-			{
-				retVal.StartBendingAngle = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("BendingAngleIncrement") == 0)
-			{
-				retVal.BendingAngleIncrement = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafPhotoTropism") == 0)
-			{
-				retVal.LeafPhotoTropism = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafGravitropism") == 0)
-			{
-				retVal.LeafGravitropism = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("LeafDistance") == 0)
-			{
-				retVal.LeafDistance = std::atof(parameterNode.first_child().value());
-			}
+			
 		}
 	}
 	return retVal;
@@ -630,17 +545,7 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 	output += "\t\t\t<CrownShynessFactor>"; output += std::to_string(treeParameters.CrownShynessFactor) + "</CrownShynessFactor>\n";
 
 	output += "\t\t\t<FoliageType>"; output += std::to_string(treeParameters.FoliageType) + "</FoliageType>\n";
-	output += "\t\t\t<LeafSizeX>"; output += std::to_string(treeParameters.LeafSize.x) + "</LeafSizeX>\n";
-	output += "\t\t\t<LeafSizeY>"; output += std::to_string(treeParameters.LeafSize.y) + "</LeafSizeY>\n";
-	output += "\t\t\t<LeafIlluminationLimit>"; output += std::to_string(treeParameters.LeafIlluminationLimit) + "</LeafIlluminationLimit>\n";
-	output += "\t\t\t<LeafInhibitorFactor>"; output += std::to_string(treeParameters.LeafInhibitorFactor) + "</LeafInhibitorFactor>\n";
-	output += "\t\t\t<IsBothSide>"; output += std::string(treeParameters.IsBothSide ? "1" : "0") + "</IsBothSide>\n";
-	output += "\t\t\t<SideLeafAmount>"; output += std::to_string(treeParameters.SideLeafAmount) + "</SideLeafAmount>\n";
-	output += "\t\t\t<StartBendingAngle>"; output += std::to_string(treeParameters.StartBendingAngle) + "</StartBendingAngle>\n";
-	output += "\t\t\t<BendingAngleIncrement>"; output += std::to_string(treeParameters.BendingAngleIncrement) + "</BendingAngleIncrement>\n";
-	output += "\t\t\t<LeafPhotoTropism>"; output += std::to_string(treeParameters.LeafPhotoTropism) + "</LeafPhotoTropism>\n";
-	output += "\t\t\t<LeafGravitropism>"; output += std::to_string(treeParameters.LeafGravitropism) + "</LeafGravitropism>\n";
-	output += "\t\t\t<LeafDistance>"; output += std::to_string(treeParameters.LeafDistance) + "</LeafDistance>\n";
+	
 
 	output += "\t\t</TreeParameters>\n";
 	ofs.write(output.c_str(), output.size());
@@ -1494,6 +1399,9 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_FoliageGenerators.push_back(std::make_shared<WillowFoliageGenerator>());
 	_FoliageGenerators.push_back(std::make_shared<PineFoliageGenerator>());
 	_FoliageGenerators.push_back(std::make_shared<MapleFoliageGenerator>());
+	_FoliageGenerators.push_back(std::make_shared<AppleFoliageGenerator>());
+	_FoliageGenerators.push_back(std::make_shared<OakFoliageGenerator>());
+	_FoliageGenerators.push_back(std::make_shared<BirchFoliageGenerator>());
 	_InternodeSystem = TreeManager::GetInternodeSystem();
 	_getcwd(_CurrentWorkingDir, 256);
 	_TreeQuery = TreeManager::GetTreeQuery();
@@ -2068,25 +1976,10 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 					ImGui::Spacing();
 					ImGui::Separator();
 					ImGui::Text("Foliage Type:");
-					static const char* FoliageTypes[]{ "Default", "Acacia", "Willow", "Pine", "Maple" };
+					static const char* FoliageTypes[]{ "Default", "Acacia", "Willow", "Pine", "Maple", "Apple", "Oak", "Birch" };
 					ImGui::Combo("Display mode", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType, FoliageTypes, IM_ARRAYSIZE(FoliageTypes));
-					if (_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType == 0)
-					{
-						ImGui::DragFloat2("Leaf Size XY", (float*)(void*)&_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafSize, 0.01f);
-						ImGui::DragFloat("LeafIlluminationLimit", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafIlluminationLimit, 0.01f);
-						ImGui::DragFloat("LeafInhibitorFactor", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafInhibitorFactor, 0.01f);
-						ImGui::Checkbox("IsBothSide", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].IsBothSide);
-						ImGui::DragInt("SideLeafAmount", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].SideLeafAmount, 0.01f);
-						ImGui::DragFloat("StartBendingAngle", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].StartBendingAngle, 0.01f);
-						ImGui::DragFloat("BendingAngleIncrement", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].BendingAngleIncrement, 0.01f);
-						ImGui::DragFloat("LeafPhotoTropism", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafPhotoTropism, 0.01f);
-						ImGui::DragFloat("LeafGravitropism", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafGravitropism, 0.01f);
-						ImGui::DragFloat("LeafDistance", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].LeafDistance, 0.01f);
-					}
-					else
-					{
-						_FoliageGenerators[_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType]->OnParamGui();
-					}
+					_FoliageGenerators[_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType]->OnParamGui();
+					
 #pragma endregion
 				}
 				else {

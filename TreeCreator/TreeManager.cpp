@@ -278,18 +278,7 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::DragFloat2("Lighting Factor A/L", &tps->ApicalBudLightingFactor);
 			ImGui::DragFloat2("Thickness End/Fac", &tps->EndNodeThickness);
 			ImGui::Spacing();
-			ImGui::DragInt("FoliageType", &tps->FoliageType);
-			ImGui::DragFloat2("LeafSize", (float*)(void*)&tps->LeafSize, 0.01f);
-			ImGui::DragFloat("LeafIlluminationLimit", &tps->LeafIlluminationLimit, 0.001f);
-			ImGui::DragFloat("LeafInhibitorFactor", &tps->LeafInhibitorFactor, 0.001f);
-			ImGui::Checkbox("IsBothSize", &tps->IsBothSide);
-			ImGui::DragInt("Side Leaf Amount", &tps->SideLeafAmount);
-			ImGui::DragFloat("StartBendingAngle", &tps->StartBendingAngle);
-			ImGui::DragFloat("BendingAngleIncrement", &tps->BendingAngleIncrement);
-			ImGui::DragFloat("LeafPhotoTropism", &tps->LeafPhotoTropism, 0.01f);
-			ImGui::DragFloat("LeafGravitropism", &tps->LeafGravitropism, 0.01f);
-			ImGui::DragFloat("LeafDistance", &tps->LeafDistance, 0.01f);
-			
+			ImGui::DragInt("FoliageType", &tps->FoliageType);			
 		}
 	);
 	EditorManager::RegisterComponentDataInspector<WillowFoliageInfo>(
