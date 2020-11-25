@@ -44,7 +44,6 @@ namespace TreeUtilities {
 	public:
 		std::vector<Bud> Buds;
 		std::vector<InternodeRingSegment> Rings;
-		std::vector<glm::mat4> LeafLocalTransforms;
 		glm::vec3 NormalDir;
 		int step;
 		void OnGui() override;
@@ -317,7 +316,7 @@ namespace TreeUtilities {
 		static std::shared_ptr<Mesh> GetMeshForTree(Entity treeEntity);
 		static void GenerateSimpleMeshForTree(Entity treeEntity, float resolution, float subdivision = 1.0f);
 		static void DeleteAllTrees();
-		static Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh);
+		static Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial);
 		static Entity CreateInternode(TreeIndex treeIndex, Entity parentEntity);
 
 		static void ExportMeshToOBJ(Entity treeEntity, std::string filename);

@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include "InternodeRingSegment.h"
 #include "UniEngine.h"
-#include "pugixml/pugixml.hpp"
 using namespace UniEngine;
 namespace TreeUtilities {
 	struct TreeParameters;

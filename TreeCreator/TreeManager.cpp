@@ -26,8 +26,6 @@ bool TreeUtilities::TreeManager::_Ready;
 
 void InternodeData::OnGui()
 {
-	ImGui::Text(("Leaf count: " + std::to_string(LeafLocalTransforms.size())).c_str());
-	ImGui::Separator();
 	for(int i = 0; i < Buds.size(); i++)
 	{
 		ImGui::Text(("Bud " + std::to_string(i)).c_str());
@@ -491,15 +489,9 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 }
 
 
-Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh)
+Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial)
 {
 	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
-	auto particleSystem = std::make_unique<Particles>();
-	particleSystem->Matrices.clear();
-	particleSystem->Material = std::move(treeLeafMaterial);
-	particleSystem->Mesh = std::move(treeLeafMesh);
-	particleSystem->BackCulling = false;
-	EntityManager::SetPrivateComponent(entity, std::move(particleSystem));
 	EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<TreeData>()));
 	EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<TreeVolume>()));
 	EntityManager::SetComponentData(entity, _TreeIndex);

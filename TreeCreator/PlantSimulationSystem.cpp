@@ -553,19 +553,10 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 }
 #pragma endregion
 #pragma region Growth
-Entity PlantSimulationSystem::CreateTree(std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh,
-	TreeParameters treeParameters, glm::vec3 position, bool enabled)
-{
-	auto mat = std::make_shared<Material>();
-	mat->SetTexture(_DefaultTreeSurfaceTex1, TextureType::DIFFUSE);
-	mat->SetTexture(_DefaultTreeSurfaceNTex1, TextureType::NORMAL);
-	mat->SetTexture(_DefaultTreeSurfaceSTex1, TextureType::SPECULAR);
-	return CreateTree(mat, treeLeafMaterial, treeLeafMesh, treeParameters, position, enabled);
-}
 
-Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, std::shared_ptr<Material> treeLeafMaterial, std::shared_ptr<Mesh> treeLeafMesh, TreeParameters treeParameters, glm::vec3 position, bool enabled)
+Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters treeParameters, glm::vec3 position, bool enabled)
 {
-	auto treeEntity = TreeManager::CreateTree(treeSurfaceMaterial, treeLeafMaterial, treeLeafMesh);
+	auto treeEntity = TreeManager::CreateTree(std::move(treeSurfaceMaterial));
 	Entity internode = TreeManager::CreateInternode(EntityManager::GetComponentData<TreeIndex>(treeEntity), treeEntity);
 #pragma region Position & Style
 
@@ -616,7 +607,11 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 
 Entity PlantSimulationSystem::CreateTree(TreeParameters parameters, glm::vec3 position, bool enabled)
 {
-	return CreateTree(_DefaultTreeLeafMaterial1, _DefaultTreeLeafMesh, parameters, position, enabled);
+	auto mat = std::make_shared<Material>();
+	mat->SetTexture(_DefaultTreeSurfaceTex1, TextureType::DIFFUSE);
+	mat->SetTexture(_DefaultTreeSurfaceNTex1, TextureType::NORMAL);
+	mat->SetTexture(_DefaultTreeSurfaceSTex1, TextureType::SPECULAR);
+	return CreateTree(mat, parameters, position, enabled);
 }
 
 bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::unique_ptr<TreeVolume>& treeVolume, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform)
@@ -1226,7 +1221,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 
 	EntityManager::SetComponentData(internode, internodeInfo);
 }
-void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft)
+void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform,  bool isLeft)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	Illumination internodeIllumination = EntityManager::GetComponentData<Illumination>(internode);
@@ -1236,9 +1231,9 @@ void TreeUtilities::PlantSimulationSystem::UpdateInternodeResource(Entity& inter
 
 
 
-	EntityManager::ForEachChild(internode, [this, &internodeInfo, &treeParameters, &treeAge, &leafTransforms, &treeTransform, isLeft](Entity child)
+	EntityManager::ForEachChild(internode, [this, &internodeInfo, &treeParameters, &treeAge, &treeTransform, isLeft](Entity child)
 		{
-			UpdateInternodeResource(child, treeParameters, treeAge, treeTransform, leafTransforms, !isLeft);
+			UpdateInternodeResource(child, treeParameters, treeAge, treeTransform, !isLeft);
 			InternodeInfo childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
 			internodeInfo.AccumulatedLight += childNodeInfo.AccumulatedLight;
 			internodeInfo.AccumulatedLength += childNodeInfo.AccumulatedLength;
@@ -1382,10 +1377,7 @@ void PlantSimulationSystem::RefreshTrees()
 		auto treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
 		auto treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
 		auto treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(treeEntity);
-		auto particleSystem = EntityManager::GetPrivateComponent<Particles>(treeEntity);
-		particleSystem->get()->Matrices.clear();
-		UpdateInternodeResource(rootInternode, treeParameters, treeAge, treeLocalToWorld.Value, particleSystem->get()->Matrices, true);
-		particleSystem->get()->RecalculateBoundingBox();
+		UpdateInternodeResource(rootInternode, treeParameters, treeAge, treeLocalToWorld.Value, true);
 		EvaluatePruning(rootInternode, treeParameters, treeAge, treeInfo);
 		if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
 	}
@@ -1420,47 +1412,6 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultTreeSurfaceSTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg"));
 	_DefaultTreeSurfaceTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"));
 	_DefaultTreeSurfaceNTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
-
-	_DefaultTreeLeafMaterial1 = std::make_shared<Material>();
-	_DefaultTreeLeafMaterial1->SetTransparentDiscard(true);
-	_DefaultTreeLeafMaterial1->SetTransparentDiscardLimit(0.1f);
-
-	_DefaultTreeLeafMaterial1->SetMaterialProperty("material.shininess", 32.0f);
-	_DefaultTreeLeafMaterial1->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	auto textureDiffuseLeaf1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/Leaf/PrunusAvium/A/level0.png"));
-	//textureDiffuseLeaf1->LoadTexture(FileIO::GetResourcePath("Textures/green.png"), "");
-	auto textureNormalLeaf1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
-	_DefaultTreeLeafMaterial1->SetTexture(textureDiffuseLeaf1, TextureType::DIFFUSE);
-	//_DefaultTreeLeafMaterial1->Textures2Ds()->push_back(textureNormalLeaf1, TextureType::NORMAL);
-
-	std::vector<Vertex> leafVertices;
-	std::vector<unsigned> leafIndices;
-	Vertex v;
-	v.Position = glm::vec3(-1, 0, 0);
-	v.TexCoords0 = glm::vec2(0, 0);
-	leafVertices.push_back(v);
-	v.Position = glm::vec3(-1, 0, -2);
-	v.TexCoords0 = glm::vec2(0, 1);
-	leafVertices.push_back(v);
-	v.Position = glm::vec3(1, 0, 0);
-	v.TexCoords0 = glm::vec2(1, 0);
-	leafVertices.push_back(v);
-	v.Position = glm::vec3(1, 0, -2);
-	v.TexCoords0 = glm::vec2(1, 1);
-	leafVertices.push_back(v);
-
-	leafIndices.push_back(0);
-	leafIndices.push_back(1);
-	leafIndices.push_back(2);
-
-	leafIndices.push_back(3);
-	leafIndices.push_back(2);
-	leafIndices.push_back(1);
-	_DefaultTreeLeafMesh = std::make_shared<Mesh>();
-	_DefaultTreeLeafMesh->SetVertices((unsigned)VertexAttribute::Position | (unsigned)VertexAttribute::TexCoord0,
-		leafVertices, leafIndices);
-
-	//_DefaultTreeLeafMesh = Default::Primitives::Quad;
 
 	_NewTreeParameters.resize(1);
 	LoadDefaultTreeParameters(1, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);
@@ -1515,7 +1466,7 @@ void PlantSimulationSystem::CreateDefaultTree()
 {
 	TreeParameters tps;
 	LoadDefaultTreeParameters(1, tps);
-	CreateTree(_DefaultTreeLeafMaterial1, _DefaultTreeLeafMesh, tps, glm::vec3(0.0f), true);
+	CreateTree(tps, glm::vec3(0.0f), true);
 }
 void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset, TreeParameters& tps)
 {
@@ -1997,7 +1948,7 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 				if (ImGui::Button("OK", ImVec2(120, 0))) {
 					//Create tree here.
 					for (auto i = 0; i < _NewTreeAmount; i++) {
-						CreateTree(_DefaultTreeLeafMaterial1, _DefaultTreeLeafMesh, _NewTreeParameters[i], _NewTreePositions[i], true);
+						CreateTree(_NewTreeParameters[i], _NewTreePositions[i], true);
 					}
 					ImGui::CloseCurrentPopup();
 				}
