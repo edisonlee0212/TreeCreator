@@ -22,7 +22,7 @@ int main()
 	RenderManager::SetSSAOKernelBias(0.08);
 	RenderManager::SetSSAOKernelRadius(0.05f);
 	RenderManager::SetSSAOSampleSize(32);
-	RenderManager::SetAmbientLight(0.35f);
+	RenderManager::SetAmbientLight(0.6f);
 	RenderManager::SetSSAOFactor(10.0f);
 	RenderManager::SetShadowMapResolution(4096);
 	RenderManager::SetStableFit(false);
@@ -103,9 +103,7 @@ int main()
 		char dir[256] = {};
 		_getcwd(dir, 256);
 		ImageCaptureSequence sequence;
-		sequence.Amount = 1;
-		sequence.EnableSemanticOutput = false;
-		sequence.EnableRandomBackground = false;
+		sequence.Amount = 10;
 		
 		sequence.CameraPos = glm::vec3(0, 2, 30);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);

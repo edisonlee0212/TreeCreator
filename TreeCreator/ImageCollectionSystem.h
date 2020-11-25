@@ -3,6 +3,15 @@
 using namespace UniEngine;
 using namespace TreeUtilities;
 namespace TreeUtilities {
+	enum class ImageCollectionSystemStatus
+	{
+		Idle,
+		Growing,
+		CaptureOriginal,
+		CaptureRandom,
+		CaptureSemantic
+	};
+	
 	struct ImageCaptureSequence
 	{
 		glm::vec3 CameraPos;
@@ -10,23 +19,16 @@ namespace TreeUtilities {
 		std::string ParamPath;
 		int Amount;
 		std::string OutputPath;
-		bool EnableSemanticOutput = false;
-		bool EnableRandomBackground = false;
 	};
 	class ImageCollectionSystem : public SystemBase
 	{
-		TreeParameters _CurrentTreeParameters;
+		ImageCollectionSystemStatus _Status = ImageCollectionSystemStatus::Idle;
+		TreeParameters _CurrentTreeParameters = TreeParameters();
 		std::string _StorePath;
 		int _RemainingAmount = 0;
-		bool _Capturing = false;
 		Entity _CurrentTree;
-
 		Entity _Background;
 		std::shared_ptr<Material> _BackgroundMaterial;
-
-		bool _Running = false;
-		bool _EnableSemanticMask = false;
-		bool _EnableRandomBackground = false;
 		PlantSimulationSystem* _PlantSimulationSystem = nullptr;
 		Entity _CameraEntity;
 		glm::vec3 _CameraPosition = glm::vec3(0);
@@ -39,5 +41,6 @@ namespace TreeUtilities {
 		void OnCreate() override;
 		void AttachToPlantSimulationSystem(PlantSimulationSystem* value);
 		void Update() override;
+		void EnableSemantic();
 	};
 }

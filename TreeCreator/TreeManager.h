@@ -263,7 +263,6 @@ namespace TreeUtilities {
 		float Height;
 		int MaxBranchingDepth;
 		int LateralBudsCount;
-		bool EnableSemanticOutput = false;
 	};
 
 	class TreeData : public PrivateComponentBase {

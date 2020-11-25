@@ -1,9 +1,16 @@
 #include "ImageCollectionSystem.h"
 
+#include "AcaciaFoliageGenerator.h"
+#include "CrownSurfaceRecon.h"
+#include "MapleFoliageGenerator.h"
+#include "PineFoliageGenerator.h"
+#include "WillowFoliageGenerator.h"
+#include "AppleFoliageGenerator.h"
+#include "OakFoliageGenerator.h"
+#include "BirchFoliageGenerator.h"
 void ImageCollectionSystem::PushImageCaptureSequence(ImageCaptureSequence sequence)
 {
 	_ImageCaptureSequences.push(sequence);
-	_Capturing = true;
 }
 
 void ImageCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation)
@@ -70,43 +77,9 @@ void ImageCollectionSystem::AttachToPlantSimulationSystem(PlantSimulationSystem*
 
 void ImageCollectionSystem::Update()
 {
-	if(_Capturing)
+	switch (_Status)
 	{
-		_Capturing = false;
-		if (_Running) {
-			if(_EnableSemanticMask)_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->GetCamera()->StoreToPng(_StorePath + std::to_string(_RemainingAmount) + "_" + (_EnableRandomBackground ? "rand" : "") + (_EnableSemanticMask ? "sem" : "") + ".png");
-			else _CameraEntity.GetPrivateComponent<CameraComponent>()->get()->GetCamera()->StoreToJpg(_StorePath + std::to_string(_RemainingAmount) + "_" + (_EnableRandomBackground ? "rand" : "") + (_EnableSemanticMask ? "sem" : "") + ".jpg", (_EnableSemanticMask ? -1 : 320), (_EnableSemanticMask ? -1 : 320));
-			TreeManager::DeleteAllTrees();
-			_RemainingAmount--;
-		}
-		if (_RemainingAmount != 0) {
-			_CurrentTreeParameters.Seed = _RemainingAmount;
-			_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
-			if(_EnableSemanticMask)
-			{
-				TreeInfo treeInfo = _CurrentTree.GetComponentData<TreeInfo>();
-				treeInfo.EnableSemanticOutput = true;
-				_CurrentTree.SetComponentData(treeInfo);
-				auto mmc = _CurrentTree.GetPrivateComponent<MeshRenderer>();
-				mmc->get()->ForwardRendering = true;
-				mmc->get()->Material = TreeManager::SemanticTreeBranchMaterial;
-				auto p = _CurrentTree.GetPrivateComponent<Particles>();
-				p->get()->ForwardRendering = true;
-				p->get()->BackCulling = false;
-				p->get()->Material = TreeManager::SemanticTreeLeafMaterial;
-			}
-			if(_EnableRandomBackground)
-			{
-				size_t index = glm::linearRand((size_t)0, _BackgroundTextures.size() - 1);
-				_BackgroundMaterial->SetTexture(_BackgroundTextures[index], TextureType::DIFFUSE);
-				_Background.SetEnabled(true);
-				
-			}else
-			{
-				_Background.SetEnabled(false);
-			}
-		}
-		else {
+		case ImageCollectionSystemStatus::Idle:
 			if (!_ImageCaptureSequences.empty())
 			{
 				ImageCaptureSequence seq = _ImageCaptureSequences.front();
@@ -116,54 +89,118 @@ void ImageCollectionSystem::Update()
 				_CurrentTreeParameters = _PlantSimulationSystem->LoadParameters(seq.ParamPath);
 				_StorePath = seq.OutputPath;
 				_CurrentTreeParameters.Seed = _RemainingAmount;
-				_EnableSemanticMask = seq.EnableSemanticOutput;
-				_EnableRandomBackground = seq.EnableRandomBackground;
 				_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
-				if (_EnableSemanticMask)
-				{
-					TreeInfo treeInfo = _CurrentTree.GetComponentData<TreeInfo>();
-					treeInfo.EnableSemanticOutput = true;
-					_CurrentTree.SetComponentData(treeInfo);
-					auto mmc = _CurrentTree.GetPrivateComponent<MeshRenderer>();
-					mmc->get()->ForwardRendering = true;
-					mmc->get()->Material = TreeManager::SemanticTreeBranchMaterial;
-					auto p = _CurrentTree.GetPrivateComponent<Particles>();
-					p->get()->ForwardRendering = true;
-					p->get()->BackCulling = false;
-					p->get()->Material = TreeManager::SemanticTreeLeafMaterial;
-				}
-				if (_EnableRandomBackground)
-				{
-					size_t index = glm::linearRand((size_t)0, _BackgroundTextures.size() - 1);
-					std::cout << index << std::endl;
-					_BackgroundMaterial->SetTexture(_BackgroundTextures[index], TextureType::DIFFUSE);
-					_Background.SetEnabled(true);
-				}
-				else
-				{
-					_Background.SetEnabled(false);
-				}
-				_Running = true;
+				_Status = ImageCollectionSystemStatus::Growing;
 			}
-			else
+			break;
+		case ImageCollectionSystemStatus::Growing:
+			if (!_PlantSimulationSystem->_Growing)
 			{
-				_Running = false;
+				TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.01f, 1.0);
+				_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->ResizeResolution(960, 960);
+				
+				_Status = ImageCollectionSystemStatus::CaptureOriginal;
+				_Background.SetEnabled(false);
 			}
-		}
-	}
-	else if(_RemainingAmount != 0)
-	{
-		if(!_PlantSimulationSystem->_Growing)
-		{
-			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.01f, 1.0);
-			if(_EnableSemanticMask)
-			{
-				_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->ResizeResolution(320, 320);
+			break;
+		case ImageCollectionSystemStatus::CaptureOriginal:
+			_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->GetCamera()->StoreToJpg(
+				_StorePath + 
+				std::to_string(_CurrentTree.GetComponentData<TreeParameters>().FoliageType)
+				+ "_"
+				+ std::to_string(_RemainingAmount) + "_white" + ".jpg", 320, 320);
+		
+			_Status = ImageCollectionSystemStatus::CaptureRandom;
+			_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)], TextureType::DIFFUSE);
+			_Background.SetEnabled(true);
+			break;
+		case ImageCollectionSystemStatus::CaptureRandom:
+			_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->GetCamera()->StoreToJpg(
+				_StorePath +
+				std::to_string(_CurrentTree.GetComponentData<TreeParameters>().FoliageType)
+				+ "_"
+				+ std::to_string(_RemainingAmount) + "_random" + ".jpg", 320, 320);
+		
+			_Status = ImageCollectionSystemStatus::CaptureSemantic;
+			_Background.SetEnabled(false);
+			_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->ResizeResolution(320, 320);
+			EnableSemantic();
+			break;
+		case ImageCollectionSystemStatus::CaptureSemantic:
+			_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->GetCamera()->StoreToPng(_StorePath +
+				std::to_string(_CurrentTree.GetComponentData<TreeParameters>().FoliageType)
+				+ "_"
+				+ std::to_string(_RemainingAmount) + "_mask" + ".png");
+			TreeManager::DeleteAllTrees();
+			_RemainingAmount--;
+			if (_RemainingAmount != 0) {
+				_CurrentTreeParameters.Seed = _RemainingAmount;
+				_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
+				_Status = ImageCollectionSystemStatus::Growing;
 			}else
 			{
-				_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->ResizeResolution(960, 960);
+				_Status = ImageCollectionSystemStatus::Idle;
 			}
-			_Capturing = true;
+			break;
+	}
+}
+
+void ImageCollectionSystem::EnableSemantic()
+{
+	Entity foliageEntity;
+	EntityManager::ForEachChild(_CurrentTree, [&foliageEntity](Entity child)
+		{
+			if (child.HasComponentData<WillowFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<AppleFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<AcaciaFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<BirchFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<OakFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<MapleFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<DefaultFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<PineFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
 		}
+	);
+	auto* branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
+	auto* leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
+	if(branchletRenderer)
+	{
+		branchletRenderer->get()->ForwardRendering = true;
+		branchletRenderer->get()->Material = TreeManager::SemanticTreeBranchMaterial;
+	}
+	if(leavesRenderer)
+	{
+		leavesRenderer->get()->ForwardRendering = true;
+		leavesRenderer->get()->BackCulling = false;
+		leavesRenderer->get()->Material = TreeManager::SemanticTreeLeafMaterial;
+	}
+	auto* branchRenderer = _CurrentTree.GetPrivateComponent<MeshRenderer>();
+	if (branchRenderer)
+	{
+		branchRenderer->get()->ForwardRendering = true;
+		branchRenderer->get()->Material = TreeManager::SemanticTreeBranchMaterial;
 	}
 }

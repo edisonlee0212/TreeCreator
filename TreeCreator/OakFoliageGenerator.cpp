@@ -109,9 +109,8 @@ void TreeUtilities::OakFoliageGenerator::Generate(Entity tree)
 	if (!found)
 	{
 		foliageEntity = EntityManager::CreateEntity(_Archetype, "Foliage");
-		bool semantic = tree.GetComponentData<TreeInfo>().EnableSemanticOutput;
 		auto particleSys = std::make_unique<Particles>();
-		particleSys->Material = semantic ? TreeManager::SemanticTreeLeafMaterial : _LeafMaterial;
+		particleSys->Material = _LeafMaterial;
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
 		particleSys->BackCulling = false;
