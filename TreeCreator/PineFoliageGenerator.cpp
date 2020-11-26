@@ -38,6 +38,7 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
 		particleSys->BackCulling = false;
+		particleSys->ReceiveShadow = false;
 		LocalToParent ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
@@ -50,11 +51,10 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 	particleSys->Matrices.clear();
 	std::vector<InternodeInfo> internodeInfos;
 	std::mutex m;
-	PineFoliageInfo pineFoliageInfo = foliageEntity.GetComponentData<PineFoliageInfo>();
-	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, &pineFoliageInfo](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
 		{
-			if (info->Inhibitor > pineFoliageInfo.InhibitorLimit) return;
-			if (illumination->Value < pineFoliageInfo.IlluminationLimit) return;
+			if (info->Inhibitor > _DefaultFoliageInfo.InhibitorLimit) return;
+			if (illumination->Value < _DefaultFoliageInfo.IlluminationLimit) return;
 			if (ti.Value != index->Value) return;
 			std::lock_guard<std::mutex> lock(m);
 			internodeInfos.push_back(*info);
@@ -70,25 +70,25 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 		glm::decompose(treeTransform.Value * internodeInfos[i].GlobalTransform, scale, rotation, translation, skew, perspective);
 		glm::vec3 parentTranslation = treeTransform.Value * glm::vec4(internodeInfos[i].ParentTranslation, 1.0f);
 		//x, ÏòÑôÖá£¬y: ºáÖá£¬z£ºroll
-		glm::vec3 ls = pineFoliageInfo.LeafSize;
+		glm::vec3 ls = _DefaultFoliageInfo.LeafSize;
 		auto branchFront = rotation * glm::vec3(0, 0, -1);
 		auto branchUp = rotation * glm::vec3(0, 1, 0);
 		if (glm::abs(glm::dot(branchFront, glm::vec3(0.0f, 1.0f, 0.0f))) > 0.99f) continue;
-		for(int j = 0; j < pineFoliageInfo.SideLeafAmount; j++)
+		for(int j = 0; j < _DefaultFoliageInfo.SideLeafAmount; j++)
 		{
 			glm::mat4 leftTransform;
 			glm::mat4 rightTransform;
-			glm::vec3 position = (parentTranslation - translation) * (static_cast<float>(j) / pineFoliageInfo.SideLeafAmount);
+			glm::vec3 position = (parentTranslation - translation) * (static_cast<float>(j) / _DefaultFoliageInfo.SideLeafAmount);
 			
 			glm::vec3 leftFront = glm::cross(branchFront, glm::vec3(0.0f, 1.0f, 0.0f));
-			leftFront = glm::rotate(leftFront, glm::radians(-glm::gaussRand(pineFoliageInfo.BendAngleMean, pineFoliageInfo.BendAngleVariance)), branchFront);
+			leftFront = glm::rotate(leftFront, glm::radians(-glm::gaussRand(_DefaultFoliageInfo.BendAngleMean, _DefaultFoliageInfo.BendAngleVariance)), branchFront);
 			glm::vec3 rightFront = glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), branchFront);
-			rightFront = glm::rotate(rightFront, glm::radians(glm::gaussRand(pineFoliageInfo.BendAngleMean, pineFoliageInfo.BendAngleVariance)), branchFront);
+			rightFront = glm::rotate(rightFront, glm::radians(glm::gaussRand(_DefaultFoliageInfo.BendAngleMean, _DefaultFoliageInfo.BendAngleVariance)), branchFront);
 
 			leftTransform = glm::inverse(treeTransform.Value) *
-				(glm::translate(glm::mat4(1.0f), translation + position - leftFront * pineFoliageInfo.LeafSize.z) * glm::mat4_cast(glm::quatLookAt(leftFront, glm::vec3(0.0f, 1.0f, 0.0f))) * glm::scale(ls));
+				(glm::translate(glm::mat4(1.0f), translation + position - leftFront * _DefaultFoliageInfo.LeafSize.z) * glm::mat4_cast(glm::quatLookAt(leftFront, glm::vec3(0.0f, 1.0f, 0.0f))) * glm::scale(ls));
 			rightTransform = glm::inverse(treeTransform.Value) *
-				(glm::translate(glm::mat4(1.0f), translation + position - rightFront * pineFoliageInfo.LeafSize.z) * glm::mat4_cast(glm::quatLookAt(rightFront, glm::vec3(0.0f, 1.0f, 0.0f))) * glm::scale(ls));
+				(glm::translate(glm::mat4(1.0f), translation + position - rightFront * _DefaultFoliageInfo.LeafSize.z) * glm::mat4_cast(glm::quatLookAt(rightFront, glm::vec3(0.0f, 1.0f, 0.0f))) * glm::scale(ls));
 
 			particleSys->Matrices.push_back(leftTransform);
 			particleSys->Matrices.push_back(rightTransform);

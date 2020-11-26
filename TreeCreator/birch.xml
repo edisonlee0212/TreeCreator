@@ -7,7 +7,7 @@
 		</Position>
 		<TreeParameters>
 			<Seed>1</Seed>
-			<Age>12</Age>
+			<Age>11</Age>
 			<LateralBudPerNode>2</LateralBudPerNode>
 			<VarianceApicalAngle>5.000000</VarianceApicalAngle>
 			<BranchingAngleMean>30.000000</BranchingAngleMean>
@@ -32,7 +32,7 @@
 			<GravitropismBase>-0.330000</GravitropismBase>
 			<GravitropismLevelFactor>0.350000</GravitropismLevelFactor>
 			<PruningFactor>0.100000</PruningFactor>
-			<LowBranchPruningFactor>4.500000</LowBranchPruningFactor>
+			<LowBranchPruningFactor>6.000000</LowBranchPruningFactor>
 			<ThicknessRemovalFactor>99999.000000</ThicknessRemovalFactor>
 			<GravityBendingStrength>0.850000</GravityBendingStrength>
 			<GravityBendingAngleFactor>0.910000</GravityBendingAngleFactor>

@@ -38,6 +38,7 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 		particleSys->Material = _LeafMaterial;
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
+		particleSys->ReceiveShadow = false;
 		particleSys->BackCulling = false;
 		LocalToParent ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
@@ -51,10 +52,9 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 	particleSys->Matrices.clear();
 	std::vector<InternodeInfo> internodeInfos;
 	std::mutex m;
-	AcaciaFoliageInfo acaciaFoliageInfo = foliageEntity.GetComponentData<AcaciaFoliageInfo>();
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, &acaciaFoliageInfo](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
 		{
-			if (info->Order < acaciaFoliageInfo.OrderLimit) return;
+			if (info->Order < _DefaultFoliageInfo.OrderLimit) return;
 			if (ti.Value != index->Value) return;
 			std::lock_guard<std::mutex> lock(m);
 			internodeInfos.push_back(*info);
@@ -70,16 +70,16 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 		glm::decompose(treeTransform.Value * internodeInfos[i].GlobalTransform, scale, rotation, translation, skew, perspective);
 		glm::vec3 parentTranslation = treeTransform.Value * glm::vec4(internodeInfos[i].ParentTranslation, 1.0f);
 		//x, ÏòÑôÖá£¬y: ºáÖá£¬z£ºroll
-		glm::vec3 ls = acaciaFoliageInfo.LeafSize;
+		glm::vec3 ls = _DefaultFoliageInfo.LeafSize;
 		auto branchFront = rotation * glm::vec3(0, 0, -1);
 		auto branchUp = rotation * glm::vec3(0, 1, 0);
 		if (glm::abs(glm::dot(branchFront, glm::vec3(0.0f, 1.0f, 0.0f))) > 0.99f) continue;
-		for (int j = 0; j < acaciaFoliageInfo.LeafAmount; j++)
+		for (int j = 0; j < _DefaultFoliageInfo.LeafAmount; j++)
 		{
 			glm::mat4 leafTransform;
 			glm::vec3 position = glm::linearRand(glm::vec3(0.0f), parentTranslation - translation);
-			position += glm::ballRand(acaciaFoliageInfo.GenerationRadius);
-			position.y *= acaciaFoliageInfo.YCompress;
+			position += glm::ballRand(_DefaultFoliageInfo.GenerationRadius);
+			position.y *= _DefaultFoliageInfo.YCompress;
 			glm::quat rotation = glm::quat(glm::radians(glm::linearRand(glm::vec3(-180.0f), glm::vec3(180.0f))));
 			//glm::quat rotation = glm::quatLookAt(glm::sphericalRand(1.0f), -glm::gaussRand(illuminations[i].LightDir, glm::vec3(0.01f)));
 			leafTransform = glm::inverse(treeTransform.Value) *
@@ -92,7 +92,7 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 
 void TreeUtilities::AcaciaFoliageGenerator::OnGui()
 {
-	ImGui::DragInt("Order Limit", &_DefaultFoliageInfo.OrderLimit, 0.01f, 0);
+	ImGui::DragInt("Order Limit", &_DefaultFoliageInfo.OrderLimit, 1.0f, 0);
 	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f, 0);
 	ImGui::DragInt("Leaf Amount", &_DefaultFoliageInfo.LeafAmount, 1, 0);
 	ImGui::DragFloat("GenerationRadius", &_DefaultFoliageInfo.GenerationRadius, 0.01f);

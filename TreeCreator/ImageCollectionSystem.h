@@ -7,6 +7,7 @@ namespace TreeUtilities {
 	{
 		Idle,
 		Growing,
+		Rendering,
 		CaptureOriginal,
 		CaptureRandom,
 		CaptureSemantic

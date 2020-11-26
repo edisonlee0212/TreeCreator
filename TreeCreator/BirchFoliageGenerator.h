@@ -6,16 +6,10 @@ using namespace UniEngine;
 namespace TreeUtilities {
 	struct BirchFoliageInfo : ComponentBase
 	{
-		glm::vec2 LeafSize = glm::vec2(0.1f);
-		float LeafIlluminationLimit = 0;
-		float LeafInhibitorFactor = 0;
-		bool IsBothSide = true;
-		int SideLeafAmount = 2;
-		float StartBendingAngle = 30;
-		float BendingAngleIncrement = 30;
-		float LeafPhotoTropism = 999.0f;
-		float LeafGravitropism = 1.0f;
-		float LeafDistance = 0;
+		float DistanceLimit = 0.5f;
+		int LeafAmount = 10;
+		float GenerationRadius = 0.5f;
+		glm::vec3 LeafSize = glm::vec3(0.12f, 1.0f, 0.12f);
 	};
 
 	class BirchFoliageGenerator :
@@ -25,7 +19,6 @@ namespace TreeUtilities {
 		EntityArchetype _Archetype;
 		std::shared_ptr<Texture2D> _LeafSurfaceTex;
 		std::shared_ptr<Material> _LeafMaterial;
-		void GenerateLeaves(Entity& internode, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
 	public:
 		BirchFoliageGenerator();
 		void Generate() override;

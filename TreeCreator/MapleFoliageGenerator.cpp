@@ -38,6 +38,7 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
 		particleSys->BackCulling = false;
+		particleSys->ReceiveShadow = false;
 		LocalToParent ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
@@ -51,11 +52,10 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 	std::vector<InternodeInfo> internodeInfos;
 	std::vector<Illumination> illuminations;
 	std::mutex m;
-	MapleFoliageInfo mapleFoliageInfo = foliageEntity.GetComponentData<MapleFoliageInfo>();
-	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, &mapleFoliageInfo, &illuminations](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, &illuminations, this](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
 		{
-			if (info->Inhibitor > mapleFoliageInfo.InhibitorLimit) return;
-			if (illumination->Value < mapleFoliageInfo.IlluminationLimit) return;
+			if (info->Inhibitor > _DefaultFoliageInfo.InhibitorLimit) return;
+			if (illumination->Value < _DefaultFoliageInfo.IlluminationLimit) return;
 			if (ti.Value != index->Value) return;
 			std::lock_guard<std::mutex> lock(m);
 			internodeInfos.push_back(*info);
@@ -72,16 +72,16 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 		glm::decompose(treeTransform.Value * internodeInfos[i].GlobalTransform, scale, rotation, translation, skew, perspective);
 		glm::vec3 parentTranslation = treeTransform.Value * glm::vec4(internodeInfos[i].ParentTranslation, 1.0f);
 		//x, ÏòÑôÖá£¬y: ºáÖá£¬z£ºroll
-		glm::vec3 ls = mapleFoliageInfo.LeafSize;
+		glm::vec3 ls = _DefaultFoliageInfo.LeafSize;
 		auto branchFront = rotation * glm::vec3(0, 0, -1);
 		auto branchUp = rotation * glm::vec3(0, 1, 0);
 		if (glm::abs(glm::dot(branchFront, glm::vec3(0.0f, 1.0f, 0.0f))) > 0.99f) continue;
-		for (int j = 0; j < mapleFoliageInfo.LeafAmount; j++)
+		for (int j = 0; j < _DefaultFoliageInfo.LeafAmount; j++)
 		{
 			glm::mat4 leafTransform;
 			
 			glm::vec3 position = glm::linearRand(glm::vec3(0.0f), parentTranslation - translation);
-			position += glm::ballRand(mapleFoliageInfo.GenerationRadius);
+			position += glm::ballRand(_DefaultFoliageInfo.GenerationRadius);
 			//glm::quat rotation = glm::quat(glm::radians(glm::linearRand(glm::vec3(-180.0f), glm::vec3(180.0f))));
 			glm::quat rotation = glm::quatLookAt(glm::sphericalRand(1.0f), -glm::gaussRand(illuminations[i].LightDir, glm::vec3(0.01f)));
 			leafTransform = glm::inverse(treeTransform.Value) *

@@ -31,11 +31,12 @@ namespace TreeUtilities {
 		int _CurrentFocusedNewTreeIndex = 0;
 		std::vector<TreeParameters> _NewTreeParameters;
 		std::vector<glm::vec3> _NewTreePositions;
-		std::shared_ptr<Texture2D> _DefaultTreeSurfaceTex1;
-		std::shared_ptr<Texture2D> _DefaultTreeSurfaceNTex1;
-		std::shared_ptr<Texture2D> _DefaultTreeSurfaceSTex1;
-		std::shared_ptr<Texture2D> _DefaultTreeSurfaceTex2;
-		std::shared_ptr<Texture2D> _DefaultTreeSurfaceNTex2;
+		std::shared_ptr<Texture2D> _DefaultTreeSurfaceSurfTex1;
+		std::shared_ptr<Texture2D> _DefaultTreeSurfaceNormTex1;
+		
+		std::shared_ptr<Texture2D> _DefaultTreeSurfaceSurfTex2;
+		std::shared_ptr<Texture2D> _DefaultTreeSurfaceSpecTex2;
+		std::shared_ptr<Texture2D> _DefaultTreeSurfaceNormTex2;
 		std::shared_ptr<Material> _DefaultConvexHullSurfaceMaterial;
 		
 #pragma endregion

@@ -100,9 +100,12 @@ void ImageCollectionSystem::Update()
 				TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.01f, 1.0);
 				_CameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(960, 960);
 				
-				_Status = ImageCollectionSystemStatus::CaptureOriginal;
-				_Background.SetEnabled(false);
+				_Status = ImageCollectionSystemStatus::Rendering;
+				_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 			}
+			break;
+		case ImageCollectionSystemStatus::Rendering:
+			_Status = ImageCollectionSystemStatus::CaptureOriginal;
 			break;
 		case ImageCollectionSystemStatus::CaptureOriginal:
 			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
@@ -113,7 +116,7 @@ void ImageCollectionSystem::Update()
 		
 			_Status = ImageCollectionSystemStatus::CaptureRandom;
 			_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)], TextureType::DIFFUSE);
-			_Background.SetEnabled(true);
+			_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(true);
 			break;
 		case ImageCollectionSystemStatus::CaptureRandom:
 			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
@@ -123,7 +126,7 @@ void ImageCollectionSystem::Update()
 				+ std::to_string(_RemainingAmount) + "_random" + ".jpg", 320, 320);
 		
 			_Status = ImageCollectionSystemStatus::CaptureSemantic;
-			_Background.SetEnabled(false);
+			_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 			_CameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(320, 320);
 			EnableSemantic();
 			break;

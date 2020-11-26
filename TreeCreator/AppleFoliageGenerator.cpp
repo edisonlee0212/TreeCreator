@@ -1,76 +1,6 @@
 #include "AppleFoliageGenerator.h"
 #include "PlantSimulationSystem.h"
 
-void TreeUtilities::AppleFoliageGenerator::GenerateLeaves(Entity& internode, glm::mat4& treeTransform,
-                                                          std::vector<glm::mat4>& leafTransforms, bool isLeft)
-{
-	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
-	Illumination internodeIllumination = EntityManager::GetComponentData<Illumination>(internode);
-	if (internodeIllumination.Value > _DefaultFoliageInfo.LeafIlluminationLimit) {
-		if (glm::linearRand(0.0f, 1.0f) >= internodeInfo.Inhibitor * _DefaultFoliageInfo.LeafInhibitorFactor)
-		{
-			glm::vec3 translation;
-			glm::quat rotation;
-			glm::vec3 scale;
-			glm::vec3 skew;
-			glm::vec4 perspective;
-			glm::decompose(treeTransform * internodeInfo.GlobalTransform, scale, rotation, translation, skew, perspective);
-			//x, œÚ—Ù÷·£¨y: ∫·÷·£¨z£∫roll
-			glm::vec3 ls = glm::vec3(_DefaultFoliageInfo.LeafSize.x, 1.0f, _DefaultFoliageInfo.LeafSize.y);
-			auto branchFront = rotation * glm::vec3(0, 0, -1);
-			auto branchUp = rotation * glm::vec3(0, 1, 0);
-			if (_DefaultFoliageInfo.IsBothSide || isLeft)
-			{
-				for (int i = 0; i < _DefaultFoliageInfo.SideLeafAmount; i++)
-				{
-					auto front = glm::rotate(branchFront,
-						glm::radians(_DefaultFoliageInfo.StartBendingAngle + i * _DefaultFoliageInfo.BendingAngleIncrement), branchUp);
-					auto up = branchUp;
-					PlantSimulationSystem::ApplyTropism(internodeIllumination.LightDir, _DefaultFoliageInfo.LeafPhotoTropism, up, front);
-					PlantSimulationSystem::ApplyTropism(glm::vec3(0, -1, 0), _DefaultFoliageInfo.LeafGravitropism, front, up);
-					auto localPosition = _DefaultFoliageInfo.LeafDistance * front;
-					auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
-					leafTransform = glm::inverse(treeTransform) * leafTransform;
-					leafTransforms.push_back(leafTransform);
-				}
-			}
-			if (_DefaultFoliageInfo.IsBothSide || !isLeft)
-			{
-				for (int i = 0; i < _DefaultFoliageInfo.SideLeafAmount; i++)
-				{
-					for (int i = 0; i < _DefaultFoliageInfo.SideLeafAmount; i++)
-					{
-						auto front = glm::rotate(branchFront,
-							glm::radians(-(_DefaultFoliageInfo.StartBendingAngle + i * _DefaultFoliageInfo.BendingAngleIncrement)), branchUp);
-						auto up = branchUp;
-						PlantSimulationSystem::ApplyTropism(internodeIllumination.LightDir, _DefaultFoliageInfo.LeafPhotoTropism, up, front);
-						PlantSimulationSystem::ApplyTropism(glm::vec3(0, -1, 0), _DefaultFoliageInfo.LeafGravitropism, front, up);
-						auto localPosition = _DefaultFoliageInfo.LeafDistance * front;
-						auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
-						leafTransform = glm::inverse(treeTransform) * leafTransform;
-						leafTransforms.push_back(leafTransform);
-					}
-				}
-			}
-			if (internodeInfo.Level == internodeInfo.MaxChildLevel)
-			{
-				auto front = branchFront;
-				auto up = branchUp;
-				PlantSimulationSystem::ApplyTropism(internodeIllumination.LightDir, _DefaultFoliageInfo.LeafPhotoTropism, up, front);
-				PlantSimulationSystem::ApplyTropism(glm::vec3(0, -1, 0), _DefaultFoliageInfo.LeafGravitropism, front, up);
-				auto localPosition = _DefaultFoliageInfo.LeafDistance * front;
-				auto leafTransform = glm::translate(glm::mat4(1.0f), localPosition + translation) * glm::mat4_cast(glm::quatLookAt(front, up)) * glm::scale(ls);
-				leafTransform = glm::inverse(treeTransform) * leafTransform;
-				leafTransforms.push_back(leafTransform);
-			}
-		}
-	}
-	EntityManager::ForEachChild(internode, [&treeTransform, &leafTransforms, isLeft, this](Entity child)
-		{
-			GenerateLeaves(child, treeTransform, leafTransforms, !isLeft);
-		});
-}
-
 AppleFoliageGenerator::AppleFoliageGenerator()
 {
 	_DefaultFoliageInfo = AppleFoliageInfo();
@@ -80,7 +10,7 @@ AppleFoliageGenerator::AppleFoliageGenerator()
 	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	_LeafMaterial->SetTransparentDiscard(true);
-	_LeafMaterial->SetTransparentDiscardLimit(0.1f);
+	_LeafMaterial->SetTransparentDiscardLimit(0.7f);
 	_LeafSurfaceTex = AssetManager::LoadTexture("../Resources/Textures/Leaf/PrunusAvium/A/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
 }
@@ -109,6 +39,7 @@ void TreeUtilities::AppleFoliageGenerator::Generate()
 		particleSys->Material = _LeafMaterial;
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
+		particleSys->ReceiveShadow = false;
 		particleSys->BackCulling = false;
 		LocalToParent ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
@@ -120,19 +51,50 @@ void TreeUtilities::AppleFoliageGenerator::Generate()
 	}
 	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
 	particleSys->Matrices.clear();
-	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeLocalToWorld.Value, particleSys->Matrices, true);
+	std::vector<InternodeInfo> internodeInfos;
+	std::mutex m;
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+		{
+			if (info->Order < _DefaultFoliageInfo.OrderLimit) return;
+			if (ti.Value != index->Value) return;
+			std::lock_guard<std::mutex> lock(m);
+			internodeInfos.push_back(*info);
+		}
+	);
+	for (int i = 0; i < internodeInfos.size(); i++)
+	{
+		glm::vec3 translation;
+		glm::quat rotation;
+		glm::vec3 scale;
+		glm::vec3 skew;
+		glm::vec4 perspective;
+		glm::decompose(treeTransform.Value * internodeInfos[i].GlobalTransform, scale, rotation, translation, skew, perspective);
+		glm::vec3 parentTranslation = treeTransform.Value * glm::vec4(internodeInfos[i].ParentTranslation, 1.0f);
+		//x, œÚ—Ù÷·£¨y: ∫·÷·£¨z£∫roll
+		glm::vec3 ls = _DefaultFoliageInfo.LeafSize;
+		auto branchFront = rotation * glm::vec3(0, 0, -1);
+		auto branchUp = rotation * glm::vec3(0, 1, 0);
+		if (glm::abs(glm::dot(branchFront, glm::vec3(0.0f, 1.0f, 0.0f))) > 0.99f) continue;
+		for (int j = 0; j < _DefaultFoliageInfo.LeafAmount; j++)
+		{
+			glm::mat4 leafTransform;
+			glm::vec3 position = glm::linearRand(glm::vec3(0.0f), parentTranslation - translation);
+			position += glm::ballRand(_DefaultFoliageInfo.GenerationRadius);
+			glm::quat rotation = glm::quat(glm::radians(glm::linearRand(glm::vec3(-180.0f), glm::vec3(180.0f))));
+			//glm::quat rotation = glm::quatLookAt(glm::sphericalRand(1.0f), -glm::gaussRand(illuminations[i].LightDir, glm::vec3(0.01f)));
+			leafTransform = glm::inverse(treeTransform.Value) *
+				(glm::translate(glm::mat4(1.0f), translation + position) * glm::mat4_cast(rotation) * glm::scale(ls));
+
+			particleSys->Matrices.push_back(leafTransform);
+		}
+	}
 }
 
 void TreeUtilities::AppleFoliageGenerator::OnGui()
 {
-	ImGui::DragFloat2("Leaf Size XY", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f);
-	ImGui::DragFloat("LeafIlluminationLimit", &_DefaultFoliageInfo.LeafIlluminationLimit, 0.01f);
-	ImGui::DragFloat("LeafInhibitorFactor", &_DefaultFoliageInfo.LeafInhibitorFactor, 0.01f);
-	ImGui::Checkbox("IsBothSide", &_DefaultFoliageInfo.IsBothSide);
-	ImGui::DragInt("SideLeafAmount", &_DefaultFoliageInfo.SideLeafAmount, 0.01f);
-	ImGui::DragFloat("StartBendingAngle", &_DefaultFoliageInfo.StartBendingAngle, 0.01f);
-	ImGui::DragFloat("BendingAngleIncrement", &_DefaultFoliageInfo.BendingAngleIncrement, 0.01f);
-	ImGui::DragFloat("LeafPhotoTropism", &_DefaultFoliageInfo.LeafPhotoTropism, 0.01f);
-	ImGui::DragFloat("LeafGravitropism", &_DefaultFoliageInfo.LeafGravitropism, 0.01f);
-	ImGui::DragFloat("LeafDistance", &_DefaultFoliageInfo.LeafDistance, 0.01f);
+	ImGui::DragInt("Order Limit", &_DefaultFoliageInfo.OrderLimit, 1.0f, 0);
+	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f, 0);
+	ImGui::DragInt("Leaf Amount", &_DefaultFoliageInfo.LeafAmount, 1, 0);
+	ImGui::DragFloat("GenerationRadius", &_DefaultFoliageInfo.GenerationRadius, 0.01f);
+	ImGui::DragFloat("YCompress", &_DefaultFoliageInfo.YCompress, 0.01f);
 }

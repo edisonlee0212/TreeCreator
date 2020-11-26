@@ -9,8 +9,8 @@ namespace TreeUtilities {
 		float InhibitorLimit;
 		float IlluminationLimit;
 		int LeafAmount = 10;
-		float GenerationRadius = 0.4f;
-		glm::vec3 LeafSize = glm::vec3(0.14f, 1.0f, 0.14f);
+		float GenerationRadius = 0.5f;
+		glm::vec3 LeafSize = glm::vec3(0.15f, 1.0f, 0.15f);
 	};
 	
     class MapleFoliageGenerator :

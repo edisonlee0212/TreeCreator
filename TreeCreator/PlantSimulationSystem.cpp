@@ -608,9 +608,23 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 Entity PlantSimulationSystem::CreateTree(TreeParameters parameters, glm::vec3 position, bool enabled)
 {
 	auto mat = std::make_shared<Material>();
-	mat->SetTexture(_DefaultTreeSurfaceTex1, TextureType::DIFFUSE);
-	mat->SetTexture(_DefaultTreeSurfaceNTex1, TextureType::NORMAL);
-	mat->SetTexture(_DefaultTreeSurfaceSTex1, TextureType::SPECULAR);
+	mat->SetProgram(Default::GLPrograms::StandardProgram);
+	mat->SetShininess(32.0f);
+
+	switch (parameters.FoliageType)
+	{
+	case 7:
+		mat->SetShininess(1024);
+		mat->SetTexture(_DefaultTreeSurfaceSurfTex2, TextureType::DIFFUSE);
+		mat->SetTexture(_DefaultTreeSurfaceNormTex2, TextureType::NORMAL);
+		mat->SetTexture(_DefaultTreeSurfaceSpecTex2, TextureType::SPECULAR);
+		break;
+	default:
+		mat->SetShininess(1024);
+		mat->SetTexture(_DefaultTreeSurfaceSurfTex1, TextureType::DIFFUSE);
+		mat->SetTexture(_DefaultTreeSurfaceNormTex1, TextureType::NORMAL);
+		break;
+	}
 	return CreateTree(mat, parameters, position, enabled);
 }
 
@@ -1425,11 +1439,12 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultConvexHullSurfaceMaterial->SetProgram(Default::GLPrograms::StandardProgram);
 	_DefaultConvexHullSurfaceMaterial->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
 
-	_DefaultTreeSurfaceTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_baseColor.jpg"));
-	_DefaultTreeSurfaceNTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_normal.jpg"));
-	_DefaultTreeSurfaceSTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg"));
-	_DefaultTreeSurfaceTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"));
-	_DefaultTreeSurfaceNTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
+	_DefaultTreeSurfaceSurfTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_baseColor.jpg"));
+	_DefaultTreeSurfaceNormTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_normal.jpg"));
+	
+	_DefaultTreeSurfaceSurfTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"));
+	_DefaultTreeSurfaceSpecTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg"));
+	_DefaultTreeSurfaceNormTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
 
 	_NewTreeParameters.resize(1);
 	LoadDefaultTreeParameters(1, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);
@@ -1800,6 +1815,8 @@ void TreeUtilities::PlantSimulationSystem::LoadDefaultTreeParameters(int preset,
 	}
 }
 #pragma endregion
+const char* FoliageTypes[]{ "Default", "Acacia", "Willow", "Pine", "Maple", "Apple", "Oak", "Birch" };
+
 inline void TreeUtilities::PlantSimulationSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
@@ -1945,7 +1962,6 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 					ImGui::Spacing();
 					ImGui::Separator();
 					ImGui::Text("Foliage Type:");
-					static const char* FoliageTypes[]{ "Default", "Acacia", "Willow", "Pine", "Maple", "Apple", "Oak", "Birch" };
 					ImGui::Combo("Foliage type", &_NewTreeParameters[_CurrentFocusedNewTreeIndex].FoliageType, FoliageTypes, IM_ARRAYSIZE(FoliageTypes));
 #pragma endregion
 				}

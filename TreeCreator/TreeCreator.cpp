@@ -22,7 +22,7 @@ int main()
 	RenderManager::SetSSAOKernelBias(0.08);
 	RenderManager::SetSSAOKernelRadius(0.05f);
 	RenderManager::SetSSAOSampleSize(32);
-	RenderManager::SetAmbientLight(0.6f);
+	RenderManager::SetAmbientLight(0.7f);
 	RenderManager::SetSSAOFactor(10.0f);
 	RenderManager::SetShadowMapResolution(4096);
 	RenderManager::SetStableFit(false);
@@ -36,8 +36,8 @@ int main()
 	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), LocalToWorld(), LocalToParent());
 	DirectionalLight dlc;
 	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
-	dlc.diffuseBrightness = 1.2f;
-	dlc.specularBrightness = 1.0f;
+	dlc.diffuseBrightness = 0.6f;
+	dlc.specularBrightness = 0.5f;
 	dlc.depthBias = 0.1;
 	dlc.normalOffset = 0.001;
 	dlc.lightSize = 1.0;
