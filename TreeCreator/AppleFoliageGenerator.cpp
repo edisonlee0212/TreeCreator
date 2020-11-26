@@ -95,7 +95,7 @@ void TreeUtilities::AppleFoliageGenerator::Generate()
 	TreeIndex ti = EntityManager::GetComponentData<TreeIndex>(tree);
 	EntityManager::ForEachChild(tree, [&found, &foliageEntity](Entity child)
 		{
-			if (child.HasComponentData<DefaultFoliageInfo>())
+			if (child.HasComponentData<AppleFoliageInfo>())
 			{
 				found = true;
 				foliageEntity = child;
@@ -118,9 +118,9 @@ void TreeUtilities::AppleFoliageGenerator::Generate()
 		foliageEntity.SetComponentData(ti);
 		EntityManager::SetParent(foliageEntity, tree);
 	}
-	auto* particleSys = foliageEntity.GetPrivateComponent<Particles>();
-	particleSys->get()->Matrices.clear();
-	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeLocalToWorld.Value, particleSys->get()->Matrices, true);
+	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
+	particleSys->Matrices.clear();
+	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeLocalToWorld.Value, particleSys->Matrices, true);
 }
 
 void TreeUtilities::AppleFoliageGenerator::OnGui()

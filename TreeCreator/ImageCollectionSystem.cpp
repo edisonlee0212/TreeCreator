@@ -67,6 +67,7 @@ void ImageCollectionSystem::OnCreate()
 	ltw.SetScale(glm::vec3(30, 1, 30));
 	_Background.SetComponentData(ltw);
 	_Background.SetPrivateComponent(std::move(mmr));
+	_Background.SetName("Background");
 	Enable();
 }
 
@@ -97,14 +98,14 @@ void ImageCollectionSystem::Update()
 			if (!_PlantSimulationSystem->_Growing)
 			{
 				TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.01f, 1.0);
-				_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->ResizeResolution(960, 960);
+				_CameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(960, 960);
 				
 				_Status = ImageCollectionSystemStatus::CaptureOriginal;
 				_Background.SetEnabled(false);
 			}
 			break;
 		case ImageCollectionSystemStatus::CaptureOriginal:
-			_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->GetCamera()->StoreToJpg(
+			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
 				_StorePath + 
 				std::to_string(_CurrentTree.GetComponentData<TreeParameters>().FoliageType)
 				+ "_"
@@ -115,7 +116,7 @@ void ImageCollectionSystem::Update()
 			_Background.SetEnabled(true);
 			break;
 		case ImageCollectionSystemStatus::CaptureRandom:
-			_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->GetCamera()->StoreToJpg(
+			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
 				_StorePath +
 				std::to_string(_CurrentTree.GetComponentData<TreeParameters>().FoliageType)
 				+ "_"
@@ -123,11 +124,11 @@ void ImageCollectionSystem::Update()
 		
 			_Status = ImageCollectionSystemStatus::CaptureSemantic;
 			_Background.SetEnabled(false);
-			_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->ResizeResolution(320, 320);
+			_CameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(320, 320);
 			EnableSemantic();
 			break;
 		case ImageCollectionSystemStatus::CaptureSemantic:
-			_CameraEntity.GetPrivateComponent<CameraComponent>()->get()->GetCamera()->StoreToPng(_StorePath +
+			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToPng(_StorePath +
 				std::to_string(_CurrentTree.GetComponentData<TreeParameters>().FoliageType)
 				+ "_"
 				+ std::to_string(_RemainingAmount) + "_mask" + ".png");
@@ -184,23 +185,19 @@ void ImageCollectionSystem::EnableSemantic()
 			}
 		}
 	);
-	auto* branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
-	auto* leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
-	if(branchletRenderer)
-	{
-		branchletRenderer->get()->ForwardRendering = true;
-		branchletRenderer->get()->Material = TreeManager::SemanticTreeBranchMaterial;
-	}
-	if(leavesRenderer)
-	{
-		leavesRenderer->get()->ForwardRendering = true;
-		leavesRenderer->get()->BackCulling = false;
-		leavesRenderer->get()->Material = TreeManager::SemanticTreeLeafMaterial;
-	}
-	auto* branchRenderer = _CurrentTree.GetPrivateComponent<MeshRenderer>();
-	if (branchRenderer)
-	{
-		branchRenderer->get()->ForwardRendering = true;
-		branchRenderer->get()->Material = TreeManager::SemanticTreeBranchMaterial;
-	}
+	try {
+		auto& branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
+		branchletRenderer->ForwardRendering = true;
+		branchletRenderer->Material = TreeManager::SemanticTreeBranchMaterial;
+	}catch (int e){}
+	
+	auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
+	leavesRenderer->ForwardRendering = true;
+	leavesRenderer->BackCulling = false;
+	leavesRenderer->Material = TreeManager::SemanticTreeLeafMaterial;
+	
+	auto& branchRenderer = _CurrentTree.GetPrivateComponent<MeshRenderer>();
+	branchRenderer->ForwardRendering = true;
+	branchRenderer->Material = TreeManager::SemanticTreeBranchMaterial;
+	
 }

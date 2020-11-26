@@ -36,7 +36,6 @@ int main()
 	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), LocalToWorld(), LocalToParent());
 	DirectionalLight dlc;
 	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
-	//dlc.specular = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
 	dlc.diffuseBrightness = 1.2f;
 	dlc.specularBrightness = 1.0f;
 	dlc.depthBias = 0.1;
@@ -103,7 +102,7 @@ int main()
 		char dir[256] = {};
 		_getcwd(dir, 256);
 		ImageCaptureSequence sequence;
-		sequence.Amount = 1;
+		sequence.Amount = 10;
 		sequence.CameraPos = glm::vec3(0, 2, 30);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\acacia";
@@ -140,8 +139,7 @@ int main()
 		sequence.OutputPath = "./Pictures/Pine/";
 		ics->PushImageCaptureSequence(sequence);
 	}
-	const bool enableSorghumRecon = false;
-	if (enableSorghumRecon) {
+	if (false) {
 		auto srSys = InitSorghumReconstructionSystem();
 		Entity plant1 = srSys->ImportPlant("skeleton_procedural_1.txt", 0.01f, "Sorghum 1");
 		Entity plant2 = srSys->ImportPlant("skeleton_procedural_2.txt", 0.01f, "Sorghum 2");

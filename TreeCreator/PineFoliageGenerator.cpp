@@ -46,8 +46,8 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 		foliageEntity.SetComponentData(ti);
 		EntityManager::SetParent(foliageEntity, tree);
 	}
-	auto* particleSys = foliageEntity.GetPrivateComponent<Particles>();
-	particleSys->get()->Matrices.clear();
+	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
+	particleSys->Matrices.clear();
 	std::vector<InternodeInfo> internodeInfos;
 	std::mutex m;
 	PineFoliageInfo pineFoliageInfo = foliageEntity.GetComponentData<PineFoliageInfo>();
@@ -90,8 +90,8 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 			rightTransform = glm::inverse(treeTransform.Value) *
 				(glm::translate(glm::mat4(1.0f), translation + position - rightFront * pineFoliageInfo.LeafSize.z) * glm::mat4_cast(glm::quatLookAt(rightFront, glm::vec3(0.0f, 1.0f, 0.0f))) * glm::scale(ls));
 
-			particleSys->get()->Matrices.push_back(leftTransform);
-			particleSys->get()->Matrices.push_back(rightTransform);
+			particleSys->Matrices.push_back(leftTransform);
+			particleSys->Matrices.push_back(rightTransform);
 		}
 		
 	}

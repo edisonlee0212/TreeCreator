@@ -47,8 +47,8 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 		foliageEntity.SetComponentData(ti);
 		EntityManager::SetParent(foliageEntity, tree);
 	}
-	auto* particleSys = foliageEntity.GetPrivateComponent<Particles>();
-	particleSys->get()->Matrices.clear();
+	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
+	particleSys->Matrices.clear();
 	std::vector<InternodeInfo> internodeInfos;
 	std::mutex m;
 	AcaciaFoliageInfo acaciaFoliageInfo = foliageEntity.GetComponentData<AcaciaFoliageInfo>();
@@ -85,7 +85,7 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 			leafTransform = glm::inverse(treeTransform.Value) *
 				(glm::translate(glm::mat4(1.0f), translation + position) * glm::mat4_cast(rotation) * glm::scale(ls));
 
-			particleSys->get()->Matrices.push_back(leafTransform);
+			particleSys->Matrices.push_back(leafTransform);
 		}
 	}
 }

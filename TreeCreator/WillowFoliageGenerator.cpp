@@ -62,9 +62,9 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		foliageEntity.SetComponentData(ti);
 		EntityManager::SetParent(foliageEntity, tree);
 	}
-	auto* mmc = foliageEntity.GetPrivateComponent<MeshRenderer>();
-	auto* particleSys = foliageEntity.GetPrivateComponent<Particles>();
-	particleSys->get()->Matrices.clear();
+	auto& mmc = foliageEntity.GetPrivateComponent<MeshRenderer>();
+	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
+	particleSys->Matrices.clear();
 	std::vector<Entity> internodes;
 	std::mutex m;
 	WillowFoliageInfo wfInfo = foliageEntity.GetComponentData<WillowFoliageInfo>();
@@ -140,7 +140,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 	}
 	for (int i = 0; i < internodes.size(); i++)
 	{
-		particleSys->get()->Matrices.insert(particleSys->get()->Matrices.end(), branchlets[i].LeafLocalTransforms.begin(), branchlets[i].LeafLocalTransforms.end());
+		particleSys->Matrices.insert(particleSys->Matrices.end(), branchlets[i].LeafLocalTransforms.begin(), branchlets[i].LeafLocalTransforms.end());
 	}
 	std::vector<Vertex> vertices;
 	std::vector<unsigned> indices;
@@ -150,8 +150,8 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 	{
 		SimpleMeshGenerator(branchlets[i], vertices, indices);
 	}
-	mmc->get()->Mesh = std::make_shared<Mesh>();
-	mmc->get()->Mesh->SetVertices(17, vertices, indices, true);
+	mmc->Mesh = std::make_shared<Mesh>();
+	mmc->Mesh->SetVertices(17, vertices, indices, true);
 }
 
 void TreeUtilities::WillowFoliageGenerator::SimpleMeshGenerator(Branchlet& branchlet, std::vector<Vertex>& vertices,

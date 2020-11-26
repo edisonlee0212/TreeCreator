@@ -99,7 +99,7 @@ void TreeUtilities::OakFoliageGenerator::Generate()
 	TreeIndex ti = EntityManager::GetComponentData<TreeIndex>(tree);
 	EntityManager::ForEachChild(tree, [&found, &foliageEntity](Entity child)
 		{
-			if (child.HasComponentData<DefaultFoliageInfo>())
+			if (child.HasComponentData<OakFoliageInfo>())
 			{
 				found = true;
 				foliageEntity = child;
@@ -122,9 +122,9 @@ void TreeUtilities::OakFoliageGenerator::Generate()
 		foliageEntity.SetComponentData(ti);
 		EntityManager::SetParent(foliageEntity, tree);
 	}
-	auto* particleSys = foliageEntity.GetPrivateComponent<Particles>();
-	particleSys->get()->Matrices.clear();
-	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeLocalToWorld.Value, particleSys->get()->Matrices, true);
+	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
+	particleSys->Matrices.clear();
+	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeLocalToWorld.Value, particleSys->Matrices, true);
 }
 
 void TreeUtilities::OakFoliageGenerator::OnGui()

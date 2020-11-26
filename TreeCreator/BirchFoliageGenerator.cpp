@@ -98,7 +98,7 @@ void TreeUtilities::BirchFoliageGenerator::Generate()
 	TreeIndex ti = EntityManager::GetComponentData<TreeIndex>(tree);
 	EntityManager::ForEachChild(tree, [&found, &foliageEntity](Entity child)
 		{
-			if (child.HasComponentData<DefaultFoliageInfo>())
+			if (child.HasComponentData<BirchFoliageInfo>())
 			{
 				found = true;
 				foliageEntity = child;
@@ -121,9 +121,9 @@ void TreeUtilities::BirchFoliageGenerator::Generate()
 		foliageEntity.SetComponentData(ti);
 		EntityManager::SetParent(foliageEntity, tree);
 	}
-	auto* particleSys = foliageEntity.GetPrivateComponent<Particles>();
-	particleSys->get()->Matrices.clear();
-	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeLocalToWorld.Value, particleSys->get()->Matrices, true);
+	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
+	particleSys->Matrices.clear();
+	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeLocalToWorld.Value, particleSys->Matrices, true);
 }
 
 void TreeUtilities::BirchFoliageGenerator::OnGui()

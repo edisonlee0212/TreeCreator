@@ -51,7 +51,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	if (EntityManager::GetChildrenAmount(treeEntity) == 0) return false;
 #pragma region Collect tree data
 	auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
-	auto treeData = EntityManager::GetPrivateComponent<TreeData>(treeEntity);
+	auto& treeData = EntityManager::GetPrivateComponent<TreeData>(treeEntity);
 	TreeAge treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
 	TreeIndex treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity);
@@ -73,23 +73,23 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	treeInfo.MaxBranchingDepth = 3;
 	EntityManager::SetComponentData(treeEntity, treeInfo);
 	const auto timeOff = treeAge.Value + treeAge.ToGrowIteration + 16;
-	treeData->get()->ApicalControlTimeVal.resize(timeOff);
-	treeData->get()->ApicalControlTimeLevelVal.resize(timeOff);
+	treeData->ApicalControlTimeVal.resize(timeOff);
+	treeData->ApicalControlTimeLevelVal.resize(timeOff);
 	for (auto t = 0; t < timeOff; t++) {
-		treeData->get()->ApicalControlTimeVal.at(t) = treeParameters.ApicalControlBase * glm::pow(treeParameters.ApicalControlAgeFactor, t);
+		treeData->ApicalControlTimeVal.at(t) = treeParameters.ApicalControlBase * glm::pow(treeParameters.ApicalControlAgeFactor, t);
 
-		treeData->get()->ApicalControlTimeLevelVal.at(t).resize(timeOff);
-		float baseApicalControlVal = treeData->get()->ApicalControlTimeVal.at(t);
-		treeData->get()->ApicalControlTimeLevelVal.at(t).at(0) = 1.0f;
+		treeData->ApicalControlTimeLevelVal.at(t).resize(timeOff);
+		float baseApicalControlVal = treeData->ApicalControlTimeVal.at(t);
+		treeData->ApicalControlTimeLevelVal.at(t).at(0) = 1.0f;
 		float currentVal = 1;
 		for (auto level = 1; level < timeOff; level++) {
 			if (baseApicalControlVal >= 1) {
 				currentVal *= 1.0f + (baseApicalControlVal - 1.0f) * glm::pow(treeParameters.ApicalControlLevelFactor, level);
-				treeData->get()->ApicalControlTimeLevelVal.at(t).at(level) = 1.0f / currentVal;
+				treeData->ApicalControlTimeLevelVal.at(t).at(level) = 1.0f / currentVal;
 			}
 			else {
 				currentVal *= 1.0f - (1.0f - baseApicalControlVal) * glm::pow(treeParameters.ApicalControlLevelFactor, level);
-				treeData->get()->ApicalControlTimeLevelVal.at(t).at(level) = currentVal;
+				treeData->ApicalControlTimeLevelVal.at(t).at(level) = currentVal;
 			}
 		}
 	}
@@ -98,8 +98,8 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	Entity rootInternode = EntityManager::GetChildren(treeEntity).at(0);
 	bool anyRemoved = false;
 	EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
-	auto* treeVolume = treeEntity.GetPrivateComponent<TreeVolume>();
-	const bool growed = GrowShoots(rootInternode, *treeVolume, *treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value);
+	auto& treeVolume = treeEntity.GetPrivateComponent<TreeVolume>();
+	const bool growed = GrowShoots(rootInternode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value);
 	if (growed) {
 		UpdateDistanceToBranchEnd(rootInternode, treeParameters, treeAge.Value);
 		UpdateDistanceToBranchStart(rootInternode);
@@ -575,8 +575,8 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	bud.IsActive = true;
 	bud.IsApical = true;
 
-	auto internodeData = EntityManager::GetPrivateComponent<InternodeData>(internode);
-	internodeData->get()->Buds.push_back(bud);
+	auto& internodeData = EntityManager::GetPrivateComponent<InternodeData>(internode);
+	internodeData->Buds.push_back(bud);
 
 	InternodeInfo internodeInfo;
 	internodeInfo.IsEndNode = false;
@@ -595,8 +595,8 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	internodeInfo.DistanceToParent = 0;
 	internodeInfo.DesiredLocalRotation = glm::quat(glm::vec3(glm::radians(90.0f), 0.0f, 0.0f));
 	EntityManager::SetComponentData(internode, internodeInfo);
-	auto treeInfo = EntityManager::GetPrivateComponent<TreeData>(treeEntity);
-	treeInfo->get()->MeshGenerated = false;
+	auto& treeData = EntityManager::GetPrivateComponent<TreeData>(treeEntity);
+	treeData->MeshGenerated = false;
 	auto id = glm::translate(glm::vec3(0.0f)) * glm::mat4_cast(glm::quat(glm::vec3(0.0f))) * glm::scale(glm::vec3(1.0f));
 	UpdateLocalTransform(internode, treeParameters, id, ltw.Value);
 	EntityManager::SetComponentData(treeEntity, treeParameters);
@@ -618,7 +618,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	internodeInfo.Inhibitor = 0;
-	auto internodeData = EntityManager::GetPrivateComponent<InternodeData>(internode);
+	auto& internodeData = EntityManager::GetPrivateComponent<InternodeData>(internode);
 
 #pragma region Grow child
 	bool ret = false;
@@ -633,7 +633,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 	{
 		if(treeVolume->PruneBuds())
 		{
-			internodeData->get()->Buds.clear();
+			internodeData->Buds.clear();
 			internodeInfo.ActivatedBudsAmount = 0;
 			internodeInfo.ApicalBudExist = false;
 			EntityManager::SetComponentData(internode, internodeInfo);
@@ -643,7 +643,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 	if (!internodeInfo.Activated) return ret;
 	if (internodeInfo.Pruned || internodeInfo.CrownShyness == 0.0f)
 	{
-		internodeData->get()->Buds.clear();
+		internodeData->Buds.clear();
 		internodeInfo.ActivatedBudsAmount = 0;
 		internodeInfo.ApicalBudExist = false;
 		EntityManager::SetComponentData(internode, internodeInfo);
@@ -656,7 +656,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 #pragma endregion
 	auto internodeIllumination = EntityManager::GetComponentData<Illumination>(internode);
 	float lateralBudsInhibitorToAdd = 0;
-	for (auto& bud : internodeData->get()->Buds) {
+	for (auto& bud : internodeData->Buds) {
 #pragma region Bud kill probability
 		float budKillProbability = 0;
 		if (bud.IsApical) {
@@ -723,7 +723,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 				for (int selectedNewNodeIndex = 0; selectedNewNodeIndex < internodesToGrow; selectedNewNodeIndex++) {
 #pragma region Setup internode
 					Entity newInternode = TreeManager::CreateInternode(treeIndex, prevInternode);
-					auto newInternodeData = EntityManager::GetPrivateComponent<InternodeData>(newInternode);
+					auto& newInternodeData = EntityManager::GetPrivateComponent<InternodeData>(newInternode);
 					InternodeInfo newInternodeInfo = EntityManager::GetComponentData<InternodeInfo>(newInternode);
 					if (selectedNewNodeIndex == internodesToGrow - 1) {
 						newInternodeInfo.ApicalBudExist = true;
@@ -784,7 +784,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 						newApicalBud.EulerAngles = prevEulerAngle;
 						newApicalBud.IsActive = true;
 						newApicalBud.IsApical = true;
-						newInternodeData->get()->Buds.push_back(newApicalBud);
+						newInternodeData->Buds.push_back(newApicalBud);
 					}
 #pragma endregion
 #pragma region Create Lateral Buds
@@ -795,7 +795,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 						newLateralBud.EulerAngles = glm::vec3(glm::radians(branchAngle), 0.0f, glm::radians(rollAngle));
 						newLateralBud.IsActive = true;
 						newLateralBud.IsApical = false;
-						newInternodeData->get()->Buds.push_back(newLateralBud);
+						newInternodeData->Buds.push_back(newLateralBud);
 					}
 #pragma endregion
 					prevInternode = newInternode;
@@ -830,20 +830,20 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 #pragma endregion
 	}
 	bool hasApicalBud = false;
-	for (int i = 0; i < internodeData->get()->Buds.size(); i++)
+	for (int i = 0; i < internodeData->Buds.size(); i++)
 	{
-		if (!internodeData->get()->Buds[i].IsActive)
+		if (!internodeData->Buds[i].IsActive)
 		{
-			internodeData->get()->Buds.erase(internodeData->get()->Buds.begin() + i);
+			internodeData->Buds.erase(internodeData->Buds.begin() + i);
 			i--;
 		}
-		else if (internodeData->get()->Buds[i].IsApical)
+		else if (internodeData->Buds[i].IsApical)
 		{
 			hasApicalBud = true;
 		}
 	}
 	internodeInfo.Inhibitor += lateralBudsInhibitorToAdd;
-	internodeInfo.ActivatedBudsAmount = internodeData->get()->Buds.size();
+	internodeInfo.ActivatedBudsAmount = internodeData->Buds.size();
 	internodeInfo.ApicalBudExist = hasApicalBud;
 	EntityManager::SetComponentData(internode, internodeInfo);
 	return ret;
@@ -1287,12 +1287,12 @@ void PlantSimulationSystem::BuildHullForTree(Entity& tree)
 		}
 	}
 
-	auto treeInfo = EntityManager::GetPrivateComponent<TreeData>(tree);
-	treeInfo->get()->ConvexHull = std::make_shared<Mesh>();
+	auto& treeData = EntityManager::GetPrivateComponent<TreeData>(tree);
+	treeData->ConvexHull = std::make_shared<Mesh>();
 	CrownSurfaceRecon psr;
 	//psr.PoissonConstruct(positions, normals, treeInfo->ConvexHull);
 	//psr.AdvancingFrontConstruct(positions, treeInfo->ConvexHull);
-	psr.ScaleSpaceConstruct(positions, treeInfo->get()->ConvexHull);
+	psr.ScaleSpaceConstruct(positions, treeData->ConvexHull);
 
 
 	/*
@@ -1364,28 +1364,28 @@ void PlantSimulationSystem::GenerateLeavesForAllTrees(std::vector<Entity>& trees
 		switch (treeParameters.FoliageType)
 		{
 		case 0:
-			EntityManager::GetPrivateComponent<DefaultFoliageGenerator>(tree)->get()->Generate();
+			EntityManager::GetPrivateComponent<DefaultFoliageGenerator>(tree)->Generate();
 			break;
 		case 1:
-			EntityManager::GetPrivateComponent<AcaciaFoliageGenerator>(tree)->get()->Generate();
+			EntityManager::GetPrivateComponent<AcaciaFoliageGenerator>(tree)->Generate();
 			break;
 		case 2:
-			EntityManager::GetPrivateComponent<WillowFoliageGenerator>(tree)->get()->Generate();
+			EntityManager::GetPrivateComponent<WillowFoliageGenerator>(tree)->Generate();
 			break;
 		case 3:
-			EntityManager::GetPrivateComponent<PineFoliageGenerator>(tree)->get()->Generate();
+			EntityManager::GetPrivateComponent<PineFoliageGenerator>(tree)->Generate();
 			break;
 		case 4:
-			EntityManager::GetPrivateComponent<MapleFoliageGenerator>(tree)->get()->Generate();
+			EntityManager::GetPrivateComponent<MapleFoliageGenerator>(tree)->Generate();
 			break;
 		case 5:
-			EntityManager::GetPrivateComponent<AppleFoliageGenerator>(tree)->get()->Generate();
+			EntityManager::GetPrivateComponent<AppleFoliageGenerator>(tree)->Generate();
 			break;
 		case 6:
-			EntityManager::GetPrivateComponent<OakFoliageGenerator>(tree)->get()->Generate();
+			EntityManager::GetPrivateComponent<OakFoliageGenerator>(tree)->Generate();
 			break;
 		case 7:
-			EntityManager::GetPrivateComponent<BirchFoliageGenerator>(tree)->get()->Generate();
+			EntityManager::GetPrivateComponent<BirchFoliageGenerator>(tree)->Generate();
 			break;
 		}
 	}
@@ -1457,9 +1457,9 @@ void TreeUtilities::PlantSimulationSystem::Update()
 
 			for (size_t i = 0; i < trees.size(); i++)
 			{
-				auto data = EntityManager::GetPrivateComponent<TreeData>(trees[i]);
-				if (data->get()->ConvexHull != nullptr) {
-					RenderManager::DrawMesh(data->get()->ConvexHull.get(), _DefaultConvexHullSurfaceMaterial.get(), ltws[i].Value, RenderManager::GetMainCamera(), false);
+				auto& treeData = EntityManager::GetPrivateComponent<TreeData>(trees[i]);
+				if (treeData->ConvexHull != nullptr) {
+					RenderManager::DrawMesh(treeData->ConvexHull.get(), _DefaultConvexHullSurfaceMaterial.get(), ltws[i].Value, RenderManager::GetMainCamera(), false);
 				}
 			}
 
