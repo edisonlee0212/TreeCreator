@@ -7,10 +7,10 @@
 		</Position>
 		<TreeParameters>
 			<Seed>1</Seed>
-			<Age>13</Age>
+			<Age>11</Age>
 			<LateralBudPerNode>2</LateralBudPerNode>
-			<VarianceApicalAngle>25.000000</VarianceApicalAngle>
-			<BranchingAngleMean>38.000000</BranchingAngleMean>
+			<VarianceApicalAngle>20.000000</VarianceApicalAngle>
+			<BranchingAngleMean>45.000000</BranchingAngleMean>
 			<BranchingAngleVariance>2.000000</BranchingAngleVariance>
 			<RollAngleMean>91.000000</RollAngleMean>
 			<RollAngleVariance>1.000000</RollAngleVariance>
@@ -28,7 +28,7 @@
 			<ApicalControlDistanceFactor>0.000000</ApicalControlDistanceFactor>
 			<MaxBudAge>20</MaxBudAge>
 			<InternodeSize>0.370000</InternodeSize>
-			<Phototropism>0.320000</Phototropism>
+			<Phototropism>0.500000</Phototropism>
 			<GravitropismBase>-0.540000</GravitropismBase>
 			<GravitropismLevelFactor>0.170000</GravitropismLevelFactor>
 			<PruningFactor>0.700000</PruningFactor>
@@ -39,7 +39,7 @@
 			<ApicalBudLightingFactor>0.390000</ApicalBudLightingFactor>
 			<LateralBudLightingFactor>1.130000</LateralBudLightingFactor>
 			<EndNodeThickness>0.010000</EndNodeThickness>
-			<ThicknessControlFactor>0.660000</ThicknessControlFactor>
+			<ThicknessControlFactor>0.600000</ThicknessControlFactor>
 			<CrownShynessBase>1.000000</CrownShynessBase>
 			<CrownShynessFactor>1.000000</CrownShynessFactor>
 			<FoliageType>5</FoliageType>

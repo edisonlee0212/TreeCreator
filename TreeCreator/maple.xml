@@ -7,7 +7,7 @@
 		</Position>
 		<TreeParameters>
 			<Seed>1</Seed>
-			<Age>11</Age>
+			<Age>10</Age>
 			<LateralBudPerNode>2</LateralBudPerNode>
 			<VarianceApicalAngle>2.000000</VarianceApicalAngle>
 			<BranchingAngleMean>30.000000</BranchingAngleMean>
@@ -43,17 +43,6 @@
 			<CrownShynessBase>1.000000</CrownShynessBase>
 			<CrownShynessFactor>1.000000</CrownShynessFactor>
 			<FoliageType>4</FoliageType>
-			<LeafSizeX>0.140000</LeafSizeX>
-			<LeafSizeY>0.140000</LeafSizeY>
-			<LeafIlluminationLimit>0.000000</LeafIlluminationLimit>
-			<LeafInhibitorFactor>0.000000</LeafInhibitorFactor>
-			<IsBothSide>1</IsBothSide>
-			<SideLeafAmount>2</SideLeafAmount>
-			<StartBendingAngle>30.000000</StartBendingAngle>
-			<BendingAngleIncrement>30.000000</BendingAngleIncrement>
-			<LeafPhotoTropism>999.000000</LeafPhotoTropism>
-			<LeafGravitropism>1.000000</LeafGravitropism>
-			<LeafDistance>0.000000</LeafDistance>
 		</TreeParameters>
 	</Instance>
 </TreeSettings>

@@ -129,6 +129,9 @@
     <ClCompile Include="OakFoliageGenerator.cpp">
       <Filter>Source Files\TreeUtilities\Foliage</Filter>
     </ClCompile>
+    <ClCompile Include="KDop.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkSystem.h">
@@ -238,6 +241,9 @@
     </ClInclude>
     <ClInclude Include="OakFoliageGenerator.h">
       <Filter>Header Files\TreeUtilities\Foliage</Filter>
+    </ClInclude>
+    <ClInclude Include="KDop.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

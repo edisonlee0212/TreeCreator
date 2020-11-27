@@ -7,10 +7,10 @@ namespace TreeUtilities {
 	struct WillowFoliageInfo : ComponentBase
 	{
 		float InhibitorLimit = 0.001f;
-		float DownDistanceMean = 3.0f;
+		float DownDistanceMean = 2.0f;
 		float DownDistanceVariance = 1.0f;
 		float LowLimit = 1.0f;
-		float PushDistance = 1.0f;
+		float PushDistance = 0.75f;
 		float Thickness = 0.01f;
 		float BendAngleMean = 25.0f;
 		float BendAngleVariance = 5.0f;

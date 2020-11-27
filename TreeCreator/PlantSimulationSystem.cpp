@@ -114,7 +114,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 #pragma region Helpers
 #pragma region I/O
 
-void TreeUtilities::PlantSimulationSystem::ExportSettings(const std::string& path)
+void TreeUtilities::PlantSimulationSystem::ExportSettingsAsXml(const std::string& path)
 {
 	std::ofstream ofs;
 	ofs.open((path + ".xml").c_str(), std::ofstream::out | std::ofstream::trunc);
@@ -149,6 +149,72 @@ void TreeUtilities::PlantSimulationSystem::ExportSettings(const std::string& pat
 		Debug::Error("Can't open file!");
 	}
 }
+
+void PlantSimulationSystem::ExportTreeParametersAsCsv(const std::string& path, std::vector<TreeParameters>& treeParametersList) const
+{
+	std::ofstream ofs;
+	ofs.open((path + ".csv").c_str(), std::ofstream::out | std::ofstream::trunc);
+	if (ofs.is_open())
+	{
+		for (auto& treeParameters : treeParametersList) {
+			std::string output = "";
+#pragma region Geometric
+			output += std::to_string(treeParameters.Age) + ",";
+			output += std::to_string(treeParameters.LateralBudPerNode) + ",";
+			output += std::to_string(treeParameters.VarianceApicalAngle) + ",";
+			output += std::to_string(treeParameters.BranchingAngleMean) + ",";
+			output += std::to_string(treeParameters.BranchingAngleVariance) + ",";
+			output += std::to_string(treeParameters.RollAngleMean) + ",";
+			 output += std::to_string(treeParameters.RollAngleVariance) + ",";
+#pragma endregion
+#pragma region Bud fate
+			output += std::to_string(treeParameters.ApicalBudKillProbability) + ",";
+			output += std::to_string(treeParameters.LateralBudKillProbability) + ",";
+			output += std::to_string(treeParameters.ApicalDominanceBase) + ",";
+			output += std::to_string(treeParameters.ApicalDominanceDistanceFactor) + ",";
+			output += std::to_string(treeParameters.ApicalDominanceAgeFactor) + ",";
+			output += std::to_string(treeParameters.GrowthRate) + ",";
+			output += std::to_string(treeParameters.InternodeLengthBase) + ",";
+			output += std::to_string(treeParameters.InternodeLengthAgeFactor) + ",";
+			output += std::to_string(treeParameters.ApicalControlBase) + ",";
+			output += std::to_string(treeParameters.ApicalControlAgeFactor) + ",";
+			output += std::to_string(treeParameters.ApicalControlLevelFactor) + ",";
+			output += std::to_string(treeParameters.ApicalControlDistanceFactor) + ",";
+			output += std::to_string(treeParameters.MaxBudAge) + ",";
+#pragma endregion
+#pragma region Environmental
+			output += std::to_string(treeParameters.InternodeSize) + ",";
+			output += std::to_string(treeParameters.Phototropism) + ",";
+			output += std::to_string(treeParameters.GravitropismBase) + ",";
+			output += std::to_string(treeParameters.GravitropismLevelFactor) + ",";
+			output += std::to_string(treeParameters.PruningFactor) + ",";
+			output += std::to_string(treeParameters.LowBranchPruningFactor) + ",";
+			output += std::to_string(treeParameters.ThicknessRemovalFactor) + ",";
+			output += std::to_string(treeParameters.GravityBendingStrength) + ",";
+			output += std::to_string(treeParameters.GravityBendingAngleFactor) + ",";
+			output += std::to_string(treeParameters.ApicalBudLightingFactor) + ",";
+			output += std::to_string(treeParameters.LateralBudLightingFactor) + ",";
+#pragma endregion
+			output += std::to_string(treeParameters.EndNodeThickness) + ",";
+			output += std::to_string(treeParameters.ThicknessControlFactor) + ",";
+
+			output += std::to_string(treeParameters.CrownShynessBase) + ",";
+			output += std::to_string(treeParameters.CrownShynessFactor) + ",";
+
+			output += std::to_string(treeParameters.FoliageType);
+			output += "\n";
+			ofs.write(output.c_str(), output.size());
+			ofs.flush();
+		}
+		ofs.close();
+		Debug::Log("Tree group saved: " + path + ".csv");
+	}
+	else
+	{
+		Debug::Error("Can't open file!");
+	}
+}
+
 void PlantSimulationSystem::ImportSettings(const std::string& path)
 {
 	pugi::xml_document doc;
@@ -1843,7 +1909,7 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 							ImGui::SameLine();
 							ImGui::InputText("", _TempExportFilePath, 256);
 							if (ImGui::Button("Save")) {
-								ExportSettings((std::string(_CurrentWorkingDir) + "\\") + std::string(_TempExportFilePath));
+								ExportSettingsAsXml((std::string(_CurrentWorkingDir) + "\\") + std::string(_TempExportFilePath));
 							}
 							ImGui::EndMenu();
 						}

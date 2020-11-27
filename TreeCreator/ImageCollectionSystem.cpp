@@ -8,9 +8,21 @@
 #include "AppleFoliageGenerator.h"
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
+
+void ImageCollectionSystem::SetIsTrain(bool value)
+{
+	_IsTrain = value;
+}
+
+auto ImageCollectionSystem::IsExport() const -> bool
+{
+	return _Export;
+}
+
 void ImageCollectionSystem::PushImageCaptureSequence(ImageCaptureSequence sequence)
 {
-	_ImageCaptureSequences.push(sequence);
+	_ImageCaptureSequences.push_back({ sequence, _PlantSimulationSystem->LoadParameters(sequence.ParamPath) });
+	_Export = true;
 }
 
 void ImageCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation)
@@ -49,12 +61,35 @@ void ImageCollectionSystem::OnCreate()
 	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/calle-2.jpg"));
 	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/calle-3.jpg"));
 	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/calle+3.jpg"));
-	
+	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/MainStreet_t.jpg"));
+	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
+
 	_CameraEntity.SetName("ImageCap Camera");
 	_CameraEntity.SetPrivateComponent(std::move(cameraComponent));
 	_BackgroundMaterial = std::make_shared<Material>();
 	_BackgroundMaterial->SetMaterialProperty("material.shininess", 32.0f);
-	_BackgroundMaterial->SetProgram(Default::GLPrograms::StandardProgram);
+	std::string vertShaderCode = std::string("#version 460 core\n")
+		+ *Default::ShaderIncludes::Uniform +
+		+"\n"
+		+ FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/Standard.vert"));
+	std::string fragShaderCode = std::string("#version 460 core\n")
+		+ *Default::ShaderIncludes::Uniform
+		+ "\n"
+		+ FileIO::LoadFileAsString("../Resources/Shaders/Fragment/Background.frag");
+
+	GLShader* standardvert = new GLShader(ShaderType::Vertex);
+	standardvert->SetCode(&vertShaderCode);
+	GLShader* standardfrag = new GLShader(ShaderType::Fragment);
+	standardfrag->SetCode(&fragShaderCode);
+	auto program = std::make_shared<GLProgram>();
+	program->Attach(ShaderType::Vertex, standardvert);
+	program->Attach(ShaderType::Fragment, standardfrag);
+	program->Link();
+	
+	delete standardvert;
+	delete standardfrag;
+
+	_BackgroundMaterial->SetProgram(program);
 	_Background = EntityManager::CreateEntity(archetype);
 	auto mmr = std::make_unique<MeshRenderer>();
 	mmr->Mesh = Default::Primitives::Quad;
@@ -71,27 +106,32 @@ void ImageCollectionSystem::OnCreate()
 	Enable();
 }
 
-void ImageCollectionSystem::AttachToPlantSimulationSystem(PlantSimulationSystem* value)
+void ImageCollectionSystem::SetPlantSimulationSystem(PlantSimulationSystem* value)
 {
 	_PlantSimulationSystem = value;
 }
 
 void ImageCollectionSystem::Update()
 {
+	std::string path;
 	switch (_Status)
 	{
 		case ImageCollectionSystemStatus::Idle:
 			if (!_ImageCaptureSequences.empty())
 			{
-				ImageCaptureSequence seq = _ImageCaptureSequences.front();
-				_ImageCaptureSequences.pop();
-				_RemainingAmount = seq.Amount;
-				SetCameraPose(seq.CameraPos, seq.CameraEulerDegreeRot);
-				_CurrentTreeParameters = _PlantSimulationSystem->LoadParameters(seq.ParamPath);
-				_StorePath = seq.OutputPath;
-				_CurrentTreeParameters.Seed = _RemainingAmount;
-				_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
+				_CurrentSelectedSequenceIndex = glm::linearRand(0, static_cast<int>(_ImageCaptureSequences.size()) - 1);
+				auto& imageCaptureSequence = _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first;
+				auto& treeParameters = _ImageCaptureSequences[_CurrentSelectedSequenceIndex].second;
+				SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
+				treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
+				treeParameters.Seed = _Counter;
+				_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
+				_TreeParametersOutputList.push_back(treeParameters);
 				_Status = ImageCollectionSystemStatus::Growing;
+			}else if(_Export)
+			{
+				_Export = false;
+				_PlantSimulationSystem->ExportTreeParametersAsCsv(_StorePath + "params_" + (_IsTrain ? "train" : "val"), _TreeParametersOutputList);
 			}
 			break;
 		case ImageCollectionSystemStatus::Growing:
@@ -108,22 +148,26 @@ void ImageCollectionSystem::Update()
 			_Status = ImageCollectionSystemStatus::CaptureOriginal;
 			break;
 		case ImageCollectionSystemStatus::CaptureOriginal:
+			path = _StorePath + "white_" + (_IsTrain ? "train/" : "val/") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
+				+ "_" + std::to_string(_Counter)
+				+ ".jpg";
 			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
-				_StorePath + 
-				std::to_string(_CurrentTree.GetComponentData<TreeParameters>().FoliageType)
-				+ "_"
-				+ std::to_string(_RemainingAmount) + "_white" + ".jpg", 320, 320);
+				path, 320, 320);
 		
 			_Status = ImageCollectionSystemStatus::CaptureRandom;
 			_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)], TextureType::DIFFUSE);
 			_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(true);
 			break;
 		case ImageCollectionSystemStatus::CaptureRandom:
+			path = _StorePath + "rgb_" + (_IsTrain ? "train/" : "val/") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
+				+ "_" + std::to_string(_Counter)
+				+ ".jpg";
 			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
-				_StorePath +
-				std::to_string(_CurrentTree.GetComponentData<TreeParameters>().FoliageType)
-				+ "_"
-				+ std::to_string(_RemainingAmount) + "_random" + ".jpg", 320, 320);
+				path, 320, 320);
 		
 			_Status = ImageCollectionSystemStatus::CaptureSemantic;
 			_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
@@ -131,20 +175,21 @@ void ImageCollectionSystem::Update()
 			EnableSemantic();
 			break;
 		case ImageCollectionSystemStatus::CaptureSemantic:
-			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToPng(_StorePath +
-				std::to_string(_CurrentTree.GetComponentData<TreeParameters>().FoliageType)
-				+ "_"
-				+ std::to_string(_RemainingAmount) + "_mask" + ".png");
+			path = _StorePath + "mask_" + (_IsTrain ? "train/" : "val/") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
+				+ "_" + std::to_string(_Counter)
+				+ ".png";
+			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToPng(
+				path);
 			TreeManager::DeleteAllTrees();
-			_RemainingAmount--;
-			if (_RemainingAmount != 0) {
-				_CurrentTreeParameters.Seed = _RemainingAmount;
-				_CurrentTree = _PlantSimulationSystem->CreateTree(_CurrentTreeParameters, glm::vec3(0.0f));
-				_Status = ImageCollectionSystemStatus::Growing;
-			}else
+			_ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Amount--;
+			if(_ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Amount == 0)
 			{
-				_Status = ImageCollectionSystemStatus::Idle;
+				_ImageCaptureSequences.erase(_ImageCaptureSequences.begin() + _CurrentSelectedSequenceIndex);
 			}
+			_Counter++;
+			_Status = ImageCollectionSystemStatus::Idle;
 			break;
 	}
 }

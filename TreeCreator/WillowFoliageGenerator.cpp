@@ -68,10 +68,9 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 	particleSys->Matrices.clear();
 	std::vector<Entity> internodes;
 	std::mutex m;
-	WillowFoliageInfo wfInfo = foliageEntity.GetComponentData<WillowFoliageInfo>();
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodes, &wfInfo](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodes, this](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
 		{
-			if (info->Inhibitor > wfInfo.InhibitorLimit) return;
+			if (info->Inhibitor > _DefaultFoliageInfo.InhibitorLimit) return;
 			if (ti.Value != index->Value) return;
 			std::lock_guard<std::mutex> lock(m);
 			internodes.push_back(internode);
@@ -97,22 +96,22 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		branchlets[i].Normal = glm::cross(up, fromDir);
 		glm::vec3 dir = glm::vec3(0, -1, 0);
 		glm::vec3 parentTranslation = translation;
-		float downDistance = glm::gaussRand(wfInfo.DownDistanceMean, wfInfo.DownDistanceVariance);
-		float pushDistance = wfInfo.PushDistance;
-		if(translation.y - downDistance < wfInfo.LowLimit)
+		float downDistance = glm::gaussRand(_DefaultFoliageInfo.DownDistanceMean, _DefaultFoliageInfo.DownDistanceVariance);
+		float pushDistance = _DefaultFoliageInfo.PushDistance;
+		if(translation.y - downDistance < _DefaultFoliageInfo.LowLimit)
 		{
-			float newDownDistance = translation.y - wfInfo.LowLimit;
+			float newDownDistance = translation.y - _DefaultFoliageInfo.LowLimit;
 			pushDistance *= newDownDistance / downDistance;
 			downDistance = newDownDistance;
 		}
 		translation = parentTranslation + glm::vec3(fromDir.x * pushDistance, -downDistance, fromDir.z * pushDistance);
 		float distance = glm::distance(parentTranslation, translation);
-		int amount = wfInfo.SubdivisionAmount;
+		int amount = _DefaultFoliageInfo.SubdivisionAmount;
 		if (amount % 2 != 0) amount++;
 		BezierCurve curve = BezierCurve(parentTranslation, parentTranslation + distance / 3.0f * fromDir, translation - distance / 3.0f * dir, translation);
 		float posStep = 1.0f / (float)amount;
 		glm::vec3 dirStep = (dir - fromDir) / (float)amount;
-		float thickness = wfInfo.Thickness;
+		float thickness = _DefaultFoliageInfo.Thickness;
 		for (int j = 1; j < amount; j++) {
 			auto startPos = curve.GetPoint(posStep * (j - 1));
 			auto endPos = curve.GetPoint(posStep * j);
@@ -125,16 +124,16 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		if (amount > 1)branchlets[i].Rings.emplace_back(curve.GetPoint(1.0f - posStep), translation, dir - dirStep, dir, thickness, thickness);
 		else branchlets[i].Rings.emplace_back(parentTranslation, translation, fromDir, dir, thickness, thickness);
 		
-		amount = wfInfo.LeafAmount;
+		amount = _DefaultFoliageInfo.LeafAmount;
 		posStep = 1.0f / (float)amount;
 		dirStep = (dir - fromDir) / (float)amount;
 		for (int j = 1; j < amount; j++) {
 			auto endPos = curve.GetPoint(posStep * j);
 			auto endDir = fromDir + (float)j * dirStep;
 			auto currUp = glm::cross(endDir, branchlets[i].Normal);
-			auto l = glm::rotate(endDir, glm::radians(glm::gaussRand(wfInfo.BendAngleMean, wfInfo.BendAngleVariance)), currUp);
-			auto r = glm::rotate(endDir, glm::radians(-glm::gaussRand(wfInfo.BendAngleMean, wfInfo.BendAngleVariance)), currUp);
-			glm::vec3 s = wfInfo.LeafSize;// *(semantic ? 2.0f : 1.0f);
+			auto l = glm::rotate(endDir, glm::radians(glm::gaussRand(_DefaultFoliageInfo.BendAngleMean, _DefaultFoliageInfo.BendAngleVariance)), currUp);
+			auto r = glm::rotate(endDir, glm::radians(-glm::gaussRand(_DefaultFoliageInfo.BendAngleMean, _DefaultFoliageInfo.BendAngleVariance)), currUp);
+			glm::vec3 s = _DefaultFoliageInfo.LeafSize;// *(semantic ? 2.0f : 1.0f);
 			branchlets[i].LeafLocalTransforms.push_back(glm::translate(endPos + s.z * 2.0f * l) * glm::mat4_cast(glm::quatLookAt(-l, currUp)) * glm::scale(s));
 			branchlets[i].LeafLocalTransforms.push_back(glm::translate(endPos + s.z * 2.0f * r) * glm::mat4_cast(glm::quatLookAt(-r, currUp)) * glm::scale(s));
 		}

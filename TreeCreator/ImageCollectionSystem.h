@@ -19,28 +19,33 @@ namespace TreeUtilities {
 		glm::vec3 CameraEulerDegreeRot;
 		std::string ParamPath;
 		int Amount;
-		std::string OutputPath;
+		std::string Name;
 	};
 	class ImageCollectionSystem : public SystemBase
 	{
 		ImageCollectionSystemStatus _Status = ImageCollectionSystemStatus::Idle;
-		TreeParameters _CurrentTreeParameters = TreeParameters();
-		std::string _StorePath;
-		int _RemainingAmount = 0;
+		int _CurrentSelectedSequenceIndex = -1;
+		int _Counter = 0;
+		std::string _StorePath = "./tree_data/";
+		bool _IsTrain = true;
 		Entity _CurrentTree;
 		Entity _Background;
+		bool _Export = false;
 		std::shared_ptr<Material> _BackgroundMaterial;
 		PlantSimulationSystem* _PlantSimulationSystem = nullptr;
 		Entity _CameraEntity;
 		glm::vec3 _CameraPosition = glm::vec3(0);
 		glm::vec3 _CameraEulerRotation = glm::vec3(0);
-		std::queue<ImageCaptureSequence> _ImageCaptureSequences;
+		std::vector<std::pair<ImageCaptureSequence, TreeParameters>> _ImageCaptureSequences;
+		std::vector<TreeParameters> _TreeParametersOutputList;
 		std::vector<std::shared_ptr<Texture2D>> _BackgroundTextures;
 	public:
+		void SetIsTrain(bool value);
+		bool IsExport() const;
 		void PushImageCaptureSequence(ImageCaptureSequence sequence);
 		void SetCameraPose(glm::vec3 position, glm::vec3 rotation);
 		void OnCreate() override;
-		void AttachToPlantSimulationSystem(PlantSimulationSystem* value);
+		void SetPlantSimulationSystem(PlantSimulationSystem* value);
 		void Update() override;
 		void EnableSemantic();
 	};

@@ -6,7 +6,7 @@ using namespace UniEngine;
 namespace TreeUtilities {
 	struct OakFoliageInfo : ComponentBase
 	{
-		int OrderLimit = 8;
+		int OrderLimit = 6;
 		int LeafAmount = 20;
 		float GenerationRadius = 0.5f;
 		glm::vec3 LeafSize = glm::vec3(0.1f, 1.0f, 0.1f);

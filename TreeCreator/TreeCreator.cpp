@@ -14,132 +14,62 @@ void InitGround();
 PlantSimulationSystem* InitPlantSimulationSystem();
 ImageCollectionSystem* InitImageCollectionSystem();
 SorghumReconstructionSystem* InitSorghumReconstructionSystem();
-
-int main()
+void EngineSetup();
+void main()
 {
-#pragma region Global light settings
-	RenderManager::SetPCSSScaleFactor(1.0f);
-	RenderManager::SetSSAOKernelBias(0.08);
-	RenderManager::SetSSAOKernelRadius(0.05f);
-	RenderManager::SetSSAOSampleSize(32);
-	RenderManager::SetAmbientLight(0.7f);
-	RenderManager::SetSSAOFactor(10.0f);
-	RenderManager::SetShadowMapResolution(4096);
-	RenderManager::SetStableFit(false);
-	RenderManager::SetSeamFixRatio(0.05f);
-	RenderManager::SetMaxShadowDistance(300);
-	RenderManager::SetSplitRatio(0.15f, 0.3f, 0.5f, 1.0f);
-#pragma endregion
-	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
-	Application::Init();
-#pragma region Lights
-	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), LocalToWorld(), LocalToParent());
-	DirectionalLight dlc;
-	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
-	dlc.diffuseBrightness = 0.6f;
-	dlc.specularBrightness = 0.5f;
-	dlc.depthBias = 0.1;
-	dlc.normalOffset = 0.001;
-	dlc.lightSize = 1.0;
-	LocalToWorld ltw;
-	ltw.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
-	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
-	EntityManager::SetComponentData(dle, dlc);
-	EntityManager::SetComponentData(dle, ltw);
-#pragma endregion
-#pragma region Preparations
-	Application::SetTimeStep(0.016f);
-	auto world = Application::GetWorld();
-	WorldTime* time = world->Time();
+	EngineSetup();
+	bool generateLearningData = true;
+	bool generateSorghum = false;
+	bool generateSorghumField = false;
 
-	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToWorld(), LocalToParent());
-	CameraControlSystem* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);
-	ccs->Enable();
-	ltw = LocalToWorld();
-	ltw.SetPosition(glm::vec3(0, 2, 35));
-	ltw.SetEulerRotation(glm::radians(glm::vec3(15, 0, 0)));
-	auto mainCamera = RenderManager::GetMainCamera();
-	if (mainCamera) {
-		mainCamera->GetOwner().SetComponentData(ltw);
-		mainCamera->DrawSkyBox = false;
-		mainCamera->ClearColor = glm::vec3(1.0f);
-	}
-	ccs->SetVelocity(15.0f);
-	//InitGround();
-#pragma endregion
-	TreeManager::Init();
-#pragma region Light estimator setup
-	//The smaller the branch node's size, the more branching for tree.
-	TreeManager::GetLightEstimator()->ResetResolution(512);
-	TreeManager::GetLightEstimator()->ResetCenterDistance(60);
-	TreeManager::GetLightEstimator()->ResetSnapShotWidth(30);
-	//From top
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, 0), 1.0f);
 	
-	//45
-	float tilt = 0.2f;
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, tilt), 0.9f);
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, -tilt), 0.9f);
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(tilt, -1, 0), 0.9f);
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(-tilt, -1, 0), 0.9f);
-
-	tilt = 1.0f;
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, tilt), 0.5f);
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, -tilt), 0.5f);
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(tilt, -1, 0), 0.5f);
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(-tilt, -1, 0), 0.5f);
-
-	tilt = 10.0f;
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, tilt), 0.1f);
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, -tilt), 0.1f);
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(tilt, -1, 0), 0.1f);
-	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(-tilt, -1, 0), 0.1f);
-#pragma endregion
 	auto pss = InitPlantSimulationSystem();
 	auto ics = InitImageCollectionSystem();
-	ics->AttachToPlantSimulationSystem(pss);
-	if (true) {
-		char dir[256] = {};
-		_getcwd(dir, 256);
-		ImageCaptureSequence sequence;
-		sequence.Amount = 10;
+	ics->SetPlantSimulationSystem(pss);
+	
+	char dir[256] = {};
+	_getcwd(dir, 256);
+	ImageCaptureSequence sequence;
+	sequence.Amount = 100;
+	
+	if (generateLearningData) {
 		sequence.CameraPos = glm::vec3(0, 2, 30);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\acacia";
-		sequence.OutputPath = "./Pictures/Acacia/";
+		sequence.Name = "acacia";
 		ics->PushImageCaptureSequence(sequence);
-		sequence.CameraPos = glm::vec3(0, 2, 30);
+		sequence.CameraPos = glm::vec3(0, 2, 25);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\apple";
-		sequence.OutputPath = "./Pictures/Apple/";
+		sequence.Name = "apple";
 		ics->PushImageCaptureSequence(sequence);
 		sequence.CameraPos = glm::vec3(0, 2, 35);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\willow";
-		sequence.OutputPath = "./Pictures/Willow/";
+		sequence.Name = "willow";
 		ics->PushImageCaptureSequence(sequence);
 		sequence.CameraPos = glm::vec3(0, 2, 45);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\maple";
-		sequence.OutputPath = "./Pictures/Maple/";
+		sequence.Name = "maple";
 		ics->PushImageCaptureSequence(sequence);
 		sequence.CameraPos = glm::vec3(0, 2, 45);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\birch";
-		sequence.OutputPath = "./Pictures/Birch/";
+		sequence.Name = "birch";
 		ics->PushImageCaptureSequence(sequence);
 		sequence.CameraPos = glm::vec3(0, 2, 50);
 		sequence.CameraEulerDegreeRot = glm::vec3(13, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\oak";
-		sequence.OutputPath = "./Pictures/Oak/";
+		sequence.Name = "oak";
 		ics->PushImageCaptureSequence(sequence);
 		sequence.CameraPos = glm::vec3(0, 2, 20);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 		sequence.ParamPath = std::string(dir) + "\\pine";
-		sequence.OutputPath = "./Pictures/Pine/";
+		sequence.Name = "pine";
 		ics->PushImageCaptureSequence(sequence);
 	}
-	if (false) {
+	if (generateSorghum) {
 		auto srSys = InitSorghumReconstructionSystem();
 		Entity plant1 = srSys->ImportPlant("skeleton_procedural_1.txt", 0.01f, "Sorghum 1");
 		Entity plant2 = srSys->ImportPlant("skeleton_procedural_2.txt", 0.01f, "Sorghum 2");
@@ -150,7 +80,7 @@ int main()
 		srSys->ExportPlant(plant2, "plant2");
 		srSys->ExportPlant(plant3, "plant3");
 		srSys->ExportPlant(plant4, "plant4");
-		if (false) {
+		if (generateSorghumField) {
 			glm::vec2 radius = glm::vec2(53, 12);
 			glm::vec2 size = glm::vec2(0.565f, 2.7f);
 			std::vector<std::vector<glm::mat4>> matricesList;
@@ -215,45 +145,85 @@ int main()
 		LocalToWorld t2;
 		LocalToWorld t3;
 		LocalToWorld t4;
-		
+
 		t1.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 		t2.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 		t3.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 		t4.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
-		
+
 		t1.SetPosition(glm::vec3(-5.0f, 0.0, 0));
 		t2.SetPosition(glm::vec3(0.0f, 0.0, 0));
 		t3.SetPosition(glm::vec3(5.0f, 0.0, 0));
 		t4.SetPosition(glm::vec3(10.0f, 0.0, 0));
-		
+
 		t1.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(42.0f), 0));
 		t2.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(30.0f), 0));
 		t3.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(40.0f), 0));
 		t4.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(-110.0f), 0));
 		EntityManager::SetComponentData(plant1, t1);
-		
+
 		EntityManager::SetComponentData(plant2, t2);
-		
+
 		EntityManager::SetComponentData(plant3, t3);
-		
+
 		EntityManager::SetComponentData(plant4, t4);
 	}
-	
 #pragma region Engine Loop
-	bool loopable = true;
+	bool loop = true;
+	bool eval = true;
 	//Start engine. Here since we need to inject procedures to the main engine loop we need to manually loop by our self.
 	//Another way to run engine is to simply execute:
 	//Application.Run();
-	while (loopable) {
-		Application::PreUpdate();		
-		//ImGui::ShowDemoWindow();
+	while (loop) {
+		Application::PreUpdate();
+		if (eval && generateLearningData && !ics->IsExport())
+		{
+			eval = false;
+			ics->SetIsTrain(false);
+			sequence.CameraPos = glm::vec3(0, 2, 30);
+			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+			sequence.ParamPath = std::string(dir) + "\\acacia";
+			sequence.Name = "acacia";
+			ics->PushImageCaptureSequence(sequence);
+			sequence.CameraPos = glm::vec3(0, 2, 25);
+			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+			sequence.ParamPath = std::string(dir) + "\\apple";
+			sequence.Name = "apple";
+			ics->PushImageCaptureSequence(sequence);
+			sequence.CameraPos = glm::vec3(0, 2, 35);
+			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+			sequence.ParamPath = std::string(dir) + "\\willow";
+			sequence.Name = "willow";
+			ics->PushImageCaptureSequence(sequence);
+			sequence.CameraPos = glm::vec3(0, 2, 45);
+			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+			sequence.ParamPath = std::string(dir) + "\\maple";
+			sequence.Name = "maple";
+			ics->PushImageCaptureSequence(sequence);
+			sequence.CameraPos = glm::vec3(0, 2, 45);
+			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+			sequence.ParamPath = std::string(dir) + "\\birch";
+			sequence.Name = "birch";
+			ics->PushImageCaptureSequence(sequence);
+			sequence.CameraPos = glm::vec3(0, 2, 50);
+			sequence.CameraEulerDegreeRot = glm::vec3(13, 0, 0);
+			sequence.ParamPath = std::string(dir) + "\\oak";
+			sequence.Name = "oak";
+			ics->PushImageCaptureSequence(sequence);
+			sequence.CameraPos = glm::vec3(0, 2, 20);
+			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
+			sequence.ParamPath = std::string(dir) + "\\pine";
+			sequence.Name = "pine";
+			ics->PushImageCaptureSequence(sequence);
+
+		}
 		Application::Update();
-		loopable = Application::LateUpdate();
+		loop = Application::LateUpdate();
 	}
 #pragma endregion
 	Application::End();
-	return 0; 
 }
+#pragma region Helpers
 PlantSimulationSystem* InitPlantSimulationSystem() {
 	return Application::GetWorld()->CreateSystem<PlantSimulationSystem>(SystemGroup::SimulationSystemGroup);
 }
@@ -267,6 +237,91 @@ SorghumReconstructionSystem* InitSorghumReconstructionSystem()
 {
 	return Application::GetWorld()->CreateSystem<SorghumReconstructionSystem>(SystemGroup::SimulationSystemGroup);
 }
+
+void EngineSetup()
+{
+#pragma region Engine Setup
+#pragma region Global light settings
+	RenderManager::SetPCSSScaleFactor(1.0f);
+	RenderManager::SetSSAOKernelBias(0.08);
+	RenderManager::SetSSAOKernelRadius(0.05f);
+	RenderManager::SetSSAOSampleSize(32);
+	RenderManager::SetAmbientLight(0.9f);
+	RenderManager::SetSSAOFactor(10.0f);
+	RenderManager::SetShadowMapResolution(4096);
+	RenderManager::SetStableFit(false);
+	RenderManager::SetSeamFixRatio(0.05f);
+	RenderManager::SetMaxShadowDistance(300);
+	RenderManager::SetSplitRatio(0.15f, 0.3f, 0.5f, 1.0f);
+#pragma endregion
+	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
+	Application::Init();
+#pragma region Lights
+	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), LocalToWorld(), LocalToParent());
+	DirectionalLight dlc;
+	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
+	dlc.diffuseBrightness = 1.3f;
+	dlc.specularBrightness = 1.0f;
+	dlc.depthBias = 0.1;
+	dlc.normalOffset = 0.001;
+	dlc.lightSize = 1.0;
+	LocalToWorld ltw;
+	ltw.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
+	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
+	EntityManager::SetComponentData(dle, dlc);
+	EntityManager::SetComponentData(dle, ltw);
+#pragma endregion
+#pragma region Preparations
+	Application::SetTimeStep(0.016f);
+	auto world = Application::GetWorld();
+	WorldTime* time = world->Time();
+
+	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToWorld(), LocalToParent());
+	CameraControlSystem* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);
+	ccs->Enable();
+	ltw = LocalToWorld();
+	ltw.SetPosition(glm::vec3(0, 2, 35));
+	ltw.SetEulerRotation(glm::radians(glm::vec3(15, 0, 0)));
+	auto mainCamera = RenderManager::GetMainCamera();
+	if (mainCamera) {
+		mainCamera->GetOwner().SetComponentData(ltw);
+		mainCamera->DrawSkyBox = false;
+		mainCamera->ClearColor = glm::vec3(1.0f);
+	}
+	ccs->SetVelocity(15.0f);
+	//InitGround();
+#pragma endregion
+	TreeManager::Init();
+#pragma region Light estimator setup
+	//The smaller the branch node's size, the more branching for tree.
+	TreeManager::GetLightEstimator()->ResetResolution(512);
+	TreeManager::GetLightEstimator()->ResetCenterDistance(60);
+	TreeManager::GetLightEstimator()->ResetSnapShotWidth(30);
+	//From top
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, 0), 1.0f);
+
+	//45
+	float tilt = 0.2f;
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, tilt), 0.9f);
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, -tilt), 0.9f);
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(tilt, -1, 0), 0.9f);
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(-tilt, -1, 0), 0.9f);
+
+	tilt = 1.0f;
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, tilt), 0.5f);
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, -tilt), 0.5f);
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(tilt, -1, 0), 0.5f);
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(-tilt, -1, 0), 0.5f);
+
+	tilt = 10.0f;
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, tilt), 0.1f);
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(0, -1, -tilt), 0.1f);
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(tilt, -1, 0), 0.1f);
+	TreeManager::GetLightEstimator()->PushSnapShot(glm::vec3(-tilt, -1, 0), 0.1f);
+#pragma endregion
+#pragma endregion
+}
+
 void InitGround() {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToParent(), LocalToWorld());
 	auto entity = EntityManager::CreateEntity(archetype);
@@ -340,4 +395,7 @@ void InitGround() {
 	entity.SetPrivateComponent(std::move(rigidBody));
 	*/
 }
+
+
+#pragma endregion
 
