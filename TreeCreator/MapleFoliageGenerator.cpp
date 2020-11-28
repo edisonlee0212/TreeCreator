@@ -7,8 +7,9 @@ TreeUtilities::MapleFoliageGenerator::MapleFoliageGenerator()
 
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
-	_LeafMaterial->SetTransparentDiscard(true);
-	_LeafMaterial->SetTransparentDiscardLimit(0.5f);
+	_LeafMaterial->TransparentDiscard = true;
+	_LeafMaterial->TransparentDiscardLimit = 0.5f;
+	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	_LeafSurfaceTex = AssetManager::LoadTexture("../Resources/Textures/Leaf/maple.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
@@ -37,7 +38,6 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 		particleSys->Material = _LeafMaterial;
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
-		particleSys->BackCulling = false;
 		particleSys->ReceiveShadow = false;
 		LocalToParent ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));

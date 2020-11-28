@@ -9,6 +9,11 @@
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
 
+void ImageCollectionSystem::ResetCounter()
+{
+	_Counter = 0;
+}
+
 void ImageCollectionSystem::SetIsTrain(bool value)
 {
 	_IsTrain = value;
@@ -124,7 +129,7 @@ void ImageCollectionSystem::Update()
 				auto& treeParameters = _ImageCaptureSequences[_CurrentSelectedSequenceIndex].second;
 				SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
 				treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
-				treeParameters.Seed = _Counter;
+				treeParameters.Seed = imageCaptureSequence.Amount + (_IsTrain ? 0 : 9999);
 				_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
 				_TreeParametersOutputList.push_back(treeParameters);
 				_Status = ImageCollectionSystemStatus::Growing;
@@ -151,7 +156,7 @@ void ImageCollectionSystem::Update()
 			path = _StorePath + "white_" + (_IsTrain ? "train/" : "val/") +
 				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
-				+ "_" + std::to_string(_Counter)
+				+ "_" + std::to_string(_ImageCaptureSequences[_CurrentSelectedSequenceIndex].second.Seed)
 				+ ".jpg";
 			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
 				path, 320, 320);
@@ -164,7 +169,7 @@ void ImageCollectionSystem::Update()
 			path = _StorePath + "rgb_" + (_IsTrain ? "train/" : "val/") +
 				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
-				+ "_" + std::to_string(_Counter)
+				+ "_" + std::to_string(_ImageCaptureSequences[_CurrentSelectedSequenceIndex].second.Seed)
 				+ ".jpg";
 			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
 				path, 320, 320);
@@ -178,7 +183,7 @@ void ImageCollectionSystem::Update()
 			path = _StorePath + "mask_" + (_IsTrain ? "train/" : "val/") +
 				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
-				+ "_" + std::to_string(_Counter)
+				+ "_" + std::to_string(_ImageCaptureSequences[_CurrentSelectedSequenceIndex].second.Seed)
 				+ ".png";
 			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToPng(
 				path);
@@ -241,7 +246,6 @@ void ImageCollectionSystem::EnableSemantic()
 	
 	auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
 	leavesRenderer->ForwardRendering = true;
-	leavesRenderer->BackCulling = false;
 	leavesRenderer->Material = TreeManager::SemanticTreeLeafMaterial;
 	
 	auto& branchRenderer = _CurrentTree.GetPrivateComponent<MeshRenderer>();

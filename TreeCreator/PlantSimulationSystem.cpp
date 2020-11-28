@@ -675,18 +675,18 @@ Entity PlantSimulationSystem::CreateTree(TreeParameters parameters, glm::vec3 po
 {
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
-	mat->SetShininess(32.0f);
+	mat->Shininess = 32.0f;
 
 	switch (parameters.FoliageType)
 	{
 	case 7:
-		mat->SetShininess(1024);
+		mat->Shininess = 1024;
 		mat->SetTexture(_DefaultTreeSurfaceSurfTex2, TextureType::DIFFUSE);
 		mat->SetTexture(_DefaultTreeSurfaceNormTex2, TextureType::NORMAL);
 		mat->SetTexture(_DefaultTreeSurfaceSpecTex2, TextureType::SPECULAR);
 		break;
 	default:
-		mat->SetShininess(1024);
+		mat->Shininess = 1024;
 		mat->SetTexture(_DefaultTreeSurfaceSurfTex1, TextureType::DIFFUSE);
 		mat->SetTexture(_DefaultTreeSurfaceNormTex1, TextureType::NORMAL);
 		break;

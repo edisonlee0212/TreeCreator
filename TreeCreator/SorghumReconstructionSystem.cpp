@@ -13,7 +13,6 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant() const
 	auto mmc = std::make_unique<MeshRenderer>();
 	mmc->Material = _StemMaterial;
 	mmc->Mesh = std::make_shared<Mesh>();
-	mmc->BackCulling = false;
 	EntityManager::SetPrivateComponent(ret, std::move(mmc));
 
 	return ret;
@@ -32,7 +31,6 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateLeafForPlant(En
 	auto mmc = std::make_unique<MeshRenderer>();
 	mmc->Material = _LeafMaterial;
 	mmc->Mesh = std::make_shared<Mesh>();
-	mmc->BackCulling = false;
 	EntityManager::SetPrivateComponent(ret, std::move(mmc));
 
 	return ret;
@@ -108,7 +106,6 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CopyPlant(Entity orig
 	auto& mmc = original.GetPrivateComponent<MeshRenderer>();
 	auto newmmc = std::unique_ptr<MeshRenderer>();
 	newmmc->Material = mmc->Material;
-	newmmc->BackCulling = false;
 	newmmc->Mesh = mmc->Mesh;
 	plant.SetPrivateComponent(std::move(newmmc));
 	EntityManager::ForEachChild(original, [this, &plant](Entity child)
@@ -120,7 +117,6 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CopyPlant(Entity orig
 			auto& mmc = newChild.GetPrivateComponent<MeshRenderer>();
 			auto newmmc = std::unique_ptr<MeshRenderer>();
 			newmmc->Material = mmc->Material;
-			newmmc->BackCulling = false;
 			newmmc->Mesh = mmc->Mesh;
 			newChild.SetPrivateComponent(std::move(newmmc));
 			EntityManager::SetParent(newChild, plant);
@@ -137,7 +133,6 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateGridPlant(Entit
 	auto imr = std::make_unique<Particles>();
 	auto& mr = EntityManager::GetPrivateComponent<MeshRenderer>(original);
 	imr->Mesh = mr->Mesh;
-	imr->BackCulling = false;
 	imr->Material = _InstancedStemMaterial;
 	imr->Matrices.clear();
 	imr->Matrices.insert(imr->Matrices.begin(), matrices.begin(), matrices.end());
@@ -152,7 +147,6 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateGridPlant(Entit
 			auto imr = std::make_unique<Particles>();
 			auto& mr = EntityManager::GetPrivateComponent<MeshRenderer>(child);
 			imr->Mesh = mr->Mesh;
-			imr->BackCulling = false;
 			imr->Material = _InstancedLeafMaterial;
 			imr->Matrices.clear();
 			imr->Matrices.insert(imr->Matrices.begin(), matrices.begin(), matrices.end());
@@ -406,19 +400,24 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 	
 	_StemMaterial = std::make_shared<Material>();
 	_StemMaterial->SetProgram(Default::GLPrograms::StandardProgram);
+	_StemMaterial->CullingMode = MaterialCullingMode::OFF;
 	auto textureDiffuseTruck = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/brown.png"));
 	_StemMaterial->SetTexture(textureDiffuseTruck, TextureType::DIFFUSE);
 	_StemMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardProgram);
+	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	auto textureLeaf = AssetManager::LoadTexture("../Resources/Textures/leafSurfaceDark.jpg");
 	_LeafMaterial->SetTexture(textureLeaf, TextureType::DIFFUSE);
 	_LeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	_InstancedStemMaterial = std::make_shared<Material>();
 	_InstancedStemMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	_InstancedStemMaterial->SetTexture(textureDiffuseTruck, TextureType::DIFFUSE);
+	_InstancedStemMaterial->CullingMode = MaterialCullingMode::OFF;
+	
 	_InstancedStemMaterial->SetMaterialProperty("material.shininess", 0.5f);
 	_InstancedLeafMaterial = std::make_shared<Material>();
+	_InstancedLeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	_InstancedLeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	_InstancedLeafMaterial->SetTexture(textureLeaf, TextureType::DIFFUSE);
 	_InstancedLeafMaterial->SetMaterialProperty("material.shininess", 1.0f);

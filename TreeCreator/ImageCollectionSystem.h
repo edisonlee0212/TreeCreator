@@ -40,6 +40,7 @@ namespace TreeUtilities {
 		std::vector<TreeParameters> _TreeParametersOutputList;
 		std::vector<std::shared_ptr<Texture2D>> _BackgroundTextures;
 	public:
+		void ResetCounter();
 		void SetIsTrain(bool value);
 		bool IsExport() const;
 		void PushImageCaptureSequence(ImageCaptureSequence sequence);

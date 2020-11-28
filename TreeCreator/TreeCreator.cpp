@@ -31,7 +31,6 @@ void main()
 	_getcwd(dir, 256);
 	ImageCaptureSequence sequence;
 	sequence.Amount = 100;
-	
 	if (generateLearningData) {
 		sequence.CameraPos = glm::vec3(0, 2, 30);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
@@ -179,6 +178,7 @@ void main()
 		if (eval && generateLearningData && !ics->IsExport())
 		{
 			eval = false;
+			ics->ResetCounter();
 			ics->SetIsTrain(false);
 			sequence.CameraPos = glm::vec3(0, 2, 30);
 			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
@@ -380,7 +380,7 @@ void InitGround() {
 	mat->SetTexture(textureH, TextureType::DISPLACEMENT);
 	*/
 
-	mat->SetShininess(32.0f);
+	mat->Shininess = 32.0f;
 	auto meshMaterial = std::make_unique<MeshRenderer>();
 	meshMaterial->Mesh = Default::Primitives::Quad;
 	meshMaterial->Material = mat;

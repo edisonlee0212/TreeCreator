@@ -212,6 +212,7 @@ void TreeUtilities::TreeManager::Init()
 	SemanticTreeBranchMaterial = std::make_shared<Material>();
 	SemanticTreeBranchMaterial->SetProgram(branchProgram);
 	SemanticTreeLeafMaterial = std::make_shared<Material>();
+	SemanticTreeLeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	SemanticTreeLeafMaterial->SetProgram(leafProgram);
 
 	_InternodeArchetype = EntityManager::CreateEntityArchetype(
