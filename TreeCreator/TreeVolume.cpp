@@ -9,6 +9,10 @@ bool TreeVolume::PruneBuds() const
 	return _PruneBuds;
 }
 
+void TreeVolume::CalculateVolume()
+{
+}
+
 bool TreeVolume::InVolume(glm::vec3 position) const
 {
 	switch (_Type)
@@ -24,13 +28,13 @@ bool TreeVolume::InVolume(glm::vec3 position) const
 void TreeVolume::OnGui()
 {
 	ImGui::Checkbox("Prune Buds", &_PruneBuds);
+	ImGui::Checkbox("Display bounds", &_Display);
 	static const char* TVTypes[]{ "Default", "Cube", "Sphere" };
 	ImGui::Combo("Display mode", (int*)(void*)&_Type, TVTypes, IM_ARRAYSIZE(TVTypes));
 	switch (_Type)
 	{
 	case TreeVolumeType::Cube:
 		ImGui::Text("Type: Cube");
-		ImGui::Checkbox("Display bounds", &_Display);
 		if (_Display)
 		{
 			ImGui::ColorEdit4("Color: ", (float*)(void*)&_DisplayColor);
@@ -41,7 +45,6 @@ void TreeVolume::OnGui()
 		break;
 	case TreeVolumeType::Sphere:
 		ImGui::Text("Type: Sphere");
-		ImGui::Checkbox("Display bounds", &_Display);
 		if (_Display)
 		{
 			ImGui::ColorEdit4("Color: ", (float*)(void*)&_DisplayColor);

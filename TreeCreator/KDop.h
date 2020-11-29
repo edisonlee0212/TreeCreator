@@ -2,13 +2,16 @@
 #include "UniEngine.h"
 #include "TreeManager.h"
 #include "FoliageGeneratorBase.h"
+#include "TreeVolume.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
 namespace TreeUtilities {
-	class KDop : public PrivateComponentBase
+	class KDop : public TreeVolume
 	{
 	public:
-		float DirectionalDistance[26];
-		void Reset();
+		float DirectionalDistance[26] = { 1.0f };
+		void CalculateVolume() override;
+		bool InVolume(glm::vec3 position) const override;
+		void OnGui() override;
 	};
 }

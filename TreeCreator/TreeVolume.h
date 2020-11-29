@@ -8,6 +8,7 @@ namespace TreeUtilities
 {
 	class TreeVolume : public PrivateComponentBase
 	{
+	protected:
 		Bound _Bound;
 		glm::vec4 _DisplayColor = glm::vec4(0.0f, 0.0f, 1.0f, 0.5f);
 		bool _Display = true;
@@ -16,10 +17,8 @@ namespace TreeUtilities
 	public:
 		void SetPruneBuds(bool value);
 		bool PruneBuds() const;
-
-		bool InVolume(glm::vec3 position) const;
-
+		virtual void CalculateVolume();
+		virtual bool InVolume(glm::vec3 position) const;
 		void OnGui() override;
 	};
-	
 }
