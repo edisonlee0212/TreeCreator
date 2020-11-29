@@ -74,7 +74,7 @@ void main()
 		Entity plant2 = srSys->ImportPlant("skeleton_procedural_2.txt", 0.01f, "Sorghum 2");
 		Entity plant3 = srSys->ImportPlant("skeleton_procedural_3.txt", 0.01f, "Sorghum 3");
 		Entity plant4 = srSys->ImportPlant("skeleton_procedural_4.txt", 0.01f, "Sorghum 4");
-		srSys->GenerateMeshForAllPlants(6, 9);
+		srSys->GenerateMeshForAllPlants(2, 3);
 		srSys->ExportPlant(plant1, "plant1");
 		srSys->ExportPlant(plant2, "plant2");
 		srSys->ExportPlant(plant3, "plant3");
@@ -140,10 +140,10 @@ void main()
 			Entity gridPlant4 = srSys->CreateGridPlant(plant4, matricesList[3]);
 			gridPlant4.SetName("Grid 4");
 		}
-		LocalToWorld t1;
-		LocalToWorld t2;
-		LocalToWorld t3;
-		LocalToWorld t4;
+		LocalToParent t1;
+		LocalToParent t2;
+		LocalToParent t3;
+		LocalToParent t4;
 
 		t1.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 		t2.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
@@ -289,7 +289,7 @@ void EngineSetup()
 		mainCamera->ClearColor = glm::vec3(1.0f);
 	}
 	ccs->SetVelocity(15.0f);
-	InitGround();
+	//InitGround();
 #pragma endregion
 	TreeManager::Init();
 #pragma region Light estimator setup

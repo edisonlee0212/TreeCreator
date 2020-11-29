@@ -10,6 +10,7 @@
 #include "AppleFoliageGenerator.h"
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
+#include "TreeVolume.h"
 
 using namespace TreeUtilities;
 
@@ -40,6 +41,8 @@ void InternodeData::OnGui()
 		ImGui::Spacing();
 	}
 }
+
+
 
 void TreeData::OnGui()
 {

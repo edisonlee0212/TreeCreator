@@ -2,6 +2,7 @@
 #include "UniEngine.h"
 #include "TreeManager.h"
 #include "FoliageGeneratorBase.h"
+#include "TreeVolume.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
 namespace TreeUtilities {

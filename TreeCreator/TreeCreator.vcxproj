@@ -126,6 +126,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClCompile Include="TreeManager.cpp" />
     <ClCompile Include="TreeScene.cpp" />
     <ClCompile Include="TreeSystem.cpp" />
+    <ClCompile Include="TreeVolume.cpp" />
     <ClCompile Include="WillowFoliageGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -164,7 +165,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClInclude Include="TreeManager.h" />
     <ClInclude Include="TreeScene.h" />
     <ClInclude Include="TreeSystem.h" />
-    <ClInclude Include="TreeUtilities.h" />
+    <ClInclude Include="TreeVolume.h" />
     <ClInclude Include="WillowFoliageGenerator.h" />
   </ItemGroup>
   <ItemGroup>

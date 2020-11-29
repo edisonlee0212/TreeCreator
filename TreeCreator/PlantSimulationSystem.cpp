@@ -20,6 +20,8 @@
 #include "AppleFoliageGenerator.h"
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
+
+#include "TreeVolume.h"
 void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
 

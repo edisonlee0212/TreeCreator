@@ -13,41 +13,59 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Header Files\Network">
-      <UniqueIdentifier>{2069fcd2-e3dd-4653-a630-1f2ff67c0749}</UniqueIdentifier>
+    <Filter Include="Source Files\SorghumReconstruction">
+      <UniqueIdentifier>{e5708bbe-0a2e-4743-a627-9878f7a058e4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Network">
-      <UniqueIdentifier>{40ed09d9-e9eb-4e95-baef-1227304b11a4}</UniqueIdentifier>
+    <Filter Include="Header Files\External">
+      <UniqueIdentifier>{f3c54ace-0ebc-4a18-b1d8-7cfb4df7ce23}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\quickhull">
+    <Filter Include="Header Files\External\pugixml">
+      <UniqueIdentifier>{d89a30ee-9332-48ee-b499-12c5917dfad4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\External\quickhull">
       <UniqueIdentifier>{5f615228-4e3a-487b-b594-461888eb3d85}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\quickhull">
-      <UniqueIdentifier>{54632908-53ed-4954-ab43-dc5d89bef97f}</UniqueIdentifier>
+    <Filter Include="Header Files\Foliage">
+      <UniqueIdentifier>{3c943877-9f76-4d18-af5f-df97fd7b8fd6}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\SorghumReconstruction">
       <UniqueIdentifier>{8c551ecc-0cfc-483c-8420-616be1296937}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\SorghumReconstruction">
-      <UniqueIdentifier>{e5708bbe-0a2e-4743-a627-9878f7a058e4}</UniqueIdentifier>
+    <Filter Include="Header Files\TreeVolume">
+      <UniqueIdentifier>{f69e32b6-b56c-4c9e-ac92-17107710e366}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\TreeUtilities">
-      <UniqueIdentifier>{73808b55-aadc-4337-b584-c48f9028a9b8}</UniqueIdentifier>
+    <Filter Include="Header Files\Systems">
+      <UniqueIdentifier>{1dca6077-2f76-4fd5-a762-0d0939638b7a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\TreeUtilities">
-      <UniqueIdentifier>{6692182e-b65f-476f-9436-4f542c2a11ed}</UniqueIdentifier>
+    <Filter Include="Source Files\External">
+      <UniqueIdentifier>{1bf02b85-ad90-4de8-aaa5-36ed28b42946}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\pugixml">
-      <UniqueIdentifier>{d89a30ee-9332-48ee-b499-12c5917dfad4}</UniqueIdentifier>
+    <Filter Include="Header Files\External\Network">
+      <UniqueIdentifier>{2069fcd2-e3dd-4653-a630-1f2ff67c0749}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\pugixml">
+    <Filter Include="Source Files\External\Network">
+      <UniqueIdentifier>{40ed09d9-e9eb-4e95-baef-1227304b11a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\External\pugixml">
       <UniqueIdentifier>{2e0e61ac-89c1-42e3-9ef4-7fc04265f248}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\TreeUtilities\Foliage">
-      <UniqueIdentifier>{3c943877-9f76-4d18-af5f-df97fd7b8fd6}</UniqueIdentifier>
+    <Filter Include="Source Files\External\quickhull">
+      <UniqueIdentifier>{54632908-53ed-4954-ab43-dc5d89bef97f}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\TreeUtilities\Foliage">
+    <Filter Include="Source Files\Foliage">
       <UniqueIdentifier>{06d8dc90-fcab-48cc-8cca-463aa5e52948}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Systems">
+      <UniqueIdentifier>{6692182e-b65f-476f-9436-4f542c2a11ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Utilities">
+      <UniqueIdentifier>{506ba6be-9e1e-4f4c-b9f7-52134a49d11a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Utilities">
+      <UniqueIdentifier>{95fb4b2b-1ce4-494b-a9ef-ff246b8b89f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\TreeVolume">
+      <UniqueIdentifier>{bf1bf9fe-d6f9-4840-aae4-d7a515bd043b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -55,13 +73,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NetworkSystem.cpp">
-      <Filter>Source Files\Network</Filter>
-    </ClCompile>
-    <ClCompile Include="TreeScene.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\External\Network</Filter>
     </ClCompile>
     <ClCompile Include="quickhull\QuickHull.cpp">
-      <Filter>Source Files\quickhull</Filter>
+      <Filter>Source Files\External\quickhull</Filter>
     </ClCompile>
     <ClCompile Include="SorghumReconstructionSystem.cpp">
       <Filter>Source Files\SorghumReconstruction</Filter>
@@ -69,106 +84,109 @@
     <ClCompile Include="LeafSegment.cpp">
       <Filter>Source Files\SorghumReconstruction</Filter>
     </ClCompile>
-    <ClCompile Include="Curve.cpp">
-      <Filter>Source Files\TreeUtilities</Filter>
-    </ClCompile>
-    <ClCompile Include="LightEstimator.cpp">
-      <Filter>Source Files\TreeUtilities</Filter>
-    </ClCompile>
-    <ClCompile Include="TreeManager.cpp">
-      <Filter>Source Files\TreeUtilities</Filter>
-    </ClCompile>
-    <ClCompile Include="TreeSystem.cpp">
-      <Filter>Source Files\TreeUtilities</Filter>
-    </ClCompile>
-    <ClCompile Include="BezierCurve.cpp">
-      <Filter>Source Files\TreeUtilities</Filter>
-    </ClCompile>
-    <ClCompile Include="BranchSystem.cpp">
-      <Filter>Source Files\TreeUtilities</Filter>
-    </ClCompile>
-    <ClCompile Include="InternodeSystem.cpp">
-      <Filter>Source Files\TreeUtilities</Filter>
-    </ClCompile>
-    <ClCompile Include="InternodeRingSegment.cpp">
-      <Filter>Source Files\TreeUtilities</Filter>
-    </ClCompile>
     <ClCompile Include="pugixml\pugixml.cpp">
-      <Filter>Source Files\pugixml</Filter>
-    </ClCompile>
-    <ClCompile Include="CrownSurfaceRecon.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\External\pugixml</Filter>
     </ClCompile>
     <ClCompile Include="FoliageGeneratorBase.cpp">
-      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+      <Filter>Source Files\Foliage</Filter>
     </ClCompile>
     <ClCompile Include="WillowFoliageGenerator.cpp">
-      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+      <Filter>Source Files\Foliage</Filter>
     </ClCompile>
     <ClCompile Include="MapleFoliageGenerator.cpp">
-      <Filter>Source Files\TreeUtilities\Foliage</Filter>
-    </ClCompile>
-    <ClCompile Include="PlantSimulationSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ImageCollectionSystem.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Foliage</Filter>
     </ClCompile>
     <ClCompile Include="PineFoliageGenerator.cpp">
-      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+      <Filter>Source Files\Foliage</Filter>
     </ClCompile>
     <ClCompile Include="AcaciaFoliageGenerator.cpp">
-      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+      <Filter>Source Files\Foliage</Filter>
     </ClCompile>
     <ClCompile Include="AppleFoliageGenerator.cpp">
-      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+      <Filter>Source Files\Foliage</Filter>
     </ClCompile>
     <ClCompile Include="BirchFoliageGenerator.cpp">
-      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+      <Filter>Source Files\Foliage</Filter>
     </ClCompile>
     <ClCompile Include="OakFoliageGenerator.cpp">
-      <Filter>Source Files\TreeUtilities\Foliage</Filter>
+      <Filter>Source Files\Foliage</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BranchSystem.cpp">
+      <Filter>Source Files\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageCollectionSystem.cpp">
+      <Filter>Source Files\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="InternodeSystem.cpp">
+      <Filter>Source Files\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="PlantSimulationSystem.cpp">
+      <Filter>Source Files\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeSystem.cpp">
+      <Filter>Source Files\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="CrownSurfaceRecon.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="BezierCurve.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="Curve.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="InternodeRingSegment.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="LightEstimator.cpp">
+      <Filter>Source Files\Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeScene.cpp">
+      <Filter>Source Files\Utilities</Filter>
     </ClCompile>
     <ClCompile Include="KDop.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\TreeVolume</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeVolume.cpp">
+      <Filter>Source Files\TreeVolume</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkSystem.h">
-      <Filter>Header Files\Network</Filter>
-    </ClInclude>
-    <ClInclude Include="TreeScene.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\External\Network</Filter>
     </ClInclude>
     <ClInclude Include="quickhull\Structs\VertexDataSource.hpp">
-      <Filter>Header Files\quickhull</Filter>
+      <Filter>Header Files\External\quickhull</Filter>
     </ClInclude>
     <ClInclude Include="quickhull\Structs\Mesh.hpp">
-      <Filter>Header Files\quickhull</Filter>
+      <Filter>Header Files\External\quickhull</Filter>
     </ClInclude>
     <ClInclude Include="quickhull\Structs\Plane.hpp">
-      <Filter>Header Files\quickhull</Filter>
+      <Filter>Header Files\External\quickhull</Filter>
     </ClInclude>
     <ClInclude Include="quickhull\Structs\Pool.hpp">
-      <Filter>Header Files\quickhull</Filter>
+      <Filter>Header Files\External\quickhull</Filter>
     </ClInclude>
     <ClInclude Include="quickhull\Structs\Ray.hpp">
-      <Filter>Header Files\quickhull</Filter>
+      <Filter>Header Files\External\quickhull</Filter>
     </ClInclude>
     <ClInclude Include="quickhull\Structs\Vector3.hpp">
-      <Filter>Header Files\quickhull</Filter>
+      <Filter>Header Files\External\quickhull</Filter>
     </ClInclude>
     <ClInclude Include="quickhull\MathUtils.hpp">
-      <Filter>Header Files\quickhull</Filter>
+      <Filter>Header Files\External\quickhull</Filter>
     </ClInclude>
     <ClInclude Include="quickhull\ConvexHull.hpp">
-      <Filter>Header Files\quickhull</Filter>
+      <Filter>Header Files\External\quickhull</Filter>
     </ClInclude>
     <ClInclude Include="quickhull\HalfEdgeMesh.hpp">
-      <Filter>Header Files\quickhull</Filter>
+      <Filter>Header Files\External\quickhull</Filter>
     </ClInclude>
     <ClInclude Include="quickhull\QuickHull.hpp">
-      <Filter>Header Files\quickhull</Filter>
+      <Filter>Header Files\External\quickhull</Filter>
     </ClInclude>
     <ClInclude Include="SorghumReconstructionSystem.h">
       <Filter>Header Files\SorghumReconstruction</Filter>
@@ -176,74 +194,77 @@
     <ClInclude Include="LeafSegment.h">
       <Filter>Header Files\SorghumReconstruction</Filter>
     </ClInclude>
-    <ClInclude Include="BezierCurve.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
-    <ClInclude Include="BranchSystem.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
-    <ClInclude Include="Curve.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
-    <ClInclude Include="LightEstimator.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
-    <ClInclude Include="TreeManager.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
-    <ClInclude Include="TreeSystem.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
-    <ClInclude Include="TreeUtilities.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
-    <ClInclude Include="InternodeSystem.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
-    <ClInclude Include="InternodeRingSegment.h">
-      <Filter>Header Files\TreeUtilities</Filter>
-    </ClInclude>
     <ClInclude Include="pugixml\pugixml.hpp">
-      <Filter>Header Files\pugixml</Filter>
+      <Filter>Header Files\External\pugixml</Filter>
     </ClInclude>
     <ClInclude Include="pugixml\pugiconfig.hpp">
-      <Filter>Header Files\pugixml</Filter>
-    </ClInclude>
-    <ClInclude Include="CrownSurfaceRecon.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\External\pugixml</Filter>
     </ClInclude>
     <ClInclude Include="FoliageGeneratorBase.h">
-      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+      <Filter>Header Files\Foliage</Filter>
     </ClInclude>
     <ClInclude Include="WillowFoliageGenerator.h">
-      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+      <Filter>Header Files\Foliage</Filter>
     </ClInclude>
     <ClInclude Include="MapleFoliageGenerator.h">
-      <Filter>Header Files\TreeUtilities\Foliage</Filter>
-    </ClInclude>
-    <ClInclude Include="PlantSimulationSystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageCollectionSystem.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Foliage</Filter>
     </ClInclude>
     <ClInclude Include="PineFoliageGenerator.h">
-      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+      <Filter>Header Files\Foliage</Filter>
     </ClInclude>
     <ClInclude Include="AcaciaFoliageGenerator.h">
-      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+      <Filter>Header Files\Foliage</Filter>
     </ClInclude>
     <ClInclude Include="AppleFoliageGenerator.h">
-      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+      <Filter>Header Files\Foliage</Filter>
     </ClInclude>
     <ClInclude Include="BirchFoliageGenerator.h">
-      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+      <Filter>Header Files\Foliage</Filter>
     </ClInclude>
     <ClInclude Include="OakFoliageGenerator.h">
-      <Filter>Header Files\TreeUtilities\Foliage</Filter>
+      <Filter>Header Files\Foliage</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BranchSystem.h">
+      <Filter>Header Files\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageCollectionSystem.h">
+      <Filter>Header Files\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="InternodeSystem.h">
+      <Filter>Header Files\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="PlantSimulationSystem.h">
+      <Filter>Header Files\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeSystem.h">
+      <Filter>Header Files\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeVolume.h">
+      <Filter>Header Files\TreeVolume</Filter>
     </ClInclude>
     <ClInclude Include="KDop.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\TreeVolume</Filter>
+    </ClInclude>
+    <ClInclude Include="BezierCurve.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="CrownSurfaceRecon.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Curve.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="InternodeRingSegment.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeScene.h">
+      <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="LightEstimator.h">
+      <Filter>Header Files\Utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
