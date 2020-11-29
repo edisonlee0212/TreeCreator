@@ -34,20 +34,20 @@ void ImageCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation
 {
 	_CameraPosition = position;
 	_CameraEulerRotation = glm::radians(rotation);
-	LocalToWorld ltw;
-	ltw.SetPosition(_CameraPosition);
-	ltw.SetEulerRotation(_CameraEulerRotation);
-	_CameraEntity.SetComponentData(ltw);
+	LocalToParent transform;
+	transform.SetPosition(_CameraPosition);
+	transform.SetEulerRotation(_CameraEulerRotation);
+	_CameraEntity.SetComponentData(transform);
 }
 
 void ImageCollectionSystem::OnCreate()
 {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToWorld(), LocalToParent());
 	_CameraEntity = EntityManager::CreateEntity(archetype);
-	LocalToWorld ltw;
-	ltw.SetPosition(_CameraPosition);
-	ltw.SetEulerRotation(_CameraEulerRotation);
-	_CameraEntity.SetComponentData(ltw);
+	LocalToParent transform;
+	transform.SetPosition(_CameraPosition);
+	transform.SetEulerRotation(_CameraEulerRotation);
+	_CameraEntity.SetComponentData(transform);
 	auto cameraComponent = std::make_unique<CameraComponent>();
 	cameraComponent->ResizeResolution(960, 960);
 	cameraComponent->DrawSkyBox = false;
@@ -102,10 +102,10 @@ void ImageCollectionSystem::OnCreate()
 	mmr->ReceiveShadow = false;
 	mmr->CastShadow = false;
 	mmr->Material = _BackgroundMaterial;
-	ltw.SetPosition(glm::vec3(0, 17, -13));
-	ltw.SetEulerRotation(glm::radians(glm::vec3(75, -0, -180)));
-	ltw.SetScale(glm::vec3(30, 1, 30));
-	_Background.SetComponentData(ltw);
+	transform.SetPosition(glm::vec3(0, 17, -13));
+	transform.SetEulerRotation(glm::radians(glm::vec3(75, -0, -180)));
+	transform.SetScale(glm::vec3(30, 1, 30));
+	_Background.SetComponentData(transform);
 	_Background.SetPrivateComponent(std::move(mmr));
 	_Background.SetName("Background");
 	Enable();

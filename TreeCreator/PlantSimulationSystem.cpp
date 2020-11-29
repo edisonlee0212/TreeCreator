@@ -628,8 +628,10 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 
 	LocalToWorld ltw;
 	ltw.Value = glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(glm::quat(glm::vec3(0))) * glm::scale(glm::vec3(1.0f));
-
+	LocalToParent ltp;
+	ltp.Value = ltw.Value;
 	EntityManager::SetComponentData(treeEntity, ltw);
+	EntityManager::SetComponentData(treeEntity, ltp);
 #pragma endregion
 	TreeAge age;
 	age.Value = 0;
@@ -1505,12 +1507,12 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultConvexHullSurfaceMaterial->SetProgram(Default::GLPrograms::StandardProgram);
 	_DefaultConvexHullSurfaceMaterial->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
 
-	_DefaultTreeSurfaceSurfTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_baseColor.jpg"));
-	_DefaultTreeSurfaceNormTex1 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_normal.jpg"));
+	_DefaultTreeSurfaceSurfTex1 = AssetManager::LoadTexture(("../Resources/Textures/BarkMaterial/Bark_Pine_baseColor.jpg"));
+	_DefaultTreeSurfaceNormTex1 = AssetManager::LoadTexture(("../Resources/Textures/BarkMaterial/Bark_Pine_normal.jpg"));
 	
-	_DefaultTreeSurfaceSurfTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"));
-	_DefaultTreeSurfaceSpecTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg"));
-	_DefaultTreeSurfaceNormTex2 = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
+	_DefaultTreeSurfaceSurfTex2 = AssetManager::LoadTexture(("../Resources/Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"));
+	_DefaultTreeSurfaceSpecTex2 = AssetManager::LoadTexture(("../Resources/Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg"));
+	_DefaultTreeSurfaceNormTex2 = AssetManager::LoadTexture(("../Resources/Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
 
 	_NewTreeParameters.resize(1);
 	LoadDefaultTreeParameters(1, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);

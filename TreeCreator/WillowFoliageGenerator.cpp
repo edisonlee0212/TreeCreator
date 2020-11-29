@@ -14,7 +14,7 @@ TreeUtilities::WillowFoliageGenerator::WillowFoliageGenerator()
 	_BranchletMaterial = std::make_shared<Material>();
 	_BranchletMaterial->SetMaterialProperty("material.shininess", 32.0f);
 	_BranchletMaterial->SetProgram(Default::GLPrograms::StandardProgram);
-	_BranchletSurfaceTex = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/BarkMaterial/Bark_Pine_baseColor.jpg"));
+	_BranchletSurfaceTex = AssetManager::LoadTexture("../Resources/Textures/BarkMaterial/Bark_Pine_baseColor.jpg");
 	_BranchletMaterial->SetTexture(_BranchletSurfaceTex, TextureType::DIFFUSE);
 
 	_LeafMaterial = std::make_shared<Material>();
@@ -54,7 +54,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
 		particleSys->ReceiveShadow = false;
-		LocalToParent ltp;
+		LocalToWorld ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(mmc));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));

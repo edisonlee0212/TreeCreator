@@ -18,7 +18,7 @@ void EngineSetup();
 void main()
 {
 	EngineSetup();
-	bool generateLearningData = true;
+	bool generateLearningData = false;
 	bool generateSorghum = false;
 	bool generateSorghumField = false;
 
@@ -265,11 +265,11 @@ void EngineSetup()
 	dlc.depthBias = 0.1;
 	dlc.normalOffset = 0.001;
 	dlc.lightSize = 1.0;
-	LocalToWorld ltw;
-	ltw.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
+	LocalToParent transform;
+	transform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
 	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
 	EntityManager::SetComponentData(dle, dlc);
-	EntityManager::SetComponentData(dle, ltw);
+	EntityManager::SetComponentData(dle, transform);
 #pragma endregion
 #pragma region Preparations
 	Application::SetTimeStep(0.016f);
@@ -279,17 +279,17 @@ void EngineSetup()
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToWorld(), LocalToParent());
 	CameraControlSystem* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);
 	ccs->Enable();
-	ltw = LocalToWorld();
-	ltw.SetPosition(glm::vec3(0, 2, 35));
-	ltw.SetEulerRotation(glm::radians(glm::vec3(15, 0, 0)));
+	transform = LocalToParent();
+	transform.SetPosition(glm::vec3(0, 2, 35));
+	transform.SetEulerRotation(glm::radians(glm::vec3(15, 0, 0)));
 	auto mainCamera = RenderManager::GetMainCamera();
 	if (mainCamera) {
-		mainCamera->GetOwner().SetComponentData(ltw);
+		mainCamera->GetOwner().SetComponentData(transform);
 		mainCamera->DrawSkyBox = false;
 		mainCamera->ClearColor = glm::vec3(1.0f);
 	}
 	ccs->SetVelocity(15.0f);
-	//InitGround();
+	InitGround();
 #pragma endregion
 	TreeManager::Init();
 #pragma region Light estimator setup
@@ -326,10 +326,10 @@ void InitGround() {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToParent(), LocalToWorld());
 	auto entity = EntityManager::CreateEntity(archetype);
 	entity.SetName("Ground");
-	LocalToWorld ltw;
-	ltw.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	ltw.SetScale(glm::vec3(100.0f));
-	EntityManager::SetComponentData(entity, ltw);
+	LocalToParent transform;
+	transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	transform.SetScale(glm::vec3(100.0f));
+	EntityManager::SetComponentData(entity, transform);
 	/*
 	auto entity1 = EntityManager::CreateEntity(archetype);
 	translation.Value = glm::vec3(-100.0f, 0.0f, 0.0f);

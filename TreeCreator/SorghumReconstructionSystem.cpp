@@ -4,11 +4,11 @@
 Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant() const
 {
 	Entity ret = EntityManager::CreateEntity(_PlantArchetype);
-	LocalToWorld ltw;
-	ltw.SetScale(glm::vec3(1.0f));
+	LocalToParent transform;
+	transform.SetScale(glm::vec3(1.0f));
 	auto spline = std::make_shared<Spline>();
 	EntityManager::SetSharedComponent(ret, spline);
-	EntityManager::SetComponentData(ret, ltw);
+	EntityManager::SetComponentData(ret, transform);
 	
 	auto mmc = std::make_unique<MeshRenderer>();
 	mmc->Material = _StemMaterial;
@@ -22,11 +22,11 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateLeafForPlant(En
 {
 	Entity ret = EntityManager::CreateEntity(_LeafArchetype);
 	EntityManager::SetParent(ret, plantEntity);
-	LocalToParent ltp;
-	ltp.SetScale(glm::vec3(1.0f));
+	LocalToParent transform;
+	transform.SetScale(glm::vec3(1.0f));
 	auto spline = std::make_shared<Spline>();
 	EntityManager::SetSharedComponent(ret, spline);
-	EntityManager::SetComponentData(ret, ltp);
+	EntityManager::SetComponentData(ret, transform);
 
 	auto mmc = std::make_unique<MeshRenderer>();
 	mmc->Material = _LeafMaterial;
@@ -101,7 +101,7 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CopyPlant(Entity orig
 {
 	Entity plant = EntityManager::CreateEntity(_PlantArchetype);
 	plant.SetComponentData(EntityManager::GetComponentData<SorghumInfo>(original));
-	plant.SetComponentData(EntityManager::GetComponentData<LocalToWorld>(original));
+	plant.SetComponentData(EntityManager::GetComponentData<LocalToParent>(original));
 	plant.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(original));
 	auto& mmc = original.GetPrivateComponent<MeshRenderer>();
 	auto newmmc = std::unique_ptr<MeshRenderer>();
@@ -128,7 +128,7 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateGridPlant(Entit
 {
 	Entity plant = EntityManager::CreateEntity(_PlantArchetype);
 	plant.SetComponentData(EntityManager::GetComponentData<SorghumInfo>(original));
-	plant.SetComponentData(EntityManager::GetComponentData<LocalToWorld>(original));
+	plant.SetComponentData(EntityManager::GetComponentData<LocalToParent>(original));
 	plant.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(original));
 	auto imr = std::make_unique<Particles>();
 	auto& mr = EntityManager::GetPrivateComponent<MeshRenderer>(original);

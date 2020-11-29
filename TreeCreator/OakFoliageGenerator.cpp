@@ -7,7 +7,7 @@ TreeUtilities::OakFoliageGenerator::OakFoliageGenerator()
 
 {
 	_DefaultFoliageInfo = OakFoliageInfo();
-	_Archetype = EntityManager::CreateEntityArchetype("Oak Foliage", LocalToParent(), LocalToWorld(), TreeIndex(), OakFoliageInfo());
+	_Archetype = EntityManager::CreateEntityArchetype("Oak Foliage", LocalToWorld(), TreeIndex(), OakFoliageInfo());
 
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
@@ -45,7 +45,7 @@ void TreeUtilities::OakFoliageGenerator::Generate()
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
 		particleSys->ReceiveShadow = false;
-		LocalToParent ltp;
+		LocalToWorld ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
 		foliageEntity.SetComponentData(ltp);
