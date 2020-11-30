@@ -89,7 +89,9 @@ void KDop::OnGui()
 					if (x != 0 || y != 0 || z != 0)
 					{
 						glm::vec3 direction = glm::normalize(glm::vec3(x, y, z)) * DirectionalDistance[index];
-						glm::vec3 front = glm::vec3(direction.y, direction.z, direction.x);
+						glm::vec3 front = glm::vec3(0, 0, -1);
+						if (direction.x == 0 && y == 0) front = glm::vec3(0, 1, 0);
+						front = glm::cross(glm::cross(front, direction), direction);
 						glm::mat4 model = glm::translate(glm::identity<glm::mat4>(), direction) * glm::mat4_cast(glm::quatLookAt(glm::normalize(front), glm::normalize(direction))) * glm::scale(glm::vec3(2.0f));
 						RenderManager::DrawGizmoQuad(glm::vec4(0, 1, 0, 0.5), model);
 						index++;

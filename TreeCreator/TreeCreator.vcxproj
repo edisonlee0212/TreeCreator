@@ -174,7 +174,11 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="MainSystems.cs" />
+    <None Include="..\Resources\Shaders\Fragment\Background.frag" />
+    <None Include="..\Resources\Shaders\Fragment\SemanticBranch.frag" />
+    <None Include="..\Resources\Shaders\Fragment\SemanticLeaf.frag" />
+    <None Include="..\Resources\Shaders\Fragment\SmallBranch.frag" />
+    <None Include="..\Resources\Shaders\Fragment\SmallBranchCopy.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

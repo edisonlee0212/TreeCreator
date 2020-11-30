@@ -49,7 +49,7 @@ void ImageCollectionSystem::OnCreate()
 	transform.SetEulerRotation(_CameraEulerRotation);
 	_CameraEntity.SetComponentData(transform);
 	auto cameraComponent = std::make_unique<CameraComponent>();
-	cameraComponent->ResizeResolution(960, 960);
+	cameraComponent->ResizeResolution(_CaptureResolution, _CaptureResolution);
 	cameraComponent->DrawSkyBox = false;
 	cameraComponent->ClearColor = glm::vec3(1.0f);
 
@@ -82,20 +82,51 @@ void ImageCollectionSystem::OnCreate()
 		+ "\n"
 		+ FileIO::LoadFileAsString("../Resources/Shaders/Fragment/Background.frag");
 
-	GLShader* standardvert = new GLShader(ShaderType::Vertex);
+	std::unique_ptr<GLShader> standardvert = std::make_unique<GLShader>(ShaderType::Vertex);
 	standardvert->SetCode(&vertShaderCode);
-	GLShader* standardfrag = new GLShader(ShaderType::Fragment);
+	std::unique_ptr<GLShader> standardfrag = std::make_unique<GLShader>(ShaderType::Fragment);
 	standardfrag->SetCode(&fragShaderCode);
 	auto program = std::make_shared<GLProgram>();
-	program->Attach(ShaderType::Vertex, standardvert);
-	program->Attach(ShaderType::Fragment, standardfrag);
+	program->Attach(ShaderType::Vertex, standardvert.get());
+	program->Attach(ShaderType::Fragment, standardfrag.get());
 	program->Link();
 	
-	delete standardvert;
-	delete standardfrag;
-
+	
 	_BackgroundMaterial->SetProgram(program);
 	_Background = EntityManager::CreateEntity(archetype);
+
+	vertShaderCode = std::string("#version 460 core\n") +
+		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/TexturePassThrough.vert"));
+	fragShaderCode = std::string("#version 460 core\n") +
+		FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SmallBranch.frag");
+	standardvert = std::make_unique<GLShader>(ShaderType::Vertex);
+	standardvert->SetCode(&vertShaderCode);
+	standardfrag = std::make_unique<GLShader>(ShaderType::Fragment);
+	standardfrag->SetCode(&fragShaderCode);
+
+	_SmallBranchProgram = std::make_unique<GLProgram>();
+	_SmallBranchProgram->Attach(ShaderType::Vertex, standardvert.get());
+	_SmallBranchProgram->Attach(ShaderType::Fragment, standardfrag.get());
+	_SmallBranchProgram->Link();
+
+	fragShaderCode = std::string("#version 460 core\n") +
+		FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SmallBranchCopy.frag");
+	standardvert = std::make_unique<GLShader>(ShaderType::Vertex);
+	standardvert->SetCode(&vertShaderCode);
+	standardfrag = std::make_unique<GLShader>(ShaderType::Fragment);
+	standardfrag->SetCode(&fragShaderCode);
+
+	_SmallBranchCopyProgram = std::make_unique<GLProgram>();
+	_SmallBranchCopyProgram->Attach(ShaderType::Vertex, standardvert.get());
+	_SmallBranchCopyProgram->Attach(ShaderType::Fragment, standardfrag.get());
+	_SmallBranchCopyProgram->Link();
+
+	_SmallBranchFilter = std::make_unique<RenderTarget>(_TargetResolution, _TargetResolution);
+	_SmallBranchBuffer = std::make_unique<GLTexture2D>(1, GL_RGB32F, _TargetResolution, _TargetResolution, true);
+	_SmallBranchBuffer->SetInt(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	_SmallBranchBuffer->SetInt(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	_SmallBranchBuffer->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	_SmallBranchBuffer->SetInt(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	auto mmr = std::make_unique<MeshRenderer>();
 	mmr->Mesh = Default::Primitives::Quad;
 	mmr->ForwardRendering = true;
@@ -143,7 +174,7 @@ void ImageCollectionSystem::Update()
 			if (!_PlantSimulationSystem->_Growing)
 			{
 				TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.01f, 1.0);
-				_CameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(960, 960);
+				_CameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 				
 				_Status = ImageCollectionSystemStatus::Rendering;
 				_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
@@ -159,7 +190,7 @@ void ImageCollectionSystem::Update()
 				+ "_" + std::to_string(_ImageCaptureSequences[_CurrentSelectedSequenceIndex].second.Seed)
 				+ ".jpg";
 			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
-				path, 320, 320);
+				path, _TargetResolution, _TargetResolution);
 		
 			_Status = ImageCollectionSystemStatus::CaptureRandom;
 			_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)], TextureType::DIFFUSE);
@@ -172,14 +203,32 @@ void ImageCollectionSystem::Update()
 				+ "_" + std::to_string(_ImageCaptureSequences[_CurrentSelectedSequenceIndex].second.Seed)
 				+ ".jpg";
 			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
-				path, 320, 320);
+				path, _TargetResolution, _TargetResolution);
 		
 			_Status = ImageCollectionSystemStatus::CaptureSemantic;
 			_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
-			_CameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(320, 320);
+			_CameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_TargetResolution, _TargetResolution);
 			EnableSemantic();
 			break;
 		case ImageCollectionSystemStatus::CaptureSemantic:
+			if (true) {
+				_SmallBranchFilter->Bind();
+				_SmallBranchProgram->Bind();
+				_SmallBranchFilter->GetFrameBuffer()->DrawBuffer(GL_COLOR_ATTACHMENT0);
+				_SmallBranchFilter->AttachTexture(_SmallBranchBuffer.get(), GL_COLOR_ATTACHMENT0);
+				_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->GetTexture()->Bind(0);
+				_SmallBranchProgram->SetInt("InputTex", 0);
+				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				Default::GLPrograms::ScreenVAO->Bind();
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+
+				_SmallBranchCopyProgram->Bind();
+				_SmallBranchFilter->AttachTexture(_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->GetTexture(), GL_COLOR_ATTACHMENT0);
+				_SmallBranchBuffer->Bind(0);
+				_SmallBranchCopyProgram->SetInt("InputTex", 0);
+				Default::GLPrograms::ScreenVAO->Bind();
+				glDrawArrays(GL_TRIANGLES, 0, 6);
+			}
 			path = _StorePath + "mask_" + (_IsTrain ? "train/" : "val/") +
 				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name

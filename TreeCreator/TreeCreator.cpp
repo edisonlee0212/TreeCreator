@@ -18,7 +18,7 @@ void EngineSetup();
 void main()
 {
 	EngineSetup();
-	bool generateLearningData = false;
+	bool generateLearningData = true;
 	bool generateSorghum = false;
 	bool generateSorghumField = false;
 
@@ -30,7 +30,7 @@ void main()
 	char dir[256] = {};
 	_getcwd(dir, 256);
 	ImageCaptureSequence sequence;
-	sequence.Amount = 100;
+	sequence.Amount = 1;
 	if (generateLearningData) {
 		sequence.CameraPos = glm::vec3(0, 2, 30);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);

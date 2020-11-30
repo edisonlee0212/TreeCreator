@@ -31,6 +31,14 @@ namespace TreeUtilities {
 		Entity _CurrentTree;
 		Entity _Background;
 		bool _Export = false;
+		size_t _TargetResolution = 320;
+		size_t _CaptureResolution = 960;
+		
+		std::unique_ptr<RenderTarget> _SmallBranchFilter;
+		std::unique_ptr<GLProgram> _SmallBranchProgram;
+		std::unique_ptr<GLTexture2D> _SmallBranchBuffer;
+		std::unique_ptr<GLProgram> _SmallBranchCopyProgram;
+		
 		std::shared_ptr<Material> _BackgroundMaterial;
 		PlantSimulationSystem* _PlantSimulationSystem = nullptr;
 		Entity _CameraEntity;

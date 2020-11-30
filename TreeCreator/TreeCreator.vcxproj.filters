@@ -268,7 +268,19 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="MainSystems.cs">
+    <None Include="..\Resources\Shaders\Fragment\SmallBranchCopy.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Resources\Shaders\Fragment\Background.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Resources\Shaders\Fragment\SemanticBranch.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Resources\Shaders\Fragment\SemanticLeaf.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Resources\Shaders\Fragment\SmallBranch.frag">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
