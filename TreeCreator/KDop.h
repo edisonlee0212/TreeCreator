@@ -4,7 +4,6 @@
 #include "FoliageGeneratorBase.h"
 #include "TreeVolume.h"
 using namespace UniEngine;
-using namespace TreeUtilities;
 namespace TreeUtilities {
 	class KDop : public TreeVolume
 	{

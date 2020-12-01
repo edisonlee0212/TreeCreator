@@ -18,7 +18,7 @@ void EngineSetup();
 void main()
 {
 	EngineSetup();
-	bool generateLearningData = true;
+	bool generateLearningData = false;
 	bool generateSorghum = false;
 	bool generateSorghumField = false;
 

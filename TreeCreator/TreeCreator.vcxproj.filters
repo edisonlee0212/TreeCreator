@@ -153,6 +153,9 @@
     <ClCompile Include="TreeVolume.cpp">
       <Filter>Source Files\TreeVolume</Filter>
     </ClCompile>
+    <ClCompile Include="CakeTower.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NetworkSystem.h">
@@ -265,6 +268,9 @@
     </ClInclude>
     <ClInclude Include="LightEstimator.h">
       <Filter>Header Files\Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="CakeTower.h">
+      <Filter>Header Files\TreeVolume</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
