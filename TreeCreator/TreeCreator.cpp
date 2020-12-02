@@ -18,7 +18,7 @@ void EngineSetup();
 void main()
 {
 	EngineSetup();
-	bool generateLearningData = false;
+	bool generateLearningData = true;
 	bool generateSorghum = false;
 	bool generateSorghumField = false;
 
@@ -30,7 +30,9 @@ void main()
 	char dir[256] = {};
 	_getcwd(dir, 256);
 	ImageCaptureSequence sequence;
-	sequence.Amount = 1;
+	sequence.Amount = 1000;
+	
+	ics->ResetCounter();
 	if (generateLearningData) {
 		sequence.CameraPos = glm::vec3(0, 2, 30);
 		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
@@ -68,6 +70,8 @@ void main()
 		sequence.Name = "pine";
 		ics->PushImageCaptureSequence(sequence);
 	}
+
+	
 	if (generateSorghum) {
 		auto srSys = InitSorghumReconstructionSystem();
 		Entity plant1 = srSys->ImportPlant("skeleton_procedural_1.txt", 0.01f, "Sorghum 1");
@@ -169,7 +173,7 @@ void main()
 	}
 #pragma region Engine Loop
 	bool loop = true;
-	bool eval = true;
+	bool eval = false;
 	//Start engine. Here since we need to inject procedures to the main engine loop we need to manually loop by our self.
 	//Another way to run engine is to simply execute:
 	//Application.Run();

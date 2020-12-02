@@ -3,9 +3,8 @@
 using namespace UniEngine;
 namespace TreeUtilities {
 	class LightSnapShot {
-		GLTexture2D* _SnapShotTexture;
-		GLPPBO* _PPBO;
-		float* _SRC;
+		std::unique_ptr<GLTexture2D> _SnapShotTexture;
+		std::vector<float> _SRC;
 		glm::vec3 _Direction;
 		float _CenterDistance;
 		float _Width;
@@ -15,9 +14,8 @@ namespace TreeUtilities {
 		friend class LightEstimator;
 		glm::vec3 _CenterPosition;
 	public:
-		GLTexture2D* SnapShotTexture() { return _SnapShotTexture; }
-		GLPPBO* GetPixelBuffer() { return _PPBO; }
-		float* GetSRC() { return _SRC; }
+		std::unique_ptr<GLTexture2D>& SnapShotTexture() { return _SnapShotTexture; }
+		std::vector<float>& GetSRC() { return _SRC; }
 		LightSnapShot(size_t resolution, glm::vec3 centerPosition, glm::vec3 direction, float centerDistance, float width, float weight);
 		glm::mat4 GetViewMatrix();
 		glm::mat4 GetLightSpaceMatrix();
@@ -28,7 +26,6 @@ namespace TreeUtilities {
 		float Weight();
 		float Resolution();
 		unsigned GetEntityIndex(size_t x, size_t y);
-		~LightSnapShot();
 	};
 
 	class LightEstimator

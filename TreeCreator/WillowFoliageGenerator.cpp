@@ -151,7 +151,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		SimpleMeshGenerator(branchlets[i], vertices, indices);
 	}
 	mmc->Mesh = std::make_shared<Mesh>();
-	mmc->Mesh->SetVertices(17, vertices, indices, true);
+	mmc->Mesh->SetVertices(17, vertices, indices, false);
 }
 
 void TreeUtilities::WillowFoliageGenerator::SimpleMeshGenerator(Branchlet& branchlet, std::vector<Vertex>& vertices,

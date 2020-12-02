@@ -33,7 +33,7 @@ namespace TreeUtilities {
 		bool _Export = false;
 		size_t _TargetResolution = 320;
 		size_t _CaptureResolution = 960;
-		
+		double _Timer;
 		std::unique_ptr<RenderTarget> _SmallBranchFilter;
 		std::unique_ptr<GLProgram> _SmallBranchProgram;
 		std::unique_ptr<GLTexture2D> _SmallBranchBuffer;
@@ -42,6 +42,7 @@ namespace TreeUtilities {
 		std::shared_ptr<Material> _BackgroundMaterial;
 		PlantSimulationSystem* _PlantSimulationSystem = nullptr;
 		Entity _CameraEntity;
+		Entity _SemanticMaskCameraEntity;
 		glm::vec3 _CameraPosition = glm::vec3(0);
 		glm::vec3 _CameraEulerRotation = glm::vec3(0);
 		std::vector<std::pair<ImageCaptureSequence, TreeParameters>> _ImageCaptureSequences;

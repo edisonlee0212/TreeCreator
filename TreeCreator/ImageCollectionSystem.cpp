@@ -12,6 +12,7 @@
 void ImageCollectionSystem::ResetCounter()
 {
 	_Counter = 0;
+	_Timer = Application::EngineTime();
 }
 
 void ImageCollectionSystem::SetIsTrain(bool value)
@@ -38,6 +39,7 @@ void ImageCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation
 	transform.SetPosition(_CameraPosition);
 	transform.SetEulerRotation(_CameraEulerRotation);
 	_CameraEntity.SetComponentData(transform);
+	_SemanticMaskCameraEntity.SetComponentData(transform);
 }
 
 void ImageCollectionSystem::OnCreate()
@@ -52,6 +54,20 @@ void ImageCollectionSystem::OnCreate()
 	cameraComponent->ResizeResolution(_CaptureResolution, _CaptureResolution);
 	cameraComponent->DrawSkyBox = false;
 	cameraComponent->ClearColor = glm::vec3(1.0f);
+	_CameraEntity.SetName("ImageCap Camera");
+	_CameraEntity.SetPrivateComponent(std::move(cameraComponent));
+
+	
+	_SemanticMaskCameraEntity = EntityManager::CreateEntity(archetype);
+	transform.SetPosition(_CameraPosition);
+	transform.SetEulerRotation(_CameraEulerRotation);
+	_SemanticMaskCameraEntity.SetComponentData(transform);
+	cameraComponent = std::make_unique<CameraComponent>();
+	cameraComponent->ResizeResolution(_TargetResolution, _TargetResolution);
+	cameraComponent->DrawSkyBox = false;
+	cameraComponent->ClearColor = glm::vec3(1.0f);
+	_SemanticMaskCameraEntity.SetName("Semantic Mask Camera");
+	_SemanticMaskCameraEntity.SetPrivateComponent(std::move(cameraComponent));
 
 	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/2236927059_a18cdd9196.jpg"));
 	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/2289428141_c758f436a1.jpg"));
@@ -69,8 +85,7 @@ void ImageCollectionSystem::OnCreate()
 	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/MainStreet_t.jpg"));
 	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
 
-	_CameraEntity.SetName("ImageCap Camera");
-	_CameraEntity.SetPrivateComponent(std::move(cameraComponent));
+	
 	_BackgroundMaterial = std::make_shared<Material>();
 	_BackgroundMaterial->SetMaterialProperty("material.shininess", 32.0f);
 	std::string vertShaderCode = std::string("#version 460 core\n")
@@ -155,7 +170,7 @@ void ImageCollectionSystem::Update()
 		case ImageCollectionSystemStatus::Idle:
 			if (!_ImageCaptureSequences.empty())
 			{
-				_CurrentSelectedSequenceIndex = glm::linearRand(0, static_cast<int>(_ImageCaptureSequences.size()) - 1);
+				_CurrentSelectedSequenceIndex = 0;
 				auto& imageCaptureSequence = _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first;
 				auto& treeParameters = _ImageCaptureSequences[_CurrentSelectedSequenceIndex].second;
 				SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
@@ -168,14 +183,15 @@ void ImageCollectionSystem::Update()
 			{
 				_Export = false;
 				_PlantSimulationSystem->ExportTreeParametersAsCsv(_StorePath + "params_" + (_IsTrain ? "train" : "val"), _TreeParametersOutputList);
+				_TreeParametersOutputList.clear();
+				const double spentTime = Application::EngineTime() - _Timer;
+				Debug::Log("Generation Finished. Used time: " + std::to_string(spentTime));
 			}
 			break;
 		case ImageCollectionSystemStatus::Growing:
 			if (!_PlantSimulationSystem->_Growing)
 			{
 				TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.01f, 1.0);
-				_CameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
-				
 				_Status = ImageCollectionSystemStatus::Rendering;
 				_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 			}
@@ -207,7 +223,6 @@ void ImageCollectionSystem::Update()
 		
 			_Status = ImageCollectionSystemStatus::CaptureSemantic;
 			_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
-			_CameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_TargetResolution, _TargetResolution);
 			EnableSemantic();
 			break;
 		case ImageCollectionSystemStatus::CaptureSemantic:
@@ -216,14 +231,14 @@ void ImageCollectionSystem::Update()
 				_SmallBranchProgram->Bind();
 				_SmallBranchFilter->GetFrameBuffer()->DrawBuffer(GL_COLOR_ATTACHMENT0);
 				_SmallBranchFilter->AttachTexture(_SmallBranchBuffer.get(), GL_COLOR_ATTACHMENT0);
-				_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->GetTexture()->Bind(0);
+				_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->GetTexture()->Bind(0);
 				_SmallBranchProgram->SetInt("InputTex", 0);
 				glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 				Default::GLPrograms::ScreenVAO->Bind();
 				glDrawArrays(GL_TRIANGLES, 0, 6);
 
 				_SmallBranchCopyProgram->Bind();
-				_SmallBranchFilter->AttachTexture(_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->GetTexture(), GL_COLOR_ATTACHMENT0);
+				_SmallBranchFilter->AttachTexture(_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->GetTexture(), GL_COLOR_ATTACHMENT0);
 				_SmallBranchBuffer->Bind(0);
 				_SmallBranchCopyProgram->SetInt("InputTex", 0);
 				Default::GLPrograms::ScreenVAO->Bind();
@@ -234,7 +249,7 @@ void ImageCollectionSystem::Update()
 				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
 				+ "_" + std::to_string(_ImageCaptureSequences[_CurrentSelectedSequenceIndex].second.Seed)
 				+ ".png";
-			_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToPng(
+			_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToPng(
 				path);
 			TreeManager::DeleteAllTrees();
 			_ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Amount--;

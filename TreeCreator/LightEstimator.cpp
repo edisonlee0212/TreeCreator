@@ -2,7 +2,7 @@
 #include "TreeManager.h"
 TreeUtilities::LightSnapShot::LightSnapShot(size_t resolution, glm::vec3 centerPosition, glm::vec3 direction, float centerDistance, float width, float weight)
 {
-	_SnapShotTexture = new GLTexture2D(1, GL_R32F, resolution, resolution);
+	_SnapShotTexture = std::make_unique<GLTexture2D>(1, GL_R32F, resolution, resolution);
 	_SnapShotTexture->SetInt(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	_SnapShotTexture->SetInt(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	_SnapShotTexture->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -14,9 +14,7 @@ TreeUtilities::LightSnapShot::LightSnapShot(size_t resolution, glm::vec3 centerP
 	_Width = width;
 	_Score = 0;
 	_Resolution = resolution;
-	_PPBO = new GLPPBO();
-	_PPBO->SetData(resolution * resolution * sizeof(float), nullptr, GL_STREAM_READ);
-	_SRC = (float*)malloc(resolution * resolution * sizeof(float));
+	_SRC.resize(resolution * resolution);
 }
 
 glm::mat4 TreeUtilities::LightSnapShot::GetViewMatrix()
@@ -82,13 +80,6 @@ unsigned TreeUtilities::LightSnapShot::GetEntityIndex(size_t x, size_t y)
 	float r = (_SRC[(x * _Resolution + y)] + 0.5f);
 	int ru = r;
 	return ru;
-}
-
-TreeUtilities::LightSnapShot::~LightSnapShot()
-{
-	free(_SRC);
-	delete(_PPBO);
-	delete(_SnapShotTexture);
 }
 
 void TreeUtilities::LightEstimator::SetMaxIllumination(float value)
@@ -206,19 +197,15 @@ void TreeUtilities::LightEstimator::TakeSnapShot(bool storeSnapshot)
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
 	for (auto ss : _SnapShots) {
-		auto texture = ss->SnapShotTexture();
+		auto texture = ss->SnapShotTexture().get();
 		_RenderTarget->AttachTexture(texture, GL_COLOR_ATTACHMENT0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		_SnapShotProgram->SetFloat4x4("lightSpaceMatrix", ss->GetLightSpaceMatrix());
 		_SnapShotProgram->SetFloat4x4("model", model);
 		glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)mesh->Size(), GL_UNSIGNED_INT, 0, (GLsizei)count);
 		if (storeSnapshot) {
-			glReadBuffer(GL_COLOR_ATTACHMENT0);
-			ss->GetPixelBuffer()->Bind();
-			glReadPixels(0, 0, _Resolution, _Resolution, GL_RED, GL_FLOAT, 0);
-			GLubyte* src = (GLubyte*)glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
-			memcpy(ss->GetSRC(), src, _Resolution * _Resolution * sizeof(float));
-			glUnmapBuffer(GL_PIXEL_PACK_BUFFER);
+			texture->Bind(0);
+			glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, ss->GetSRC().data());
 		}
 	}
 	
@@ -235,7 +222,7 @@ void TreeUtilities::LightEstimator::DrawSnapShots(Camera* camera)
 	float startX = -0.9f;
 	for (auto ss : _SnapShots) {
 		if (ss->SnapShotTexture() == nullptr) break;
-		RenderManager::DrawTexture2D(ss->SnapShotTexture(), 0, glm::vec2(startX, 0.1f * 16.0 / 9.0f - 1.0f), glm::vec2(0.1f, 0.1f * 16.0 / 9.0f), camera);
+		RenderManager::DrawTexture2D(ss->SnapShotTexture().get(), 0, glm::vec2(startX, 0.1f * 16.0 / 9.0f - 1.0f), glm::vec2(0.1f, 0.1f * 16.0 / 9.0f), camera);
 		startX += 0.2f;
 	}
 }
