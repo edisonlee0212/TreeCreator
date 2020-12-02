@@ -155,7 +155,7 @@ void TreeUtilities::PlantSimulationSystem::ExportSettingsAsXml(const std::string
 void PlantSimulationSystem::ExportTreeParametersAsCsv(const std::string& path, std::vector<TreeParameters>& treeParametersList) const
 {
 	std::ofstream ofs;
-	ofs.open((path + ".csv").c_str(), std::ofstream::out | std::ofstream::trunc);
+	ofs.open((path + ".csv").c_str(), std::ofstream::out | std::ofstream::app);
 	if (ofs.is_open())
 	{
 		for (auto& treeParameters : treeParametersList) {

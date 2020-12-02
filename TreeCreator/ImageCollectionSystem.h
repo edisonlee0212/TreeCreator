@@ -18,7 +18,6 @@ namespace TreeUtilities {
 		glm::vec3 CameraPos;
 		glm::vec3 CameraEulerDegreeRot;
 		std::string ParamPath;
-		int Amount;
 		std::string Name;
 	};
 	class ImageCollectionSystem : public SystemBase
@@ -26,6 +25,8 @@ namespace TreeUtilities {
 		ImageCollectionSystemStatus _Status = ImageCollectionSystemStatus::Idle;
 		int _CurrentSelectedSequenceIndex = -1;
 		int _Counter = 0;
+		int _EndIndex = 0;
+		int _StartIndex = 0;
 		std::string _StorePath = "./tree_data/";
 		bool _IsTrain = true;
 		Entity _CurrentTree;
@@ -49,7 +50,7 @@ namespace TreeUtilities {
 		std::vector<TreeParameters> _TreeParametersOutputList;
 		std::vector<std::shared_ptr<Texture2D>> _BackgroundTextures;
 	public:
-		void ResetCounter();
+		void ResetCounter(int value, int startIndex, int endIndex);
 		void SetIsTrain(bool value);
 		bool IsExport() const;
 		void PushImageCaptureSequence(ImageCaptureSequence sequence);

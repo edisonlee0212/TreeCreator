@@ -9,10 +9,14 @@
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
 
-void ImageCollectionSystem::ResetCounter()
+void ImageCollectionSystem::ResetCounter(int value, int startIndex, int endIndex)
 {
-	_Counter = 0;
+	_Counter = value;
+	_StartIndex = startIndex;
+	_EndIndex = endIndex;
 	_Timer = Application::EngineTime();
+	_Status = ImageCollectionSystemStatus::Idle;
+	_CurrentSelectedSequenceIndex = 0;
 }
 
 void ImageCollectionSystem::SetIsTrain(bool value)
@@ -168,14 +172,13 @@ void ImageCollectionSystem::Update()
 	switch (_Status)
 	{
 		case ImageCollectionSystemStatus::Idle:
-			if (!_ImageCaptureSequences.empty())
+			if (!_ImageCaptureSequences.empty() && _StartIndex <= _EndIndex)
 			{
-				_CurrentSelectedSequenceIndex = 0;
 				auto& imageCaptureSequence = _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first;
 				auto& treeParameters = _ImageCaptureSequences[_CurrentSelectedSequenceIndex].second;
 				SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
 				treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
-				treeParameters.Seed = imageCaptureSequence.Amount + (_IsTrain ? 0 : 9999);
+				treeParameters.Seed = _StartIndex + (_IsTrain ? 0 : 9999);
 				_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
 				_TreeParametersOutputList.push_back(treeParameters);
 				_Status = ImageCollectionSystemStatus::Growing;
@@ -191,7 +194,7 @@ void ImageCollectionSystem::Update()
 		case ImageCollectionSystemStatus::Growing:
 			if (!_PlantSimulationSystem->_Growing)
 			{
-				TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.01f, 1.0);
+				TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.1f, 1.0);
 				_Status = ImageCollectionSystemStatus::Rendering;
 				_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 			}
@@ -252,11 +255,9 @@ void ImageCollectionSystem::Update()
 			_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToPng(
 				path);
 			TreeManager::DeleteAllTrees();
-			_ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Amount--;
-			if(_ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Amount == 0)
-			{
-				_ImageCaptureSequences.erase(_ImageCaptureSequences.begin() + _CurrentSelectedSequenceIndex);
-			}
+			_CurrentSelectedSequenceIndex++;
+			_CurrentSelectedSequenceIndex %= _ImageCaptureSequences.size();
+			if (_CurrentSelectedSequenceIndex == 0) _StartIndex++;
 			_Counter++;
 			_Status = ImageCollectionSystemStatus::Idle;
 			break;
