@@ -99,6 +99,7 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 
 void TreeUtilities::PineFoliageGenerator::OnGui()
 {
+	if (ImGui::Button("Regenerate")) Generate();
 	ImGui::DragFloat("Inhibitor Limit", &_DefaultFoliageInfo.InhibitorLimit, 0.01f, 0);
 	ImGui::DragFloat("Illumination Limit", &_DefaultFoliageInfo.IlluminationLimit, 0.01f, 0);
 	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f, 0);

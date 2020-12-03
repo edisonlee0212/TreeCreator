@@ -129,6 +129,7 @@ void TreeUtilities::DefaultFoliageGenerator::Generate()
 
 void TreeUtilities::DefaultFoliageGenerator::OnGui()
 {
+	if (ImGui::Button("Regenerate")) Generate();
 	ImGui::DragFloat2("Leaf Size XY", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f);
 	ImGui::DragFloat("LeafIlluminationLimit", &_DefaultFoliageInfo.LeafIlluminationLimit, 0.01f);
 	ImGui::DragFloat("LeafInhibitorFactor", &_DefaultFoliageInfo.LeafInhibitorFactor, 0.01f);

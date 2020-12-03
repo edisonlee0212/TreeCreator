@@ -336,7 +336,7 @@ void DataCollectionSystem::OnCreate()
 	sequence.ParamPath = std::string(dir) + "\\birch";
 	sequence.Name = "birch";
 	PushImageCaptureSequence(sequence);
-	sequence.CameraPos = glm::vec3(0, 2, 50);
+	sequence.CameraPos = glm::vec3(0, 2, 40);
 	sequence.CameraEulerDegreeRot = glm::vec3(13, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\oak";
 	sequence.Name = "oak";
@@ -383,7 +383,7 @@ void DataCollectionSystem::Update()
 	case DataCollectionSystemStatus::Growing:
 		if (!_PlantSimulationSystem->_Growing)
 		{
-			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.1f, 1.0);
+			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.1f, 0.1f);
 			_Status = DataCollectionSystemStatus::Rendering;
 			_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 		}

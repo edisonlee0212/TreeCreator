@@ -1,5 +1,10 @@
 #include "KDop.h"
 
+KDop::KDop()
+{
+	DirectionalDistance.resize(26);
+}
+
 void KDop::CalculateVolume()
 {
 	Entity tree = GetOwner();

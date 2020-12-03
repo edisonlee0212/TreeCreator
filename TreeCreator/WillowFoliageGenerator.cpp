@@ -160,7 +160,7 @@ void TreeUtilities::WillowFoliageGenerator::SimpleMeshGenerator(Branchlet& branc
 	glm::vec3 normal = branchlet.Normal;
 
 	auto rings = branchlet.Rings;
-	int step = 4;
+	int step = 3;
 	float angleStep = 360.0f / (float)(step);
 	int vertexIndex = vertices.size();
 	Vertex archetype;
@@ -204,6 +204,7 @@ void TreeUtilities::WillowFoliageGenerator::SimpleMeshGenerator(Branchlet& branc
 
 void TreeUtilities::WillowFoliageGenerator::OnGui()
 {
+	if (ImGui::Button("Regenerate")) Generate();
 	ImGui::DragFloat("Inhibitor Limit", &_DefaultFoliageInfo.InhibitorLimit, 0.01f);
 	ImGui::DragFloat("Dist Mean", &_DefaultFoliageInfo.DownDistanceMean, 0.01f);
 	ImGui::DragFloat("Dist Var", &_DefaultFoliageInfo.DownDistanceVariance, 0.01f);

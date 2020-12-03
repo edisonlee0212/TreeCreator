@@ -92,6 +92,7 @@ void TreeUtilities::BirchFoliageGenerator::Generate()
 
 void TreeUtilities::BirchFoliageGenerator::OnGui()
 {
+	if (ImGui::Button("Regenerate")) Generate();
 	ImGui::DragFloat("Distance Limit", &_DefaultFoliageInfo.DistanceLimit, 0.1f, 0);
 	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f, 0);
 	ImGui::DragInt("Leaf Amount", &_DefaultFoliageInfo.LeafAmount, 1, 0);

@@ -92,6 +92,7 @@ void TreeUtilities::AppleFoliageGenerator::Generate()
 
 void TreeUtilities::AppleFoliageGenerator::OnGui()
 {
+	if (ImGui::Button("Regenerate")) Generate();
 	ImGui::DragInt("Order Limit", &_DefaultFoliageInfo.OrderLimit, 1.0f, 0);
 	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f, 0);
 	ImGui::DragInt("Leaf Amount", &_DefaultFoliageInfo.LeafAmount, 1, 0);

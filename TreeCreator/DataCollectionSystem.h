@@ -68,7 +68,7 @@ namespace TreeUtilities {
 		DataCollectionSystemStatus _Status = DataCollectionSystemStatus::Idle;
 		int _CurrentSelectedSequenceIndex = -1;
 		int _Counter = 0;
-		int _EndIndex = 0;
+		int _EndIndex = -1;
 		int _StartIndex = 0;
 		std::string _StorePath = "./tree_data/";
 		bool _IsTrain = true;

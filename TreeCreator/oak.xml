@@ -6,8 +6,8 @@
 			<z>0.000000</z>
 		</Position>
 		<TreeParameters>
-			<Seed>1</Seed>
-			<Age>11</Age>
+			<Seed>3</Seed>
+			<Age>10</Age>
 			<LateralBudPerNode>3</LateralBudPerNode>
 			<VarianceApicalAngle>20.000000</VarianceApicalAngle>
 			<BranchingAngleMean>29.520000</BranchingAngleMean>

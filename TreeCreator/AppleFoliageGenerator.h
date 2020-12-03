@@ -6,9 +6,9 @@ using namespace UniEngine;
 namespace TreeUtilities {
 	struct AppleFoliageInfo : ComponentBase
 	{
-		int OrderLimit = 5;
+		int OrderLimit = 6;
 		int LeafAmount = 30;
-		float GenerationRadius = 0.4f;
+		float GenerationRadius = 0.25f;
 		float YCompress = 1.0f;
 		glm::vec3 LeafSize = glm::vec3(0.05f, 1.0f, 0.1f);
 	};

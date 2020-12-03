@@ -8,6 +8,7 @@ namespace TreeUtilities {
 	class KDop : public TreeVolume
 	{
 	public:
+		KDop();
 		std::vector<float> DirectionalDistance;
 		void CalculateVolume() override;
 		bool InVolume(glm::vec3 position) const override;

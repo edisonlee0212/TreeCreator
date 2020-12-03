@@ -14,8 +14,8 @@ namespace TreeUtilities {
 		float Thickness = 0.01f;
 		float BendAngleMean = 25.0f;
 		float BendAngleVariance = 5.0f;
-		int SubdivisionAmount = 6;
-		int LeafAmount = 20;
+		int SubdivisionAmount = 3;
+		int LeafAmount = 15;
 		glm::vec3 LeafSize = glm::vec3(0.05f, 1.0f, 0.1f);
 	};
 	
