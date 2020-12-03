@@ -9,7 +9,7 @@
 TreeUtilities::WillowFoliageGenerator::WillowFoliageGenerator()
 {
 	_DefaultFoliageInfo = WillowFoliageInfo();
-	_Archetype = EntityManager::CreateEntityArchetype("Willow Foliage", LocalToParent(), LocalToWorld(), TreeIndex(), WillowFoliageInfo());
+	_Archetype = EntityManager::CreateEntityArchetype("Willow Foliage", Transform(), GlobalTransform(), TreeIndex(), WillowFoliageInfo());
 
 	_BranchletMaterial = std::make_shared<Material>();
 	_BranchletMaterial->SetMaterialProperty("material.shininess", 32.0f);
@@ -54,7 +54,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
 		particleSys->ReceiveShadow = false;
-		LocalToWorld ltp;
+		GlobalTransform ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(mmc));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
@@ -77,7 +77,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		}
 	);
 	if (internodes.empty()) return;
-	glm::mat4 treeTransform = EntityManager::GetComponentData<LocalToWorld>(tree).Value;
+	glm::mat4 treeTransform = EntityManager::GetComponentData<GlobalTransform>(tree).Value;
 	std::vector<Branchlet> branchlets;
 	branchlets.resize(internodes.size());
 	for(int i = 0; i < internodes.size(); i++)

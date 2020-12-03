@@ -185,7 +185,7 @@ void DataCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation)
 {
 	_CameraPosition = position;
 	_CameraEulerRotation = glm::radians(rotation);
-	LocalToParent transform;
+	Transform transform;
 	transform.SetPosition(_CameraPosition);
 	transform.SetEulerRotation(_CameraEulerRotation);
 	_CameraEntity.SetComponentData(transform);
@@ -194,9 +194,9 @@ void DataCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation)
 
 void DataCollectionSystem::OnCreate()
 {
-	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToWorld(), LocalToParent());
+	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", GlobalTransform(), Transform());
 	_CameraEntity = EntityManager::CreateEntity(archetype);
-	LocalToParent transform;
+	Transform transform;
 	transform.SetPosition(_CameraPosition);
 	transform.SetEulerRotation(_CameraEulerRotation);
 	_CameraEntity.SetComponentData(transform);

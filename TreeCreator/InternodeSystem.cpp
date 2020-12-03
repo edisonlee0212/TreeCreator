@@ -28,10 +28,10 @@ void TreeUtilities::InternodeSystem::RaySelection()
 	float minDistance = FLT_MAX;
 	auto mainCamera = RenderManager::GetMainCamera();
 	if (mainCamera) {
-		auto cameraLtw = mainCamera->GetOwner().GetComponentData<LocalToWorld>();
+		auto cameraLtw = mainCamera->GetOwner().GetComponentData<GlobalTransform>();
 		const Ray cameraRay = mainCamera->GetCamera()->ScreenPointToRay(
 			cameraLtw, InputManager::GetMouseScreenPosition());
-		EntityManager::ForEach<LocalToWorld, InternodeInfo>(_InternodeQuery, [this, cameraLtw, &writeMutex, &minDistance, cameraRay](int i, Entity entity, LocalToWorld* ltw, InternodeInfo* info)
+		EntityManager::ForEach<GlobalTransform, InternodeInfo>(_InternodeQuery, [this, cameraLtw, &writeMutex, &minDistance, cameraRay](int i, Entity entity, GlobalTransform* ltw, InternodeInfo* info)
 			{
 				const float distance = glm::distance(glm::vec3(cameraLtw.Value[3]), glm::vec3(ltw->Value[3]));
 				if (cameraRay.Intersect(ltw->Value[3], 0.1f))
@@ -85,14 +85,14 @@ void TreeUtilities::InternodeSystem::Update()
 	if(!_RaySelectedEntity.IsNull())
 	{
 		RenderManager::DrawGizmoPoint(glm::vec4(1, 1, 0, 1), 
-			_RaySelectedEntity.GetComponentData<LocalToWorld>().Value, 0.1f);
+			_RaySelectedEntity.GetComponentData<GlobalTransform>().Value, 0.1f);
 	}
 }
 
 void TreeUtilities::InternodeSystem::RefreshConnections() const
 {
 	float lineWidth = _ConnectionWidth;
-	EntityManager::ForEach<LocalToWorld, Connection, InternodeInfo>(_InternodeQuery, [lineWidth](int i, Entity entity, LocalToWorld* ltw, Connection* c, InternodeInfo* info) {
+	EntityManager::ForEach<GlobalTransform, Connection, InternodeInfo>(_InternodeQuery, [lineWidth](int i, Entity entity, GlobalTransform* ltw, Connection* c, InternodeInfo* info) {
 		glm::vec3 scale;
 		glm::quat rotation;
 		glm::vec3 translation;

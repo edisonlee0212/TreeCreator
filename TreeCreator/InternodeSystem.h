@@ -19,7 +19,7 @@ namespace TreeUtilities {
 
         Entity _RaySelectedEntity;
     	
-        std::vector<LocalToWorld> _InternodeLTWList;
+        std::vector<GlobalTransform> _InternodeLTWList;
         std::vector<Connection> _ConnectionList;
         void DrawGui();
         void RaySelection();

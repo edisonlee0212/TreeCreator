@@ -153,7 +153,7 @@ void TreeUtilities::LightEstimator::Clear()
 
 void TreeUtilities::LightEstimator::TakeSnapShot(bool storeSnapshot)
 {
-	std::vector<LocalToWorld> matrices = std::vector<LocalToWorld>();
+	std::vector<GlobalTransform> matrices = std::vector<GlobalTransform>();
 	std::vector<Entity> internodeEntities = std::vector<Entity>();
 	
 	TreeManager::GetInternodeQuery().ToComponentDataArray(matrices);

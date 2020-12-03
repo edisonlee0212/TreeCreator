@@ -57,7 +57,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	TreeAge treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
 	TreeIndex treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity);
-	LocalToWorld treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(treeEntity);
+	GlobalTransform treeLocalToWorld = EntityManager::GetComponentData<GlobalTransform>(treeEntity);
 #pragma endregion
 	if (treeAge.ToGrowIteration == 0) {
 		return false;
@@ -563,7 +563,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	Entity internode = TreeManager::CreateInternode(EntityManager::GetComponentData<TreeIndex>(treeEntity), treeEntity);
 #pragma region Position & Style
 
-	LocalToWorld ltw;
+	GlobalTransform ltw;
 	ltw.Value = glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(glm::quat(glm::vec3(0))) * glm::scale(glm::vec3(1.0f));
 	EntityManager::SetComponentData(treeEntity, ltw);
 #pragma endregion
@@ -878,11 +878,11 @@ inline float TreeUtilities::PlantSimulationSystem::GetApicalControl(std::unique_
 #pragma region Pruning
 void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 {
-	std::vector<LocalToWorld> internodesLTWs;
+	std::vector<GlobalTransform> internodesLTWs;
 	std::vector<TreeIndex> internodesTreeIndices;
 	std::vector<TreeIndex> treeIndices;
 	std::vector<TreeParameters> treeParameters;
-	_InternodeQuery.ToComponentDataArray<LocalToWorld, InternodeInfo>(internodesLTWs, [detectionDistance](InternodeInfo& info)
+	_InternodeQuery.ToComponentDataArray<GlobalTransform, InternodeInfo>(internodesLTWs, [detectionDistance](InternodeInfo& info)
 		{
 			return info.LongestDistanceToEnd <= detectionDistance;
 		});
@@ -893,7 +893,7 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 
 	_TreeQuery.ToComponentDataArray(treeIndices);
 	_TreeQuery.ToComponentDataArray(treeParameters);
-	EntityManager::ForEach<LocalToWorld, InternodeInfo, TreeIndex>(_InternodeQuery, [detectionDistance, &treeIndices, &treeParameters, &internodesLTWs, &internodesTreeIndices, this](int i, Entity branchNode, LocalToWorld* ltw, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<GlobalTransform, InternodeInfo, TreeIndex>(_InternodeQuery, [detectionDistance, &treeIndices, &treeParameters, &internodesLTWs, &internodesTreeIndices, this](int i, Entity branchNode, GlobalTransform* ltw, InternodeInfo* info, TreeIndex* index)
 		{
 			if (info->Pruned) {
 				return;
@@ -993,7 +993,7 @@ bool PlantSimulationSystem::EvaluateRemoval(Entity& internode, TreeParameters& t
 	for (auto child : children)
 	{
 		InternodeInfo childInternodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
-		if (internodeInfo.Level != 0 && EntityManager::GetComponentData<LocalToWorld>(child).Value[3].y < treeParameters.LowBranchPruningFactor)
+		if (internodeInfo.Level != 0 && EntityManager::GetComponentData<GlobalTransform>(child).Value[3].y < treeParameters.LowBranchPruningFactor)
 		{
 			EntityManager::DeleteEntity(child);
 			anyRemoved = true;
@@ -1023,7 +1023,7 @@ bool PlantSimulationSystem::EvaluateRemoval(Entity& internode, TreeParameters& t
 #pragma region Physics
 void TreeUtilities::PlantSimulationSystem::CalculatePhysics(Entity tree)
 {
-	LocalToWorld ltw = EntityManager::GetComponentData<LocalToWorld>(tree);
+	GlobalTransform ltw = EntityManager::GetComponentData<GlobalTransform>(tree);
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
 	if (EntityManager::GetChildrenAmount(tree) == 0) return;
 	Entity rootInternode = EntityManager::GetChildren(tree).at(0);
@@ -1033,14 +1033,14 @@ void TreeUtilities::PlantSimulationSystem::CalculatePhysics(Entity tree)
 }
 void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntity) const
 {
-	glm::mat4 treeTransform = EntityManager::GetComponentData<LocalToWorld>(treeEntity).Value;
+	glm::mat4 treeTransform = EntityManager::GetComponentData<GlobalTransform>(treeEntity).Value;
 	auto treeIndex = EntityManager::GetComponentData<TreeIndex>(treeEntity).Value;
 	auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
 	auto internodeSize = EntityManager::GetComponentData<TreeParameters>(treeEntity).InternodeSize;
 	std::mutex heightMutex;
 	float treeHeight = 0.0f;
-	EntityManager::ForEach<TreeIndex, LocalToWorld, InternodeInfo>(_InternodeQuery,
-		[treeTransform, treeIndex, &treeHeight, &heightMutex, &internodeSize](int i, Entity internode, TreeIndex* index, LocalToWorld* ltw, InternodeInfo* info)
+	EntityManager::ForEach<TreeIndex, GlobalTransform, InternodeInfo>(_InternodeQuery,
+		[treeTransform, treeIndex, &treeHeight, &heightMutex, &internodeSize](int i, Entity internode, TreeIndex* index, GlobalTransform* ltw, InternodeInfo* info)
 		{
 			if (index->Value == treeIndex) {
 				ltw->Value = treeTransform * info->GlobalTransform * glm::scale(glm::vec3(internodeSize));
@@ -1279,7 +1279,7 @@ void PlantSimulationSystem::ApplyTropism(glm::vec3 targetDir, float tropism, glm
 
 void PlantSimulationSystem::BuildHullForTree(Entity& tree)
 {
-	std::vector<LocalToWorld> internodeLTWs;
+	std::vector<GlobalTransform> internodeLTWs;
 	std::vector<InternodeInfo> internodeInfos;
 	const auto treeIndex = EntityManager::GetComponentData<TreeIndex>(tree);
 	_InternodeQuery.ToComponentDataArray(treeIndex, internodeLTWs);
@@ -1418,7 +1418,7 @@ void PlantSimulationSystem::RefreshTrees()
 		auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
 		auto treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
 		auto treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
-		auto treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(treeEntity);
+		auto treeLocalToWorld = EntityManager::GetComponentData<GlobalTransform>(treeEntity);
 		UpdateInternodeResource(rootInternode, treeParameters, treeAge, treeLocalToWorld.Value, true);
 		EvaluatePruning(rootInternode, treeParameters, treeAge, treeInfo);
 		if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
@@ -1465,7 +1465,7 @@ void TreeUtilities::PlantSimulationSystem::Update()
 	else {
 		if (_DisplayConvexHull)
 		{
-			std::vector<LocalToWorld> ltws;
+			std::vector<GlobalTransform> ltws;
 			std::vector<Entity> trees;
 
 			_TreeQuery.ToComponentDataArray(ltws);

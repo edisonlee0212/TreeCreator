@@ -107,10 +107,10 @@ void main()
 			Entity gridPlant4 = srSys->CreateGridPlant(plant4, matricesList[3]);
 			gridPlant4.SetName("Grid 4");
 		}
-		LocalToParent t1;
-		LocalToParent t2;
-		LocalToParent t3;
-		LocalToParent t4;
+		Transform t1;
+		Transform t2;
+		Transform t3;
+		Transform t4;
 
 		t1.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
 		t2.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
@@ -188,7 +188,7 @@ void EngineSetup()
 	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
 #pragma region Lights
-	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), LocalToWorld(), LocalToParent());
+	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), GlobalTransform(), Transform());
 	DirectionalLight dlc;
 	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
 	dlc.diffuseBrightness = 0.5f;
@@ -196,7 +196,7 @@ void EngineSetup()
 	dlc.depthBias = 0.1;
 	dlc.normalOffset = 0.001;
 	dlc.lightSize = 1.0;
-	LocalToParent transform;
+	Transform transform;
 	transform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
 	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
 	EntityManager::SetComponentData(dle, dlc);
@@ -207,10 +207,10 @@ void EngineSetup()
 	auto world = Application::GetWorld();
 	WorldTime* time = world->Time();
 
-	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToWorld(), LocalToParent());
+	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", GlobalTransform(), Transform());
 	CameraControlSystem* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);
 	ccs->Enable();
-	transform = LocalToParent();
+	transform = Transform();
 	transform.SetPosition(glm::vec3(0, 2, 35));
 	transform.SetEulerRotation(glm::radians(glm::vec3(15, 0, 0)));
 	auto mainCamera = RenderManager::GetMainCamera();
@@ -254,10 +254,10 @@ void EngineSetup()
 }
 
 void InitGround() {
-	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", LocalToParent(), LocalToWorld());
+	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Transform(), GlobalTransform());
 	auto entity = EntityManager::CreateEntity(archetype);
 	entity.SetName("Ground");
-	LocalToParent transform;
+	Transform transform;
 	transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
 	transform.SetScale(glm::vec3(100.0f));
 	EntityManager::SetComponentData(entity, transform);

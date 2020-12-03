@@ -222,13 +222,13 @@ void TreeUtilities::TreeManager::Init()
 
 	_InternodeArchetype = EntityManager::CreateEntityArchetype(
 		"Internode",
-		LocalToWorld(), Connection(),
+		GlobalTransform(), Connection(),
 		Illumination(),
 		InternodeIndex(), InternodeInfo(), TreeIndex()
 	);
 	_TreeArchetype = EntityManager::CreateEntityArchetype(
 		"Tree",
-		LocalToWorld(),
+		GlobalTransform(),
 		TreeIndex(), TreeInfo(), TreeAge(),
 		TreeParameters()
 	);
@@ -628,7 +628,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	}
 
 	std::mutex creationM;
-	glm::mat4 treeTransform = EntityManager::GetComponentData<LocalToWorld>(treeEntity).Value;
+	glm::mat4 treeTransform = EntityManager::GetComponentData<GlobalTransform>(treeEntity).Value;
 	//Prepare ring mesh.
 	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [&creationM, resolution, subdivision, treeTransform](int i, Entity internode, InternodeInfo* info)
 		{

@@ -4,7 +4,7 @@
 AppleFoliageGenerator::AppleFoliageGenerator()
 {
 	_DefaultFoliageInfo = AppleFoliageInfo();
-	_Archetype = EntityManager::CreateEntityArchetype("Apple Foliage", LocalToWorld(), TreeIndex(), AppleFoliageInfo());
+	_Archetype = EntityManager::CreateEntityArchetype("Apple Foliage", GlobalTransform(), TreeIndex(), AppleFoliageInfo());
 
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
@@ -19,9 +19,9 @@ AppleFoliageGenerator::AppleFoliageGenerator()
 void TreeUtilities::AppleFoliageGenerator::Generate()
 {
 	const auto tree = GetOwner();
-	LocalToWorld treeLocalToWorld = EntityManager::GetComponentData<LocalToWorld>(tree);
+	GlobalTransform treeLocalToWorld = EntityManager::GetComponentData<GlobalTransform>(tree);
 	Entity foliageEntity;
-	LocalToWorld treeTransform = EntityManager::GetComponentData<LocalToWorld>(tree);
+	GlobalTransform treeTransform = EntityManager::GetComponentData<GlobalTransform>(tree);
 	bool found = false;
 	TreeIndex ti = EntityManager::GetComponentData<TreeIndex>(tree);
 	EntityManager::ForEachChild(tree, [&found, &foliageEntity](Entity child)
@@ -41,7 +41,7 @@ void TreeUtilities::AppleFoliageGenerator::Generate()
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
 		particleSys->ReceiveShadow = false;
-		LocalToWorld transform;
+		GlobalTransform transform;
 		transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
 		foliageEntity.SetComponentData(transform);
