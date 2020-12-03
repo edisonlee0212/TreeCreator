@@ -1,16 +1,59 @@
 #pragma once
+#include "CakeTower.h"
+#include "KDop.h"
 #include "PlantSimulationSystem.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
 namespace TreeUtilities {
-	enum class ImageCollectionSystemStatus
+	enum class DataCollectionSystemStatus
 	{
 		Idle,
 		Growing,
 		Rendering,
 		CaptureOriginal,
 		CaptureRandom,
-		CaptureSemantic
+		CaptureSemantic,
+		CollectData,
+		CleanUp
+	};
+
+	struct ParamsOutput
+	{
+		int Index;
+		std::string Name;
+		TreeParameters Parameters;
+		ParamsOutput(int index, std::string& name, TreeParameters& params)
+		{
+			Index = index;
+			Name = name;
+			Parameters = params;
+		}
+	};
+
+	struct KDopOutput
+	{
+		int Index;
+		std::string Name;
+		std::vector<float> data;
+		KDopOutput(int index, std::string& name, std::unique_ptr<KDop>& kdop)
+		{
+			Index = index;
+			Name = name;
+			data = kdop->DirectionalDistance;
+		}
+	};
+
+	struct CakeTowerOutput
+	{
+		int Index;
+		std::string Name;
+		std::vector<std::vector<CakeSlice>> data;
+		CakeTowerOutput(int index, std::string& name, std::unique_ptr<CakeTower>& cakeTower)
+		{
+			Index = index;
+			Name = name;
+			data = cakeTower->CakeTiers;
+		}
 	};
 	
 	struct ImageCaptureSequence
@@ -20,9 +63,9 @@ namespace TreeUtilities {
 		std::string ParamPath;
 		std::string Name;
 	};
-	class ImageCollectionSystem : public SystemBase
+	class DataCollectionSystem : public SystemBase
 	{
-		ImageCollectionSystemStatus _Status = ImageCollectionSystemStatus::Idle;
+		DataCollectionSystemStatus _Status = DataCollectionSystemStatus::Idle;
 		int _CurrentSelectedSequenceIndex = -1;
 		int _Counter = 0;
 		int _EndIndex = 0;
@@ -31,7 +74,7 @@ namespace TreeUtilities {
 		bool _IsTrain = true;
 		Entity _CurrentTree;
 		Entity _Background;
-		bool _Export = false;
+		bool _NeedExport = false;
 		size_t _TargetResolution = 320;
 		size_t _CaptureResolution = 960;
 		double _Timer;
@@ -47,13 +90,19 @@ namespace TreeUtilities {
 		glm::vec3 _CameraPosition = glm::vec3(0);
 		glm::vec3 _CameraEulerRotation = glm::vec3(0);
 		std::vector<std::pair<ImageCaptureSequence, TreeParameters>> _ImageCaptureSequences;
-		std::vector<TreeParameters> _TreeParametersOutputList;
+		std::vector<ParamsOutput> _TreeParametersOutputList;
+		std::vector<KDopOutput> _KDopsOutputList;
+		std::vector<CakeTowerOutput> _CakeTowersOutputList;
 		std::vector<std::shared_ptr<Texture2D>> _BackgroundTextures;
 	public:
-		void ResetCounter(int value, int startIndex, int endIndex);
+		void ExportAllData();
+		void ResetCounter(int value, int startIndex, int endIndex, bool needExport);
 		void SetIsTrain(bool value);
 		bool IsExport() const;
 		void PushImageCaptureSequence(ImageCaptureSequence sequence);
+		void ExportParams(const std::string& path) const;
+		void ExportKDops(const std::string& path) const;
+		void ExportCakeTower(const std::string& path) const;
 		void SetCameraPose(glm::vec3 position, glm::vec3 rotation);
 		void OnCreate() override;
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);

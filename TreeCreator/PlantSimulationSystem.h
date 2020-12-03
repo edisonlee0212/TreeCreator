@@ -14,7 +14,7 @@ namespace TreeUtilities {
 	class PlantSimulationSystem :
 		public SystemBase
 	{
-		friend class ImageCollectionSystem;
+		friend class DataCollectionSystem;
 		float _GrowthTimer;
 #pragma region GUI Related
 		
@@ -70,7 +70,6 @@ namespace TreeUtilities {
 		void GenerateLeavesForAllTrees(std::vector<Entity>& trees);
 		void RefreshTrees();
 		void ExportSettingsAsXml(const std::string& path);
-		void ExportTreeParametersAsCsv(const std::string& path, std::vector<TreeParameters>& treeParametersList) const;
 		void ImportSettings(const std::string& path);
 		TreeParameters LoadParameters(const std::string& path);
 		static void LoadDefaultTreeParameters(int preset, TreeParameters& tps);

@@ -6,13 +6,13 @@
 #include "PlantSimulationSystem.h"
 #include "TreeManager.h"
 #include "SorghumReconstructionSystem.h"
-#include "ImageCollectionSystem.h"
+#include "DataCollectionSystem.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
 using namespace SorghumReconstruction;
 void InitGround();
 PlantSimulationSystem* InitPlantSimulationSystem();
-ImageCollectionSystem* InitImageCollectionSystem();
+DataCollectionSystem* InitImageCollectionSystem();
 SorghumReconstructionSystem* InitSorghumReconstructionSystem();
 void EngineSetup();
 void main()
@@ -22,55 +22,19 @@ void main()
 	bool generateSorghum = false;
 	bool generateSorghumField = false;
 
-	
-	auto pss = InitPlantSimulationSystem();
-	auto ics = InitImageCollectionSystem();
+
+	PlantSimulationSystem* pss = InitPlantSimulationSystem();
+	DataCollectionSystem* ics = InitImageCollectionSystem();
 	ics->SetPlantSimulationSystem(pss);
 	
-	char dir[256] = {};
-	_getcwd(dir, 256);
-	ImageCaptureSequence sequence;
-	/*
-	ics->ResetCounter(0);
+	
+	int counter = 0;
+	int startIndex = 1;
+	int endIndex = 5;
 	if (generateLearningData) {
-		sequence.CameraPos = glm::vec3(0, 2, 30);
-		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-		sequence.ParamPath = std::string(dir) + "\\acacia";
-		sequence.Name = "acacia";
-		ics->PushImageCaptureSequence(sequence);
-		sequence.CameraPos = glm::vec3(0, 2, 25);
-		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-		sequence.ParamPath = std::string(dir) + "\\apple";
-		sequence.Name = "apple";
-		ics->PushImageCaptureSequence(sequence);
-		sequence.CameraPos = glm::vec3(0, 2, 35);
-		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-		sequence.ParamPath = std::string(dir) + "\\willow";
-		sequence.Name = "willow";
-		ics->PushImageCaptureSequence(sequence);
-		sequence.CameraPos = glm::vec3(0, 2, 45);
-		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-		sequence.ParamPath = std::string(dir) + "\\maple";
-		sequence.Name = "maple";
-		ics->PushImageCaptureSequence(sequence);
-		sequence.CameraPos = glm::vec3(0, 2, 45);
-		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-		sequence.ParamPath = std::string(dir) + "\\birch";
-		sequence.Name = "birch";
-		ics->PushImageCaptureSequence(sequence);
-		sequence.CameraPos = glm::vec3(0, 2, 50);
-		sequence.CameraEulerDegreeRot = glm::vec3(13, 0, 0);
-		sequence.ParamPath = std::string(dir) + "\\oak";
-		sequence.Name = "oak";
-		ics->PushImageCaptureSequence(sequence);
-		sequence.CameraPos = glm::vec3(0, 2, 20);
-		sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-		sequence.ParamPath = std::string(dir) + "\\pine";
-		sequence.Name = "pine";
-		ics->PushImageCaptureSequence(sequence);
+		ics->ResetCounter(counter, startIndex, endIndex, true);
+		ics->SetIsTrain(true);
 	}
-
-	*/
 	if (generateSorghum) {
 		auto srSys = InitSorghumReconstructionSystem();
 		Entity plant1 = srSys->ImportPlant("skeleton_procedural_1.txt", 0.01f, "Sorghum 1");
@@ -180,45 +144,9 @@ void main()
 		Application::PreUpdate();
 		if (eval && generateLearningData && !ics->IsExport())
 		{
+			ics->ResetCounter(counter, startIndex, endIndex, true);
 			eval = false;
-			ics->ResetCounter(1400, 201, 400);
 			ics->SetIsTrain(false);
-			sequence.CameraPos = glm::vec3(0, 2, 30);
-			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-			sequence.ParamPath = std::string(dir) + "\\acacia";
-			sequence.Name = "acacia";
-			ics->PushImageCaptureSequence(sequence);
-			sequence.CameraPos = glm::vec3(0, 2, 25);
-			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-			sequence.ParamPath = std::string(dir) + "\\apple";
-			sequence.Name = "apple";
-			ics->PushImageCaptureSequence(sequence);
-			sequence.CameraPos = glm::vec3(0, 2, 35);
-			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-			sequence.ParamPath = std::string(dir) + "\\willow";
-			sequence.Name = "willow";
-			ics->PushImageCaptureSequence(sequence);
-			sequence.CameraPos = glm::vec3(0, 2, 45);
-			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-			sequence.ParamPath = std::string(dir) + "\\maple";
-			sequence.Name = "maple";
-			ics->PushImageCaptureSequence(sequence);
-			sequence.CameraPos = glm::vec3(0, 2, 45);
-			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-			sequence.ParamPath = std::string(dir) + "\\birch";
-			sequence.Name = "birch";
-			ics->PushImageCaptureSequence(sequence);
-			sequence.CameraPos = glm::vec3(0, 2, 50);
-			sequence.CameraEulerDegreeRot = glm::vec3(13, 0, 0);
-			sequence.ParamPath = std::string(dir) + "\\oak";
-			sequence.Name = "oak";
-			ics->PushImageCaptureSequence(sequence);
-			sequence.CameraPos = glm::vec3(0, 2, 20);
-			sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
-			sequence.ParamPath = std::string(dir) + "\\pine";
-			sequence.Name = "pine";
-			ics->PushImageCaptureSequence(sequence);
-
 		}
 		Application::Update();
 		loop = Application::LateUpdate();
@@ -231,9 +159,9 @@ PlantSimulationSystem* InitPlantSimulationSystem() {
 	return Application::GetWorld()->CreateSystem<PlantSimulationSystem>(SystemGroup::SimulationSystemGroup);
 }
 
-ImageCollectionSystem* InitImageCollectionSystem()
+DataCollectionSystem* InitImageCollectionSystem()
 {
-	return Application::GetWorld()->CreateSystem<ImageCollectionSystem>(SystemGroup::SimulationSystemGroup);
+	return Application::GetWorld()->CreateSystem<DataCollectionSystem>(SystemGroup::SimulationSystemGroup);
 }
 
 SorghumReconstructionSystem* InitSorghumReconstructionSystem()

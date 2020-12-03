@@ -19,8 +19,8 @@ namespace TreeUtilities {
 	public:
 		glm::vec4 DisplayColor = glm::vec4(1.0f);
 		float DisplayScale = 0.2f;
-		int TierAmount = 30;
-		int SliceAmount = 72;
+		int TierAmount = 10;
+		int SliceAmount = 9;
 		std::vector<std::vector<CakeSlice>> CakeTiers;
 		void CalculateVolume() override;
 		bool InVolume(glm::vec3 position) const override;

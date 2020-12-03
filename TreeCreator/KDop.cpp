@@ -12,6 +12,9 @@ void KDop::CalculateVolume()
 			return treeIndex.Value == targetTreeIndex.Value;
 		}
 	);
+
+	DirectionalDistance.resize(26);
+	
 	for(auto& i : DirectionalDistance)
 	{
 		i = FLT_MIN;

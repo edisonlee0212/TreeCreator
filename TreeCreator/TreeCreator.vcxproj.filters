@@ -117,9 +117,6 @@
     <ClCompile Include="BranchSystem.cpp">
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="ImageCollectionSystem.cpp">
-      <Filter>Source Files\Systems</Filter>
-    </ClCompile>
     <ClCompile Include="InternodeSystem.cpp">
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
@@ -153,8 +150,11 @@
     <ClCompile Include="TreeVolume.cpp">
       <Filter>Source Files\TreeVolume</Filter>
     </ClCompile>
+    <ClCompile Include="DataCollectionSystem.cpp">
+      <Filter>Source Files\Systems</Filter>
+    </ClCompile>
     <ClCompile Include="CakeTower.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\TreeVolume</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -233,9 +233,6 @@
     <ClInclude Include="BranchSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="ImageCollectionSystem.h">
-      <Filter>Header Files\Systems</Filter>
-    </ClInclude>
     <ClInclude Include="InternodeSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
@@ -271,6 +268,9 @@
     </ClInclude>
     <ClInclude Include="CakeTower.h">
       <Filter>Header Files\TreeVolume</Filter>
+    </ClInclude>
+    <ClInclude Include="DataCollectionSystem.h">
+      <Filter>Header Files\Systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
