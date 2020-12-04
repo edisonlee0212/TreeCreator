@@ -65,6 +65,7 @@ namespace TreeUtilities {
 		void ResumeGrowth();
 		void PauseGrowth();
 	public:
+		
 		static void SetAllInternodeActivated(Entity tree, bool value);
 		static void ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up);
 		void GenerateLeavesForAllTrees(std::vector<Entity>& trees);

@@ -153,7 +153,7 @@ void DataCollectionSystem::ExportKDops(const std::string& path) const
 void TreeUtilities::DataCollectionSystem::ExportCakeTower(const std::string& path) const
 {
 	std::ofstream ofs;
-	ofs.open((path + ".csv").c_str(), std::ofstream::out | std::ofstream::app);
+	ofs.open((path + ".csv").c_str(), std::ofstream::out | std::ofstream::trunc);
 	if (ofs.is_open())
 	{
 		for (auto& instance : _CakeTowersOutputList) {
@@ -441,6 +441,11 @@ void DataCollectionSystem::Update()
 		_Status = DataCollectionSystemStatus::CollectData;
 		break;
 	case DataCollectionSystemStatus::CollectData:
+		
+		TreeManager::SerializeTreeGraph(_StorePath + "graph_" + (_IsTrain ? "train/ " : "val/ ") +
+			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, _CurrentTree);
+		
 		_TreeParametersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, treeParameters);
 		_CurrentTree.GetPrivateComponent<KDop>()->CalculateVolume();
 		_KDopsOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<KDop>());

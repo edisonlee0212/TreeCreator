@@ -12,8 +12,7 @@
 #include "BirchFoliageGenerator.h"
 #include "CakeTower.h"
 #include "KDop.h"
-#include "TreeVolume.h"
-
+#include "rapidjson/prettywriter.h"
 using namespace TreeUtilities;
 
 LightEstimator* TreeUtilities::TreeManager::_LightEstimator;
@@ -695,4 +694,80 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 		mmc->Mesh->SetVertices(17, vertices, indices, true);
 		treeData->MeshGenerated = true;
 	}
+}
+void TreeManager::SerializeTreeGraph(std::string path, Entity tree)
+{
+	std::ofstream ofs;
+	ofs.open((path + ".json").c_str(), std::ofstream::out | std::ofstream::trunc);
+	if (!ofs.is_open())
+	{
+		Debug::Error("Can't open file!");
+		return;
+	}
+	
+	TreeIndex treeIndex = tree.GetComponentData<TreeIndex>();
+	std::vector<InternodeInfo> internodeInfos;
+	std::vector<Entity> internodes;
+	_InternodeQuery.ToEntityArray<TreeIndex>(internodes, [treeIndex](Entity entity, TreeIndex& compareIndex)
+		{
+			return treeIndex.Value == compareIndex.Value;
+		}
+	);
+	_InternodeQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [treeIndex](TreeIndex& compareIndex)
+		{
+			return treeIndex.Value == compareIndex.Value;
+		}
+	);
+	rapidjson::StringBuffer buffer;
+	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
+	buffer.Clear();
+	writer.StartObject();
+	writer.String("Count");
+	writer.Int(internodes.size());
+	writer.String("Internodes");
+	writer.StartArray();
+	for(size_t i = 0; i < internodes.size(); i++)
+	{
+		//Internode
+		writer.StartObject();
+		writer.String("Index");
+		writer.Int(internodes[i].Index);
+		writer.String("Parent");
+		writer.Int(EntityManager::GetParent(internodes[i]).Index);
+		writer.String("Gravelius Order");
+		writer.Int(internodeInfos[i].Order);
+		writer.String("Thickness");
+		writer.Double(internodeInfos[i].Thickness);
+		writer.String("Level");
+		writer.Int(internodeInfos[i].Level);
+		writer.String("Start Age");
+		writer.Int(internodeInfos[i].StartAge);
+		//Position
+		writer.String("Position");
+		auto& transform = internodeInfos[i].GlobalTransform;
+		//xyz
+		writer.StartArray();
+		writer.Double(transform[3].x);
+		writer.Double(transform[3].y);
+		writer.Double(transform[3].z);
+		writer.EndArray();
+		//End xyz
+		//End Position
+		writer.String("Children");
+		writer.StartArray();
+		for(auto& i : EntityManager::GetChildren(internodes[i]))
+		{
+			writer.Int(i.Index);
+		}
+		writer.EndArray();
+		writer.EndObject();
+		//End internode
+	}
+	writer.EndArray();
+	writer.EndObject();
+	std::string output = buffer.GetString();
+	ofs.write(output.c_str(), output.size());
+	ofs.flush();
+	ofs.close();
+	Debug::Log("Tree graph saved: " + path + ".json");
 }

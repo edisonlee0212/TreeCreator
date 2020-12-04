@@ -242,6 +242,7 @@ namespace TreeUtilities {
 
 		static void SimpleMeshGenerator(Entity& internode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep = -1);
 	public:
+		static void SerializeTreeGraph(std::string path, Entity tree);
 		static std::shared_ptr<Material> SemanticTreeBranchMaterial;
 		static std::shared_ptr<Material> SemanticTreeLeafMaterial;
 		static void Init();

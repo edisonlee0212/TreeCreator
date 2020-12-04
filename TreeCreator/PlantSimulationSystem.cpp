@@ -1360,6 +1360,8 @@ void PlantSimulationSystem::PauseGrowth()
 	_GrowthTimer = 0;
 }
 
+
+
 void PlantSimulationSystem::SetAllInternodeActivated(Entity tree, bool value)
 {
 	TreeIndex treeIndex = tree.GetComponentData<TreeIndex>();
