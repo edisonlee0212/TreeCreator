@@ -636,7 +636,7 @@ void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::strin
 				mesh = EntityManager::GetPrivateComponent<MeshRenderer>(foliageEntity)->Mesh;
 				vertices = mesh->GetVerticesUnsafe();
 				indices = mesh->GetIndicesUnsafe();
-				branchVertSize += vertices.size();
+				branchletVertSize += vertices.size();
 #pragma region Data collection
 				for (const auto& vertex : vertices) {
 					branchletVert += "v " + std::to_string(vertex.Position.x)
@@ -671,7 +671,6 @@ void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::strin
 							+ "\n";
 					}
 				}
-				branchVert += "s off\n";
 				for (auto& matrix : matrices)
 				{
 					for (int i = 0; i < indices.size() / 3; i++) {
@@ -680,29 +679,36 @@ void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::strin
 							+ " " + std::to_string(indices.at(i * 3 + 2) + 1 + offset + branchVertSize + branchletVertSize)
 							+ "\n";
 					}
-					offset += indices.size();
+					offset += vertices.size();
 				}
 			}
 		}
 		of.write(branchVert.c_str(), branchVert.size());
 		of.flush();
-		of.write(branchletVert.c_str(), branchletVert.size());
-		of.flush();
-		of.write(leafVert.c_str(), leafVert.size());
-		of.flush();
-		std::string group = "g branches\n";
+		if (branchletVert.size() != 0) {
+			of.write(branchletVert.c_str(), branchletVert.size());
+			of.flush();
+		}
+		if (leafVert.size() != 0) {
+			of.write(leafVert.c_str(), leafVert.size());
+			of.flush();
+		}
+		std::string group = "o branches\n";
 		of.write(group.c_str(), group.size());
 		of.write(branchIndices.c_str(), branchIndices.size());
 		of.flush();
-		group = "g branchlets\n";
-		of.write(group.c_str(), group.size());
-		of.write(branchletIndices.c_str(), branchletIndices.size());
-		of.flush();
-		group = "g leaves\n";
-		of.write(group.c_str(), group.size());
-		of.write(leafIndices.c_str(), leafIndices.size());
-		of.flush();
-		
+		if (branchletVert.size() != 0) {
+			group = "o branchlets\n";
+			of.write(group.c_str(), group.size());
+			of.write(branchletIndices.c_str(), branchletIndices.size());
+			of.flush();
+		}
+		if (leafVert.size() != 0) {
+			group = "o leaves\n";
+			of.write(group.c_str(), group.size());
+			of.write(leafIndices.c_str(), leafIndices.size());
+			of.flush();
+		}
 		of.close();
 		Debug::Log("Model saved as " + filename + ".obj");
 	}

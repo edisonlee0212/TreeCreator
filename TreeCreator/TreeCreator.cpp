@@ -30,7 +30,7 @@ void main()
 	
 	int counter = 0;
 	int startIndex = 1;
-	int endIndex = 1;
+	int endIndex = 5;
 	if (generateLearningData) {
 		ics->ResetCounter(counter, startIndex, endIndex, true);
 		ics->SetIsTrain(true);

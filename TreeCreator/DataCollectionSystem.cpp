@@ -315,12 +315,12 @@ void DataCollectionSystem::OnCreate()
 	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\acacia";
 	sequence.Name = "acacia";
-	//PushImageCaptureSequence(sequence);
+	PushImageCaptureSequence(sequence);
 	sequence.CameraPos = glm::vec3(0, 2, 25);
 	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\apple";
 	sequence.Name = "apple";
-	//PushImageCaptureSequence(sequence);
+	PushImageCaptureSequence(sequence);
 	sequence.CameraPos = glm::vec3(0, 2, 35);
 	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\willow";
@@ -335,17 +335,17 @@ void DataCollectionSystem::OnCreate()
 	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\birch";
 	sequence.Name = "birch";
-	//PushImageCaptureSequence(sequence);
+	PushImageCaptureSequence(sequence);
 	sequence.CameraPos = glm::vec3(0, 2, 40);
 	sequence.CameraEulerDegreeRot = glm::vec3(13, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\oak";
 	sequence.Name = "oak";
-	//PushImageCaptureSequence(sequence);
+	PushImageCaptureSequence(sequence);
 	sequence.CameraPos = glm::vec3(0, 2, 20);
 	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\pine";
 	sequence.Name = "pine";
-	//PushImageCaptureSequence(sequence);
+	PushImageCaptureSequence(sequence);
 #pragma endregion
 
 	
