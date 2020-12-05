@@ -315,12 +315,12 @@ void DataCollectionSystem::OnCreate()
 	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\acacia";
 	sequence.Name = "acacia";
-	PushImageCaptureSequence(sequence);
+	//PushImageCaptureSequence(sequence);
 	sequence.CameraPos = glm::vec3(0, 2, 25);
 	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\apple";
 	sequence.Name = "apple";
-	PushImageCaptureSequence(sequence);
+	//PushImageCaptureSequence(sequence);
 	sequence.CameraPos = glm::vec3(0, 2, 35);
 	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\willow";
@@ -335,17 +335,17 @@ void DataCollectionSystem::OnCreate()
 	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\birch";
 	sequence.Name = "birch";
-	PushImageCaptureSequence(sequence);
+	//PushImageCaptureSequence(sequence);
 	sequence.CameraPos = glm::vec3(0, 2, 40);
 	sequence.CameraEulerDegreeRot = glm::vec3(13, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\oak";
 	sequence.Name = "oak";
-	PushImageCaptureSequence(sequence);
+	//PushImageCaptureSequence(sequence);
 	sequence.CameraPos = glm::vec3(0, 2, 20);
 	sequence.CameraEulerDegreeRot = glm::vec3(15, 0, 0);
 	sequence.ParamPath = std::string(dir) + "\\pine";
 	sequence.Name = "pine";
-	PushImageCaptureSequence(sequence);
+	//PushImageCaptureSequence(sequence);
 #pragma endregion
 
 	
@@ -445,6 +445,10 @@ void DataCollectionSystem::Update()
 		TreeManager::SerializeTreeGraph(_StorePath + "graph_" + (_IsTrain ? "train/ " : "val/ ") +
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, _CurrentTree);
+
+		TreeManager::ExportTreeAsModel(_CurrentTree, _StorePath + "obj_" + (_IsTrain ? "train/ " : "val/ ") +
+			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, true);
 		
 		_TreeParametersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, treeParameters);
 		_CurrentTree.GetPrivateComponent<KDop>()->CalculateVolume();
@@ -464,7 +468,7 @@ void DataCollectionSystem::Update()
 	}
 }
 
-void DataCollectionSystem::EnableSemantic()
+void DataCollectionSystem::EnableSemantic() const
 {
 	Entity foliageEntity;
 	EntityManager::ForEachChild(_CurrentTree, [&foliageEntity](Entity child)
@@ -503,17 +507,18 @@ void DataCollectionSystem::EnableSemantic()
 			}
 		}
 	);
-	try {
+	if (foliageEntity.HasPrivateComponent<MeshRenderer>())
+	{
 		auto& branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
 		branchletRenderer->ForwardRendering = true;
 		branchletRenderer->Material = TreeManager::SemanticTreeBranchMaterial;
 	}
-	catch (int e) {}
-
-	auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
-	leavesRenderer->ForwardRendering = true;
-	leavesRenderer->Material = TreeManager::SemanticTreeLeafMaterial;
-
+	if (foliageEntity.HasPrivateComponent<Particles>())
+	{
+		auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
+		leavesRenderer->ForwardRendering = true;
+		leavesRenderer->Material = TreeManager::SemanticTreeLeafMaterial;
+	}
 	auto& branchRenderer = _CurrentTree.GetPrivateComponent<MeshRenderer>();
 	branchRenderer->ForwardRendering = true;
 	branchRenderer->Material = TreeManager::SemanticTreeBranchMaterial;

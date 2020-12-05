@@ -27,7 +27,7 @@ namespace TreeUtilities {
 		char _TempExportFilePath[256] = {};
 		int _NewPushIteration = 0;
 		float _MeshGenerationResolution = 0.01f;
-		float _MeshGenerationSubdivision = 1.0f;
+		float _MeshGenerationSubdivision = 0.1f;
 		int _NewTreeAmount = 1;
 		int _CurrentFocusedNewTreeIndex = 0;
 		std::vector<TreeParameters> _NewTreeParameters;

@@ -67,13 +67,15 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
 	particleSys->Matrices.clear();
 	std::vector<Entity> internodes;
+	std::vector<Illumination> illuminations;
 	std::mutex m;
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodes, this](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodes, this, &illuminations](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
 		{
 			if (info->Inhibitor > _DefaultFoliageInfo.InhibitorLimit) return;
 			if (ti.Value != index->Value) return;
 			std::lock_guard<std::mutex> lock(m);
 			internodes.push_back(internode);
+			illuminations.push_back(*illumination);
 		}
 	);
 	if (internodes.empty()) return;
@@ -130,7 +132,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		for (int j = 1; j < amount; j++) {
 			auto endPos = curve.GetPoint(posStep * j);
 			auto endDir = fromDir + (float)j * dirStep;
-			auto currUp = glm::cross(endDir, branchlets[i].Normal);
+			auto currUp = illuminations[i].Value > 0 ? -illuminations[i].LightDir : glm::cross(endDir, branchlets[i].Normal);
 			auto l = glm::rotate(endDir, glm::radians(glm::gaussRand(_DefaultFoliageInfo.BendAngleMean, _DefaultFoliageInfo.BendAngleVariance)), currUp);
 			auto r = glm::rotate(endDir, glm::radians(-glm::gaussRand(_DefaultFoliageInfo.BendAngleMean, _DefaultFoliageInfo.BendAngleVariance)), currUp);
 			glm::vec3 s = _DefaultFoliageInfo.LeafSize;// *(semantic ? 2.0f : 1.0f);
@@ -151,7 +153,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		SimpleMeshGenerator(branchlets[i], vertices, indices);
 	}
 	mmc->Mesh = std::make_shared<Mesh>();
-	mmc->Mesh->SetVertices(17, vertices, indices, false);
+	mmc->Mesh->SetVertices(17, vertices, indices, true);
 }
 
 void TreeUtilities::WillowFoliageGenerator::SimpleMeshGenerator(Branchlet& branchlet, std::vector<Vertex>& vertices,

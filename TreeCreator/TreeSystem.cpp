@@ -31,7 +31,7 @@ void TreeUtilities::TreeSystem::OnGui()
 		}
 		ImGui::InputText("File name", _MeshOBJFileName, 255);
 		if(ImGui::Button(("Export mesh as " + std::string(_MeshOBJFileName) + ".obj").c_str())) {
-			TreeManager::ExportMeshToOBJ(treeEntity, _MeshOBJFileName);
+			TreeManager::ExportTreeAsModel(treeEntity, _MeshOBJFileName);
 		}
 		ImGui::Separator();
 		title = "Light Estimation##";

@@ -555,13 +555,12 @@ Entity TreeUtilities::TreeManager::CreateInternode(TreeIndex treeIndex, Entity p
 	return entity;
 }
 
-void TreeUtilities::TreeManager::ExportMeshToOBJ(Entity treeEntity, std::string filename)
+void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::string filename, bool includeFoliage)
 {
-	//TreeData info = EntityManager::GetComponentData<TreeData>(treeEntity);
-	auto mesh = GetMeshForTree(treeEntity);
+	auto mesh = EntityManager::GetPrivateComponent<MeshRenderer>(treeEntity)->Mesh;
 	auto vertices = mesh->GetVerticesUnsafe();
 	auto indices = mesh->GetIndicesUnsafe();
-
+	
 	if (vertices.size() == 0) {
 		Debug::Log("Mesh not generated!");
 		return;
@@ -571,25 +570,139 @@ void TreeUtilities::TreeManager::ExportMeshToOBJ(Entity treeEntity, std::string 
 	of.open((filename + ".obj").c_str(), std::ofstream::out | std::ofstream::trunc);
 	if (of.is_open())
 	{
-		std::string data = "";
+		std::string branchVert = "";
+		std::string branchletVert = "";
+		std::string leafVert = "";
+		std::string branchIndices = "";
+		std::string branchletIndices = "";
+		std::string leafIndices = "";
 #pragma region Data collection
-		data += "# List of geometric vertices, with (x, y, z).\n";
 		for (const auto& vertex : vertices) {
-			data += "v " + std::to_string(vertex.Position.x)
+			branchVert += "v " + std::to_string(vertex.Position.x)
 				+ " " + std::to_string(vertex.Position.y)
 				+ " " + std::to_string(vertex.Position.z)
 				+ "\n";
 		}
-		data += "# List of indices for faces vertices, with (x, y, z).\n";
 		for (int i = 0; i < indices.size() / 3; i++) {
-			data += "f " + std::to_string(indices.at(i * 3) + 1)
+			branchIndices += "f " + std::to_string(indices.at(i * 3) + 1)
 				+ " " + std::to_string(indices.at(i * 3 + 1) + 1)
 				+ " " + std::to_string(indices.at(i * 3 + 2) + 1)
 				+ "\n";
 		}
 #pragma endregion
-		of.write(data.c_str(), data.size());
+		size_t branchVertSize = vertices.size();
+		if(includeFoliage)
+		{
+			Entity foliageEntity;
+			EntityManager::ForEachChild(treeEntity, [&foliageEntity](Entity child)
+				{
+					if (child.HasComponentData<WillowFoliageInfo>())
+					{
+						foliageEntity = child;
+					}
+					else if (child.HasComponentData<AppleFoliageInfo>())
+					{
+						foliageEntity = child;
+					}
+					else if (child.HasComponentData<AcaciaFoliageInfo>())
+					{
+						foliageEntity = child;
+					}
+					else if (child.HasComponentData<BirchFoliageInfo>())
+					{
+						foliageEntity = child;
+					}
+					else if (child.HasComponentData<OakFoliageInfo>())
+					{
+						foliageEntity = child;
+					}
+					else if (child.HasComponentData<MapleFoliageInfo>())
+					{
+						foliageEntity = child;
+					}
+					else if (child.HasComponentData<DefaultFoliageInfo>())
+					{
+						foliageEntity = child;
+					}
+					else if (child.HasComponentData<PineFoliageInfo>())
+					{
+						foliageEntity = child;
+					}
+				}
+			);
+			size_t branchletVertSize = 0;
+			if(foliageEntity.HasPrivateComponent<MeshRenderer>())
+			{
+				mesh = EntityManager::GetPrivateComponent<MeshRenderer>(foliageEntity)->Mesh;
+				vertices = mesh->GetVerticesUnsafe();
+				indices = mesh->GetIndicesUnsafe();
+				branchVertSize += vertices.size();
+#pragma region Data collection
+				for (const auto& vertex : vertices) {
+					branchletVert += "v " + std::to_string(vertex.Position.x)
+						+ " " + std::to_string(vertex.Position.y)
+						+ " " + std::to_string(vertex.Position.z)
+						+ "\n";
+				}
+				for (int i = 0; i < indices.size() / 3; i++) {
+					branchletIndices += "f " + std::to_string(indices.at(i * 3) + 1 + branchVertSize)
+						+ " " + std::to_string(indices.at(i * 3 + 1) + 1 + branchVertSize)
+						+ " " + std::to_string(indices.at(i * 3 + 2) + 1 + branchVertSize)
+						+ "\n";
+				}
+#pragma endregion
+			}
+			
+			if(foliageEntity.HasPrivateComponent<Particles>())
+			{
+				auto& particles = EntityManager::GetPrivateComponent<Particles>(foliageEntity);
+				mesh = particles->Mesh;
+				vertices = mesh->GetVerticesUnsafe();
+				indices = mesh->GetIndicesUnsafe();
+				auto& matrices = particles->Matrices;
+				size_t offset = 0;
+				for(auto& matrix : matrices)
+				{
+					for (const auto& vertex : vertices) {
+						glm::vec3 position = matrix * glm::vec4(vertex.Position, 1);
+						leafVert += "v " + std::to_string(position.x)
+							+ " " + std::to_string(position.y)
+							+ " " + std::to_string(position.z)
+							+ "\n";
+					}
+				}
+				branchVert += "s off\n";
+				for (auto& matrix : matrices)
+				{
+					for (int i = 0; i < indices.size() / 3; i++) {
+						leafIndices += "f " + std::to_string(indices.at(i * 3) + 1 + offset + branchVertSize + branchletVertSize)
+							+ " " + std::to_string(indices.at(i * 3 + 1) + 1 + offset + branchVertSize + branchletVertSize)
+							+ " " + std::to_string(indices.at(i * 3 + 2) + 1 + offset + branchVertSize + branchletVertSize)
+							+ "\n";
+					}
+					offset += indices.size();
+				}
+			}
+		}
+		of.write(branchVert.c_str(), branchVert.size());
 		of.flush();
+		of.write(branchletVert.c_str(), branchletVert.size());
+		of.flush();
+		of.write(leafVert.c_str(), leafVert.size());
+		of.flush();
+		std::string group = "g branches\n";
+		of.write(group.c_str(), group.size());
+		of.write(branchIndices.c_str(), branchIndices.size());
+		of.flush();
+		group = "g branchlets\n";
+		of.write(group.c_str(), group.size());
+		of.write(branchletIndices.c_str(), branchletIndices.size());
+		of.flush();
+		group = "g leaves\n";
+		of.write(group.c_str(), group.size());
+		of.write(leafIndices.c_str(), leafIndices.size());
+		of.flush();
+		
 		of.close();
 		Debug::Log("Model saved as " + filename + ".obj");
 	}
@@ -604,14 +717,6 @@ LightEstimator* TreeUtilities::TreeManager::GetLightEstimator()
 	return _LightEstimator;
 }
 
-std::shared_ptr<Mesh> TreeUtilities::TreeManager::GetMeshForTree(Entity treeEntity)
-{
-	if (!_Ready) {
-		Debug::Error("TreeManager: Not initialized!");
-		return nullptr;
-	}
-	return EntityManager::GetPrivateComponent<MeshRenderer>(treeEntity)->Mesh;
-}
 #pragma endregion
 
 
@@ -755,9 +860,9 @@ void TreeManager::SerializeTreeGraph(std::string path, Entity tree)
 		//End Position
 		writer.String("Children");
 		writer.StartArray();
-		for(auto& i : EntityManager::GetChildren(internodes[i]))
+		for(auto& child : EntityManager::GetChildren(internodes[i]))
 		{
-			writer.Int(i.Index);
+			writer.Int(child.Index);
 		}
 		writer.EndArray();
 		writer.EndObject();

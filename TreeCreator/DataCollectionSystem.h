@@ -107,6 +107,6 @@ namespace TreeUtilities {
 		void OnCreate() override;
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);
 		void Update() override;
-		void EnableSemantic();
+		void EnableSemantic() const;
 	};
 }

@@ -17,7 +17,7 @@ void TreeScene::ExportSceneAsOBJ(std::string filename)
 		for (auto treeEntity : trees)
 		{
 			auto ltw = EntityManager::GetComponentData<GlobalTransform>(treeEntity);
-			auto mesh = TreeManager::GetMeshForTree(treeEntity);
+			auto mesh = EntityManager::GetPrivateComponent<MeshRenderer>(treeEntity)->Mesh;
 			if(!mesh->GetVerticesUnsafe().empty() && !mesh->GetIndicesUnsafe().empty())
 			{
 				std::string header = "#Tree vertices: " + std::to_string(mesh->GetVerticesUnsafe().size()) +", tris: " + std::to_string(mesh->GetIndicesUnsafe().size() / 3);

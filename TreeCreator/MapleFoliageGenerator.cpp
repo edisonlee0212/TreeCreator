@@ -83,7 +83,9 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 			glm::vec3 position = glm::linearRand(glm::vec3(0.0f), parentTranslation - translation);
 			position += glm::ballRand(_DefaultFoliageInfo.GenerationRadius);
 			//glm::quat rotation = glm::quat(glm::radians(glm::linearRand(glm::vec3(-180.0f), glm::vec3(180.0f))));
+			
 			glm::quat rotation = glm::quatLookAt(glm::sphericalRand(1.0f), -glm::gaussRand(illuminations[i].LightDir, glm::vec3(0.01f)));
+			if(glm::any(glm::isnan(rotation))) rotation = glm::quat(glm::radians(glm::linearRand(glm::vec3(-180.0f), glm::vec3(180.0f))));
 			leafTransform = glm::inverse(treeTransform.Value) *
 				(glm::translate(glm::mat4(1.0f), translation + position) * glm::mat4_cast(rotation) * glm::scale(ls));
 				
