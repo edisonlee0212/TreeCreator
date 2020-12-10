@@ -18,7 +18,7 @@ void EngineSetup();
 void main()
 {
 	EngineSetup();
-	bool generateLearningData = true;
+	bool generateLearningData = false;
 	bool generateSorghum = false;
 	bool generateSorghumField = false;
 
@@ -30,7 +30,7 @@ void main()
 	
 	int counter = 0;
 	int startIndex = 1;
-	int endIndex = 5;
+	int endIndex = 100;
 	if (generateLearningData) {
 		ics->ResetCounter(counter, startIndex, endIndex, true);
 		ics->SetIsTrain(true);

@@ -29,22 +29,25 @@ void TreeUtilities::InternodeSystem::RaySelection()
 	auto mainCamera = RenderManager::GetMainCamera();
 	if (mainCamera) {
 		auto cameraLtw = mainCamera->GetOwner().GetComponentData<GlobalTransform>();
-		const Ray cameraRay = mainCamera->GetCamera()->ScreenPointToRay(
-			cameraLtw, InputManager::GetMouseScreenPosition());
-		EntityManager::ForEach<GlobalTransform, InternodeInfo>(_InternodeQuery, [this, cameraLtw, &writeMutex, &minDistance, cameraRay](int i, Entity entity, GlobalTransform* ltw, InternodeInfo* info)
-			{
-				const float distance = glm::distance(glm::vec3(cameraLtw.Value[3]), glm::vec3(ltw->Value[3]));
-				if (cameraRay.Intersect(ltw->Value[3], 0.1f))
+		glm::vec2 mousePos;
+		if (InputManager::GetMousePosition(mousePos)) {
+			const Ray cameraRay = mainCamera->GetCamera()->ScreenPointToRay(
+				cameraLtw, mousePos);
+			EntityManager::ForEach<GlobalTransform, InternodeInfo>(_InternodeQuery, [this, cameraLtw, &writeMutex, &minDistance, cameraRay](int i, Entity entity, GlobalTransform* ltw, InternodeInfo* info)
 				{
-					std::lock_guard<std::mutex> lock(writeMutex);
-					if (distance < minDistance)
+					const float distance = glm::distance(glm::vec3(cameraLtw.Value[3]), glm::vec3(ltw->Value[3]));
+					if (cameraRay.Intersect(ltw->Value[3], 0.1f))
 					{
-						minDistance = distance;
-						this->_RaySelectedEntity = entity;
+						std::lock_guard<std::mutex> lock(writeMutex);
+						if (distance < minDistance)
+						{
+							minDistance = distance;
+							this->_RaySelectedEntity = entity;
+						}
 					}
 				}
-			}
-		);
+			);
+		}
 	}
 	if(InputManager::GetKey(GLFW_KEY_F))
 	{

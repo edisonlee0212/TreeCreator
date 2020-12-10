@@ -5,9 +5,10 @@ glm::ivec2 CakeTower::SelectSlice(glm::vec3 position) const
 	glm::ivec2 retVal = glm::ivec2(0);
 	const float heightLevel = _MaxHeight / TierAmount;
 	const float sliceAngle = 360.0f / SliceAmount;
-	retVal.x = position.y / heightLevel;
+	retVal.x = static_cast<int>(position.y / heightLevel);
 	if (retVal.x >= TierAmount) retVal.x = TierAmount - 1;
-	retVal.y = (glm::degrees(glm::atan(position.x, position.z)) + 180.0f) / sliceAngle;
+	if (position.x == 0 && position.z == 0) retVal.y = 0;
+	else retVal.y = static_cast<int>((glm::degrees(glm::atan(position.x, position.z)) + 180.0f) / sliceAngle);
 	if (retVal.y >= SliceAmount) retVal.y = SliceAmount - 1;
 	return retVal;
 }
@@ -47,8 +48,15 @@ void CakeTower::CalculateVolume()
 	{
 		const glm::vec3 position = i.GlobalTransform[3];
 		const auto sliceIndex = SelectSlice(position);
-		const float currentDistance = glm::length(glm::vec2(position.x, position.z)) + i.Thickness;
-		if (CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance < currentDistance) CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance = currentDistance;
+		const float currentDistance = glm::length(glm::vec2(position.x, position.z));
+		if(currentDistance <= i.Thickness)
+		{
+			for(auto& slice : CakeTiers[sliceIndex.x])
+			{
+				if (slice.MaxDistance < currentDistance + i.Thickness) slice.MaxDistance = currentDistance + i.Thickness;
+			}
+		}
+		else if (CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance < currentDistance) CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance = currentDistance;
 	}
 }
 
@@ -81,7 +89,7 @@ void CakeTower::OnGui()
 			tier.resize(SliceAmount);
 			for (auto& slice : tier)
 			{
-				const float currentHeight = heightLevel * (tierIndex + 0.5f);
+				const float currentHeight = heightLevel * tierIndex;
 				const float currentAngle = sliceAngle * (sliceIndex + 0.5f);
 				float x = glm::abs(glm::tan(glm::radians(currentAngle)));
 				float z = 1.0f;

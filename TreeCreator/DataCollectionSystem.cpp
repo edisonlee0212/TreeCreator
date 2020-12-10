@@ -132,10 +132,10 @@ void DataCollectionSystem::ExportKDops(const std::string& path) const
 			auto& kdop = instance.data;
 			std::string output = "";
 			output += std::to_string(instance.Index) + ",";
-			output += instance.Name + ",";
+			output += instance.Name;
 			for(auto& i : kdop)
 			{
-				output += std::to_string(i) + ",";
+				output += "," + std::to_string(i);
 			}
 			output += "\n";
 			ofs.write(output.c_str(), output.size());
@@ -160,12 +160,12 @@ void TreeUtilities::DataCollectionSystem::ExportCakeTower(const std::string& pat
 			auto cakeTower = instance.data;
 			std::string output = "";
 			output += std::to_string(instance.Index) + ",";
-			output += instance.Name + ",";
+			output += instance.Name;
 			for (auto& tier : cakeTower)
 			{
 				for(auto& slice : tier)
 				{
-					output += std::to_string(slice.MaxDistance) + ",";
+					output += "," + std::to_string(slice.MaxDistance);
 				}
 			}
 			output += "\n";
@@ -435,8 +435,8 @@ void DataCollectionSystem::Update()
 		path = _StorePath + "mask_" + (_IsTrain ? "train/" : "val/") +
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
-			+ ".png";
-		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToPng(
+			+ ".jpg";
+		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
 			path);
 		_Status = DataCollectionSystemStatus::CollectData;
 		break;
