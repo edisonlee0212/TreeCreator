@@ -135,22 +135,19 @@ void main()
 		EntityManager::SetComponentData(plant4, t4);
 	}
 #pragma region Engine Loop
-	bool loop = true;
 	bool eval = true;
-	//Start engine. Here since we need to inject procedures to the main engine loop we need to manually loop by our self.
-	//Another way to run engine is to simply execute:
-	//Application.Run();
-	while (loop) {
-		Application::PreUpdate();
-		if (eval && generateLearningData && !ics->IsExport())
+	Application::RegisterUpdateFunction([&]()
 		{
-			ics->ResetCounter(counter, startIndex, endIndex, true);
-			eval = false;
-			ics->SetIsTrain(false);
+			if (eval && generateLearningData && !ics->IsExport())
+			{
+				ics->ResetCounter(counter, startIndex, endIndex, true);
+				eval = false;
+				ics->SetIsTrain(false);
+			}
 		}
-		Application::Update();
-		loop = Application::LateUpdate();
-	}
+	);
+	Application::Run();
+	
 #pragma endregion
 	Application::End();
 }
