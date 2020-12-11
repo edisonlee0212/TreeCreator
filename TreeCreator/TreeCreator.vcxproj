@@ -45,15 +45,15 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\Submodules\UniEngine\includes\glad\include\glad;..\Submodules\UniEngine\includes\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\includes\glad\include;..\Submodules\UniEngine\includes\Assimp\include;..\Submodules\UniEngine\includes\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\includes\PhysX\include;..\Submodules\UniEngine\UniEngine;$(CGAL_DIR)\include;$(BOOST_INCLUDEDIR);$(CGAL_DIR)\auxiliary\gmp\include;$(EIGEN3_INCLUDE_DIR);$(EIGEN3_INCLUDE_DIR)\Eigen\src;..\includes;$(IncludePath)</IncludePath>
+    <IncludePath>..\Submodules\UniEngine\includes\glad\include\glad;..\Submodules\UniEngine\includes\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\includes\glad\include;..\Submodules\UniEngine\includes\Assimp\include;..\Submodules\UniEngine\includes\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\includes\PhysX\include;..\Submodules\UniEngine\UniEngine;..\includes;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
-    <LibraryPath>$(CGAL_DIR)\auxiliary\gmp\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\Submodules\UniEngine\includes\glad\include\glad;..\Submodules\UniEngine\includes\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\includes\glad\include;..\Submodules\UniEngine\includes\Assimp\include;..\Submodules\UniEngine\includes\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\includes\PhysX\include;..\Submodules\UniEngine\UniEngine;$(CGAL_DIR)\include;$(BOOST_INCLUDEDIR);$(CGAL_DIR)\auxiliary\gmp\include;$(EIGEN3_INCLUDE_DIR);$(EIGEN3_INCLUDE_DIR)\Eigen\src;..\includes;$(IncludePath)</IncludePath>
+    <IncludePath>..\Submodules\UniEngine\includes\glad\include\glad;..\Submodules\UniEngine\includes\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\includes\glad\include;..\Submodules\UniEngine\includes\Assimp\include;..\Submodules\UniEngine\includes\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\includes\PhysX\include;..\Submodules\UniEngine\UniEngine;..\includes;$(IncludePath)</IncludePath>
     <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
-    <LibraryPath>$(CGAL_DIR)\auxiliary\gmp\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -68,7 +68,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
-      <AdditionalDependencies>libgmp-10.lib;libmpfr-4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d "..\Submodules\UniEngine\UniEngine\$(IntDir)UniEngine.dll" "$(OutDir)"
@@ -93,7 +93,7 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\d\*.dll" "$(OutDir)" </Comma
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>
       </AdditionalLibraryDirectories>
-      <AdditionalDependencies>libgmp-10.lib;libmpfr-4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y /d "..\Submodules\UniEngine\UniEngine\$(IntDir)UniEngine.dll" "$(OutDir)"
@@ -120,7 +120,6 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClCompile Include="PineFoliageGenerator.cpp" />
     <ClCompile Include="PlantSimulationSystem.cpp" />
     <ClCompile Include="NetworkSystem.cpp" />
-    <ClCompile Include="CrownSurfaceRecon.cpp" />
     <ClCompile Include="pugixml\pugixml.cpp" />
     <ClCompile Include="quickhull\QuickHull.cpp" />
     <ClCompile Include="InternodeRingSegment.cpp" />
@@ -151,7 +150,6 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClInclude Include="OakFoliageGenerator.h" />
     <ClInclude Include="PineFoliageGenerator.h" />
     <ClInclude Include="PlantSimulationSystem.h" />
-    <ClInclude Include="CrownSurfaceRecon.h" />
     <ClInclude Include="pugixml\pugiconfig.hpp" />
     <ClInclude Include="pugixml\pugixml.hpp" />
     <ClInclude Include="quickhull\ConvexHull.hpp" />
@@ -169,7 +167,6 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClInclude Include="TreeManager.h" />
     <ClInclude Include="TreeScene.h" />
     <ClInclude Include="TreeSystem.h" />
-    <ClInclude Include="TreeVolume.h" />
     <ClInclude Include="WillowFoliageGenerator.h" />
   </ItemGroup>
   <ItemGroup>

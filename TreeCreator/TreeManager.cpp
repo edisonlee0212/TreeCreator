@@ -3,7 +3,6 @@
 #include <gtx/matrix_decompose.hpp>
 #include <utility>
 #include "AcaciaFoliageGenerator.h"
-#include "CrownSurfaceRecon.h"
 #include "MapleFoliageGenerator.h"
 #include "PineFoliageGenerator.h"
 #include "WillowFoliageGenerator.h"

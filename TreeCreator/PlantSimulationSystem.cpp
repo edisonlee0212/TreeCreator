@@ -9,11 +9,11 @@
 
 #include "pugixml/pugixml.hpp"
 
-#include <CGAL/Point_set_3.h>
+//#include <CGAL/Point_set_3.h>
 
 
 #include "AcaciaFoliageGenerator.h"
-#include "CrownSurfaceRecon.h"
+//#include "CrownSurfaceRecon.h"
 #include "MapleFoliageGenerator.h"
 #include "PineFoliageGenerator.h"
 #include "WillowFoliageGenerator.h"
@@ -1305,13 +1305,13 @@ void PlantSimulationSystem::BuildHullForTree(Entity& tree)
 
 	auto& treeData = EntityManager::GetPrivateComponent<TreeData>(tree);
 	treeData->ConvexHull = std::make_shared<Mesh>();
-	CrownSurfaceRecon psr;
+	//CrownSurfaceRecon psr;
 	//psr.PoissonConstruct(positions, normals, treeInfo->ConvexHull);
 	//psr.AdvancingFrontConstruct(positions, treeInfo->ConvexHull);
-	psr.ScaleSpaceConstruct(positions, treeData->ConvexHull);
+	//psr.ScaleSpaceConstruct(positions, treeData->ConvexHull);
 
 
-	/*
+	
 	quickhull::QuickHull<float> qh; // Could be double as well
 	std::vector<quickhull::Vector3<float>> pointCloud;
 	for (size_t i = 0; i < internodeLTWs.size(); i++)
@@ -1341,10 +1341,7 @@ void PlantSimulationSystem::BuildHullForTree(Entity& tree)
 		vertices[i].Position = glm::vec3(v.x, v.y, v.z);
 		vertices[i].TexCoords0 = glm::vec2(0, 0);
 	}
-	auto treeInfo = EntityManager::GetSharedComponent<TreeData>(tree);
-	treeInfo->ConvexHull = std::make_shared<Mesh>();
-	treeInfo->ConvexHull->SetVertices(17, vertices, indices, true);
-	*/
+	treeData->ConvexHull->SetVertices(17, vertices, indices, true);
 }
 
 void PlantSimulationSystem::ResumeGrowth()

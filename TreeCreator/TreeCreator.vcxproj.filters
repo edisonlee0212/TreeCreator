@@ -126,9 +126,6 @@
     <ClCompile Include="TreeSystem.cpp">
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="CrownSurfaceRecon.cpp">
-      <Filter>Source Files\Utilities</Filter>
-    </ClCompile>
     <ClCompile Include="BezierCurve.cpp">
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
@@ -242,16 +239,10 @@
     <ClInclude Include="TreeSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="TreeVolume.h">
-      <Filter>Header Files\TreeVolume</Filter>
-    </ClInclude>
     <ClInclude Include="KDop.h">
       <Filter>Header Files\TreeVolume</Filter>
     </ClInclude>
     <ClInclude Include="BezierCurve.h">
-      <Filter>Header Files\Utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="CrownSurfaceRecon.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
     <ClInclude Include="Curve.h">
