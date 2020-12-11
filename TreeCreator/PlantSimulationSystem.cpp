@@ -1372,7 +1372,7 @@ void PlantSimulationSystem::SetAllInternodeActivated(Entity tree, bool value)
 	);
 }
 
-void PlantSimulationSystem::GenerateLeavesForAllTrees(std::vector<Entity>& trees)
+void PlantSimulationSystem::GenerateLeavesForAllTrees(std::vector<Entity>& trees) const
 {
 	for (auto& tree : trees) {
 		TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);

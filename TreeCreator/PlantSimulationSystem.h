@@ -15,9 +15,8 @@ namespace TreeUtilities {
 		public SystemBase
 	{
 		friend class DataCollectionSystem;
+#pragma region Stuff
 		float _GrowthTimer;
-#pragma region GUI Related
-		
 		float _DirectionPruningLimitAngle = 60;
 		bool _DisplayConvexHull = false;
 		bool _EnableDirectionPruning = false;
@@ -39,14 +38,13 @@ namespace TreeUtilities {
 		std::shared_ptr<Texture2D> _DefaultTreeSurfaceSpecTex2;
 		std::shared_ptr<Texture2D> _DefaultTreeSurfaceNormTex2;
 		std::shared_ptr<Material> _DefaultConvexHullSurfaceMaterial;
-		
-#pragma endregion
 		InternodeSystem* _InternodeSystem = nullptr;
 		unsigned int _ConfigFlags = 0;
 		bool _Growing = false;
 		EntityQuery _TreeQuery;
 		EntityQuery _InternodeQuery;
-		
+#pragma endregion
+#pragma region Internal Functions
 		float GetApicalControl(std::unique_ptr<TreeData>& treeInfo, InternodeInfo& internodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const;
 		inline void OnGui();
 		void UpdateDistanceToBranchEnd(Entity& internode, TreeParameters& treeParameters, int treeAge);
@@ -64,11 +62,18 @@ namespace TreeUtilities {
 		void BuildHullForTree(Entity& tree);
 		void ResumeGrowth();
 		void PauseGrowth();
+#pragma endregion
 	public:
-		
+		void OnCreate() override;
+		void OnDestroy() override;
+		//Function will be called each frame.
+		void Update() override;
+		//Function will be called every time step.
+		void FixedUpdate() override;
+#pragma region Helpers
 		static void SetAllInternodeActivated(Entity tree, bool value);
 		static void ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up);
-		void GenerateLeavesForAllTrees(std::vector<Entity>& trees);
+		void GenerateLeavesForAllTrees(std::vector<Entity>& trees) const;
 		void RefreshTrees();
 		void ExportSettingsAsXml(const std::string& path);
 		void ImportSettings(const std::string& path);
@@ -77,12 +82,10 @@ namespace TreeUtilities {
 		void TryGrowAllTrees(std::vector<Entity>& trees);
 		bool GrowTree(Entity& treeEntity);
 		void CalculatePhysics(Entity tree);
-		void OnCreate() override;
-		void OnDestroy() override;
-		void Update() override;
-		void FixedUpdate() override;
+
 		Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters parameters, glm::vec3 position, bool enabled = true);
 		Entity CreateTree(TreeParameters parameters, glm::vec3 position, bool enabled = true);
 		void CreateDefaultTree();
+#pragma endregion
 	};
 }
