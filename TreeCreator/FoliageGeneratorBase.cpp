@@ -77,7 +77,7 @@ void TreeUtilities::DefaultFoliageGenerator::GenerateLeaves(Entity& internode,
 DefaultFoliageGenerator::DefaultFoliageGenerator()
 {
 	_DefaultFoliageInfo = DefaultFoliageInfo();
-	_Archetype = EntityManager::CreateEntityArchetype("Pine Foliage", GlobalTransform(), TreeIndex(), DefaultFoliageInfo());
+	_Archetype = EntityManager::CreateEntityArchetype("Pine Foliage", Transform(), GlobalTransform(), TreeIndex(), DefaultFoliageInfo());
 
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
@@ -92,9 +92,8 @@ DefaultFoliageGenerator::DefaultFoliageGenerator()
 void TreeUtilities::DefaultFoliageGenerator::Generate()
 {
 	const auto tree = GetOwner();
-	GlobalTransform treeLocalToWorld = EntityManager::GetComponentData<GlobalTransform>(tree);
-	Entity foliageEntity;
 	GlobalTransform treeTransform = EntityManager::GetComponentData<GlobalTransform>(tree);
+	Entity foliageEntity;
 	bool found = false;
 	TreeIndex ti = EntityManager::GetComponentData<TreeIndex>(tree);
 	EntityManager::ForEachChild(tree, [&found, &foliageEntity](Entity child)
@@ -114,7 +113,7 @@ void TreeUtilities::DefaultFoliageGenerator::Generate()
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
 		particleSys->ReceiveShadow = false;
-		GlobalTransform transform;
+		Transform transform;
 		transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
 		foliageEntity.SetComponentData(transform);
@@ -124,7 +123,7 @@ void TreeUtilities::DefaultFoliageGenerator::Generate()
 	}
 	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
 	particleSys->Matrices.clear();
-	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeLocalToWorld.Value, particleSys->Matrices, true);
+	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeTransform.Value, particleSys->Matrices, true);
 }
 
 void TreeUtilities::DefaultFoliageGenerator::OnGui()

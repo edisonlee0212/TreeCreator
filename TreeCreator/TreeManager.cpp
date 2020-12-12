@@ -225,7 +225,7 @@ void TreeUtilities::TreeManager::Init()
 		InternodeIndex(), InternodeInfo(), TreeIndex()
 	);
 	_TreeArchetype = EntityManager::CreateEntityArchetype(
-		"Tree",
+		"Tree", Transform(),
 		GlobalTransform(),
 		TreeIndex(), TreeInfo(), TreeAge(),
 		TreeParameters()
@@ -488,9 +488,9 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters& treeParameters)
 {
 	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
-	EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<TreeData>()));
+	EntityManager::SetPrivateComponent(entity, std::make_unique<TreeData>());
 	//EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<KDop>()));
-	EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<CakeTower>()));
+	EntityManager::SetPrivateComponent(entity, std::make_unique<CakeTower>());
 	EntityManager::SetComponentData(entity, _TreeIndex);
 	auto mmc = std::make_unique<MeshRenderer>();
 	mmc->Material = std::move(treeSurfaceMaterial);

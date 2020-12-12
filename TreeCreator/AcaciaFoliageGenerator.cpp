@@ -4,7 +4,7 @@
 TreeUtilities::AcaciaFoliageGenerator::AcaciaFoliageGenerator()
 {
 	_DefaultFoliageInfo = AcaciaFoliageInfo();
-	_Archetype = EntityManager::CreateEntityArchetype("Pine Foliage", GlobalTransform(), TreeIndex(), AcaciaFoliageInfo());
+	_Archetype = EntityManager::CreateEntityArchetype("Pine Foliage", Transform(), GlobalTransform(), TreeIndex(), AcaciaFoliageInfo());
 
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
@@ -40,7 +40,7 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 		particleSys->Mesh = Default::Primitives::Quad;
 		particleSys->ForwardRendering = true;
 		particleSys->ReceiveShadow = false;
-		GlobalTransform transform;
+		Transform transform;
 		transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
 		foliageEntity.SetComponentData(transform);

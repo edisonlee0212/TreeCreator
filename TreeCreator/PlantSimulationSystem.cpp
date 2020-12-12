@@ -562,10 +562,13 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	auto treeEntity = TreeManager::CreateTree(std::move(treeSurfaceMaterial), treeParameters);
 	Entity internode = TreeManager::CreateInternode(EntityManager::GetComponentData<TreeIndex>(treeEntity), treeEntity);
 #pragma region Position & Style
-
-	GlobalTransform ltw;
-	ltw.Value = glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(glm::quat(glm::vec3(0))) * glm::scale(glm::vec3(1.0f));
-	EntityManager::SetComponentData(treeEntity, ltw);
+	Transform transform;
+	GlobalTransform globalTransform;
+	
+	globalTransform.Value = glm::translate(glm::mat4(1.0f), position) * glm::mat4_cast(glm::quat(glm::vec3(0))) * glm::scale(glm::vec3(1.0f));
+	transform.Value = globalTransform.Value;
+	EntityManager::SetComponentData(treeEntity, transform);
+	EntityManager::SetComponentData(treeEntity, globalTransform);
 #pragma endregion
 	TreeAge age;
 	age.Value = 0;
@@ -600,7 +603,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	auto& treeData = EntityManager::GetPrivateComponent<TreeData>(treeEntity);
 	treeData->MeshGenerated = false;
 	auto id = glm::translate(glm::vec3(0.0f)) * glm::mat4_cast(glm::quat(glm::vec3(0.0f))) * glm::scale(glm::vec3(1.0f));
-	UpdateLocalTransform(internode, treeParameters, id, ltw.Value);
+	UpdateLocalTransform(internode, treeParameters, id, globalTransform.Value);
 	EntityManager::SetComponentData(treeEntity, treeParameters);
 	EntityManager::SetComponentData(treeEntity, age);
 	ResumeGrowth();
