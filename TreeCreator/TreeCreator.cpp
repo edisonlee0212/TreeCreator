@@ -21,9 +21,8 @@ void main()
 	bool generateLearningData = false;
 	bool generateSorghum = false;
 	bool generateSorghumField = false;
-
-
 	PlantSimulationSystem* pss = InitPlantSimulationSystem();
+	if (generateLearningData) {
 	DataCollectionSystem* ics = InitImageCollectionSystem();
 	ics->SetPlantSimulationSystem(pss);
 	
@@ -31,9 +30,23 @@ void main()
 	int counter = 0;
 	int startIndex = 1;
 	int endIndex = 100;
-	if (generateLearningData) {
+	
 		ics->ResetCounter(counter, startIndex, endIndex, true);
 		ics->SetIsTrain(true);
+		bool eval = true;
+		Application::RegisterUpdateFunction([&]()
+			{
+				if (eval && generateLearningData && !ics->IsExport())
+				{
+					ics->ResetCounter(counter, startIndex, endIndex, true);
+					eval = false;
+					ics->SetIsTrain(false);
+				}
+			}
+		);
+	}else
+	{
+		InitGround();
 	}
 	if (generateSorghum) {
 		auto srSys = InitSorghumReconstructionSystem();
@@ -135,19 +148,7 @@ void main()
 		EntityManager::SetComponentData(plant4, t4);
 	}
 #pragma region Engine Loop
-	bool eval = true;
-	Application::RegisterUpdateFunction([&]()
-		{
-			if (eval && generateLearningData && !ics->IsExport())
-			{
-				ics->ResetCounter(counter, startIndex, endIndex, true);
-				eval = false;
-				ics->SetIsTrain(false);
-			}
-		}
-	);
 	Application::Run();
-	
 #pragma endregion
 	Application::End();
 }
@@ -217,7 +218,7 @@ void EngineSetup()
 		mainCamera->ClearColor = glm::vec3(1.0f);
 	}
 	ccs->SetVelocity(15.0f);
-	//InitGround();
+	
 #pragma endregion
 	TreeManager::Init();
 #pragma region Light estimator setup
@@ -256,57 +257,17 @@ void InitGround() {
 	entity.SetName("Ground");
 	Transform transform;
 	transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	transform.SetScale(glm::vec3(100.0f));
+	transform.SetScale(glm::vec3(10.0f));
 	EntityManager::SetComponentData(entity, transform);
-	/*
-	auto entity1 = EntityManager::CreateEntity(archetype);
-	translation.Value = glm::vec3(-100.0f, 0.0f, 0.0f);
-	scale.Value = glm::vec3(100.0f, 1.0f, 20.0f);
-	Rotation rotation;
-	rotation.Value = glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(1, 0, 0));
-	EntityManager::SetComponentData<Translation>(entity1, translation);
-	EntityManager::SetComponentData<Scale>(entity1, scale);
-	EntityManager::SetComponentData<Rotation>(entity1, rotation);
 
-	auto entity2 = EntityManager::CreateEntity(archetype);
-	translation.Value = glm::vec3(100.0f, 0.0f, 0.0f);
-	scale.Value = glm::vec3(100.0f, 1.0f, 20.0f);
-	rotation.Value = glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(-1, 0, 0));
-
-	EntityManager::SetComponentData<Translation>(entity2, translation);
-	EntityManager::SetComponentData<Scale>(entity2, scale);
-	EntityManager::SetComponentData<Rotation>(entity2, rotation);
-
-
-	auto entity3 = EntityManager::CreateEntity(archetype);
-	translation.Value = glm::vec3(0.0f, 0.0f, -100.0f);
-	scale.Value = glm::vec3(100.0f, 1.0f, 20.0f);
-	rotation.Value = glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, 1));
-
-	EntityManager::SetComponentData<Translation>(entity3, translation);
-	EntityManager::SetComponentData<Scale>(entity3, scale);
-	EntityManager::SetComponentData<Rotation>(entity3, rotation);
-
-	auto entity4 = EntityManager::CreateEntity(archetype);
-	translation.Value = glm::vec3(0.0f, 0.0f, 100.0f);
-	scale.Value = glm::vec3(100.0f, 1.0f, 20.0f);
-	rotation.Value = glm::quatLookAt(glm::vec3(0, 1, 0), glm::vec3(0, 0, -1));
-
-	EntityManager::SetComponentData<Translation>(entity4, translation);
-	EntityManager::SetComponentData<Scale>(entity4, scale);
-	EntityManager::SetComponentData<Rotation>(entity4, rotation);
-
-	*/
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
-	/*
-	auto textureD = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/bricks2.jpg"));
+	auto textureD = AssetManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg");
 	mat->SetTexture(textureD, TextureType::DIFFUSE);
-	auto textureN = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/bricks2_normal.jpg"));
+	auto textureN = AssetManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg");
 	mat->SetTexture(textureN, TextureType::NORMAL);
-	auto textureH = AssetManager::LoadTexture(FileIO::GetResourcePath("Textures/bricks2_disp.jpg"));
+	auto textureH = AssetManager::LoadTexture("../Resources/Textures/dirt_01_height.jpg");
 	mat->SetTexture(textureH, TextureType::DISPLACEMENT);
-	*/
 
 	mat->Shininess = 32.0f;
 	auto meshMaterial = std::make_unique<MeshRenderer>();
@@ -315,13 +276,6 @@ void InitGround() {
 	meshMaterial->ReceiveShadow = false;
 	meshMaterial->ForwardRendering = true;
 	EntityManager::SetPrivateComponent<MeshRenderer>(entity, std::move(meshMaterial));
-	/*
-	auto rigidBody = std::make_unique<RigidBody>();
-	rigidBody->SetShapeType(ShapeType::Box);
-	rigidBody->SetShapeParam(glm::vec3(50, 1, 50));
-	rigidBody->SetStatic(true);
-	entity.SetPrivateComponent(std::move(rigidBody));
-	*/
 }
 
 

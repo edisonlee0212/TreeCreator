@@ -9,7 +9,8 @@ namespace TreeUtilities
 	class TreeVolume : public PrivateComponentBase
 	{
 	protected:
-		Bound _Bound;
+		glm::vec3 _Center;
+		float _SphereRadius;
 		glm::vec4 _DisplayColor = glm::vec4(0.0f, 0.0f, 1.0f, 0.5f);
 		bool _Display = true;
 		bool _PruneBuds = false;

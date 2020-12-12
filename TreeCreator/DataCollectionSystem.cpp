@@ -358,7 +358,7 @@ void DataCollectionSystem::SetPlantSimulationSystem(PlantSimulationSystem* value
 
 void DataCollectionSystem::Update()
 {
-	if (_ImageCaptureSequences.empty()) return;
+	if (_ImageCaptureSequences.empty() || _CurrentSelectedSequenceIndex < 0) return;
 	std::string path;
 	auto& imageCaptureSequence = _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first;
 	auto& treeParameters = _ImageCaptureSequences[_CurrentSelectedSequenceIndex].second;

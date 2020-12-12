@@ -121,7 +121,6 @@ namespace TreeUtilities {
 	enum class TreeVolumeType
 	{
 		Default,
-		Cube,
 		Sphere
 	};
 	
