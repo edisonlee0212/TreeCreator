@@ -1376,33 +1376,7 @@ void PlantSimulationSystem::GenerateLeavesForAllTrees(std::vector<Entity>& trees
 {
 	for (auto& tree : trees) {
 		TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
-		switch (treeParameters.FoliageType)
-		{
-		case 0:
-			EntityManager::GetPrivateComponent<DefaultFoliageGenerator>(tree)->Generate();
-			break;
-		case 1:
-			EntityManager::GetPrivateComponent<AcaciaFoliageGenerator>(tree)->Generate();
-			break;
-		case 2:
-			EntityManager::GetPrivateComponent<WillowFoliageGenerator>(tree)->Generate();
-			break;
-		case 3:
-			EntityManager::GetPrivateComponent<PineFoliageGenerator>(tree)->Generate();
-			break;
-		case 4:
-			EntityManager::GetPrivateComponent<MapleFoliageGenerator>(tree)->Generate();
-			break;
-		case 5:
-			EntityManager::GetPrivateComponent<AppleFoliageGenerator>(tree)->Generate();
-			break;
-		case 6:
-			EntityManager::GetPrivateComponent<OakFoliageGenerator>(tree)->Generate();
-			break;
-		case 7:
-			EntityManager::GetPrivateComponent<BirchFoliageGenerator>(tree)->Generate();
-			break;
-		}
+		EntityManager::GetPrivateComponent<FoliageGeneratorBase>(tree)->Generate();
 	}
 }
 
