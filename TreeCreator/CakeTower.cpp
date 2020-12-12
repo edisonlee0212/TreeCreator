@@ -205,7 +205,7 @@ bool CakeTower::InVolume(glm::vec3 position) const
 {
 	const auto sliceIndex = SelectSlice(position);
 	const float currentDistance = glm::length(glm::vec2(position.x, position.z));
-	return CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance < currentDistance && position.y <= _MaxHeight;
+	return CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance >= currentDistance && position.y <= _MaxHeight;
 }
 
 void CakeTower::OnGui()
