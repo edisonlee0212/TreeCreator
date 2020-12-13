@@ -15,6 +15,108 @@ glm::ivec2 CakeTower::SelectSlice(glm::vec3 position) const
 
 void CakeTower::GenerateMesh()
 {
+	_BoundMeshes.clear();
+	for(int tierIndex = 0; tierIndex < TierAmount; tierIndex++)
+	{
+		auto mesh = std::make_shared<Mesh>();
+		std::vector<Vertex> vertices;
+		std::vector<unsigned> indices;
+
+		const float sliceAngle = 360.0f / SliceAmount;
+		const int totalAngleStep = 3;
+		const int totalLevelStep = 2;
+		const float stepAngle = sliceAngle / (totalAngleStep - 1);
+		const float heightLevel = _MaxHeight / TierAmount;
+		const float stepLevel = heightLevel / (totalLevelStep - 1);
+		vertices.resize(totalLevelStep * SliceAmount * totalAngleStep * 2 + totalLevelStep);
+		indices.resize((12 * (totalLevelStep - 1) * totalAngleStep) * SliceAmount);
+		for (int levelStep = 0; levelStep < totalLevelStep; levelStep++) {
+			const float currentHeight = heightLevel * tierIndex + stepLevel * levelStep;
+			for (int sliceIndex = 0; sliceIndex < SliceAmount; sliceIndex++)
+			{
+				for (int angleStep = 0; angleStep < totalAngleStep; angleStep++) {
+					const int actualAngleStep = sliceIndex * totalAngleStep + angleStep;
+					
+					float currentAngle = sliceAngle * sliceIndex + stepAngle * angleStep;
+					if (currentAngle >= 360) currentAngle = 0;
+					float x = glm::abs(glm::tan(glm::radians(currentAngle)));
+					float z = 1.0f;
+					if (currentAngle >= 0 && currentAngle <= 90)
+					{
+						z *= -1;
+						x *= -1;
+					}
+					else if (currentAngle > 90 && currentAngle <= 180)
+					{
+						x *= -1;
+					}
+					else if (currentAngle > 270 && currentAngle <= 360)
+					{
+						z *= -1;
+					}
+					glm::vec3 position = glm::normalize(glm::vec3(x, 0.0f, z)) * CakeTiers[tierIndex][sliceIndex].MaxDistance;
+					position.y = currentHeight;
+					vertices[levelStep * totalAngleStep * SliceAmount + actualAngleStep].Position = position;
+					vertices[levelStep * totalAngleStep * SliceAmount + actualAngleStep].TexCoords0 = glm::vec2((float)levelStep / (totalLevelStep - 1), (float)angleStep / (totalAngleStep - 1));
+
+					vertices[totalLevelStep * SliceAmount * totalAngleStep + levelStep * totalAngleStep * SliceAmount + actualAngleStep].Position = position;
+					vertices[totalLevelStep * SliceAmount * totalAngleStep + levelStep * totalAngleStep * SliceAmount + actualAngleStep].TexCoords0 = glm::vec2((float)levelStep / (totalLevelStep - 1), (float)angleStep / (totalAngleStep - 1));
+				}
+			}
+			vertices[vertices.size() - totalLevelStep + levelStep].Position = glm::vec3(0, currentHeight, 0);
+			vertices[vertices.size() - totalLevelStep + levelStep].TexCoords0 = glm::vec2(0.0f);
+		}
+		for (int levelStep = 0; levelStep < totalLevelStep - 1; levelStep++)
+		{
+			for (int sliceIndex = 0; sliceIndex < SliceAmount; sliceIndex++)
+			{
+				for (int angleStep = 0; angleStep < totalAngleStep; angleStep++) {
+					const int actualAngleStep = sliceIndex * totalAngleStep + angleStep; //0-5
+					//Fill a quad here.
+					if (actualAngleStep < SliceAmount * totalAngleStep - 1) {
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep)] = levelStep * totalAngleStep * SliceAmount + actualAngleStep;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 1] = levelStep * totalAngleStep * SliceAmount + actualAngleStep + 1;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 2] = (levelStep + 1) * totalAngleStep * SliceAmount + actualAngleStep;
+
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 3] = (levelStep + 1) * totalAngleStep * SliceAmount + actualAngleStep + 1;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 4] = (levelStep + 1) * totalAngleStep * SliceAmount + actualAngleStep;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 5] = levelStep * totalAngleStep * SliceAmount + actualAngleStep + 1;
+						//Connect with center here.
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 6] = totalLevelStep * SliceAmount * totalAngleStep + levelStep * totalAngleStep * SliceAmount + actualAngleStep;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 7] = vertices.size() - totalLevelStep + levelStep;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 8] = totalLevelStep * SliceAmount * totalAngleStep + levelStep * totalAngleStep * SliceAmount + actualAngleStep + 1;
+
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 9] = totalLevelStep * SliceAmount * totalAngleStep + (levelStep + 1) * totalAngleStep * SliceAmount + actualAngleStep + 1;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 10] = vertices.size() - totalLevelStep + (levelStep + 1);
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 11] = totalLevelStep * SliceAmount * totalAngleStep + (levelStep + 1) * totalAngleStep * SliceAmount + actualAngleStep;
+					}
+					else
+					{
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep)] = levelStep * totalAngleStep * SliceAmount + actualAngleStep;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 1] = levelStep * totalAngleStep * SliceAmount;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 2] = (levelStep + 1) * totalAngleStep * SliceAmount + actualAngleStep;
+
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 3] = (levelStep + 1) * totalAngleStep * SliceAmount;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 4] = (levelStep + 1) * totalAngleStep * SliceAmount + actualAngleStep;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 5] = levelStep * totalAngleStep * SliceAmount;
+						//Connect with center here.
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 6] = totalLevelStep * SliceAmount * totalAngleStep + levelStep * totalAngleStep * SliceAmount + actualAngleStep;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 7] = vertices.size() - totalLevelStep + levelStep;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 8] = totalLevelStep * SliceAmount * totalAngleStep + levelStep * totalAngleStep * SliceAmount;
+
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 9] = totalLevelStep * SliceAmount * totalAngleStep + (levelStep + 1) * totalAngleStep * SliceAmount;
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 10] = vertices.size() - totalLevelStep + (levelStep + 1);
+						indices[12 * (levelStep * totalAngleStep * SliceAmount + actualAngleStep) + 11] = totalLevelStep * SliceAmount * totalAngleStep + (levelStep + 1) * totalAngleStep * SliceAmount + actualAngleStep;
+					}
+					
+				}
+			}
+		}
+		mesh->SetVertices(17, vertices, indices);
+		_BoundMeshes.push_back(std::move(mesh));
+	}
+	/*
+	
 	_BoundMesh = std::make_shared<Mesh>();
 	std::vector<Vertex> vertices;
 	std::vector<unsigned> indices;
@@ -100,6 +202,7 @@ void CakeTower::GenerateMesh()
 	}
 
 	_BoundMesh->SetVertices(17, vertices, indices);
+	*/
 	_MeshGenerated = true;
 }
 
@@ -107,24 +210,30 @@ void CakeTower::SettleToEntity()
 {
 	if (!_MeshGenerated) CalculateVolume();
 	Entity targetEntity = Entity();
+	auto children = EntityManager::GetChildren(GetOwner());
+	for(auto& child : children)
+	{
+		if (child.HasComponentData<CakeTowerInfo>()) EntityManager::DeleteEntity(child);
+	}
+	children.clear();
 	EntityManager::ForEachChild(GetOwner(), [&](Entity child)
 		{
 			if (child.HasComponentData<CakeTowerInfo>()) targetEntity = child;
 		}
 	);
-	if (targetEntity.IsNull()) {
+	for(int i = 0; i < _BoundMeshes.size(); i++)
+	{
 		Transform transform;
 		transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
-		targetEntity = EntityManager::CreateEntity(_CakeTowerArchetype, "CakeTower");
+		targetEntity = EntityManager::CreateEntity(_CakeTowerArchetype, "CakeTower" + std::to_string(i));
 		auto mmc = std::make_unique<MeshRenderer>();
 		mmc->Material = _CakeTowerMaterial;
 		mmc->ForwardRendering = true;
+		mmc->Mesh = _BoundMeshes[i];
 		targetEntity.SetPrivateComponent(std::move(mmc));
 		targetEntity.SetComponentData(transform);
 		EntityManager::SetParent(targetEntity, GetOwner());
 	}
-	auto& mmc = targetEntity.GetPrivateComponent<MeshRenderer>();
-	mmc->Mesh = _BoundMesh;
 }
 
 CakeTower::CakeTower()
@@ -277,6 +386,8 @@ void CakeTower::OnGui()
 	}
 	if (_Display && _MeshGenerated)
 	{
-		RenderManager::DrawGizmoMesh(_BoundMesh.get(), DisplayColor, GetOwner().GetComponentData<GlobalTransform>().Value);
+		for (auto& i : _BoundMeshes) {
+			RenderManager::DrawGizmoMesh(i.get(), DisplayColor, GetOwner().GetComponentData<GlobalTransform>().Value);
+		}
 	}
 }

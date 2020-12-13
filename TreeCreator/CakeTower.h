@@ -23,7 +23,7 @@ namespace TreeUtilities {
 		EntityArchetype _CakeTowerArchetype;
 		float _MaxHeight = 0.0f;
 		//float _MaxRadius = 0.0f;
-		std::shared_ptr<Mesh> _BoundMesh;
+		std::vector<std::shared_ptr<Mesh>> _BoundMeshes;
 		bool _MeshGenerated = false;
 		std::shared_ptr<Material> _CakeTowerMaterial;
 		void GenerateMesh();
