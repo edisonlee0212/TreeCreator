@@ -50,7 +50,14 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 }
 bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 {
-	if (EntityManager::GetChildrenAmount(treeEntity) == 0) return false;
+	if (!treeEntity.Enabled()) return false;
+	Entity rootInternode = Entity();
+	EntityManager::ForEachChild(treeEntity, [&](Entity child)
+		{
+			if (child.HasComponentData<InternodeInfo>()) rootInternode = child;
+		}
+	);
+	if (rootInternode.IsNull()) return false;
 #pragma region Collect tree data
 	auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
 	auto& treeData = EntityManager::GetPrivateComponent<TreeData>(treeEntity);
@@ -97,7 +104,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	}
 #pragma endregion
 #pragma region Update branch structure information
-	Entity rootInternode = EntityManager::GetChildren(treeEntity).at(0);
+	
 	bool anyRemoved = false;
 	EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
 	auto& treeVolume = treeEntity.GetPrivateComponent<TreeVolume>();
@@ -888,11 +895,13 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 	_InternodeQuery.ToComponentDataArray<GlobalTransform, InternodeInfo>(internodesLTWs, [detectionDistance](InternodeInfo& info)
 		{
 			return info.LongestDistanceToEnd <= detectionDistance;
-		});
+		}
+	);
 	_InternodeQuery.ToComponentDataArray<TreeIndex, InternodeInfo>(internodesTreeIndices, [detectionDistance](InternodeInfo& info)
 		{
 			return info.LongestDistanceToEnd <= detectionDistance;
-		});
+		}
+	);
 
 	_TreeQuery.ToComponentDataArray(treeIndices);
 	_TreeQuery.ToComponentDataArray(treeParameters);
@@ -1378,7 +1387,13 @@ void PlantSimulationSystem::SetAllInternodeActivated(Entity tree, bool value)
 void PlantSimulationSystem::GenerateLeavesForAllTrees(std::vector<Entity>& trees) const
 {
 	for (auto& tree : trees) {
-		TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
+		Entity rootInternode = Entity();
+		EntityManager::ForEachChild(tree, [&](Entity child)
+			{
+				if (child.HasComponentData<InternodeInfo>()) rootInternode = child;
+			}
+		);
+		if (rootInternode.IsNull()) continue;
 		EntityManager::GetPrivateComponent<FoliageGeneratorBase>(tree)->Generate();
 	}
 }
@@ -1387,17 +1402,24 @@ void PlantSimulationSystem::RefreshTrees()
 {
 	auto trees = std::vector<Entity>();
 	_TreeQuery.ToEntityArray(trees);
+	if (trees.empty()) return;
 	TreeManager::CalculateInternodeIllumination();
 	for (auto& treeEntity : trees)
 	{
-		auto rootInternode = EntityManager::GetChildren(treeEntity).at(0);
+		Entity rootInternode = Entity();
+		EntityManager::ForEachChild(treeEntity, [&](Entity child)
+			{
+				if (child.HasComponentData<InternodeInfo>()) rootInternode = child;
+			}
+		);
+		if (rootInternode.IsNull()) continue;
 		auto treeInfo = EntityManager::GetComponentData<TreeInfo>(treeEntity);
 		auto treeAge = EntityManager::GetComponentData<TreeAge>(treeEntity);
 		auto treeParameters = EntityManager::GetComponentData<TreeParameters>(treeEntity);
-		auto treeLocalToWorld = EntityManager::GetComponentData<GlobalTransform>(treeEntity);
-		UpdateInternodeResource(rootInternode, treeParameters, treeAge, treeLocalToWorld.Value, true);
+		auto treeGlobalTransform = EntityManager::GetComponentData<GlobalTransform>(treeEntity);
+		UpdateInternodeResource(rootInternode, treeParameters, treeAge, treeGlobalTransform.Value, true);
 		EvaluatePruning(rootInternode, treeParameters, treeAge, treeInfo);
-		if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeLocalToWorld.Value[3])), _DirectionPruningLimitAngle);
+		if (_EnableDirectionPruning) EvaluateDirectionPruning(rootInternode, glm::normalize(glm::vec3(treeGlobalTransform.Value[3])), _DirectionPruningLimitAngle);
 	}
 	CalculateCrownShyness(10.0f);
 }
@@ -1442,12 +1464,7 @@ void TreeUtilities::PlantSimulationSystem::Update()
 		if (_DisplayConvexHull)
 		{
 			std::vector<GlobalTransform> ltws;
-			std::vector<Entity> trees;
-
 			_TreeQuery.ToComponentDataArray(ltws);
-			_TreeQuery.ToEntityArray(trees);
-
-
 			for (size_t i = 0; i < trees.size(); i++)
 			{
 				auto& treeData = EntityManager::GetPrivateComponent<TreeData>(trees[i]);
@@ -1455,12 +1472,9 @@ void TreeUtilities::PlantSimulationSystem::Update()
 					RenderManager::DrawMesh(treeData->ConvexHull.get(), _DefaultConvexHullSurfaceMaterial.get(), ltws[i].Value, RenderManager::GetMainCamera(), false);
 				}
 			}
-
 		}
 		if (_InternodeSystem->GetConfigFlags() & InternodeSystem_DrawInternodes || _InternodeSystem->GetConfigFlags() & InternodeSystem_DrawConnections)
 		{
-			std::vector<Entity> trees;
-			_TreeQuery.ToEntityArray(trees);
 			for (size_t i = 0; i < trees.size(); i++)
 			{
 				ApplyLocalTransform(trees[i]);

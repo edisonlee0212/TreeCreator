@@ -158,12 +158,10 @@ void TreeUtilities::LightEstimator::TakeSnapShot(bool storeSnapshot)
 	
 	TreeManager::GetInternodeQuery().ToComponentDataArray(matrices);
 	TreeManager::GetInternodeQuery().ToEntityArray(internodeEntities);
-	
 	auto mesh = Default::Primitives::Sphere;
 	
 	GLVBO indicesBuffer;
 	size_t count = matrices.size();
-	if (count == 0) return;
 	mesh->Enable();
 
 	indicesBuffer.SetData((GLsizei)count * sizeof(Entity), internodeEntities.data(), GL_DYNAMIC_DRAW);
@@ -200,6 +198,7 @@ void TreeUtilities::LightEstimator::TakeSnapShot(bool storeSnapshot)
 		auto texture = ss->SnapShotTexture().get();
 		_RenderTarget->AttachTexture(texture, GL_COLOR_ATTACHMENT0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		if (count == 0) continue;
 		_SnapShotProgram->SetFloat4x4("lightSpaceMatrix", ss->GetLightSpaceMatrix());
 		_SnapShotProgram->SetFloat4x4("model", model);
 		glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)mesh->Size(), GL_UNSIGNED_INT, 0, (GLsizei)count);

@@ -232,9 +232,9 @@ void TreeUtilities::TreeManager::Init()
 	);
 
 	_InternodeQuery = EntityManager::CreateEntityQuery();
-	EntityManager::SetEntityQueryAllFilters(_InternodeQuery, InternodeInfo());
+	EntityManager::SetEntityQueryAllFilters(_InternodeQuery, GlobalTransform(), Connection(), Illumination(), InternodeIndex(), InternodeInfo(), TreeIndex());
 	_TreeQuery = EntityManager::CreateEntityQuery();
-	EntityManager::SetEntityQueryAllFilters(_TreeQuery, TreeInfo());
+	EntityManager::SetEntityQueryAllFilters(_TreeQuery, TreeInfo(), TreeAge(), TreeIndex(), TreeParameters(), GlobalTransform());
 
 	_TreeSystem = Application::GetWorld()->CreateSystem<TreeSystem>(SystemGroup::SimulationSystemGroup);
 	_InternodeSystem = Application::GetWorld()->CreateSystem<InternodeSystem>(SystemGroup::SimulationSystemGroup);
@@ -389,7 +389,7 @@ void TreeUtilities::TreeManager::Init()
 	EditorManager::RegisterComponentDataInspector<TreeInfo>(
 		[](ComponentBase* data, bool isRoot)
 		{
-			auto info = static_cast<TreeInfo*>(data);
+			const auto info = static_cast<TreeInfo*>(data);
 			ImGui::Text(("Current seed " + std::to_string(info->CurrentSeed)).c_str());
 			ImGui::Text(("Height " + std::to_string(info->Height)).c_str());
 			ImGui::Text(("Max branching depth " + std::to_string(info->MaxBranchingDepth)).c_str());
@@ -439,6 +439,7 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 {
 	std::vector<Entity> internodes;
 	_InternodeQuery.ToEntityArray(internodes);
+	
 	GetLightEstimator()->TakeSnapShot(true);
 	EntityManager::ForEach<Illumination, TreeIndex>(_InternodeQuery, [](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index)
 		{
@@ -446,7 +447,8 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 			illumination->Value = 0;
 		}
 	);
-	auto snapShots = _LightEstimator->GetSnapShots();
+	if (internodes.empty()) return;
+	const auto snapShots = _LightEstimator->GetSnapShots();
 	float maxIllumination = 0;
 	for (const auto& shot : *snapShots) {
 		size_t resolution = shot->Resolution();
@@ -461,7 +463,7 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 						unsigned index = shot->GetEntityIndex(i, j);
 						if (index != 0) {
 							std::lock_guard<std::mutex> lock(writeMutex);
-							Illumination illumination = EntityManager::GetComponentData<Illumination>(index);
+							auto illumination = EntityManager::GetComponentData<Illumination>(index);
 							illumination.LightDir += shot->GetDirection() * shot->Weight();
 							illumination.Value += shot->Weight();
 							if (localMaxIllumination < illumination.Value) localMaxIllumination = illumination.Value;
@@ -473,7 +475,7 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 				}
 			).share());
 		}
-		for (auto i : futures) i.wait();
+		for (const auto& i : futures) i.wait();
 	}
 	_LightEstimator->SetMaxIllumination(maxIllumination);
 	EntityManager::ForEach<Illumination, TreeIndex>(_InternodeQuery, [maxIllumination](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index)
@@ -488,6 +490,7 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters& treeParameters)
 {
 	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
+	
 	EntityManager::SetPrivateComponent(entity, std::make_unique<TreeData>());
 	//EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<KDop>()));
 	EntityManager::SetPrivateComponent(entity, std::make_unique<CakeTower>());
@@ -499,27 +502,35 @@ Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurf
 	{
 	case 0:
 		EntityManager::SetPrivateComponent(entity, std::make_unique<DefaultFoliageGenerator>());
+		entity.SetName("Default Tree No." + std::to_string(_TreeIndex.Value));
 		break;
 	case 1:
 		EntityManager::SetPrivateComponent(entity, std::make_unique<AcaciaFoliageGenerator>());
+		entity.SetName("Acacia Tree No." + std::to_string(_TreeIndex.Value));
 		break;
 	case 2:
 		EntityManager::SetPrivateComponent(entity, std::make_unique<WillowFoliageGenerator>());
+		entity.SetName("Willow Tree No." + std::to_string(_TreeIndex.Value));
 		break;
 	case 3:
 		EntityManager::SetPrivateComponent(entity, std::make_unique<PineFoliageGenerator>());
+		entity.SetName("Pine Tree No." + std::to_string(_TreeIndex.Value));
 		break;
 	case 4:
 		EntityManager::SetPrivateComponent(entity, std::make_unique<MapleFoliageGenerator>());
+		entity.SetName("Maple Tree No." + std::to_string(_TreeIndex.Value));
 		break;
 	case 5:
 		EntityManager::SetPrivateComponent(entity, std::make_unique<AppleFoliageGenerator>());
+		entity.SetName("Apple Tree No." + std::to_string(_TreeIndex.Value));
 		break;
 	case 6:
 		EntityManager::SetPrivateComponent(entity, std::make_unique<OakFoliageGenerator>());
+		entity.SetName("Oak Tree No." + std::to_string(_TreeIndex.Value));
 		break;
 	case 7:
 		EntityManager::SetPrivateComponent(entity, std::make_unique<BirchFoliageGenerator>());
+		entity.SetName("Birch Tree No." + std::to_string(_TreeIndex.Value));
 		break;
 	}
 	_TreeIndex.Value++;
@@ -540,7 +551,8 @@ void TreeManager::DeleteAllTrees()
 
 Entity TreeUtilities::TreeManager::CreateInternode(TreeIndex treeIndex, Entity parentEntity)
 {
-	auto entity = EntityManager::CreateEntity(_InternodeArchetype);
+	const auto entity = EntityManager::CreateEntity(_InternodeArchetype);
+	entity.SetName("Internode");
 	auto internodeData = std::make_unique<InternodeData>();
 	EntityManager::SetComponentData(entity, treeIndex);
 	EntityManager::SetParent(entity, parentEntity);

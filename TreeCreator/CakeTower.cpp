@@ -103,6 +103,38 @@ void CakeTower::GenerateMesh()
 	_MeshGenerated = true;
 }
 
+void CakeTower::SettleToEntity()
+{
+	if (!_MeshGenerated) CalculateVolume();
+	Entity targetEntity = Entity();
+	EntityManager::ForEachChild(GetOwner(), [&](Entity child)
+		{
+			if (child.HasComponentData<CakeTowerInfo>()) targetEntity = child;
+		}
+	);
+	if (targetEntity.IsNull()) {
+		Transform transform;
+		transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
+		targetEntity = EntityManager::CreateEntity(_CakeTowerArchetype, "CakeTower");
+		auto mmc = std::make_unique<MeshRenderer>();
+		mmc->Material = _CakeTowerMaterial;
+		mmc->ForwardRendering = true;
+		targetEntity.SetPrivateComponent(std::move(mmc));
+		targetEntity.SetComponentData(transform);
+		EntityManager::SetParent(targetEntity, GetOwner());
+	}
+	auto& mmc = targetEntity.GetPrivateComponent<MeshRenderer>();
+	mmc->Mesh = _BoundMesh;
+}
+
+CakeTower::CakeTower()
+{
+	_CakeTowerArchetype = EntityManager::CreateEntityArchetype("CakeTower", Transform(), GlobalTransform(), CakeTowerInfo());
+	_CakeTowerMaterial = std::make_shared<Material>();
+	_CakeTowerMaterial->SetProgram(Default::GLPrograms::StandardProgram);
+	
+}
+
 std::string CakeTower::Serialize()
 {
 	if (!_MeshGenerated) CalculateVolume();
@@ -171,7 +203,7 @@ void CakeTower::CalculateVolume()
 	{
 		const glm::vec3 position = i.GlobalTransform[3];
 		if (position.y > _MaxHeight) _MaxHeight = position.y;
-		const float radius = glm::length(glm::vec2(position.x, position.z));
+		//const float radius = glm::length(glm::vec2(position.x, position.z));
 		//if (radius > _MaxRadius) _MaxRadius = radius;
 	}
 
@@ -218,6 +250,10 @@ void CakeTower::OnGui()
 	if(ImGui::DragInt("Tier Amount", &TierAmount, 1, 1, 100)) edited = true;
 	if(ImGui::DragInt("Slice Amount", &SliceAmount, 1, 1, 100)) edited = true;
 	if (ImGui::Button("Calculate Bounds") || edited) CalculateVolume();
+	if (ImGui::Button("Form Entity"))
+	{
+		SettleToEntity();
+	}
 	if (ImGui::Button("Save..."))
 	{
 		const std::string path = FileIO::SaveFile("CakeTower (*.ct)\0*.ct\0").value();
