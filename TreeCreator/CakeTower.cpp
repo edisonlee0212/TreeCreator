@@ -58,12 +58,14 @@ void CakeTower::GenerateMesh()
 					position.y = currentHeight;
 					vertices[levelStep * totalAngleStep * SliceAmount + actualAngleStep].Position = position;
 					vertices[levelStep * totalAngleStep * SliceAmount + actualAngleStep].TexCoords0 = glm::vec2((float)levelStep / (totalLevelStep - 1), (float)angleStep / (totalAngleStep - 1));
-
+					vertices[levelStep * totalAngleStep * SliceAmount + actualAngleStep].Normal = glm::normalize(position);
 					vertices[totalLevelStep * SliceAmount * totalAngleStep + levelStep * totalAngleStep * SliceAmount + actualAngleStep].Position = position;
 					vertices[totalLevelStep * SliceAmount * totalAngleStep + levelStep * totalAngleStep * SliceAmount + actualAngleStep].TexCoords0 = glm::vec2((float)levelStep / (totalLevelStep - 1), (float)angleStep / (totalAngleStep - 1));
+					vertices[totalLevelStep * SliceAmount * totalAngleStep + levelStep * totalAngleStep * SliceAmount + actualAngleStep].Normal = glm::vec3(0, levelStep == 0 ? -1 : 1, 0);
 				}
 			}
 			vertices[vertices.size() - totalLevelStep + levelStep].Position = glm::vec3(0, currentHeight, 0);
+			vertices[vertices.size() - totalLevelStep + levelStep].Normal = glm::vec3(0, levelStep == 0 ? -1 : 1, 0);
 			vertices[vertices.size() - totalLevelStep + levelStep].TexCoords0 = glm::vec2(0.0f);
 		}
 		for (int levelStep = 0; levelStep < totalLevelStep - 1; levelStep++)
@@ -112,7 +114,7 @@ void CakeTower::GenerateMesh()
 				}
 			}
 		}
-		mesh->SetVertices(17, vertices, indices);
+		mesh->SetVertices(19, vertices, indices);
 		_BoundMeshes.push_back(std::move(mesh));
 	}
 	/*

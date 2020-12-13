@@ -18,19 +18,48 @@ void EngineSetup();
 void main()
 {
 	EngineSetup();
+
+#pragma region Lights
+	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), GlobalTransform(), Transform());
+	DirectionalLight dlc;
+	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
+	dlc.diffuseBrightness = 1.0f;
+	dlc.specularBrightness = 1.0f;
+	dlc.depthBias = 0.1f;
+	dlc.normalOffset = 0.001f;
+	dlc.lightSize = 1.0;
+	Transform transform;
+	transform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
+	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
+	EntityManager::SetComponentData(dle, dlc);
+	EntityManager::SetComponentData(dle, transform);
+#pragma endregion
+	
 	bool generateLearningData = false;
 	bool generateSorghum = false;
 	bool generateSorghumField = false;
 	PlantSimulationSystem* pss = InitPlantSimulationSystem();
 	if (generateLearningData) {
-	DataCollectionSystem* ics = InitImageCollectionSystem();
-	ics->SetPlantSimulationSystem(pss);
-	
-	
-	int counter = 0;
-	int startIndex = 1;
-	int endIndex = 100;
-	
+		RenderManager::SetAmbientLight(1.0f);
+		dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
+		dlc.diffuseBrightness = 0.5f;
+		dlc.specularBrightness = 1.0f;
+		dlc.depthBias = 0.1f;
+		dlc.normalOffset = 0.001f;
+		dlc.lightSize = 1.0;
+		Transform lightTransform;
+		lightTransform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
+		EntityManager::SetComponentData(dle, dlc);
+		EntityManager::SetComponentData(dle, lightTransform);
+		
+		DataCollectionSystem* ics = InitImageCollectionSystem();
+		ics->SetPlantSimulationSystem(pss);
+
+
+		int counter = 0;
+		int startIndex = 1;
+		int endIndex = 100;
+
 		ics->ResetCounter(counter, startIndex, endIndex, true);
 		ics->SetIsTrain(true);
 		bool eval = true;
@@ -44,9 +73,11 @@ void main()
 				}
 			}
 		);
-	}else
+	}
+	else
 	{
 		InitGround();
+
 	}
 	if (generateSorghum) {
 		auto srSys = InitSorghumReconstructionSystem();
@@ -175,31 +206,19 @@ void EngineSetup()
 	RenderManager::SetSSAOKernelBias(0.08);
 	RenderManager::SetSSAOKernelRadius(0.05f);
 	RenderManager::SetSSAOSampleSize(32);
-	RenderManager::SetAmbientLight(1.0f);
+	RenderManager::SetAmbientLight(0.5f);
 	RenderManager::SetSSAOFactor(10.0f);
 	RenderManager::SetShadowMapResolution(4096);
 	RenderManager::SetStableFit(false);
 	RenderManager::SetSeamFixRatio(0.05f);
-	RenderManager::SetMaxShadowDistance(300);
+	RenderManager::SetMaxShadowDistance(100);
 	RenderManager::SetSplitRatio(0.15f, 0.3f, 0.5f, 1.0f);
 #pragma endregion
 	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
-#pragma region Lights
-	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), GlobalTransform(), Transform());
-	DirectionalLight dlc;
-	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
-	dlc.diffuseBrightness = 0.5f;
-	dlc.specularBrightness = 1.0f;
-	dlc.depthBias = 0.1;
-	dlc.normalOffset = 0.001;
-	dlc.lightSize = 1.0;
 	Transform transform;
 	transform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
-	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
-	EntityManager::SetComponentData(dle, dlc);
-	EntityManager::SetComponentData(dle, transform);
-#pragma endregion
+
 #pragma region Preparations
 	Application::SetTimeStep(0.016f);
 	auto world = Application::GetWorld();
@@ -218,7 +237,7 @@ void EngineSetup()
 		mainCamera->ClearColor = glm::vec3(1.0f);
 	}
 	ccs->SetVelocity(15.0f);
-	
+
 #pragma endregion
 	TreeManager::Init();
 #pragma region Light estimator setup
@@ -257,24 +276,24 @@ void InitGround() {
 	entity.SetName("Ground");
 	Transform transform;
 	transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	transform.SetScale(glm::vec3(10.0f));
+	transform.SetScale(glm::vec3(20.0f));
 	EntityManager::SetComponentData(entity, transform);
 
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
 	auto textureD = AssetManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg");
-	mat->SetTexture(textureD, TextureType::DIFFUSE);
+	mat->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
 	auto textureN = AssetManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg");
 	mat->SetTexture(textureN, TextureType::NORMAL);
-	auto textureH = AssetManager::LoadTexture("../Resources/Textures/dirt_01_height.jpg");
-	mat->SetTexture(textureH, TextureType::DISPLACEMENT);
+	//auto textureH = AssetManager::LoadTexture("../Resources/Textures/dirt_01_height.jpg");
+	//mat->SetTexture(textureH, TextureType::DISPLACEMENT);
 
 	mat->Shininess = 32.0f;
 	auto meshMaterial = std::make_unique<MeshRenderer>();
 	meshMaterial->Mesh = Default::Primitives::Quad;
 	meshMaterial->Material = mat;
-	meshMaterial->ReceiveShadow = false;
-	meshMaterial->ForwardRendering = true;
+	meshMaterial->ReceiveShadow = true;
+	meshMaterial->ForwardRendering = false;
 	EntityManager::SetPrivateComponent<MeshRenderer>(entity, std::move(meshMaterial));
 }
 
