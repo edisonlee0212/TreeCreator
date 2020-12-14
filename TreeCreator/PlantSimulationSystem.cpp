@@ -41,11 +41,23 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 		_Growing = false;
 		float timer = Application::EngineTime() - _GrowthTimer;
 		Debug::Log("Structural growth completed in " + std::to_string(timer) + " seconds.");
-		Debug::Log("Generating leaves...");
+		Debug::Log("Generating mesh and leaves...");
 		timer = Application::EngineTime();
+		if (_AutoGenerateMesh) {
+			for (auto& tree : trees) {
+				Entity rootInternode = Entity();
+				EntityManager::ForEachChild(tree, [&](Entity child)
+					{
+						if (child.HasComponentData<InternodeInfo>()) rootInternode = child;
+					}
+				);
+				if (rootInternode.IsNull()) continue;
+				TreeManager::GenerateSimpleMeshForTree(tree, _MeshGenerationResolution, _MeshGenerationSubdivision);
+			}
+		}
 		GenerateLeavesForAllTrees(trees);
 		timer = Application::EngineTime() - timer;
-		Debug::Log("Leaves generation completed in " + std::to_string(timer) + " seconds.");
+		Debug::Log("Mesh and leaves generation completed in " + std::to_string(timer) + " seconds.");
 	}
 }
 bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
@@ -2013,6 +2025,7 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 		}
 		ImGui::InputFloat("Limit angle", &_DirectionPruningLimitAngle, 0.0f, 0.0f, "%.1f");
 		ImGui::Checkbox("Enable direction pruning", &_EnableDirectionPruning);
+		ImGui::Checkbox("Auto Generate mesh after growth", &_AutoGenerateMesh);
 		ImGui::InputFloat("Mesh resolution", &_MeshGenerationResolution, 0.0f, 0.0f, "%.5f");
 		ImGui::InputFloat("Branch subdivision", &_MeshGenerationSubdivision, 0.0f, 0.0f, "%.5f");
 		if (ImGui::Button("Generate mesh for all trees")) {

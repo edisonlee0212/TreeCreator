@@ -16,6 +16,7 @@ namespace TreeUtilities {
 	{
 		friend class DataCollectionSystem;
 #pragma region Stuff
+		bool _AutoGenerateMesh = true;
 		float _GrowthTimer;
 		float _DirectionPruningLimitAngle = 60;
 		bool _DisplayConvexHull = false;

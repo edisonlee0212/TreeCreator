@@ -27,7 +27,7 @@ namespace TreeUtilities {
 		bool _MeshGenerated = false;
 		std::shared_ptr<Material> _CakeTowerMaterial;
 		void GenerateMesh();
-		void SettleToEntity();
+		void FormEntity();
 	public:
 		CakeTower();
 		std::string Serialize();

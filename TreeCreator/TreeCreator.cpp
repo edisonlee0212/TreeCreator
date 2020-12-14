@@ -276,7 +276,7 @@ void InitGround() {
 	entity.SetName("Ground");
 	Transform transform;
 	transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	transform.SetScale(glm::vec3(20.0f));
+	transform.SetScale(glm::vec3(40.0f, 20.0f, 20.0f));
 	EntityManager::SetComponentData(entity, transform);
 
 	auto mat = std::make_shared<Material>();
@@ -284,7 +284,7 @@ void InitGround() {
 	auto textureD = AssetManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg");
 	mat->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
 	auto textureN = AssetManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg");
-	mat->SetTexture(textureN, TextureType::NORMAL);
+	//mat->SetTexture(textureN, TextureType::NORMAL);
 	//auto textureH = AssetManager::LoadTexture("../Resources/Textures/dirt_01_height.jpg");
 	//mat->SetTexture(textureH, TextureType::DISPLACEMENT);
 

@@ -208,33 +208,32 @@ void CakeTower::GenerateMesh()
 	_MeshGenerated = true;
 }
 
-void CakeTower::SettleToEntity()
+void CakeTower::FormEntity()
 {
 	if (!_MeshGenerated) CalculateVolume();
-	Entity targetEntity = Entity();
 	auto children = EntityManager::GetChildren(GetOwner());
 	for(auto& child : children)
 	{
 		if (child.HasComponentData<CakeTowerInfo>()) EntityManager::DeleteEntity(child);
 	}
 	children.clear();
-	EntityManager::ForEachChild(GetOwner(), [&](Entity child)
-		{
-			if (child.HasComponentData<CakeTowerInfo>()) targetEntity = child;
-		}
-	);
+	Transform transform;
+	transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
+
+	const auto targetEntity = EntityManager::CreateEntity(_CakeTowerArchetype, "CakeTowers");
+	EntityManager::SetParent(targetEntity, GetOwner());
+	targetEntity.SetComponentData(transform);
 	for(int i = 0; i < _BoundMeshes.size(); i++)
 	{
-		Transform transform;
-		transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
-		targetEntity = EntityManager::CreateEntity(_CakeTowerArchetype, "CakeTower" + std::to_string(i));
+		auto slice = EntityManager::CreateEntity(_CakeTowerArchetype, "CakeTower" + std::to_string(i));
 		auto mmc = std::make_unique<MeshRenderer>();
 		mmc->Material = _CakeTowerMaterial;
 		mmc->ForwardRendering = true;
 		mmc->Mesh = _BoundMeshes[i];
-		targetEntity.SetPrivateComponent(std::move(mmc));
-		targetEntity.SetComponentData(transform);
-		EntityManager::SetParent(targetEntity, GetOwner());
+		slice.SetPrivateComponent(std::move(mmc));
+		slice.SetComponentData(transform);
+		EntityManager::SetParent(slice, targetEntity);
+		slice.SetEnabled(false);
 	}
 }
 
@@ -375,7 +374,7 @@ void CakeTower::OnGui()
 	if (ImGui::Button("Calculate Bounds") || edited) CalculateVolume();
 	if (ImGui::Button("Form Entity"))
 	{
-		SettleToEntity();
+		FormEntity();
 	}
 	if (ImGui::Button("Save..."))
 	{

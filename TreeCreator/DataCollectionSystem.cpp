@@ -382,7 +382,6 @@ void DataCollectionSystem::Update()
 	case DataCollectionSystemStatus::Growing:
 		if (!_PlantSimulationSystem->_Growing)
 		{
-			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, 0.1f, 0.1f);
 			_Status = DataCollectionSystemStatus::Rendering;
 			_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 		}
