@@ -655,17 +655,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 			internodeInfo.Inhibitor += childNodeInfo.Inhibitor * childNodeInfo.ParentInhibitorFactor;
 		}
 	);
-	if(treeVolume->IsEnabled() && !treeVolume->InVolume((treeTransform * internodeInfo.GlobalTransform)[3]))
-	{
-		if(treeVolume->PruneBuds())
-		{
-			internodeData->Buds.clear();
-			internodeInfo.ActivatedBudsAmount = 0;
-			internodeInfo.ApicalBudExist = false;
-			EntityManager::SetComponentData(internode, internodeInfo);
-		}
-		return ret;
-	}
+	
 	if (!internodeInfo.Activated) return ret;
 	if (internodeInfo.Pruned || internodeInfo.CrownShyness == 0.0f)
 	{
@@ -734,7 +724,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 				float internodeLength = distanceToGrow / static_cast<float>(internodesToGrow);
 				internodeLength *= treeParameters.InternodeLengthBase * glm::pow(treeParameters.InternodeLengthAgeFactor, treeAge.Value);
 				Entity prevInternode = internode;
-				InternodeInfo prevInternodeInfo = internodeInfo;
+				//InternodeInfo prevInternodeInfo = internodeInfo;
 				glm::vec3 prevEulerAngle = bud.EulerAngles;
 				glm::quat prevInternodeRotation;
 				glm::vec3 scale;
@@ -749,7 +739,6 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 				for (int selectedNewNodeIndex = 0; selectedNewNodeIndex < internodesToGrow; selectedNewNodeIndex++) {
 #pragma region Setup internode
 					Entity newInternode = TreeManager::CreateInternode(treeIndex, prevInternode);
-					auto& newInternodeData = EntityManager::GetPrivateComponent<InternodeData>(newInternode);
 					InternodeInfo newInternodeInfo = EntityManager::GetComponentData<InternodeInfo>(newInternode);
 					if (selectedNewNodeIndex == internodesToGrow - 1) {
 						newInternodeInfo.ApicalBudExist = true;
@@ -798,12 +787,24 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 					prevInternodeRotation = globalRawRotation;
 					prevInternodeTranslation = prevInternodeTranslation + newInternodeInfo.DistanceToParent * desiredFront;
 					newInternodeInfo.GlobalTransform = glm::translate(prevInternodeTranslation);
-
+					if (treeVolume->IsEnabled())
+					{
+						Transform tempTrans;
+						tempTrans.Value = newInternodeInfo.GlobalTransform;
+						//Stop growing if the distanceToGrow exceed the volume.
+						glm::vec3 targetPosition = tempTrans.GetPosition();
+						if (!treeVolume->InVolume(targetPosition)) {
+							EntityManager::DeleteEntity(newInternode);
+							break;
+						}
+					}
+					ret = true;
 #pragma endregion
 #pragma endregion
 					prevEulerAngle = glm::vec3(
 						glm::gaussRand(glm::vec2(0.0f), glm::vec2(glm::radians(treeParameters.VarianceApicalAngle))),
 						0.0f);
+					auto& newInternodeData = EntityManager::GetPrivateComponent<InternodeData>(newInternode);
 #pragma region Create Apical Bud
 					if (selectedNewNodeIndex == internodesToGrow - 1) {
 						Bud newApicalBud;
@@ -825,7 +826,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 					}
 #pragma endregion
 					prevInternode = newInternode;
-					prevInternodeInfo = newInternodeInfo;
+					//prevInternodeInfo = newInternodeInfo;
 #pragma region Apply new internode info
 					EntityManager::SetComponentData(newInternode, newInternodeInfo);
 #pragma endregion
@@ -849,9 +850,6 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 			if (budAge > treeParameters.MaxBudAge) {
 				bud.IsActive = false;
 			}
-		}
-		else {
-			ret = true;
 		}
 #pragma endregion
 	}
