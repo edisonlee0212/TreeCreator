@@ -185,17 +185,17 @@ void main()
 }
 #pragma region Helpers
 PlantSimulationSystem* InitPlantSimulationSystem() {
-	return Application::GetWorld()->CreateSystem<PlantSimulationSystem>(SystemGroup::SimulationSystemGroup);
+	return Application::GetCurrentWorld()->CreateSystem<PlantSimulationSystem>(SystemGroup::SimulationSystemGroup);
 }
 
 DataCollectionSystem* InitImageCollectionSystem()
 {
-	return Application::GetWorld()->CreateSystem<DataCollectionSystem>(SystemGroup::SimulationSystemGroup);
+	return Application::GetCurrentWorld()->CreateSystem<DataCollectionSystem>(SystemGroup::SimulationSystemGroup);
 }
 
 SorghumReconstructionSystem* InitSorghumReconstructionSystem()
 {
-	return Application::GetWorld()->CreateSystem<SorghumReconstructionSystem>(SystemGroup::SimulationSystemGroup);
+	return Application::GetCurrentWorld()->CreateSystem<SorghumReconstructionSystem>(SystemGroup::SimulationSystemGroup);
 }
 
 void EngineSetup()
@@ -221,7 +221,7 @@ void EngineSetup()
 
 #pragma region Preparations
 	Application::SetTimeStep(0.016f);
-	auto world = Application::GetWorld();
+	auto& world = Application::GetCurrentWorld();
 	WorldTime* time = world->Time();
 
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", GlobalTransform(), Transform());

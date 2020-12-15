@@ -245,7 +245,7 @@ CakeTower::CakeTower()
 	SetEnabled(true);
 }
 
-std::string CakeTower::Serialize()
+std::string CakeTower::Save()
 {
 	if (!_MeshGenerated) CalculateVolume();
 	std::string output;
@@ -280,7 +280,7 @@ std::string CakeTower::Serialize()
 	return output;
 }
 
-void CakeTower::Deserialize(const std::string& path)
+void CakeTower::Load(const std::string& path)
 {
 	std::ifstream ifs;
 	ifs.open(path.c_str());
@@ -383,7 +383,7 @@ void CakeTower::OnGui()
 			const std::string path = temp.value();
 			if (!path.empty())
 			{
-				const std::string data = Serialize();
+				const std::string data = Save();
 				std::ofstream ofs;
 				ofs.open(path.c_str(), std::ofstream::out | std::ofstream::trunc);
 				ofs.write(data.c_str(), data.length());
@@ -400,7 +400,7 @@ void CakeTower::OnGui()
 			const std::string path = temp.value();
 			if (!path.empty())
 			{
-				Deserialize(path);
+				Load(path);
 			}
 		}
 		

@@ -40,12 +40,6 @@
     <Filter Include="Source Files\External">
       <UniqueIdentifier>{1bf02b85-ad90-4de8-aaa5-36ed28b42946}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\External\Network">
-      <UniqueIdentifier>{2069fcd2-e3dd-4653-a630-1f2ff67c0749}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\External\Network">
-      <UniqueIdentifier>{40ed09d9-e9eb-4e95-baef-1227304b11a4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\External\pugixml">
       <UniqueIdentifier>{2e0e61ac-89c1-42e3-9ef4-7fc04265f248}</UniqueIdentifier>
     </Filter>
@@ -71,9 +65,6 @@
   <ItemGroup>
     <ClCompile Include="TreeCreator.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="NetworkSystem.cpp">
-      <Filter>Source Files\External\Network</Filter>
     </ClCompile>
     <ClCompile Include="quickhull\QuickHull.cpp">
       <Filter>Source Files\External\quickhull</Filter>
@@ -155,9 +146,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NetworkSystem.h">
-      <Filter>Header Files\External\Network</Filter>
-    </ClInclude>
     <ClInclude Include="quickhull\Structs\VertexDataSource.hpp">
       <Filter>Header Files\External\quickhull</Filter>
     </ClInclude>

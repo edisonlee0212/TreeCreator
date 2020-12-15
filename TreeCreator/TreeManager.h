@@ -221,7 +221,7 @@ namespace TreeUtilities {
 	};
 #pragma endregion
 	class TreeManager :
-		public ManagerBase
+		public Singleton<TreeManager>
 	{
 		static LightEstimator* _LightEstimator;
 

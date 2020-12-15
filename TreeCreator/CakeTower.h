@@ -30,8 +30,8 @@ namespace TreeUtilities {
 		void FormEntity();
 	public:
 		CakeTower();
-		std::string Serialize();
-		void Deserialize(const std::string& path);
+		std::string Save();
+		void Load(const std::string& path);
 		glm::vec4 DisplayColor = glm::vec4(0.5f);
 		float DisplayScale = 0.2f;
 		int SliceAmount = 9;
