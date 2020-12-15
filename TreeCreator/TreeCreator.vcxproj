@@ -45,15 +45,17 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\Submodules\UniEngine\includes\glad\include\glad;..\Submodules\UniEngine\includes\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\includes\glad\include;..\Submodules\UniEngine\includes\Assimp\include;..\Submodules\UniEngine\includes\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\includes\PhysX\include;..\Submodules\UniEngine\UniEngine;..\includes;$(IncludePath)</IncludePath>
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>..\Submodules\UniEngine\external\glad\include\glad;..\Submodules\UniEngine\external\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\external\glad\include;..\Submodules\UniEngine\external\Assimp\include;..\Submodules\UniEngine\external\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\external\PhysX\include;..\Submodules\UniEngine\UniEngine\include;..\includes;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(ProjectName)</OutDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IntDir>$(SolutionDir)bin\int\$(Configuration)-$(Platform)\$(ProjectName)</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\Submodules\UniEngine\includes\glad\include\glad;..\Submodules\UniEngine\includes\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\includes\glad\include;..\Submodules\UniEngine\includes\Assimp\include;..\Submodules\UniEngine\includes\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\includes\PhysX\include;..\Submodules\UniEngine\UniEngine;..\includes;$(IncludePath)</IncludePath>
-    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>..\Submodules\UniEngine\external\glad\include\glad;..\Submodules\UniEngine\external\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\external\glad\include;..\Submodules\UniEngine\external\Assimp\include;..\Submodules\UniEngine\external\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\external\PhysX\include;..\Submodules\UniEngine\UniEngine\include;..\includes;$(IncludePath)</IncludePath>
+    <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(ProjectName)</OutDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IntDir>$(SolutionDir)bin\int\$(Configuration)-$(Platform)\$(ProjectName)</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -71,9 +73,9 @@
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "..\Submodules\UniEngine\UniEngine\$(IntDir)UniEngine.dll" "$(OutDir)"
-xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mtd.dll" "$(OutDir)"
-xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\d\*.dll" "$(OutDir)" </Command>
+      <Command>xcopy /y /d "..\bin\Debug-x64\UniEngine\UniEngine.dll" "$(OutDir)"
+xcopy /y /d "..\Submodules\UniEngine\external\Assimp\x64\Debug\assimp-vc142-mtd.dll" "$(OutDir)"
+xcopy /y /d "..\Submodules\UniEngine\external\PhysX\d\*.dll" "$(OutDir)" </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -96,9 +98,9 @@ xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\d\*.dll" "$(OutDir)" </Comma
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y /d "..\Submodules\UniEngine\UniEngine\$(IntDir)UniEngine.dll" "$(OutDir)"
-xcopy /y /d "..\Submodules\UniEngine\includes\Assimp\$(IntDir)assimp-vc142-mt.dll" "$(OutDir)" 
-xcopy /y /d "..\Submodules\UniEngine\includes\PhysX\r\*.dll" "$(OutDir)" </Command>
+      <Command>xcopy /y /d "..\bin\Release-x64\UniEngine\UniEngine.dll" "$(OutDir)"
+xcopy /y /d "..\Submodules\UniEngine\external\Assimp\x64\Release\assimp-vc142-mt.dll" "$(OutDir)" 
+xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
