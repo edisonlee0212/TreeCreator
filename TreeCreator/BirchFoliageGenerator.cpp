@@ -12,7 +12,7 @@ TreeUtilities::BirchFoliageGenerator::BirchFoliageGenerator()
 	_LeafMaterial->TransparentDiscard = true;
 	_LeafMaterial->TransparentDiscardLimit = 0.7f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
-	_LeafSurfaceTex = AssetManager::LoadTexture("../Resources/Textures/Leaf/PrunusAvium/A/level0.png");
+	_LeafSurfaceTex = FileManager::LoadTexture("../Resources/Textures/Leaf/PrunusAvium/A/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
 }
 

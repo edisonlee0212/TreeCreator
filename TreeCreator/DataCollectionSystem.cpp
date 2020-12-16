@@ -218,21 +218,21 @@ void DataCollectionSystem::OnCreate()
 	_SemanticMaskCameraEntity.SetName("Semantic Mask Camera");
 	_SemanticMaskCameraEntity.SetPrivateComponent(std::move(cameraComponent));
 
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/2236927059_a18cdd9196.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/2289428141_c758f436a1.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/2814264828_bb3f9d7ca9.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/3397325268_dc6135c432.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/69498568_e43c0e8520.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/1122838735_bc116c7a7c.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/1123280110_dda3037a69.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/3837561150_9f786dc7e5.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/winecentre.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/calle-2.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/calle-3.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/calle+3.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/MainStreet_t.jpg"));
-	_BackgroundTextures.push_back(AssetManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/2236927059_a18cdd9196.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/2289428141_c758f436a1.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/2814264828_bb3f9d7ca9.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/3397325268_dc6135c432.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/69498568_e43c0e8520.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/1122838735_bc116c7a7c.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/1123280110_dda3037a69.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/3837561150_9f786dc7e5.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/winecentre.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/calle-2.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/calle-3.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/calle+3.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/MainStreet_t.jpg"));
+	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
 
 
 	_BackgroundMaterial = std::make_shared<Material>();

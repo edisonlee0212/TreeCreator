@@ -1449,12 +1449,12 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultConvexHullSurfaceMaterial->SetProgram(Default::GLPrograms::StandardProgram);
 	_DefaultConvexHullSurfaceMaterial->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
 
-	_DefaultTreeSurfaceSurfTex1 = AssetManager::LoadTexture(("../Resources/Textures/BarkMaterial/Bark_Pine_baseColor.jpg"));
-	_DefaultTreeSurfaceNormTex1 = AssetManager::LoadTexture(("../Resources/Textures/BarkMaterial/Bark_Pine_normal.jpg"));
+	_DefaultTreeSurfaceSurfTex1 = FileManager::LoadTexture(("../Resources/Textures/BarkMaterial/Bark_Pine_baseColor.jpg"));
+	_DefaultTreeSurfaceNormTex1 = FileManager::LoadTexture(("../Resources/Textures/BarkMaterial/Bark_Pine_normal.jpg"));
 	
-	_DefaultTreeSurfaceSurfTex2 = AssetManager::LoadTexture(("../Resources/Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"));
-	_DefaultTreeSurfaceSpecTex2 = AssetManager::LoadTexture(("../Resources/Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg"));
-	_DefaultTreeSurfaceNormTex2 = AssetManager::LoadTexture(("../Resources/Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
+	_DefaultTreeSurfaceSurfTex2 = FileManager::LoadTexture(("../Resources/Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"));
+	_DefaultTreeSurfaceSpecTex2 = FileManager::LoadTexture(("../Resources/Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg"));
+	_DefaultTreeSurfaceNormTex2 = FileManager::LoadTexture(("../Resources/Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
 
 	_NewTreeParameters.resize(1);
 	LoadDefaultTreeParameters(1, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);

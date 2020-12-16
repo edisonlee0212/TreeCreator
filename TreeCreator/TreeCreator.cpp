@@ -25,7 +25,7 @@ void main()
 	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
 	dlc.diffuseBrightness = 1.0f;
 	dlc.specularBrightness = 1.0f;
-	dlc.depthBias = 0.1f;
+	dlc.bias = 0.1f;
 	dlc.normalOffset = 0.001f;
 	dlc.lightSize = 1.0;
 	Transform transform;
@@ -44,7 +44,7 @@ void main()
 		dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
 		dlc.diffuseBrightness = 0.5f;
 		dlc.specularBrightness = 1.0f;
-		dlc.depthBias = 0.1f;
+		dlc.bias = 0.1f;
 		dlc.normalOffset = 0.001f;
 		dlc.lightSize = 1.0;
 		Transform lightTransform;
@@ -281,9 +281,9 @@ void InitGround() {
 
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureD = AssetManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg");
+	auto textureD = FileManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg");
 	mat->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
-	auto textureN = AssetManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg");
+	auto textureN = FileManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg");
 	//mat->SetTexture(textureN, TextureType::NORMAL);
 	//auto textureH = AssetManager::LoadTexture("../Resources/Textures/dirt_01_height.jpg");
 	//mat->SetTexture(textureH, TextureType::DISPLACEMENT);
