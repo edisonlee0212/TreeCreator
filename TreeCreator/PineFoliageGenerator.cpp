@@ -11,7 +11,7 @@ TreeUtilities::PineFoliageGenerator::PineFoliageGenerator()
 	_LeafMaterial->TransparentDiscard = true;
 	_LeafMaterial->TransparentDiscardLimit = 0.1f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
-	_LeafSurfaceTex = FileManager::LoadTexture("../Resources/Textures/Leaf/Pine/level0.png");
+	_LeafSurfaceTex = ResourceManager::LoadTexture("../Resources/Textures/Leaf/Pine/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
 }
 

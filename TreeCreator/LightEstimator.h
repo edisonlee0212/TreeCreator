@@ -33,7 +33,7 @@ namespace TreeUtilities {
 		RenderTarget* _RenderTarget = nullptr;
 		size_t _Resolution = 2048;
 		std::vector<LightSnapShot*> _SnapShots;
-		GLProgram* _SnapShotProgram = nullptr;
+		std::unique_ptr<GLProgram> _SnapShotProgram = nullptr;
 
 		GLRenderBuffer* _DepthBuffer = nullptr;
 		float _LightEstimationScore = 0;

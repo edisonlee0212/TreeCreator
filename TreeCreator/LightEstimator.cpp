@@ -104,9 +104,9 @@ TreeUtilities::LightEstimator::LightEstimator(size_t resolution, float centerDis
 	std::string fragShaderCode = std::string("#version 460 core\n") +
 		FileIO::LoadFileAsString("../Resources/Shaders/TreeUtilities/LightSnapShot.frag");
 
-	_SnapShotProgram = new GLProgram(
-		new GLShader(ShaderType::Vertex, &vertShaderCode),
-		new GLShader(ShaderType::Fragment, &fragShaderCode));
+	_SnapShotProgram = std::make_unique<GLProgram>(
+		std::make_shared<GLShader>(ShaderType::Vertex, &vertShaderCode),
+		std::make_shared<GLShader>(ShaderType::Fragment, &fragShaderCode));
 }
 
 void TreeUtilities::LightEstimator::ResetResolution(size_t value)

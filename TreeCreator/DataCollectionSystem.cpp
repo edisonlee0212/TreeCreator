@@ -218,21 +218,21 @@ void DataCollectionSystem::OnCreate()
 	_SemanticMaskCameraEntity.SetName("Semantic Mask Camera");
 	_SemanticMaskCameraEntity.SetPrivateComponent(std::move(cameraComponent));
 
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/2236927059_a18cdd9196.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/2289428141_c758f436a1.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/2814264828_bb3f9d7ca9.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/3397325268_dc6135c432.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/69498568_e43c0e8520.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/1122838735_bc116c7a7c.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/1123280110_dda3037a69.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/3837561150_9f786dc7e5.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/winecentre.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/calle-2.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/calle-3.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/calle+3.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/MainStreet_t.jpg"));
-	_BackgroundTextures.push_back(FileManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/2236927059_a18cdd9196.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/2289428141_c758f436a1.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/2814264828_bb3f9d7ca9.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/3397325268_dc6135c432.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/69498568_e43c0e8520.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/1122838735_bc116c7a7c.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/1123280110_dda3037a69.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/3837561150_9f786dc7e5.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/winecentre.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/calle-2.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/calle-3.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/calle+3.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/MainStreet_t.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
 
 
 	_BackgroundMaterial = std::make_shared<Material>();
@@ -246,14 +246,12 @@ void DataCollectionSystem::OnCreate()
 		+ "\n"
 		+ FileIO::LoadFileAsString("../Resources/Shaders/Fragment/Background.frag");
 
-	std::unique_ptr<GLShader> standardvert = std::make_unique<GLShader>(ShaderType::Vertex);
+	auto standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
 	standardvert->SetCode(&vertShaderCode);
-	std::unique_ptr<GLShader> standardfrag = std::make_unique<GLShader>(ShaderType::Fragment);
+	auto standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
 	standardfrag->SetCode(&fragShaderCode);
-	auto program = std::make_shared<GLProgram>();
-	program->Attach(ShaderType::Vertex, standardvert.get());
-	program->Attach(ShaderType::Fragment, standardfrag.get());
-	program->Link();
+	auto program = std::make_shared<GLProgram>(standardvert, standardfrag);
+	
 
 
 	_BackgroundMaterial->SetProgram(program);
@@ -263,28 +261,22 @@ void DataCollectionSystem::OnCreate()
 		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/TexturePassThrough.vert"));
 	fragShaderCode = std::string("#version 460 core\n") +
 		FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SmallBranch.frag");
-	standardvert = std::make_unique<GLShader>(ShaderType::Vertex);
+	standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
 	standardvert->SetCode(&vertShaderCode);
-	standardfrag = std::make_unique<GLShader>(ShaderType::Fragment);
+	standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
 	standardfrag->SetCode(&fragShaderCode);
 
-	_SmallBranchProgram = std::make_unique<GLProgram>();
-	_SmallBranchProgram->Attach(ShaderType::Vertex, standardvert.get());
-	_SmallBranchProgram->Attach(ShaderType::Fragment, standardfrag.get());
-	_SmallBranchProgram->Link();
+	_SmallBranchProgram = std::make_unique<GLProgram>(standardvert, standardfrag);
 
 	fragShaderCode = std::string("#version 460 core\n") +
 		FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SmallBranchCopy.frag");
-	standardvert = std::make_unique<GLShader>(ShaderType::Vertex);
+	standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
 	standardvert->SetCode(&vertShaderCode);
-	standardfrag = std::make_unique<GLShader>(ShaderType::Fragment);
+	standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
 	standardfrag->SetCode(&fragShaderCode);
 
-	_SmallBranchCopyProgram = std::make_unique<GLProgram>();
-	_SmallBranchCopyProgram->Attach(ShaderType::Vertex, standardvert.get());
-	_SmallBranchCopyProgram->Attach(ShaderType::Fragment, standardfrag.get());
-	_SmallBranchCopyProgram->Link();
-
+	_SmallBranchCopyProgram = std::make_unique<GLProgram>(standardvert, standardfrag);
+	
 	_SmallBranchFilter = std::make_unique<RenderTarget>(_TargetResolution, _TargetResolution);
 	_SmallBranchBuffer = std::make_unique<GLTexture2D>(1, GL_RGB32F, _TargetResolution, _TargetResolution, true);
 	_SmallBranchBuffer->SetInt(GL_TEXTURE_MIN_FILTER, GL_NEAREST);

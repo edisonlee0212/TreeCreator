@@ -36,7 +36,7 @@ void main()
 #pragma endregion
 	
 	bool generateLearningData = false;
-	bool generateSorghum = true;
+	bool generateSorghum = false;
 	bool generateSorghumField = true;
 	PlantSimulationSystem* pss = InitPlantSimulationSystem();
 	if (generateLearningData) {
@@ -282,9 +282,9 @@ void InitGround() {
 
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureD = FileManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg");
+	auto textureD = ResourceManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg");
 	mat->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
-	auto textureN = FileManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg");
+	auto textureN = ResourceManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg");
 	//mat->SetTexture(textureN, TextureType::NORMAL);
 	//auto textureH = AssetManager::LoadTexture("../Resources/Textures/dirt_01_height.jpg");
 	//mat->SetTexture(textureH, TextureType::DISPLACEMENT);

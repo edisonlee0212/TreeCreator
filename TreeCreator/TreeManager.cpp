@@ -182,16 +182,12 @@ void TreeUtilities::TreeManager::Init()
 		+ "\n"
 		+ FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SemanticBranch.frag");
 
-	GLShader* standardvert = new GLShader(ShaderType::Vertex);
+	auto standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
 	standardvert->SetCode(&vertShaderCode);
-	GLShader* standardfrag = new GLShader(ShaderType::Fragment);
+	auto standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
 	standardfrag->SetCode(&fragShaderCode);
-	auto branchProgram = std::make_shared<GLProgram>();
-	branchProgram->Attach(ShaderType::Vertex, standardvert);
-	branchProgram->Attach(ShaderType::Fragment, standardfrag);
-	branchProgram->Link();
-	delete standardvert;
-	delete standardfrag;
+	auto branchProgram = std::make_shared<GLProgram>(standardvert, standardfrag);
+	
 
 	vertShaderCode = std::string("#version 460 core\n")
 		+ *Default::ShaderIncludes::Uniform +
@@ -201,17 +197,12 @@ void TreeUtilities::TreeManager::Init()
 		+ *Default::ShaderIncludes::Uniform
 		+ "\n"
 		+ FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SemanticLeaf.frag");
-	standardvert = new GLShader(ShaderType::Vertex);
+	standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
 	standardvert->SetCode(&vertShaderCode);
-	standardfrag = new GLShader(ShaderType::Fragment);
+	standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
 	standardfrag->SetCode(&fragShaderCode);
-	auto leafProgram = std::make_shared<GLProgram>();
-	leafProgram->Attach(ShaderType::Vertex, standardvert);
-	leafProgram->Attach(ShaderType::Fragment, standardfrag);
-	leafProgram->Link();
-	delete standardvert;
-	delete standardfrag;
-
+	auto leafProgram = std::make_shared<GLProgram>(standardvert, standardfrag);
+	
 	SemanticTreeBranchMaterial = std::make_shared<Material>();
 	SemanticTreeBranchMaterial->SetProgram(branchProgram);
 	SemanticTreeLeafMaterial = std::make_shared<Material>();
