@@ -216,16 +216,6 @@ void TreeUtilities::LightEstimator::TakeSnapShot(bool storeSnapshot)
 	RenderTarget::BindDefault();
 }
 
-void TreeUtilities::LightEstimator::DrawSnapShots(Camera* camera)
-{
-	float startX = -0.9f;
-	for (auto ss : _SnapShots) {
-		if (ss->SnapShotTexture() == nullptr) break;
-		RenderManager::DrawTexture2D(ss->SnapShotTexture().get(), 0, glm::vec2(startX, 0.1f * 16.0 / 9.0f - 1.0f), glm::vec2(0.1f, 0.1f * 16.0 / 9.0f), camera);
-		startX += 0.2f;
-	}
-}
-
 float TreeUtilities::LightEstimator::GetMaxIllumination()
 {
 	return _MaxIllumination;

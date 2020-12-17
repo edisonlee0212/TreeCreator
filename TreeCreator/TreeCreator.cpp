@@ -36,8 +36,8 @@ void main()
 #pragma endregion
 	
 	bool generateLearningData = false;
-	bool generateSorghum = false;
-	bool generateSorghumField = false;
+	bool generateSorghum = true;
+	bool generateSorghumField = true;
 	PlantSimulationSystem* pss = InitPlantSimulationSystem();
 	if (generateLearningData) {
 		RenderManager::SetAmbientLight(1.0f);
@@ -214,6 +214,7 @@ void EngineSetup()
 	RenderManager::SetMaxShadowDistance(100);
 	RenderManager::SetSplitRatio(0.15f, 0.3f, 0.5f, 1.0f);
 #pragma endregion
+	FileIO::SetProjectPath("../Resources/");
 	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
 	Transform transform;

@@ -28,7 +28,7 @@ namespace SorghumReconstruction {
 		}
 	};
 	
-	class Spline : public SharedComponentBase {
+	class Spline : public PrivateComponentBase {
 	public:
 		glm::vec3 Left;
 		float StartingPoint;
@@ -81,15 +81,7 @@ namespace SorghumReconstruction {
 			}
 			return Curves.at(curveIndex).GetAxis(curveU);
 		}
-		size_t GetHashCode() override;
 	};
-
-	inline size_t Spline::GetHashCode()
-	{
-		return (size_t)this;
-	}
-
-	
 	class SorghumReconstructionSystem :
 		public SystemBase
 	{
@@ -104,7 +96,6 @@ namespace SorghumReconstruction {
 		void DrawGUI();
 		void ObjExportHelper(glm::vec3 position, std::shared_ptr<Mesh> mesh, std::ofstream& of, unsigned& startIndex) const;
 	public:
-		Entity CopyPlant(Entity original);
 		Entity CreateGridPlant(Entity original, std::vector<glm::mat4>& matrices, bool rotateLeaves = false, float devAngle = 0.0f);
 		Entity CreatePlant() const;
 		Entity CreateLeafForPlant(Entity& plantEntity) const;

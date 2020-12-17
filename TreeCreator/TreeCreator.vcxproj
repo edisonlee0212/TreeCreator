@@ -45,14 +45,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\Submodules\UniEngine\external\glad\include\glad;..\Submodules\UniEngine\external\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\external\glad\include;..\Submodules\UniEngine\external\Assimp\include;..\Submodules\UniEngine\external\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\external\PhysX\include;..\Submodules\UniEngine\UniEngine\include;..\includes;..\Submodules\UniEngine\external\yaml-cpp\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\Submodules\UniEngine\external\glad\include\glad;..\Submodules\UniEngine\external\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\external\glad\include;..\Submodules\UniEngine\external\Assimp\include;..\Submodules\UniEngine\external\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\external\PhysX\include;..\Submodules\UniEngine\UniEngine\include;..\includes;..\Submodules\UniEngine\external\yaml-cpp\include;..\Submodules\UniEngine\external;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(ProjectName)</OutDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IntDir>$(SolutionDir)bin\int\$(Configuration)-$(Platform)\$(ProjectName)</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\Submodules\UniEngine\external\glad\include\glad;..\Submodules\UniEngine\external\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\external\glad\include;..\Submodules\UniEngine\external\Assimp\include;..\Submodules\UniEngine\external\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\external\PhysX\include;..\Submodules\UniEngine\UniEngine\include;..\includes;..\Submodules\UniEngine\external\yaml-cpp\include;$(IncludePath)</IncludePath>
+    <IncludePath>..\Submodules\UniEngine\external\glad\include\glad;..\Submodules\UniEngine\external\glad\include\KHR;..\Submodules\UniEngine\Submodules\glfw\include;..\Submodules\UniEngine\Submodules\ImGui\backends;..\Submodules\UniEngine\Submodules\ImGui;..\Submodules\UniEngine\external\glad\include;..\Submodules\UniEngine\external\Assimp\include;..\Submodules\UniEngine\external\glm\glm;..\Submodules\UniEngine\Submodules\stb;..\Submodules\UniEngine\external\PhysX\include;..\Submodules\UniEngine\UniEngine\include;..\includes;..\Submodules\UniEngine\external\yaml-cpp\include;..\Submodules\UniEngine\external;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\$(Configuration)-$(Platform)\$(ProjectName)</OutDir>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <IntDir>$(SolutionDir)bin\int\$(Configuration)-$(Platform)\$(ProjectName)</IntDir>

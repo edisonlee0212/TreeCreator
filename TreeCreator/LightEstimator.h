@@ -55,7 +55,6 @@ namespace TreeUtilities {
 		void PushSnapShot(glm::vec3 direction, float weight);
 		void Clear();
 		void TakeSnapShot(bool storeSnapShot);
-		void DrawSnapShots(Camera* camera);
 		float GetMaxIllumination();
 		float CalculateScore();
 		std::vector<LightSnapShot*>* GetSnapShots();

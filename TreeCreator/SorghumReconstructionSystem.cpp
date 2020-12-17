@@ -6,8 +6,8 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreatePlant() const
 	Entity ret = EntityManager::CreateEntity(_PlantArchetype);
 	Transform transform;
 	transform.SetScale(glm::vec3(1.0f));
-	auto spline = std::make_shared<Spline>();
-	EntityManager::SetSharedComponent(ret, spline);
+	auto spline = std::make_unique<Spline>();
+	EntityManager::SetPrivateComponent(ret, std::move(spline));
 	EntityManager::SetComponentData(ret, transform);
 	
 	auto mmc = std::make_unique<MeshRenderer>();
@@ -24,8 +24,8 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateLeafForPlant(En
 	EntityManager::SetParent(ret, plantEntity);
 	Transform transform;
 	transform.SetScale(glm::vec3(1.0f));
-	auto spline = std::make_shared<Spline>();
-	EntityManager::SetSharedComponent(ret, spline);
+	auto spline = std::make_unique<Spline>();
+	EntityManager::SetPrivateComponent(ret, std::move(spline));
 	EntityManager::SetComponentData(ret, transform);
 
 	auto mmc = std::make_unique<MeshRenderer>();
@@ -97,39 +97,15 @@ void SorghumReconstruction::SorghumReconstructionSystem::ObjExportHelper(glm::ve
 	}
 }
 
-Entity SorghumReconstruction::SorghumReconstructionSystem::CopyPlant(Entity original)
-{
-	Entity plant = EntityManager::CreateEntity(_PlantArchetype);
-	plant.SetComponentData(EntityManager::GetComponentData<SorghumInfo>(original));
-	plant.SetComponentData(EntityManager::GetComponentData<Transform>(original));
-	plant.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(original));
-	auto& mmc = original.GetPrivateComponent<MeshRenderer>();
-	auto newmmc = std::unique_ptr<MeshRenderer>();
-	newmmc->Material = mmc->Material;
-	newmmc->Mesh = mmc->Mesh;
-	plant.SetPrivateComponent(std::move(newmmc));
-	EntityManager::ForEachChild(original, [this, &plant](Entity child)
-		{
-			Entity newChild = EntityManager::CreateEntity(_LeafArchetype);
-			newChild.SetComponentData(EntityManager::GetComponentData<LeafInfo>(child));
-			newChild.SetComponentData(EntityManager::GetComponentData<Transform> (child));
-			newChild.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(child));
-			auto& mmc = newChild.GetPrivateComponent<MeshRenderer>();
-			auto newmmc = std::unique_ptr<MeshRenderer>();
-			newmmc->Material = mmc->Material;
-			newmmc->Mesh = mmc->Mesh;
-			newChild.SetPrivateComponent(std::move(newmmc));
-			EntityManager::SetParent(newChild, plant);
-		});
-	return plant;
-}
-
 Entity SorghumReconstruction::SorghumReconstructionSystem::CreateGridPlant(Entity original, std::vector<glm::mat4>& matrices, bool rotateLeaves, float devAngle)
 {
 	Entity plant = EntityManager::CreateEntity(_PlantArchetype);
 	plant.SetComponentData(EntityManager::GetComponentData<SorghumInfo>(original));
 	plant.SetComponentData(EntityManager::GetComponentData<Transform>(original));
-	plant.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(original));
+	auto newSpline = std::make_unique<Spline>();
+	auto& spline = EntityManager::GetPrivateComponent<Spline>(original);
+	*newSpline.get() = *spline.get();
+	plant.SetPrivateComponent(std::move(newSpline));
 	auto imr = std::make_unique<Particles>();
 	auto& mr = EntityManager::GetPrivateComponent<MeshRenderer>(original);
 	imr->Mesh = mr->Mesh;
@@ -143,7 +119,10 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateGridPlant(Entit
 			Entity newChild = EntityManager::CreateEntity(_LeafArchetype);
 			newChild.SetComponentData(EntityManager::GetComponentData<LeafInfo>(child));
 			newChild.SetComponentData(EntityManager::GetComponentData<Transform>(child));
-			newChild.SetSharedComponent(EntityManager::GetSharedComponent<Spline>(child));
+			auto newSpline = std::make_unique<Spline>();
+			auto& spline = EntityManager::GetPrivateComponent<Spline>(child);
+			*newSpline.get() = *spline.get();
+			newChild.SetPrivateComponent(std::move(newSpline));
 			auto imr = std::make_unique<Particles>();
 			auto& mr = EntityManager::GetPrivateComponent<MeshRenderer>(child);
 			imr->Mesh = mr->Mesh;
@@ -164,11 +143,11 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 	EntityManager::ForEach<GlobalTransform>(_SplineQuery, [&meshMutex, segmentAmount, step]
 	(int index, Entity entity, GlobalTransform* ltw)
 		{
-			auto spline = EntityManager::GetSharedComponent<Spline>(entity);
+			auto& spline = EntityManager::GetPrivateComponent<Spline>(entity);
 			spline->Nodes.clear();
 			int stemNodeCount = 0;
 			if (spline->StartingPoint != -1) {
-				auto truckSpline = EntityManager::GetSharedComponent<Spline>(EntityManager::GetParent(entity));
+				auto& truckSpline = EntityManager::GetPrivateComponent<Spline>(EntityManager::GetParent(entity));
 				float width = 0.1f - spline->StartingPoint * 0.05f;
 				for (float i = 0.0f; i < spline->StartingPoint - 0.05f; i += 0.05f)
 				{
@@ -286,12 +265,12 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 	_PlantQuery.ToEntityArray(plants);
 	for (auto& plant : plants) {
 		auto& pmmc = EntityManager::GetPrivateComponent<MeshRenderer>(plant);
-		auto spline = EntityManager::GetSharedComponent<Spline>(plant);
+		auto& spline = EntityManager::GetPrivateComponent<Spline>(plant);
 		pmmc->Mesh->SetVertices(17, spline->Vertices, spline->Indices, true);
 		EntityManager::ForEachChild(plant, [](Entity child)
 			{
 				auto& mmc = EntityManager::GetPrivateComponent<MeshRenderer>(child);
-				auto childSpline = EntityManager::GetSharedComponent<Spline>(child);
+				auto& childSpline = EntityManager::GetPrivateComponent<Spline>(child);
 				mmc->Mesh->SetVertices(17, childSpline->Vertices, childSpline->Indices, true);
 			}
 		);
@@ -311,7 +290,7 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::ImportPlant(std::stri
 	file >> leafCount;
 	Entity truck = CreatePlant();
 	truck.SetName(name);
-	auto truckSpline = EntityManager::GetSharedComponent<Spline>(truck);
+	auto& truckSpline = EntityManager::GetPrivateComponent<Spline>(truck);
 
 
 
@@ -330,13 +309,12 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::ImportPlant(std::stri
 	truckSpline->Left = glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), truckSpline->Curves.begin()->CP0 - truckSpline->Curves.back().CP3);
 	for (int i = 0; i < leafCount; i++) {
 		Entity leaf = CreateLeafForPlant(truck);
-		auto leafSpline = EntityManager::GetSharedComponent<Spline>(leaf);
+		auto& leafSpline = EntityManager::GetPrivateComponent<Spline>(leaf);
 		float startingPoint;
 		file >> startingPoint;
 		
 		leafSpline->StartingPoint = startingPoint;
 		leafSpline->Import(file);
-		EntityManager::SetSharedComponent(leaf, leafSpline);
 		for (auto& curve : leafSpline->Curves) {
 			curve.CP0 += truckSpline->EvaluatePointFromCurve(startingPoint);
 			curve.CP1 += truckSpline->EvaluatePointFromCurve(startingPoint);
