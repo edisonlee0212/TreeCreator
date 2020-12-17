@@ -104,7 +104,7 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateGridPlant(Entit
 	plant.SetComponentData(EntityManager::GetComponentData<Transform>(original));
 	auto newSpline = std::make_unique<Spline>();
 	auto& spline = EntityManager::GetPrivateComponent<Spline>(original);
-	*newSpline.get() = *spline.get();
+	*newSpline = *spline;
 	plant.SetPrivateComponent(std::move(newSpline));
 	auto imr = std::make_unique<Particles>();
 	auto& mr = EntityManager::GetPrivateComponent<MeshRenderer>(original);
@@ -121,7 +121,7 @@ Entity SorghumReconstruction::SorghumReconstructionSystem::CreateGridPlant(Entit
 			newChild.SetComponentData(EntityManager::GetComponentData<Transform>(child));
 			auto newSpline = std::make_unique<Spline>();
 			auto& spline = EntityManager::GetPrivateComponent<Spline>(child);
-			*newSpline.get() = *spline.get();
+			*newSpline = *spline;
 			newChild.SetPrivateComponent(std::move(newSpline));
 			auto imr = std::make_unique<Particles>();
 			auto& mr = EntityManager::GetPrivateComponent<MeshRenderer>(child);
