@@ -17,14 +17,14 @@ namespace TreeUtilities {
 		std::unique_ptr<GLTexture2D>& SnapShotTexture() { return _SnapShotTexture; }
 		std::vector<float>& GetSRC() { return _SRC; }
 		LightSnapShot(size_t resolution, glm::vec3 centerPosition, glm::vec3 direction, float centerDistance, float width, float weight);
-		glm::mat4 GetViewMatrix();
-		glm::mat4 GetLightSpaceMatrix();
-		glm::vec3 GetDirection();
+		glm::mat4 GetViewMatrix() const;
+		glm::mat4 GetLightSpaceMatrix() const;
+		glm::vec3 GetDirection() const;
 		float CalculateScore();
-		float CenterDistance();
-		float Width();
-		float Weight();
-		float Resolution();
+		float CenterDistance() const;
+		float Width() const;
+		float Weight() const;
+		float Resolution() const;
 		unsigned GetEntityIndex(size_t x, size_t y);
 	};
 
@@ -46,7 +46,7 @@ namespace TreeUtilities {
 		friend class TreeManager;
 		void SetMaxIllumination(float value);
 	public:
-		glm::vec3 GetCenterPosition();
+		glm::vec3 GetCenterPosition() const;
 		LightEstimator(size_t resolution = 512, float centerDistance = 100.0f);
 		void ResetResolution(size_t value);
 		void ResetCenterPosition(glm::vec3 position);

@@ -385,7 +385,7 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardProgram);
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
-	auto textureLeaf = ResourceManager::LoadTexture("../Resources/Textures/leafSurfaceDark.jpg");
+	auto textureLeaf = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafSurfaceDark.jpg");
 	_LeafMaterial->SetTexture(textureLeaf, TextureType::DIFFUSE);
 	_LeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
 	_InstancedStemMaterial = std::make_shared<Material>();

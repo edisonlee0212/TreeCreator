@@ -144,6 +144,9 @@
     <ClCompile Include="CakeTower.cpp">
       <Filter>Source Files\TreeVolume</Filter>
     </ClCompile>
+    <ClCompile Include="MaskTrimmer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quickhull\Structs\VertexDataSource.hpp">
@@ -251,22 +254,8 @@
     <ClInclude Include="DataCollectionSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\Resources\Shaders\Fragment\SmallBranchCopy.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Resources\Shaders\Fragment\Background.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Resources\Shaders\Fragment\SemanticBranch.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Resources\Shaders\Fragment\SemanticLeaf.frag">
-      <Filter>Resource Files</Filter>
-    </None>
-    <None Include="..\Resources\Shaders\Fragment\SmallBranch.frag">
-      <Filter>Resource Files</Filter>
-    </None>
+    <ClInclude Include="MaskTrimmer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

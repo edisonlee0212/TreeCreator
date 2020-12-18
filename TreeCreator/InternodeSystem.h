@@ -19,10 +19,12 @@ namespace TreeUtilities {
         EntityQuery _InternodeQuery;
 
         float _ConnectionWidth = 1.0f;
+    	glm::vec4 _InternodeColor = glm::vec4(0.0f, 0.0f, 1.0f, 0.8f);
         glm::vec4 _ConnectionColor = glm::vec4(0.6f, 0.3f, 0, 0.8f);
         glm::vec4 _RayColor = glm::vec4(0.0f, 1.0f, 0.0f, 0.3f);
         Entity _RaySelectedEntity;
         Entity _CameraEntity;
+        float _InternodeSize = 0.1f;
         std::vector<GlobalTransform> _InternodeLTWList;
         std::vector<Connection> _ConnectionList;
         std::vector<Ray> _RayList;

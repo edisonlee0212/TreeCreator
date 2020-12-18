@@ -1,6 +1,6 @@
 #include "InternodeSystem.h"
 #include "TreeManager.h"
-
+#include "Ray.h"
 #include <gtx/matrix_decompose.hpp>
 
 void TreeUtilities::InternodeSystem::DrawGui()
@@ -17,8 +17,12 @@ void TreeUtilities::InternodeSystem::DrawGui()
 		ImGui::CheckboxFlags("Draw internodes", &_ConfigFlags, InternodeSystem_DrawInternodes);
 		ImGui::CheckboxFlags("Draw Connections", &_ConfigFlags, InternodeSystem_DrawConnections);
 		ImGui::CheckboxFlags("Draw camera rays", &_ConfigFlags, InternodeSystem_DrawCameraRays);
+		if (_ConfigFlags & InternodeSystem_DrawInternodes) {
+			ImGui::InputFloat("Internode Size", &_InternodeSize);
+			ImGui::ColorEdit4("Internode Color", &_InternodeColor.x);
+		}
 		if (_ConfigFlags & InternodeSystem_DrawConnections) {
-			ImGui::InputFloat("Internode Connection Width", &_ConnectionWidth);
+			ImGui::InputFloat("Connection Width", &_ConnectionWidth);
 			ImGui::ColorEdit4("Connection Color", &_ConnectionColor.x);
 		}
 		if (_ConfigFlags & InternodeSystem_DrawCameraRays) {
@@ -39,7 +43,7 @@ void TreeUtilities::InternodeSystem::RaySelection()
 		auto cameraLtw = mainCamera->GetOwner().GetComponentData<GlobalTransform>();
 		glm::vec2 mousePos;
 		if (InputManager::GetMousePosition(mousePos)) {
-			const Ray cameraRay = mainCamera->GetCamera()->ScreenPointToRay(
+			const Ray cameraRay = mainCamera->ScreenPointToRay(
 				cameraLtw, mousePos);
 			EntityManager::ForEach<GlobalTransform, InternodeInfo>(_InternodeQuery, [this, cameraLtw, &writeMutex, &minDistance, cameraRay](int i, Entity entity, GlobalTransform* ltw, InternodeInfo* info)
 				{
@@ -84,7 +88,7 @@ void TreeUtilities::InternodeSystem::Update()
 	_InternodeLTWList.clear();
 	if (_ConfigFlags & InternodeSystem_DrawInternodes) {
 		_InternodeQuery.ToComponentDataArray(_InternodeLTWList);
-		if (!_InternodeLTWList.empty())RenderManager::DrawGizmoCubeInstanced(glm::vec4(0, 0, 1, 1), (glm::mat4*)_InternodeLTWList.data(), _InternodeLTWList.size(), glm::mat4(1.0f), 0.02f);
+		if (!_InternodeLTWList.empty())RenderManager::DrawGizmoCubeInstanced(glm::vec4(0, 0, 1, 1), (glm::mat4*)_InternodeLTWList.data(), _InternodeLTWList.size(), glm::mat4(1.0f), _InternodeSize);
 	}
 	if (_ConfigFlags & InternodeSystem_DrawConnections) {
 		_ConnectionList.resize(0);

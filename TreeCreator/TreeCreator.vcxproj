@@ -118,6 +118,7 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClCompile Include="LeafSegment.cpp" />
     <ClCompile Include="LightEstimator.cpp" />
     <ClCompile Include="MapleFoliageGenerator.cpp" />
+    <ClCompile Include="MaskTrimmer.cpp" />
     <ClCompile Include="OakFoliageGenerator.cpp" />
     <ClCompile Include="PineFoliageGenerator.cpp" />
     <ClCompile Include="PlantSimulationSystem.cpp" />
@@ -147,6 +148,7 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClInclude Include="LeafSegment.h" />
     <ClInclude Include="LightEstimator.h" />
     <ClInclude Include="MapleFoliageGenerator.h" />
+    <ClInclude Include="MaskTrimmer.h" />
     <ClInclude Include="OakFoliageGenerator.h" />
     <ClInclude Include="PineFoliageGenerator.h" />
     <ClInclude Include="PlantSimulationSystem.h" />
@@ -173,13 +175,6 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ProjectReference Include="..\Submodules\UniEngine\UniEngine\UniEngine.vcxproj">
       <Project>{324d4482-9924-4f0b-aba0-e6e9ba51b02f}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\Resources\Shaders\Fragment\Background.frag" />
-    <None Include="..\Resources\Shaders\Fragment\SemanticBranch.frag" />
-    <None Include="..\Resources\Shaders\Fragment\SemanticLeaf.frag" />
-    <None Include="..\Resources\Shaders\Fragment\SmallBranch.frag" />
-    <None Include="..\Resources\Shaders\Fragment\SmallBranchCopy.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

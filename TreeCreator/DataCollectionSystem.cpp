@@ -36,7 +36,7 @@ auto DataCollectionSystem::IsExport() const -> bool
 
 void DataCollectionSystem::PushImageCaptureSequence(ImageCaptureSequence sequence)
 {
-	_ImageCaptureSequences.push_back({ sequence, _PlantSimulationSystem->LoadParameters(sequence.ParamPath) });
+	_ImageCaptureSequences.emplace_back(sequence, _PlantSimulationSystem->LoadParameters(sequence.ParamPath));
 	
 }
 
@@ -219,21 +219,21 @@ void DataCollectionSystem::OnCreate()
 	_SemanticMaskCameraEntity.SetName("Semantic Mask Camera");
 	_SemanticMaskCameraEntity.SetPrivateComponent(std::move(cameraComponent));
 
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/2236927059_a18cdd9196.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/2289428141_c758f436a1.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/2814264828_bb3f9d7ca9.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/3397325268_dc6135c432.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/69498568_e43c0e8520.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/1122838735_bc116c7a7c.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/1123280110_dda3037a69.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/3837561150_9f786dc7e5.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/winecentre.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/calle-2.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/calle-3.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/calle+3.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/MainStreet_t.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture("../Resources/Textures/Street/st-andrewgate-2_300px.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/2236927059_a18cdd9196.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/2289428141_c758f436a1.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/2814264828_bb3f9d7ca9.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/3397325268_dc6135c432.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/69498568_e43c0e8520.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/1122838735_bc116c7a7c.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/1123280110_dda3037a69.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/3837561150_9f786dc7e5.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/st-andrewgate-2_300px.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/winecentre.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/calle-2.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/calle-3.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/calle+3.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/MainStreet_t.jpg"));
+	_BackgroundTextures.push_back(ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Street/st-andrewgate-2_300px.jpg"));
 
 
 	_BackgroundMaterial = std::make_shared<Material>();
@@ -245,7 +245,7 @@ void DataCollectionSystem::OnCreate()
 	std::string fragShaderCode = std::string("#version 460 core\n")
 		+ *Default::ShaderIncludes::Uniform
 		+ "\n"
-		+ FileIO::LoadFileAsString("../Resources/Shaders/Fragment/Background.frag");
+		+ FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/Background.frag");
 
 	auto standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
 	standardvert->SetCode(&vertShaderCode);
@@ -261,7 +261,7 @@ void DataCollectionSystem::OnCreate()
 	vertShaderCode = std::string("#version 460 core\n") +
 		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/TexturePassThrough.vert"));
 	fragShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SmallBranch.frag");
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/SmallBranch.frag");
 	standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
 	standardvert->SetCode(&vertShaderCode);
 	standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
@@ -270,7 +270,7 @@ void DataCollectionSystem::OnCreate()
 	_SmallBranchProgram = std::make_unique<GLProgram>(standardvert, standardfrag);
 
 	fragShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SmallBranchCopy.frag");
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/SmallBranchCopy.frag");
 	standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
 	standardvert->SetCode(&vertShaderCode);
 	standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
@@ -390,7 +390,7 @@ void DataCollectionSystem::Update()
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
 			+ ".jpg";
-		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
+		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 			path, _TargetResolution, _TargetResolution);
 
 		_Status = DataCollectionSystemStatus::CaptureRandom;
@@ -402,7 +402,7 @@ void DataCollectionSystem::Update()
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
 			+ ".jpg";
-		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
+		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 			path, _TargetResolution, _TargetResolution);
 
 		_Status = DataCollectionSystemStatus::CaptureSemantic;
@@ -414,14 +414,14 @@ void DataCollectionSystem::Update()
 		_SmallBranchFilter->GetFrameBuffer()->DrawBuffer(GL_COLOR_ATTACHMENT0);
 		_SmallBranchFilter->Bind();
 		_SmallBranchProgram->Bind();
-		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->GetTexture()->Bind(0);
+		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetTexture()->Texture()->Bind(0);
 		_SmallBranchProgram->SetInt("InputTex", 0);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		Default::GLPrograms::ScreenVAO->Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		_SmallBranchCopyProgram->Bind();
-		_SmallBranchFilter->AttachTexture(_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->GetTexture(), GL_COLOR_ATTACHMENT0);
+		_SmallBranchFilter->AttachTexture(_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetTexture()->Texture().get(), GL_COLOR_ATTACHMENT0);
 		_SmallBranchBuffer->Bind(0);
 		_SmallBranchCopyProgram->SetInt("InputTex", 0);
 		Default::GLPrograms::ScreenVAO->Bind();
@@ -430,7 +430,7 @@ void DataCollectionSystem::Update()
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
 			+ ".jpg";
-		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
+		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 			path);
 		_Status = DataCollectionSystemStatus::CollectData;
 		break;

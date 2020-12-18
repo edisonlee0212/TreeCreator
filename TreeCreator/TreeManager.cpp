@@ -12,6 +12,7 @@
 #include "CakeTower.h"
 #include "KDop.h"
 #include "rapidjson/prettywriter.h"
+#include "Ray.h"
 using namespace TreeUtilities;
 
 LightEstimator* TreeUtilities::TreeManager::_LightEstimator;
@@ -180,7 +181,7 @@ void TreeUtilities::TreeManager::Init()
 	std::string fragShaderCode = std::string("#version 460 core\n")
 		+ *Default::ShaderIncludes::Uniform
 		+ "\n"
-		+ FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SemanticBranch.frag");
+		+ FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/SemanticBranch.frag");
 
 	auto standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
 	standardvert->SetCode(&vertShaderCode);
@@ -196,7 +197,7 @@ void TreeUtilities::TreeManager::Init()
 	fragShaderCode = std::string("#version 460 core\n")
 		+ *Default::ShaderIncludes::Uniform
 		+ "\n"
-		+ FileIO::LoadFileAsString("../Resources/Shaders/Fragment/SemanticLeaf.frag");
+		+ FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/SemanticLeaf.frag");
 	standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
 	standardvert->SetCode(&vertShaderCode);
 	standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);

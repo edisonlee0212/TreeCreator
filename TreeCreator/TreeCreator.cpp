@@ -283,11 +283,11 @@ void InitGround() {
 
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureD = ResourceManager::LoadTexture("../Resources/Textures/dirt_01_diffuse.jpg");
+	auto textureD = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/dirt_01_diffuse.jpg");
 	mat->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
-	auto textureN = ResourceManager::LoadTexture("../Resources/Textures/dirt_01_normal.jpg");
+	auto textureN = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/dirt_01_normal.jpg");
 	//mat->SetTexture(textureN, TextureType::NORMAL);
-	//auto textureH = AssetManager::LoadTexture("../Resources/Textures/dirt_01_height.jpg");
+	//auto textureH = AssetManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/dirt_01_height.jpg");
 	//mat->SetTexture(textureH, TextureType::DISPLACEMENT);
 
 	mat->Shininess = 32.0f;

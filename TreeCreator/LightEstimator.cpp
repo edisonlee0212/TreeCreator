@@ -17,7 +17,7 @@ TreeUtilities::LightSnapShot::LightSnapShot(size_t resolution, glm::vec3 centerP
 	_SRC.resize(resolution * resolution);
 }
 
-glm::mat4 TreeUtilities::LightSnapShot::GetViewMatrix()
+glm::mat4 TreeUtilities::LightSnapShot::GetViewMatrix() const
 {
 	glm::mat4 view = glm::lookAt(_CenterPosition - _CenterDistance * _Direction, _CenterPosition, glm::vec3(0, 1, 0));
 	if (glm::any(glm::isnan(view[3]))) {
@@ -26,7 +26,7 @@ glm::mat4 TreeUtilities::LightSnapShot::GetViewMatrix()
 	return view;
 }
 
-glm::mat4 TreeUtilities::LightSnapShot::GetLightSpaceMatrix()
+glm::mat4 TreeUtilities::LightSnapShot::GetLightSpaceMatrix() const
 {
 	glm::mat4 view = glm::lookAt(_CenterPosition - _CenterDistance * _Direction, _CenterPosition, glm::vec3(0, 1, 0));
 	if (glm::any(glm::isnan(view[3]))) {
@@ -37,7 +37,7 @@ glm::mat4 TreeUtilities::LightSnapShot::GetLightSpaceMatrix()
 	return projection * view;
 }
 
-glm::vec3 TreeUtilities::LightSnapShot::GetDirection()
+glm::vec3 TreeUtilities::LightSnapShot::GetDirection() const
 {
 	return _Direction;
 }
@@ -54,22 +54,22 @@ float TreeUtilities::LightSnapShot::CalculateScore()
 	return _Score;
 }
 
-float TreeUtilities::LightSnapShot::CenterDistance()
+float TreeUtilities::LightSnapShot::CenterDistance() const
 {
 	return _CenterDistance;
 }
 
-float TreeUtilities::LightSnapShot::Width()
+float TreeUtilities::LightSnapShot::Width() const
 {
 	return _Width;
 }
 
-float TreeUtilities::LightSnapShot::Weight()
+float TreeUtilities::LightSnapShot::Weight() const
 {
 	return _Weight;
 }
 
-float TreeUtilities::LightSnapShot::Resolution()
+float TreeUtilities::LightSnapShot::Resolution() const
 {
 	return _Resolution;
 }
@@ -87,7 +87,7 @@ void TreeUtilities::LightEstimator::SetMaxIllumination(float value)
 	_MaxIllumination = value;
 }
 
-glm::vec3 TreeUtilities::LightEstimator::GetCenterPosition()
+glm::vec3 TreeUtilities::LightEstimator::GetCenterPosition() const
 {
 	return _CenterPositon;
 }
@@ -100,9 +100,9 @@ TreeUtilities::LightEstimator::LightEstimator(size_t resolution, float centerDis
 	_RenderTarget->AttachRenderBuffer(_DepthBuffer, GL_DEPTH_ATTACHMENT);
 
 	std::string vertShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString("../Resources/Shaders/TreeUtilities/LightSnapShot.vert");
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/TreeUtilities/LightSnapShot.vert");
 	std::string fragShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString("../Resources/Shaders/TreeUtilities/LightSnapShot.frag");
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/TreeUtilities/LightSnapShot.frag");
 
 	_SnapShotProgram = std::make_unique<GLProgram>(
 		std::make_shared<GLShader>(ShaderType::Vertex, &vertShaderCode),
