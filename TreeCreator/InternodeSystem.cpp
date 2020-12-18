@@ -6,16 +6,24 @@
 void TreeUtilities::InternodeSystem::DrawGui()
 {
 	ImGui::Begin("Tree Utilities");
-	if (ImGui::CollapsingHeader("Internode System", ImGuiTreeNodeFlags_DefaultOpen)) {
+	if (ImGui::CollapsingHeader("Internode System")) {
 		ImGui::Text("Internodes Amount: %d ", _InternodeQuery.GetEntityAmount());
 		ImGui::Separator();
-		ImGui::InputFloat("Internode Connection Width", &_ConnectionWidth);
+		
 		if (ImGui::Button("Regenerate connections for internodes")) {
 			RefreshConnections();
 		}
 		ImGui::Separator();
 		ImGui::CheckboxFlags("Draw internodes", &_ConfigFlags, InternodeSystem_DrawInternodes);
-		ImGui::CheckboxFlags("Draw internode Connections", &_ConfigFlags, InternodeSystem_DrawConnections);
+		ImGui::CheckboxFlags("Draw Connections", &_ConfigFlags, InternodeSystem_DrawConnections);
+		ImGui::CheckboxFlags("Draw camera rays", &_ConfigFlags, InternodeSystem_DrawCameraRays);
+		if (_ConfigFlags & InternodeSystem_DrawConnections) {
+			ImGui::InputFloat("Internode Connection Width", &_ConnectionWidth);
+			ImGui::ColorEdit4("Connection Color", &_ConnectionColor.x);
+		}
+		if (_ConfigFlags & InternodeSystem_DrawCameraRays) {
+			ImGui::ColorEdit4("Camera Ray Color", &_RayColor.x);
+		}
 	}
 	ImGui::End();
 }
@@ -79,9 +87,14 @@ void TreeUtilities::InternodeSystem::Update()
 		if (!_InternodeLTWList.empty())RenderManager::DrawGizmoCubeInstanced(glm::vec4(0, 0, 1, 1), (glm::mat4*)_InternodeLTWList.data(), _InternodeLTWList.size(), glm::mat4(1.0f), 0.02f);
 	}
 	if (_ConfigFlags & InternodeSystem_DrawConnections) {
-		_ConnectionList.clear();
+		_ConnectionList.resize(0);
 		_InternodeQuery.ToComponentDataArray(_ConnectionList);
-		if (!_ConnectionList.empty())RenderManager::DrawGizmoMeshInstanced(Default::Primitives::Cylinder.get(), glm::vec4(0.6f, 0.3f, 0, 1), (glm::mat4*)_ConnectionList.data(), _ConnectionList.size(), glm::mat4(1.0f), 1.0f);
+		if (!_ConnectionList.empty())RenderManager::DrawGizmoMeshInstanced(Default::Primitives::Cylinder.get(), _ConnectionColor, (glm::mat4*)_ConnectionList.data(), _ConnectionList.size(), glm::mat4(1.0f), 1.0f);
+	}
+	if (_ConfigFlags & InternodeSystem_DrawCameraRays) {
+		_RayList.resize(0);
+		_InternodeQuery.ToComponentDataArray(_RayList);
+		RenderManager::DrawGizmoRays(_RayColor, _RayList, 0.01f);
 	}
 	DrawGui();
 	RaySelection();
@@ -95,7 +108,12 @@ void TreeUtilities::InternodeSystem::Update()
 void TreeUtilities::InternodeSystem::RefreshConnections() const
 {
 	float lineWidth = _ConnectionWidth;
-	EntityManager::ForEach<GlobalTransform, Connection, InternodeInfo>(_InternodeQuery, [lineWidth](int i, Entity entity, GlobalTransform* ltw, Connection* c, InternodeInfo* info) {
+	glm::vec3 cameraPos = glm::vec3(0.0f);
+	if(_CameraEntity.IsValid())
+	{
+		cameraPos = _CameraEntity.GetComponentData<GlobalTransform>().GetPosition();
+	}
+	EntityManager::ForEach<GlobalTransform, Connection, Ray, InternodeInfo>(_InternodeQuery, [lineWidth, cameraPos](int i, Entity entity, GlobalTransform* ltw, Connection* c, Ray* ray, InternodeInfo* info) {
 		glm::vec3 scale;
 		glm::quat rotation;
 		glm::vec3 translation;
@@ -105,7 +123,15 @@ void TreeUtilities::InternodeSystem::RefreshConnections() const
 		glm::vec3 parentTranslation = translation + (rotation * glm::vec3(0, 0, 1)) * info->DistanceToParent;
 		rotation *= glm::quat(glm::vec3(glm::radians(90.0f), 0.0f, 0.0f));
 		glm::mat4 rotationMat = glm::mat4_cast(rotation);
-		if(EntityManager::HasPrivateComponent<TreeData>(EntityManager::GetParent(entity))) c->Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(0.0f));
-		else c->Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(info->Thickness * lineWidth, glm::distance(translation, parentTranslation) / 2.0f, info->Thickness * lineWidth));
-		});
+		if (EntityManager::HasPrivateComponent<TreeData>(EntityManager::GetParent(entity))) {
+			c->Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(0.0f));
+		}
+		else {
+			c->Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(info->Thickness * lineWidth, glm::distance(translation, parentTranslation) / 2.0f, info->Thickness * lineWidth));
+		}
+		ray->Start = translation;
+		ray->Direction = glm::normalize(cameraPos - translation);
+		ray->Length = glm::distance(cameraPos, translation);
+	}, false
+	);
 }

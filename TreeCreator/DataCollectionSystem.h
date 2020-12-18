@@ -85,7 +85,7 @@ namespace TreeUtilities {
 		
 		std::shared_ptr<Material> _BackgroundMaterial;
 		PlantSimulationSystem* _PlantSimulationSystem = nullptr;
-		Entity _CameraEntity;
+		Entity _ImageCameraEntity;
 		Entity _SemanticMaskCameraEntity;
 		glm::vec3 _CameraPosition = glm::vec3(0);
 		glm::vec3 _CameraEulerRotation = glm::vec3(0);

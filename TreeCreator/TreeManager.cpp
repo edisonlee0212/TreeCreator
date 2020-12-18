@@ -211,7 +211,7 @@ void TreeUtilities::TreeManager::Init()
 
 	_InternodeArchetype = EntityManager::CreateEntityArchetype(
 		"Internode",
-		GlobalTransform(), Connection(),
+		GlobalTransform(), Connection(), Ray(),
 		Illumination(),
 		InternodeIndex(), InternodeInfo(), TreeIndex()
 	);

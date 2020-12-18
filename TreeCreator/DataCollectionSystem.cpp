@@ -187,24 +187,25 @@ void DataCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation)
 	Transform transform;
 	transform.SetPosition(_CameraPosition);
 	transform.SetEulerRotation(_CameraEulerRotation);
-	_CameraEntity.SetComponentData(transform);
+	_ImageCameraEntity.SetComponentData(transform);
 	_SemanticMaskCameraEntity.SetComponentData(transform);
 }
 
 void DataCollectionSystem::OnCreate()
 {
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", GlobalTransform(), Transform());
-	_CameraEntity = EntityManager::CreateEntity(archetype);
+	_ImageCameraEntity = EntityManager::CreateEntity(archetype);
+	TreeManager::GetInternodeSystem()->_CameraEntity = _ImageCameraEntity;
 	Transform transform;
 	transform.SetPosition(_CameraPosition);
 	transform.SetEulerRotation(_CameraEulerRotation);
-	_CameraEntity.SetComponentData(transform);
+	_ImageCameraEntity.SetComponentData(transform);
 	auto cameraComponent = std::make_unique<CameraComponent>();
 	cameraComponent->ResizeResolution(_CaptureResolution, _CaptureResolution);
 	cameraComponent->DrawSkyBox = false;
 	cameraComponent->ClearColor = glm::vec3(1.0f);
-	_CameraEntity.SetName("ImageCap Camera");
-	_CameraEntity.SetPrivateComponent(std::move(cameraComponent));
+	_ImageCameraEntity.SetName("ImageCap Camera");
+	_ImageCameraEntity.SetPrivateComponent(std::move(cameraComponent));
 
 
 	_SemanticMaskCameraEntity = EntityManager::CreateEntity(archetype);
@@ -255,7 +256,7 @@ void DataCollectionSystem::OnCreate()
 
 
 	_BackgroundMaterial->SetProgram(program);
-	_Background = EntityManager::CreateEntity(archetype);
+	
 
 	vertShaderCode = std::string("#version 460 core\n") +
 		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/TexturePassThrough.vert"));
@@ -292,6 +293,9 @@ void DataCollectionSystem::OnCreate()
 	transform.SetPosition(glm::vec3(0, 17, -13));
 	transform.SetEulerRotation(glm::radians(glm::vec3(75, -0, -180)));
 	transform.SetScale(glm::vec3(30, 1, 30));
+
+
+	_Background = EntityManager::CreateEntity(archetype);
 	_Background.SetComponentData(transform);
 	_Background.SetPrivateComponent(std::move(mmr));
 	_Background.SetName("Background");
@@ -386,7 +390,7 @@ void DataCollectionSystem::Update()
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
 			+ ".jpg";
-		_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
+		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
 			path, _TargetResolution, _TargetResolution);
 
 		_Status = DataCollectionSystemStatus::CaptureRandom;
@@ -398,7 +402,7 @@ void DataCollectionSystem::Update()
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
 			+ ".jpg";
-		_CameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
+		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->GetCamera()->StoreToJpg(
 			path, _TargetResolution, _TargetResolution);
 
 		_Status = DataCollectionSystemStatus::CaptureSemantic;

@@ -25,8 +25,8 @@ void main()
 	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
 	dlc.diffuseBrightness = 1.0f;
 	dlc.specularBrightness = 1.0f;
-	dlc.bias = 0.1f;
-	dlc.normalOffset = 0.001f;
+	dlc.bias = 0.3f;
+	dlc.normalOffset = 0.01f;
 	dlc.lightSize = 1.0;
 	Transform transform;
 	transform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
@@ -39,21 +39,22 @@ void main()
 	bool generateSorghum = false;
 	bool generateSorghumField = true;
 	PlantSimulationSystem* pss = InitPlantSimulationSystem();
+	DataCollectionSystem* ics = InitImageCollectionSystem();
+	ics->SetPlantSimulationSystem(pss);
 	if (generateLearningData) {
 		RenderManager::SetAmbientLight(1.0f);
 		dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
 		dlc.diffuseBrightness = 0.5f;
 		dlc.specularBrightness = 1.0f;
-		dlc.bias = 0.1f;
-		dlc.normalOffset = 0.001f;
+		dlc.bias = 0.3f;
+		dlc.normalOffset = 0.01f;
 		dlc.lightSize = 1.0;
 		Transform lightTransform;
 		lightTransform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
 		EntityManager::SetComponentData(dle, dlc);
 		EntityManager::SetComponentData(dle, lightTransform);
 		
-		DataCollectionSystem* ics = InitImageCollectionSystem();
-		ics->SetPlantSimulationSystem(pss);
+		
 
 
 		int counter = 0;
