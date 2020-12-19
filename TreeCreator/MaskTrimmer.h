@@ -5,14 +5,21 @@ using namespace UniEngine;
 namespace TreeUtilities {
 	class MaskTrimmer : public PrivateComponentBase
 	{
+		friend class DataCollectionSystem;
+		static Entity _CameraEntity;
+		static unsigned _ResolutionX;
+		static unsigned _ResolutionY;
 		static std::unique_ptr<GLProgram> _FilterProgram;
-		std::unique_ptr<RenderTarget> _Filter;
-		std::unique_ptr<GLRenderBuffer> _DepthBuffer;
+		static std::unique_ptr<RenderTarget> _Filter;
+		static std::unique_ptr<GLRenderBuffer> _DepthStencilBuffer;
 		std::unique_ptr<GLTexture2D> _Result;
+		std::shared_ptr<Texture2D> _Mask;
+		float _InternodeSize = 0.075f;
 	public:
-		static void Init();
+		void ShotInternodes() const;
+		void Filter();
 		MaskTrimmer();
-		void Trim(Entity tree, Entity cameraEntity, std::shared_ptr<Texture2D> mask, unsigned amount = 1);
+		void Trim();
 		void OnGui() override;
 	};
 }

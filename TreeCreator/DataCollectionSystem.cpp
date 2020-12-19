@@ -11,7 +11,7 @@
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
 
-
+#include "MaskTrimmer.h"
 
 void DataCollectionSystem::ResetCounter(int value, int startIndex, int endIndex, bool needExport)
 {
@@ -248,9 +248,9 @@ void DataCollectionSystem::OnCreate()
 		+ FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/Background.frag");
 
 	auto standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
-	standardvert->SetCode(&vertShaderCode);
+	standardvert->Compile(vertShaderCode);
 	auto standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
-	standardfrag->SetCode(&fragShaderCode);
+	standardfrag->Compile(fragShaderCode);
 	auto program = std::make_shared<GLProgram>(standardvert, standardfrag);
 	
 
@@ -263,18 +263,18 @@ void DataCollectionSystem::OnCreate()
 	fragShaderCode = std::string("#version 460 core\n") +
 		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/SmallBranch.frag");
 	standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
-	standardvert->SetCode(&vertShaderCode);
+	standardvert->Compile(vertShaderCode);
 	standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
-	standardfrag->SetCode(&fragShaderCode);
+	standardfrag->Compile(fragShaderCode);
 
 	_SmallBranchProgram = std::make_unique<GLProgram>(standardvert, standardfrag);
 
 	fragShaderCode = std::string("#version 460 core\n") +
 		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/SmallBranchCopy.frag");
 	standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
-	standardvert->SetCode(&vertShaderCode);
+	standardvert->Compile(vertShaderCode);
 	standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
-	standardfrag->SetCode(&fragShaderCode);
+	standardfrag->Compile(fragShaderCode);
 
 	_SmallBranchCopyProgram = std::make_unique<GLProgram>(standardvert, standardfrag);
 	
@@ -343,7 +343,29 @@ void DataCollectionSystem::OnCreate()
 	PushImageCaptureSequence(sequence);
 #pragma endregion
 
-	
+#pragma region MaskTrimmer
+	MaskTrimmer::_ResolutionX = _TargetResolution;
+	MaskTrimmer::_ResolutionY = _TargetResolution;
+	MaskTrimmer::_CameraEntity = _SemanticMaskCameraEntity;
+	MaskTrimmer::_Filter = std::make_unique<RenderTarget>(_TargetResolution, _TargetResolution);
+	MaskTrimmer::_DepthStencilBuffer = std::make_unique<GLRenderBuffer>();
+	MaskTrimmer::_DepthStencilBuffer->AllocateStorage(GL_DEPTH24_STENCIL8, _TargetResolution, _TargetResolution);
+	MaskTrimmer::_Filter->AttachRenderBuffer(MaskTrimmer::_DepthStencilBuffer.get(), GL_DEPTH_STENCIL_ATTACHMENT);
+
+	vertShaderCode = std::string("#version 460 core\n") +
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/TreeUtilities/LightSnapShot.vert");
+	fragShaderCode = std::string("#version 460 core\n") +
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/TreeUtilities/LightSnapShot.frag");
+	auto vertShader = std::make_shared<GLShader>(ShaderType::Vertex, vertShaderCode);
+	auto fragShader = std::make_shared<GLShader>(ShaderType::Fragment, fragShaderCode);
+	MaskTrimmer::_FilterProgram = std::make_unique<GLProgram>(vertShader, fragShader);
+		/*
+		 * static std::unique_ptr<GLProgram> _FilterProgram;
+		static std::unique_ptr<RenderTarget> _Filter;
+		static std::unique_ptr<GLRenderBuffer> _DepthStencilBuffer;
+		 */
+#pragma endregion
+
 	Enable();
 }
 

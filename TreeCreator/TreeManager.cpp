@@ -11,6 +11,7 @@
 #include "BirchFoliageGenerator.h"
 #include "CakeTower.h"
 #include "KDop.h"
+#include "MaskTrimmer.h"
 #include "rapidjson/prettywriter.h"
 #include "Ray.h"
 using namespace TreeUtilities;
@@ -184,9 +185,9 @@ void TreeUtilities::TreeManager::Init()
 		+ FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/SemanticBranch.frag");
 
 	auto standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
-	standardvert->SetCode(&vertShaderCode);
+	standardvert->Compile(vertShaderCode);
 	auto standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
-	standardfrag->SetCode(&fragShaderCode);
+	standardfrag->Compile(fragShaderCode);
 	auto branchProgram = std::make_shared<GLProgram>(standardvert, standardfrag);
 	
 
@@ -199,9 +200,9 @@ void TreeUtilities::TreeManager::Init()
 		+ "\n"
 		+ FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/SemanticLeaf.frag");
 	standardvert = std::make_shared<GLShader>(ShaderType::Vertex);
-	standardvert->SetCode(&vertShaderCode);
+	standardvert->Compile(vertShaderCode);
 	standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
-	standardfrag->SetCode(&fragShaderCode);
+	standardfrag->Compile(fragShaderCode);
 	auto leafProgram = std::make_shared<GLProgram>(standardvert, standardfrag);
 	
 	SemanticTreeBranchMaterial = std::make_shared<Material>();
@@ -486,6 +487,7 @@ Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurf
 	EntityManager::SetPrivateComponent(entity, std::make_unique<TreeData>());
 	//EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<KDop>()));
 	EntityManager::SetPrivateComponent(entity, std::make_unique<CakeTower>());
+	EntityManager::SetPrivateComponent(entity, std::make_unique<MaskTrimmer>());
 	EntityManager::SetComponentData(entity, _TreeIndex);
 	auto mmc = std::make_unique<MeshRenderer>();
 	mmc->Material = std::move(treeSurfaceMaterial);

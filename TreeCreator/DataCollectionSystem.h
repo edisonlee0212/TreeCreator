@@ -87,8 +87,8 @@ namespace TreeUtilities {
 		PlantSimulationSystem* _PlantSimulationSystem = nullptr;
 		Entity _ImageCameraEntity;
 		Entity _SemanticMaskCameraEntity;
-		glm::vec3 _CameraPosition = glm::vec3(0);
-		glm::vec3 _CameraEulerRotation = glm::vec3(0);
+		glm::vec3 _CameraPosition = glm::vec3(0, 2, 25);
+		glm::vec3 _CameraEulerRotation = glm::radians(glm::vec3(15, 0, 0));
 		std::vector<std::pair<ImageCaptureSequence, TreeParameters>> _ImageCaptureSequences;
 		std::vector<ParamsOutput> _TreeParametersOutputList;
 		std::vector<KDopOutput> _KDopsOutputList;
