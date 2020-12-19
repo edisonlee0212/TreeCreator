@@ -22,6 +22,11 @@
 #include "BirchFoliageGenerator.h"
 
 #include "TreeVolume.h"
+
+float TreeUtilities::PlantSimulationSystem::_MeshGenerationResolution = 0.01f;
+float TreeUtilities::PlantSimulationSystem::_MeshGenerationSubdivision = 0.1f;
+
+
 void TreeUtilities::PlantSimulationSystem::FixedUpdate()
 {
 

@@ -15,6 +15,7 @@ namespace TreeUtilities {
 		public SystemBase
 	{
 		friend class DataCollectionSystem;
+		friend class MaskTrimmer;
 #pragma region Stuff
 		bool _AutoGenerateMesh = true;
 		float _GrowthTimer;
@@ -26,8 +27,8 @@ namespace TreeUtilities {
 		char _TempImportFilePath[256] = {};
 		char _TempExportFilePath[256] = {};
 		int _NewPushIteration = 0;
-		float _MeshGenerationResolution = 0.01f;
-		float _MeshGenerationSubdivision = 0.1f;
+		static float _MeshGenerationResolution;
+		static float _MeshGenerationSubdivision;
 		int _NewTreeAmount = 1;
 		int _CurrentFocusedNewTreeIndex = 0;
 		std::vector<TreeParameters> _NewTreeParameters;

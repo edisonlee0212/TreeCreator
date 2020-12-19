@@ -1,6 +1,6 @@
 #include "MaskTrimmer.h"
 #include "TreeManager.h"
-
+#include "PlantSimulationSystem.h"
 Entity TreeUtilities::MaskTrimmer::_CameraEntity;
 unsigned TreeUtilities::MaskTrimmer::_ResolutionX;
 unsigned TreeUtilities::MaskTrimmer::_ResolutionY;
@@ -94,6 +94,9 @@ void TreeUtilities::MaskTrimmer::Filter() const
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	Default::GLPrograms::ScreenVAO->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	_FilteredResult->Bind(0);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, (void*)_Data.data());
 }
 
 TreeUtilities::MaskTrimmer::MaskTrimmer()
@@ -109,6 +112,7 @@ TreeUtilities::MaskTrimmer::MaskTrimmer()
 	_FilteredResult->SetInt(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	_FilteredResult->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	_FilteredResult->SetInt(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	_Data.resize(_ResolutionX * _ResolutionY);
 	_Mask = nullptr;
 }
 
@@ -116,9 +120,16 @@ void TreeUtilities::MaskTrimmer::Trim()
 {
 	if (!_Mask || !_CameraEntity.IsValid()) return;
 	Filter();
-	auto& cameraComponent = _CameraEntity.GetPrivateComponent<CameraComponent>();
-	Entity tree = GetOwner();
-
+	for(const auto i : _Data)
+	{
+		if(i != 0)
+		{
+			Entity entity = EntityManager::GetEntity(i);
+			if (!entity.IsDeleted()) EntityManager::DeleteEntity(entity);
+		}
+	}
+	if(EntityManager::HasPrivateComponent<FoliageGeneratorBase>(GetOwner()))EntityManager::GetPrivateComponent<FoliageGeneratorBase>(GetOwner())->Generate();
+	TreeManager::GenerateSimpleMeshForTree(GetOwner(), PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
 }
 
 void TreeUtilities::MaskTrimmer::OnGui()

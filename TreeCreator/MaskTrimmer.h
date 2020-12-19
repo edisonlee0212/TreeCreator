@@ -16,6 +16,7 @@ namespace TreeUtilities {
 		std::unique_ptr<GLTexture2D> _InternodeCaptureResult;
 		std::unique_ptr<GLTexture2D> _FilteredResult;
 		std::shared_ptr<Texture2D> _Mask;
+		std::vector<float> _Data;
 		float _InternodeSize = 0.075f;
 	public:
 		void ShotInternodes() const;
