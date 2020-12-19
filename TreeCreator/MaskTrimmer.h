@@ -18,6 +18,8 @@ namespace TreeUtilities {
 		std::shared_ptr<Texture2D> _Mask;
 		std::vector<float> _Data;
 		float _InternodeSize = 0.075f;
+		float _IgnoreMaxHeight = 0.3f;
+		float _IgnoreWidth = 0.1f;
 	public:
 		void ShotInternodes() const;
 		void Filter() const;

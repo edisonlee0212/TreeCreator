@@ -91,6 +91,8 @@ void TreeUtilities::MaskTrimmer::Filter() const
 	_Mask->Texture()->Bind(1);
 	_FilterProgram->SetInt("InputTex", 0);
 	_FilterProgram->SetInt("MaskTex", 1);
+	_FilterProgram->SetFloat("IgnoreMaxHeight", _IgnoreMaxHeight);
+	_FilterProgram->SetFloat("IgnoreWidth", _IgnoreWidth);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	Default::GLPrograms::ScreenVAO->Bind();
 	glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -134,7 +136,9 @@ void TreeUtilities::MaskTrimmer::Trim()
 
 void TreeUtilities::MaskTrimmer::OnGui()
 {
-	ImGui::DragFloat("Internode size", &_InternodeSize);
+	ImGui::DragFloat("Internode size", &_InternodeSize, 0.001f, 0.02f, 1.0f);
+	ImGui::DragFloat("Height ignore", &_IgnoreMaxHeight, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat("Width ignore", &_IgnoreWidth, 0.01f, 0.0f, 0.5f);
 	if (ImGui::Button("ShotInternodes"))
 	{
 		ShotInternodes();

@@ -6,7 +6,8 @@ in VS_OUT {
 
 uniform sampler2D InputTex;
 uniform sampler2D MaskTex;
-
+uniform float IgnoreMaxHeight;
+uniform float IgnoreWidth;
 void main()
 {
 	float delta = 1.0 / textureSize(InputTex, 0).y;
@@ -16,5 +17,6 @@ void main()
 	{
 		originalColor = vec3(0.0, 0.0, 0.0);
 	}
+	if(vs_in.TexCoords.x > 0.5 - IgnoreWidth && vs_in.TexCoords.x < 0.5 + IgnoreWidth && vs_in.TexCoords.y > 0.0 && vs_in.TexCoords.y < IgnoreMaxHeight) originalColor = vec3(9999999.0, 1.0, 1.0);
 	FragColor = originalColor;
 }
