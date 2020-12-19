@@ -100,9 +100,9 @@ TreeUtilities::LightEstimator::LightEstimator(size_t resolution, float centerDis
 	_RenderTarget->AttachRenderBuffer(_DepthBuffer, GL_DEPTH_ATTACHMENT);
 
 	std::string vertShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/TreeUtilities/LightSnapShot.vert");
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Vertex/LightSnapShot.vert");
 	std::string fragShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/TreeUtilities/LightSnapShot.frag");
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/LightSnapShot.frag");
 
 	_SnapShotProgram = std::make_unique<GLProgram>(
 		std::make_shared<GLShader>(ShaderType::Vertex, vertShaderCode),

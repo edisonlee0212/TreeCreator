@@ -353,17 +353,21 @@ void DataCollectionSystem::OnCreate()
 	MaskTrimmer::_Filter->AttachRenderBuffer(MaskTrimmer::_DepthStencilBuffer.get(), GL_DEPTH_STENCIL_ATTACHMENT);
 
 	vertShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/TreeUtilities/LightSnapShot.vert");
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Vertex/LightSnapShot.vert");
 	fragShaderCode = std::string("#version 460 core\n") +
-		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/TreeUtilities/LightSnapShot.frag");
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/LightSnapShot.frag");
 	auto vertShader = std::make_shared<GLShader>(ShaderType::Vertex, vertShaderCode);
 	auto fragShader = std::make_shared<GLShader>(ShaderType::Fragment, fragShaderCode);
+	MaskTrimmer::_InternodeCaptureProgram = std::make_unique<GLProgram>(vertShader, fragShader);
+
+	
+	vertShaderCode = std::string("#version 460 core\n") +
+		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/TexturePassThrough.vert"));
+	fragShaderCode = std::string("#version 460 core\n") +
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/MaskFilter.frag");
+	vertShader = std::make_shared<GLShader>(ShaderType::Vertex, vertShaderCode);
+	fragShader = std::make_shared<GLShader>(ShaderType::Fragment, fragShaderCode);
 	MaskTrimmer::_FilterProgram = std::make_unique<GLProgram>(vertShader, fragShader);
-		/*
-		 * static std::unique_ptr<GLProgram> _FilterProgram;
-		static std::unique_ptr<RenderTarget> _Filter;
-		static std::unique_ptr<GLRenderBuffer> _DepthStencilBuffer;
-		 */
 #pragma endregion
 
 	Enable();

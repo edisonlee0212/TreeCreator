@@ -4,6 +4,7 @@
 Entity TreeUtilities::MaskTrimmer::_CameraEntity;
 unsigned TreeUtilities::MaskTrimmer::_ResolutionX;
 unsigned TreeUtilities::MaskTrimmer::_ResolutionY;
+std::unique_ptr<GLProgram> TreeUtilities::MaskTrimmer::_InternodeCaptureProgram;
 std::unique_ptr<GLProgram> TreeUtilities::MaskTrimmer::_FilterProgram;
 std::unique_ptr<RenderTarget> TreeUtilities::MaskTrimmer::_Filter;
 std::unique_ptr<GLRenderBuffer> TreeUtilities::MaskTrimmer::_DepthStencilBuffer;
@@ -57,16 +58,16 @@ void TreeUtilities::MaskTrimmer::ShotInternodes() const
 	const glm::mat4 scale = glm::scale(glm::identity<glm::mat4>(), glm::vec3(1.0f));
 	const glm::mat4 model = translation * scale;
 	_Filter->Bind();
-	_FilterProgram->Bind();
+	_InternodeCaptureProgram->Bind();
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_BLEND);
-	_Filter->AttachTexture(_Result.get(), GL_COLOR_ATTACHMENT0);
+	_Filter->AttachTexture(_InternodeCaptureResult.get(), GL_COLOR_ATTACHMENT0);
 	_Filter->Clear();
 	if (count != 0) {
 		const auto position = cameraTransform.GetPosition();
 		const auto rotation = cameraTransform.GetRotation();
-		_FilterProgram->SetFloat4x4("lightSpaceMatrix", _CameraEntity.GetPrivateComponent<CameraComponent>()->GetProjection() * glm::lookAt(position, position + rotation * glm::vec3(0, 0, -1), rotation * glm::vec3(0, 1, 0)));
-		_FilterProgram->SetFloat4x4("model", model);
+		_InternodeCaptureProgram->SetFloat4x4("lightSpaceMatrix", _CameraEntity.GetPrivateComponent<CameraComponent>()->GetProjection() * glm::lookAt(position, position + rotation * glm::vec3(0, 0, -1), rotation * glm::vec3(0, 1, 0)));
+		_InternodeCaptureProgram->SetFloat4x4("model", model);
 		glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)mesh->Size(), GL_UNSIGNED_INT, 0, (GLsizei)count);
 	}
 
@@ -78,21 +79,36 @@ void TreeUtilities::MaskTrimmer::ShotInternodes() const
 	RenderTarget::BindDefault();
 }
 
-void TreeUtilities::MaskTrimmer::Filter()
+void TreeUtilities::MaskTrimmer::Filter() const
 {
 	if (!_Mask || !_CameraEntity.IsValid()) return;
 	ShotInternodes();
-	Entity tree = GetOwner();
-
+	_Filter->AttachTexture(_FilteredResult.get(), GL_COLOR_ATTACHMENT0);
+	_Filter->GetFrameBuffer()->DrawBuffer(GL_COLOR_ATTACHMENT0);
+	_Filter->Bind();
+	_FilterProgram->Bind();
+	_InternodeCaptureResult->Bind(0);
+	_Mask->Texture()->Bind(1);
+	_FilterProgram->SetInt("InputTex", 0);
+	_FilterProgram->SetInt("MaskTex", 1);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	Default::GLPrograms::ScreenVAO->Bind();
+	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 TreeUtilities::MaskTrimmer::MaskTrimmer()
 {
-	_Result = std::make_unique<GLTexture2D>(1, GL_R32F, _ResolutionX, _ResolutionY);
-	_Result->SetInt(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	_Result->SetInt(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	_Result->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	_Result->SetInt(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	_InternodeCaptureResult = std::make_unique<GLTexture2D>(1, GL_R32F, _ResolutionX, _ResolutionY);
+	_InternodeCaptureResult->SetInt(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	_InternodeCaptureResult->SetInt(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	_InternodeCaptureResult->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	_InternodeCaptureResult->SetInt(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+	_FilteredResult = std::make_unique<GLTexture2D>(1, GL_R32F, _ResolutionX, _ResolutionY);
+	_FilteredResult->SetInt(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	_FilteredResult->SetInt(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	_FilteredResult->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	_FilteredResult->SetInt(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	_Mask = nullptr;
 }
 
@@ -120,11 +136,13 @@ void TreeUtilities::MaskTrimmer::OnGui()
 	{
 		Trim();
 	}
-	ImGui::Text("TargetMask: ");
+	ImGui::Text("Target Mask: ");
 	EditorManager::DragAndDrop(_Mask);
 	ImGui::Text("Content: ");
-	if (_Mask)ImGui::Image((ImTextureID)_Mask->Texture()->ID(), ImVec2(320, 320), ImVec2(0, 1), ImVec2(1, 0));
+	if (_Mask)ImGui::Image((ImTextureID)_Mask->Texture()->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::Separator();
-	ImGui::Text("Result: ");
-	ImGui::Image((ImTextureID)_Result->ID(), ImVec2(320, 320), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Text("Internode Capture: ");
+	ImGui::Image((ImTextureID)_InternodeCaptureResult->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Text("Filtered Result: ");
+	ImGui::Image((ImTextureID)_FilteredResult->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
 }

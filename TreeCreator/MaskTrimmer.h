@@ -9,15 +9,17 @@ namespace TreeUtilities {
 		static Entity _CameraEntity;
 		static unsigned _ResolutionX;
 		static unsigned _ResolutionY;
+		static std::unique_ptr<GLProgram> _InternodeCaptureProgram;
 		static std::unique_ptr<GLProgram> _FilterProgram;
 		static std::unique_ptr<RenderTarget> _Filter;
 		static std::unique_ptr<GLRenderBuffer> _DepthStencilBuffer;
-		std::unique_ptr<GLTexture2D> _Result;
+		std::unique_ptr<GLTexture2D> _InternodeCaptureResult;
+		std::unique_ptr<GLTexture2D> _FilteredResult;
 		std::shared_ptr<Texture2D> _Mask;
 		float _InternodeSize = 0.075f;
 	public:
 		void ShotInternodes() const;
-		void Filter();
+		void Filter() const;
 		MaskTrimmer();
 		void Trim();
 		void OnGui() override;
