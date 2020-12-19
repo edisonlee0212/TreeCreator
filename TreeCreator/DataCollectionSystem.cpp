@@ -203,6 +203,7 @@ void DataCollectionSystem::OnCreate()
 	auto cameraComponent = std::make_unique<CameraComponent>();
 	cameraComponent->ResizeResolution(_CaptureResolution, _CaptureResolution);
 	cameraComponent->DrawSkyBox = false;
+	cameraComponent->AllowAutoResize = false;
 	cameraComponent->ClearColor = glm::vec3(1.0f);
 	_ImageCameraEntity.SetName("ImageCap Camera");
 	_ImageCameraEntity.SetPrivateComponent(std::move(cameraComponent));
@@ -215,6 +216,7 @@ void DataCollectionSystem::OnCreate()
 	cameraComponent = std::make_unique<CameraComponent>();
 	cameraComponent->ResizeResolution(_TargetResolution, _TargetResolution);
 	cameraComponent->DrawSkyBox = false;
+	cameraComponent->AllowAutoResize = false;
 	cameraComponent->ClearColor = glm::vec3(1.0f);
 	_SemanticMaskCameraEntity.SetName("Semantic Mask Camera");
 	_SemanticMaskCameraEntity.SetPrivateComponent(std::move(cameraComponent));

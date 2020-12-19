@@ -227,8 +227,12 @@ void EngineSetup()
 	WorldTime* time = world->Time();
 
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", GlobalTransform(), Transform());
-	CameraControlSystem* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);
-	ccs->Enable();
+	const bool enableCameraControl = false;
+	if (enableCameraControl) {
+		CameraControlSystem* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);
+		ccs->Enable();
+		ccs->SetVelocity(15.0f);
+	}
 	transform = Transform();
 	transform.SetPosition(glm::vec3(0, 2, 35));
 	transform.SetEulerRotation(glm::radians(glm::vec3(15, 0, 0)));
@@ -238,7 +242,6 @@ void EngineSetup()
 		mainCamera->DrawSkyBox = false;
 		mainCamera->ClearColor = glm::vec3(1.0f);
 	}
-	ccs->SetVelocity(15.0f);
 
 #pragma endregion
 	TreeManager::Init();
