@@ -9,5 +9,5 @@ in VS_OUT {
 
 void main()
 {
-	FragColor = texture(TEXTURE_DIFFUSE0, fs_in.TexCoords).rgba;
+	FragColor = texture(UE_DIFFUSE_MAP, fs_in.TexCoords).rgba;
 }

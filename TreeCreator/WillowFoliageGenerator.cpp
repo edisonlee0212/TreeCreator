@@ -12,19 +12,19 @@ TreeUtilities::WillowFoliageGenerator::WillowFoliageGenerator()
 	_Archetype = EntityManager::CreateEntityArchetype("Willow Foliage", Transform(), GlobalTransform(), TreeIndex(), WillowFoliageInfo());
 
 	_BranchletMaterial = std::make_shared<Material>();
-	_BranchletMaterial->SetMaterialProperty("material.shininess", 32.0f);
+	_BranchletMaterial->Shininess = 32.0f;
 	_BranchletMaterial->SetProgram(Default::GLPrograms::StandardProgram);
 	_BranchletSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_baseColor.jpg");
-	_BranchletMaterial->SetTexture(_BranchletSurfaceTex, TextureType::DIFFUSE);
+	_BranchletMaterial->SetTexture(_BranchletSurfaceTex);
 
 	_LeafMaterial = std::make_shared<Material>();
-	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
-	_LeafMaterial->TransparentDiscard = true;
-	_LeafMaterial->TransparentDiscardLimit = 0.2f;
+	_LeafMaterial->Shininess = 32.0f;
+	_LeafMaterial->AlphaDiscardEnabled = true;
+	_LeafMaterial->AlphaDiscardOffset = 0.2f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/Willow/level0.png");
-	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
+	_LeafMaterial->SetTexture(_LeafSurfaceTex);
 }
 
 void TreeUtilities::WillowFoliageGenerator::Generate()

@@ -644,14 +644,14 @@ Entity PlantSimulationSystem::CreateTree(TreeParameters parameters, glm::vec3 po
 	{
 	case 7:
 		mat->Shininess = 1024;
-		mat->SetTexture(_DefaultTreeSurfaceSurfTex2, TextureType::DIFFUSE);
-		mat->SetTexture(_DefaultTreeSurfaceNormTex2, TextureType::NORMAL);
-		mat->SetTexture(_DefaultTreeSurfaceSpecTex2, TextureType::SPECULAR);
+		mat->SetTexture(_DefaultTreeSurfaceSurfTex2);
+		mat->SetTexture(_DefaultTreeSurfaceNormTex2);
+		mat->SetTexture(_DefaultTreeSurfaceSpecTex2);
 		break;
 	default:
 		mat->Shininess = 1024;
-		mat->SetTexture(_DefaultTreeSurfaceSurfTex1, TextureType::DIFFUSE);
-		mat->SetTexture(_DefaultTreeSurfaceNormTex1, TextureType::NORMAL);
+		mat->SetTexture(_DefaultTreeSurfaceSurfTex1);
+		mat->SetTexture(_DefaultTreeSurfaceNormTex1);
 		break;
 	}
 	return CreateTree(mat, parameters, position, enabled);
@@ -1450,16 +1450,16 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	}
 
 	_DefaultConvexHullSurfaceMaterial = std::make_shared<Material>();
-	_DefaultConvexHullSurfaceMaterial->SetMaterialProperty("material.shininess", 32.0f);
+	_DefaultConvexHullSurfaceMaterial->Shininess = 32.0f;
 	_DefaultConvexHullSurfaceMaterial->SetProgram(Default::GLPrograms::StandardProgram);
-	_DefaultConvexHullSurfaceMaterial->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
+	_DefaultConvexHullSurfaceMaterial->SetTexture(Default::Textures::StandardTexture);
 
-	_DefaultTreeSurfaceSurfTex1 = ResourceManager::LoadTexture((FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_baseColor.jpg"));
-	_DefaultTreeSurfaceNormTex1 = ResourceManager::LoadTexture((FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_normal.jpg"));
+	_DefaultTreeSurfaceSurfTex1 = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_baseColor.jpg", TextureType::ALBEDO);
+	_DefaultTreeSurfaceNormTex1 = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_normal.jpg", TextureType::NORMAL);
 	
-	_DefaultTreeSurfaceSurfTex2 = ResourceManager::LoadTexture((FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg"));
-	_DefaultTreeSurfaceSpecTex2 = ResourceManager::LoadTexture((FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg"));
-	_DefaultTreeSurfaceNormTex2 = ResourceManager::LoadTexture((FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_NORM.jpg"));
+	_DefaultTreeSurfaceSurfTex2 = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg", TextureType::ALBEDO);
+	_DefaultTreeSurfaceSpecTex2 = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg", TextureType::SPECULAR);
+	_DefaultTreeSurfaceNormTex2 = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_NORM.jpg", TextureType::NORMAL);
 
 	_NewTreeParameters.resize(1);
 	LoadDefaultTreeParameters(1, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);

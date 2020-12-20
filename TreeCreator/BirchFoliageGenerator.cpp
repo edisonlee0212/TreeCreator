@@ -7,13 +7,13 @@ TreeUtilities::BirchFoliageGenerator::BirchFoliageGenerator()
 	_Archetype = EntityManager::CreateEntityArchetype("Birch Foliage", Transform(), GlobalTransform(), TreeIndex(), BirchFoliageInfo());
 
 	_LeafMaterial = std::make_shared<Material>();
-	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
+	_LeafMaterial->Shininess = 32.0f;
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	_LeafMaterial->TransparentDiscard = true;
-	_LeafMaterial->TransparentDiscardLimit = 0.7f;
+	_LeafMaterial->AlphaDiscardEnabled = true;
+	_LeafMaterial->AlphaDiscardOffset = 0.7f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/PrunusAvium/A/level0.png");
-	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
+	_LeafMaterial->SetTexture(_LeafSurfaceTex);
 }
 
 void TreeUtilities::BirchFoliageGenerator::Generate()

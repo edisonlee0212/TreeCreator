@@ -6,13 +6,13 @@ TreeUtilities::MapleFoliageGenerator::MapleFoliageGenerator()
 	_Archetype = EntityManager::CreateEntityArchetype("Pine Foliage", Transform(), GlobalTransform(), TreeIndex(), MapleFoliageInfo());
 
 	_LeafMaterial = std::make_shared<Material>();
-	_LeafMaterial->SetMaterialProperty("material.shininess", 32.0f);
-	_LeafMaterial->TransparentDiscard = true;
-	_LeafMaterial->TransparentDiscardLimit = 0.5f;
+	_LeafMaterial->Shininess = 32.0f;
+	_LeafMaterial->AlphaDiscardEnabled = true;
+	_LeafMaterial->AlphaDiscardOffset = 0.5f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/maple.png");
-	_LeafMaterial->SetTexture(_LeafSurfaceTex, TextureType::DIFFUSE);
+	_LeafMaterial->SetTexture(_LeafSurfaceTex);
 }
 
 void TreeUtilities::MapleFoliageGenerator::Generate()

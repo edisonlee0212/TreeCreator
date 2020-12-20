@@ -380,25 +380,25 @@ void SorghumReconstruction::SorghumReconstructionSystem::OnCreate()
 	_StemMaterial->SetProgram(Default::GLPrograms::StandardProgram);
 	_StemMaterial->CullingMode = MaterialCullingMode::OFF;
 	auto textureDiffuseTruck = ResourceManager::LoadTexture(FileIO::GetResourcePath("Textures/brown.png"));
-	_StemMaterial->SetTexture(textureDiffuseTruck, TextureType::DIFFUSE);
-	_StemMaterial->SetMaterialProperty("material.shininess", 1.0f);
+	_StemMaterial->SetTexture(textureDiffuseTruck);
+	_StemMaterial->Shininess = 1.0f;
 	_LeafMaterial = std::make_shared<Material>();
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardProgram);
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	auto textureLeaf = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafSurfaceDark.jpg");
-	_LeafMaterial->SetTexture(textureLeaf, TextureType::DIFFUSE);
-	_LeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
+	_LeafMaterial->SetTexture(textureLeaf);
+	_LeafMaterial->Shininess = 1.0f;
 	_InstancedStemMaterial = std::make_shared<Material>();
 	_InstancedStemMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	_InstancedStemMaterial->SetTexture(textureDiffuseTruck, TextureType::DIFFUSE);
+	_InstancedStemMaterial->SetTexture(textureDiffuseTruck);
 	_InstancedStemMaterial->CullingMode = MaterialCullingMode::OFF;
 	
-	_InstancedStemMaterial->SetMaterialProperty("material.shininess", 0.5f);
+	_InstancedStemMaterial->Shininess = 0.5f;
 	_InstancedLeafMaterial = std::make_shared<Material>();
 	_InstancedLeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	_InstancedLeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	_InstancedLeafMaterial->SetTexture(textureLeaf, TextureType::DIFFUSE);
-	_InstancedLeafMaterial->SetMaterialProperty("material.shininess", 1.0f);
+	_InstancedLeafMaterial->SetTexture(textureLeaf);
+	_InstancedLeafMaterial->Shininess = 1.0f;
 	Enable();
 }
 

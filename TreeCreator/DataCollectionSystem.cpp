@@ -239,7 +239,7 @@ void DataCollectionSystem::OnCreate()
 
 
 	_BackgroundMaterial = std::make_shared<Material>();
-	_BackgroundMaterial->SetMaterialProperty("material.shininess", 32.0f);
+	_BackgroundMaterial->Shininess = 32.0f;
 	std::string vertShaderCode = std::string("#version 460 core\n")
 		+ *Default::ShaderIncludes::Uniform +
 		+"\n"
@@ -422,7 +422,7 @@ void DataCollectionSystem::Update()
 			path, _TargetResolution, _TargetResolution);
 
 		_Status = DataCollectionSystemStatus::CaptureRandom;
-		_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)], TextureType::DIFFUSE);
+		_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)]);
 		_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(true);
 		break;
 	case DataCollectionSystemStatus::CaptureRandom:

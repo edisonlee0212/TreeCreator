@@ -227,7 +227,7 @@ void EngineSetup()
 	WorldTime* time = world->Time();
 
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", GlobalTransform(), Transform());
-	const bool enableCameraControl = false;
+	const bool enableCameraControl = true;
 	if (enableCameraControl) {
 		CameraControlSystem* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);
 		ccs->Enable();
@@ -281,18 +281,23 @@ void InitGround() {
 	entity.SetName("Ground");
 	Transform transform;
 	transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	transform.SetScale(glm::vec3(40.0f, 20.0f, 20.0f));
+	transform.SetScale(glm::vec3(10.0f, 10.0f, 10.0f));
 	EntityManager::SetComponentData(entity, transform);
 
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureD = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/dirt_01_diffuse.jpg");
-	mat->SetTexture(Default::Textures::StandardTexture, TextureType::DIFFUSE);
-	auto textureN = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/dirt_01_normal.jpg");
-	//mat->SetTexture(textureN, TextureType::NORMAL);
-	//auto textureH = AssetManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/dirt_01_height.jpg");
-	//mat->SetTexture(textureH, TextureType::DISPLACEMENT);
-
+	auto textureD = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-albedo.png", TextureType::ALBEDO);
+	mat->SetTexture(textureD);
+	auto textureN = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-normal-ogl.png", TextureType::NORMAL);
+	mat->SetTexture(textureN);
+	auto textureH = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-height.png", TextureType::DISPLACEMENT);
+	mat->SetTexture(textureH);
+	auto textureA = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-ao.png", TextureType::AO);
+	mat->SetTexture(textureA);
+	auto textureM = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-metallic.png", TextureType::METALLIC);
+	mat->SetTexture(textureM);
+	auto textureR = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-roughness.png", TextureType::ROUGHNESS);
+	mat->SetTexture(textureR);
 	mat->Shininess = 32.0f;
 	auto meshMaterial = std::make_unique<MeshRenderer>();
 	meshMaterial->Mesh = Default::Primitives::Quad;
