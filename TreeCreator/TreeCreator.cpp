@@ -7,6 +7,8 @@
 #include "TreeManager.h"
 #include "SorghumReconstructionSystem.h"
 #include "DataCollectionSystem.h"
+#include "Bloom.h"
+#include "SSAO.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
 using namespace SorghumReconstruction;
@@ -204,11 +206,11 @@ void EngineSetup()
 #pragma region Engine Setup
 #pragma region Global light settings
 	RenderManager::SetPCSSScaleFactor(1.0f);
-	RenderManager::SetSSAOKernelBias(0.08);
-	RenderManager::SetSSAOKernelRadius(0.05f);
-	RenderManager::SetSSAOSampleSize(32);
+	//RenderManager::SetSSAOKernelBias(0.08);
+	//RenderManager::SetSSAOKernelRadius(0.05f);
+	//RenderManager::SetSSAOSampleSize(32);
 	RenderManager::SetAmbientLight(0.5f);
-	RenderManager::SetSSAOFactor(10.0f);
+	//RenderManager::SetSSAOFactor(10.0f);
 	RenderManager::SetShadowMapResolution(4096);
 	RenderManager::SetStableFit(false);
 	RenderManager::SetSeamFixRatio(0.05f);
@@ -229,7 +231,7 @@ void EngineSetup()
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", GlobalTransform(), Transform());
 	const bool enableCameraControl = true;
 	if (enableCameraControl) {
-		CameraControlSystem* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);
+		auto* ccs = world->CreateSystem<CameraControlSystem>(SystemGroup::SimulationSystemGroup);
 		ccs->Enable();
 		ccs->SetVelocity(15.0f);
 	}
@@ -241,6 +243,11 @@ void EngineSetup()
 		mainCamera->GetOwner().SetComponentData(transform);
 		mainCamera->DrawSkyBox = false;
 		mainCamera->ClearColor = glm::vec3(1.0f);
+		auto postProcessing = std::make_unique<PostProcessing>();
+		
+		postProcessing->PushLayer(std::make_unique<Bloom>());
+		postProcessing->PushLayer(std::make_unique<SSAO>());
+		mainCamera->GetOwner().SetPrivateComponent(std::move(postProcessing));
 	}
 
 #pragma endregion
@@ -276,8 +283,7 @@ void EngineSetup()
 }
 
 void InitGround() {
-	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", Transform(), GlobalTransform());
-	auto entity = EntityManager::CreateEntity(archetype);
+	const auto entity = EntityManager::CreateEntity();
 	entity.SetName("Ground");
 	Transform transform;
 	transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
@@ -286,17 +292,17 @@ void InitGround() {
 
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
-	auto textureD = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-albedo.png", TextureType::ALBEDO);
-	mat->SetTexture(textureD);
-	auto textureN = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-normal-ogl.png", TextureType::NORMAL);
+	const auto textureD = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-albedo.png", TextureType::ALBEDO);
+	mat->SetTexture(Default::Textures::StandardTexture);
+	const auto textureN = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-normal-ogl.png", TextureType::NORMAL);
 	mat->SetTexture(textureN);
-	auto textureH = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-height.png", TextureType::DISPLACEMENT);
+	const auto textureH = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-height.png", TextureType::DISPLACEMENT);
 	mat->SetTexture(textureH);
-	auto textureA = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-ao.png", TextureType::AO);
+	const auto textureA = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-ao.png", TextureType::AO);
 	mat->SetTexture(textureA);
-	auto textureM = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-metallic.png", TextureType::METALLIC);
+	const auto textureM = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-metallic.png", TextureType::METALLIC);
 	mat->SetTexture(textureM);
-	auto textureR = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-roughness.png", TextureType::ROUGHNESS);
+	const auto textureR = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-roughness.png", TextureType::ROUGHNESS);
 	mat->SetTexture(textureR);
 	mat->Shininess = 32.0f;
 	auto meshMaterial = std::make_unique<MeshRenderer>();
@@ -304,6 +310,7 @@ void InitGround() {
 	meshMaterial->Material = mat;
 	meshMaterial->ReceiveShadow = true;
 	meshMaterial->ForwardRendering = false;
+	meshMaterial->Material->DisplacementMapScale = -0.02f;
 	EntityManager::SetPrivateComponent<MeshRenderer>(entity, std::move(meshMaterial));
 }
 
