@@ -317,13 +317,13 @@ void CakeTower::CalculateVolume()
 		}
 	);
 	_MaxHeight = 0;
-	//_MaxRadius = 0;
+	_MaxRadius = 0;
 	for (auto& i : internodeInfos)
 	{
 		const glm::vec3 position = i.GlobalTransform[3];
 		if (position.y > _MaxHeight) _MaxHeight = position.y;
-		//const float radius = glm::length(glm::vec2(position.x, position.z));
-		//if (radius > _MaxRadius) _MaxRadius = radius;
+		const float radius = glm::length(glm::vec2(position.x, position.z));
+		if (radius > _MaxRadius) _MaxRadius = radius;
 	}
 
 	CakeTiers.resize(SliceAmount);
@@ -364,6 +364,21 @@ bool CakeTower::InVolume(glm::vec3 position) const
 
 void CakeTower::OnGui()
 {
+	ImGui::DragFloat("Remove Distance", &_RemoveDistance);
+	ImGui::DragFloat("Attract Distance", &_AttractDistance);
+	ImGui::DragInt("AP Count", &_AttractionPointsCount);
+	if(ImGui::Button("Generate attraction points"))
+	{
+		ClearAttractionPoints();
+		GenerateAttractionPoints(_AttractionPointsCount);
+	}
+	if(_Display)
+	{
+		const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
+		std::vector<GlobalTransform> points;
+		TreeManager::GetAttractionPointQuery().ToComponentDataArray(treeIndex, points);
+		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), 0.1f);
+	}
 	ImGui::Checkbox("Prune Buds", &_PruneBuds);
 	ImGui::Checkbox("Display bounds", &_Display);
 	ImGui::ColorEdit4("Display Color", &DisplayColor.x);
@@ -411,4 +426,12 @@ void CakeTower::OnGui()
 			RenderManager::DrawGizmoMesh(i.get(), DisplayColor, GetOwner().GetComponentData<GlobalTransform>().Value);
 		}
 	}
+}
+
+void CakeTower::GenerateAttractionPoints(int amount) 
+{
+	if (!_MeshGenerated) CalculateVolume();
+	glm::vec3 min = glm::vec3(-_MaxRadius, 0, -_MaxRadius);
+	glm::vec3 max = glm::vec3(_MaxRadius, _MaxHeight, _MaxRadius);
+	TreeVolume::GenerateAttractionPoints(min, max, amount);
 }

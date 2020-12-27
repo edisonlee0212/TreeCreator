@@ -10,6 +10,7 @@ namespace TreeUtilities
 	{
 		friend class PlantSimulationSystem;
 	protected:
+		int _AttractionPointsCount = 2000;
 		float _RemoveDistance;
 		float _AttractDistance;
 		glm::vec3 _Center;
@@ -20,6 +21,7 @@ namespace TreeUtilities
 		TreeVolumeType _Type = TreeVolumeType::Default;
 		void GenerateAttractionPoints(glm::vec3 min, glm::vec3 max, int amount) const;
 	public:
+		void ClearAttractionPoints() const;
 		virtual void GenerateAttractionPoints(int amount);
 		void SetPruneBuds(bool value);
 		bool PruneBuds() const;

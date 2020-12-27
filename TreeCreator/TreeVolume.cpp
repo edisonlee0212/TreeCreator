@@ -15,6 +15,15 @@ void TreeVolume::CalculateVolume()
 
 void TreeVolume::GenerateAttractionPoints(int amount)
 {
+	
+}
+
+void TreeVolume::ClearAttractionPoints() const
+{
+	const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
+	std::vector<Entity> points;
+	TreeManager::GetAttractionPointQuery().ToEntityArray(treeIndex, points);
+	for (auto& i : points) EntityManager::DeleteEntity(i);
 }
 
 void TreeVolume::GenerateAttractionPoints(glm::vec3 min, glm::vec3 max, int amount) const

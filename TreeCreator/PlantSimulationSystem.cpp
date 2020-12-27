@@ -124,12 +124,12 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	bool enableSpaceColonization = false;
 	float spaceColonizationWeight = 1.0f;
 	if (treeAge.Value > 5) {
-		enableSpaceColonization = true;
+		//enableSpaceColonization = true;
 	}
 	bool anyRemoved = false;
 	EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
 	auto& treeVolume = treeEntity.GetPrivateComponent<TreeVolume>();
-	if (enableSpaceColonization)
+	if (treeVolume->IsEnabled())
 	{
 		float removeDistance = treeEntity.GetPrivateComponent<TreeVolume>()->_RemoveDistance;
 		float attractDistance = treeEntity.GetPrivateComponent<TreeVolume>()->_AttractDistance;
@@ -730,7 +730,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 	EntityManager::ForEachChild(internode, [&ret, this, &internodeInfo, &treeData, &treeAge, &treeParameters, &treeIndex, &treeTransform, &treeVolume, enableSpaceColonization, weight](Entity childNode)
 		{
 			if (GrowShoots(childNode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeTransform, enableSpaceColonization, weight)) ret = true;
-			auto childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(childNode);
+			const auto childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(childNode);
 			internodeInfo.Inhibitor += childNodeInfo.Inhibitor * childNodeInfo.ParentInhibitorFactor;
 		}
 	);
@@ -878,66 +878,81 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 		}
 #pragma endregion
 	}
-	for (auto& candidate : newInternodeCandidates)
-	{
-		auto& bud = internodeData->Buds[candidate.first];
-		bool isLateral = !(bud.IsApical && EntityManager::GetChildrenAmount(internode) == 0);
+	if (!enableSpaceColonization) {
+		for (auto& candidate : newInternodeCandidates)
+		{
+			auto& bud = internodeData->Buds[candidate.first];
+			bool isLateral = !(bud.IsApical && EntityManager::GetChildrenAmount(internode) == 0);
 #pragma region Bud kill probability
-		float budKillProbability = 0;
-		if (bud.IsApical) {
-			budKillProbability = EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(internode)) ? 0 : treeParameters.ApicalBudKillProbability;
-		}
-		else {
-			budKillProbability = treeParameters.LateralBudKillProbability;
-		}
-		float randomProb = glm::linearRand(0.0f, 1.0f);
-		if (randomProb < budKillProbability) {
-			bud.IsActive = false;
-			continue;
-		}
+			float budKillProbability = 0;
+			if (bud.IsApical) {
+				budKillProbability = EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(internode)) ? 0 : treeParameters.ApicalBudKillProbability;
+			}
+			else {
+				budKillProbability = treeParameters.LateralBudKillProbability;
+			}
+			float randomProb = glm::linearRand(0.0f, 1.0f);
+			if (randomProb < budKillProbability) {
+				bud.IsActive = false;
+				continue;
+			}
 #pragma endregion
 #pragma region Flush check
-		//compute probability that the given bud can grow
-		float budGrowProbability = 1.0f;
-		// first take into account the apical dominance
-		if (internodeInfo.Inhibitor > 0) budGrowProbability *= glm::exp(-internodeInfo.Inhibitor);
-		// now take into consideration the light on the bud
-		float illumination = internodeIllumination.Value;
-		if (illumination < 1.0f) {
-			budGrowProbability *= glm::pow(illumination,
-				bud.IsApical ? treeParameters.ApicalBudLightingFactor : treeParameters.LateralBudLightingFactor);
-		}
-		//budGrowProbability *= internodeInfo.CrownShyness;
-		// now check whether the bud is going to flush or not
-		bool flush = treeAge.Value < 2 ? true : budGrowProbability >= glm::linearRand(0.0f, 1.0f);
+			//compute probability that the given bud can grow
+			float budGrowProbability = 1.0f;
+			// first take into account the apical dominance
+			if (internodeInfo.Inhibitor > 0) budGrowProbability *= glm::exp(-internodeInfo.Inhibitor);
+			// now take into consideration the light on the bud
+			float illumination = internodeIllumination.Value;
+			if (illumination < 1.0f) {
+				budGrowProbability *= glm::pow(illumination,
+					bud.IsApical ? treeParameters.ApicalBudLightingFactor : treeParameters.LateralBudLightingFactor);
+			}
+			//budGrowProbability *= internodeInfo.CrownShyness;
+			// now check whether the bud is going to flush or not
+			bool flush = treeAge.Value < 2 ? true : budGrowProbability >= glm::linearRand(0.0f, 1.0f);
 #pragma endregion
-		if (flush && !candidate.second.empty()) {
-			ret = true;
-			auto& chain = candidate.second;
-			Entity prevInternode = internode;
-			for (auto& dataInfoPair : chain) {
-				Entity newInternode = TreeManager::CreateInternode(treeIndex, prevInternode);
-				auto& newInternodeInfo = dataInfoPair.second;
-				treeData->ActiveLength += newInternodeInfo.DistanceToParent;
-				newInternode.SetPrivateComponent(std::move(dataInfoPair.first));
-				newInternode.SetComponentData(newInternodeInfo);
-				prevInternode = newInternode;
+			if (flush && !candidate.second.empty()) {
+				ret = true;
+				auto& chain = candidate.second;
+				Entity prevInternode = internode;
+				for (auto& dataInfoPair : chain) {
+					Entity newInternode = TreeManager::CreateInternode(treeIndex, prevInternode);
+					auto& newInternodeInfo = dataInfoPair.second;
+					treeData->ActiveLength += newInternodeInfo.DistanceToParent;
+					newInternode.SetPrivateComponent(std::move(dataInfoPair.first));
+					newInternode.SetComponentData(newInternodeInfo);
+					prevInternode = newInternode;
+				}
+				bud.IsActive = false;
+				if (isLateral)
+				{
+					lateralBudsInhibitorToAdd += treeParameters.ApicalDominanceBase * static_cast<float>(internodeInfo.ActivatedBudsAmount) * glm::pow(treeParameters.ApicalDominanceAgeFactor, treeAge.Value);
+				}
+				else
+				{
+					internodeInfo.Inhibitor += treeParameters.ApicalDominanceBase * static_cast<float>(internodeInfo.ActivatedBudsAmount) * glm::pow(treeParameters.ApicalDominanceAgeFactor, treeAge.Value);
+				}
 			}
-			bud.IsActive = false;
-			if (isLateral)
-			{
-				lateralBudsInhibitorToAdd += treeParameters.ApicalDominanceBase * static_cast<float>(internodeInfo.ActivatedBudsAmount) * glm::pow(treeParameters.ApicalDominanceAgeFactor, treeAge.Value);
-			}
-			else
-			{
-				internodeInfo.Inhibitor += treeParameters.ApicalDominanceBase * static_cast<float>(internodeInfo.ActivatedBudsAmount) * glm::pow(treeParameters.ApicalDominanceAgeFactor, treeAge.Value);
+			else {
+				int budAge = treeAge.Value - internodeInfo.StartAge;
+				if (budAge > treeParameters.MaxBudAge) {
+					bud.IsActive = false;
+				}
 			}
 		}
-		else {
-			int budAge = treeAge.Value - internodeInfo.StartAge;
-			if (budAge > treeParameters.MaxBudAge) {
-				bud.IsActive = false;
-			}
+	}else
+	{
+		glm::vec3 direction = internodeInfo.DirectionVector;
+		int attractedPointsAmount = internodeData->Points.size();
+		std::map<float, int> ratings;
+		int i = 0;
+		for (auto& candidate : newInternodeCandidates)
+		{
+			glm::vec3 shootDirection;
+			auto& branchEndInfo = candidate.second.back().second;
+			shootDirection = branchEndInfo.GlobalTransform[3] - internodeInfo.GlobalTransform[3];
+			ratings.insert({ glm::dot(direction, shootDirection), i });
 		}
 	}
 	for (int i = 0; i < internodeData->Buds.size(); i++)

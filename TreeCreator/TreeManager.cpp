@@ -573,13 +573,14 @@ Entity TreeUtilities::TreeManager::CreateInternode(TreeIndex treeIndex, Entity p
 
 Entity TreeManager::CreateAttractionPoint(const TreeIndex& treeIndex, const glm::vec3& position, const Entity& tree)
 {
-	const auto entity = EntityManager::CreateEntity(_InternodeArchetype);
+	const auto entity = EntityManager::CreateEntity(_AttractionPointArchetype);
 	entity.SetName("Attraction Point");
 	entity.SetComponentData(treeIndex);
 	Transform transform;
 	transform.SetPosition(position);
 	entity.SetComponentData(transform);
 	EntityManager::SetParent(entity, tree);
+	return entity;
 }
 
 void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::string filename, bool includeFoliage)
