@@ -121,72 +121,69 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	}
 #pragma endregion
 #pragma region Update branch structure information
-	bool enableSpaceColonization = false;
-	float spaceColonizationWeight = 1.0f;
-	if (treeAge.Value > 5) {
-		//enableSpaceColonization = true;
-	}
+	auto& treeVolume = treeEntity.GetPrivateComponent<TreeVolume>();
+	const bool enableSpaceColonization = treeVolume->_EnableSpaceColonization;
+	const float spaceColonizationWeight = 1.0f;
 	bool anyRemoved = false;
 	EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
-	auto& treeVolume = treeEntity.GetPrivateComponent<TreeVolume>();
-	if (treeVolume->IsEnabled())
-	{
-		float removeDistance = treeEntity.GetPrivateComponent<TreeVolume>()->_RemoveDistance;
-		float attractDistance = treeEntity.GetPrivateComponent<TreeVolume>()->_AttractDistance;
+#pragma region Space colonization prep.
+	float removeDistance = treeEntity.GetPrivateComponent<TreeVolume>()->_RemoveDistance;
+	float attractDistance = treeEntity.GetPrivateComponent<TreeVolume>()->_AttractDistance;
 #pragma region Remove attraction points.
-		std::vector<Entity> internodes;
-		std::vector<GlobalTransform> internodeTransforms;
-		_InternodeQuery.ToEntityArray(treeIndex, internodes);
-		_InternodeQuery.ToComponentDataArray(treeIndex, internodeTransforms);
-		std::vector<Entity> removeList;
-		std::mutex m;
-		EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetAttractionPointQuery(), [&removeList, &m, treeIndex, &internodeTransforms, &internodes, removeDistance](int i, Entity entity, TreeIndex* index, GlobalTransform* globalTransform)
+	std::vector<Entity> internodes;
+	std::vector<GlobalTransform> internodeTransforms;
+	_InternodeQuery.ToEntityArray(treeIndex, internodes);
+	_InternodeQuery.ToComponentDataArray(treeIndex, internodeTransforms);
+	std::vector<Entity> removeList;
+	std::mutex m;
+	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetAttractionPointQuery(), [&removeList, &m, treeIndex, &internodeTransforms, &internodes, removeDistance](int i, Entity entity, TreeIndex* index, GlobalTransform* globalTransform)
+		{
+			if (treeIndex.Value != index->Value) return;
+			for (const auto& i : internodeTransforms)
 			{
-				if (treeIndex.Value != index->Value) return;
-				for (const auto& i : internodeTransforms)
+				if (glm::distance(i.GetPosition(), globalTransform->GetPosition()) < removeDistance)
 				{
-					if (glm::distance(i.GetPosition(), globalTransform->GetPosition()) < removeDistance)
-					{
-						std::lock_guard<std::mutex> lock(m);
-						removeList.push_back(entity);
-						break;
-					}
+					std::lock_guard<std::mutex> lock(m);
+					removeList.push_back(entity);
+					break;
 				}
 			}
-		);
-		for (const auto& i : removeList) EntityManager::DeleteEntity(i);
-		internodes.clear();
-		internodeTransforms.clear();
-		_InternodeQuery.ToEntityArray(treeIndex, internodes);
-		_InternodeQuery.ToComponentDataArray(treeIndex, internodeTransforms);
+		}
+	);
+	for (const auto& i : removeList) EntityManager::DeleteEntity(i);
+	internodes.clear();
+	internodeTransforms.clear();
+	_InternodeQuery.ToEntityArray(treeIndex, internodes);
+	_InternodeQuery.ToComponentDataArray(treeIndex, internodeTransforms);
 #pragma endregion
 #pragma region Assign attraction points.
-		EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetAttractionPointQuery(), [&treeEntity, treeIndex, &internodeTransforms, &internodes, attractDistance](int i, Entity entity, TreeIndex* index, GlobalTransform* globalTransform)
+	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetAttractionPointQuery(), [&treeEntity, treeIndex, &internodeTransforms, &internodes, attractDistance](int i, Entity entity, TreeIndex* index, GlobalTransform* globalTransform)
+		{
+			if (treeIndex.Value != index->Value) return;
+			for (int i = 0; i < internodes.size(); i++)
 			{
-				if (treeIndex.Value != index->Value) return;
-				for (int i = 0; i < internodes.size(); i++)
+				const auto internodePos = internodeTransforms[i].GetPosition();
+				if (glm::distance(internodePos, globalTransform->GetPosition()) < attractDistance)
 				{
-					if (glm::distance(internodeTransforms[i].GetPosition(), globalTransform->GetPosition()) < attractDistance)
-					{
-						auto& data = internodes[i].GetPrivateComponent<InternodeData>();
-						std::lock_guard<std::mutex> lock(data->InternodeLock);
-						data->Points.push_back(globalTransform->GetPosition());
-					}
+					auto& data = internodes[i].GetPrivateComponent<InternodeData>();
+					std::lock_guard<std::mutex> lock(data->InternodeLock);
+					data->Points.push_back(globalTransform->GetPosition() - internodePos);
 				}
-
 			}
-		);
+
+		}
+	);
 #pragma endregion
 #pragma region Calculate direction vector
-		EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [treeIndex](int i, Entity entity, InternodeInfo* info)
-			{
-				auto& data = entity.GetPrivateComponent<InternodeData>();
-				info->DirectionVector = glm::vec3(0);
-				for (const auto& i : data->Points) info->DirectionVector += i;
-			}
-		);
+	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [treeIndex](int i, Entity entity, InternodeInfo* info)
+		{
+			auto& data = entity.GetPrivateComponent<InternodeData>();
+			info->DirectionVector = glm::vec3(0);
+			for (const auto& pointPos : data->Points) info->DirectionVector += pointPos;
+		}
+	);
 #pragma endregion
-	}
+#pragma endregion
 	const bool growed = GrowShoots(rootInternode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value, enableSpaceColonization, spaceColonizationWeight);
 	if (growed) {
 		UpdateDistanceToBranchEnd(rootInternode, treeParameters, treeAge.Value);
@@ -767,7 +764,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 	for (int i = 0; i < internodeData->Buds.size(); i++) {
 		auto& bud = internodeData->Buds[i];
 		bool isLateral = !(bud.IsApical && EntityManager::GetChildrenAmount(internode) == 0);
-#pragma region Grow new shoot
+#pragma region Calculate new shoots
 		if (isLateral ? growLateral : growApical) {
 			newInternodeCandidates.emplace_back(i, std::vector<std::pair<std::unique_ptr<InternodeData>, InternodeInfo>>());
 			float distanceToGrow = isLateral ? lateralDistanceToGrow : apicalDistanceToGrow;
@@ -949,10 +946,48 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 		int i = 0;
 		for (auto& candidate : newInternodeCandidates)
 		{
+			if (candidate.second.empty()) continue;
 			glm::vec3 shootDirection;
 			auto& branchEndInfo = candidate.second.back().second;
 			shootDirection = branchEndInfo.GlobalTransform[3] - internodeInfo.GlobalTransform[3];
 			ratings.insert({ glm::dot(direction, shootDirection), i });
+			i++;
+		}
+		i = 0;
+		for(auto it = ratings.rbegin(); it != ratings.rend(); ++it)
+		{
+			auto& candidate = newInternodeCandidates[it->second];
+			auto& bud = internodeData->Buds[candidate.first];
+			if (attractedPointsAmount > 0 && i < 1) {
+				ret = true;
+				bool isLateral = !(bud.IsApical && EntityManager::GetChildrenAmount(internode) == 0);
+				auto& chain = candidate.second;
+				Entity prevInternode = internode;
+				for (auto& dataInfoPair : chain) {
+					Entity newInternode = TreeManager::CreateInternode(treeIndex, prevInternode);
+					auto& newInternodeInfo = dataInfoPair.second;
+					treeData->ActiveLength += newInternodeInfo.DistanceToParent;
+					newInternode.SetPrivateComponent(std::move(dataInfoPair.first));
+					newInternode.SetComponentData(newInternodeInfo);
+					prevInternode = newInternode;
+				}
+				bud.IsActive = false;
+				if (isLateral)
+				{
+					lateralBudsInhibitorToAdd += treeParameters.ApicalDominanceBase * static_cast<float>(internodeInfo.ActivatedBudsAmount) * glm::pow(treeParameters.ApicalDominanceAgeFactor, treeAge.Value);
+				}
+				else
+				{
+					internodeInfo.Inhibitor += treeParameters.ApicalDominanceBase * static_cast<float>(internodeInfo.ActivatedBudsAmount) * glm::pow(treeParameters.ApicalDominanceAgeFactor, treeAge.Value);
+				}
+			}else
+			{
+				int budAge = treeAge.Value - internodeInfo.StartAge;
+				if (budAge > treeParameters.MaxBudAge) {
+					bud.IsActive = false;
+				}
+			}
+			i++;
 		}
 	}
 	for (int i = 0; i < internodeData->Buds.size(); i++)

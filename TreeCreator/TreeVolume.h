@@ -11,8 +11,9 @@ namespace TreeUtilities
 		friend class PlantSimulationSystem;
 	protected:
 		int _AttractionPointsCount = 2000;
-		float _RemoveDistance;
-		float _AttractDistance;
+		float _RemoveDistance = 1.0f;
+		float _AttractDistance = 2.0f;
+		bool _EnableSpaceColonization;
 		glm::vec3 _Center;
 		float _SphereRadius;
 		glm::vec4 _DisplayColor = glm::vec4(0.0f, 0.0f, 1.0f, 0.5f);

@@ -117,94 +117,6 @@ void CakeTower::GenerateMesh()
 		mesh->SetVertices(19, vertices, indices);
 		_BoundMeshes.push_back(std::move(mesh));
 	}
-	/*
-	
-	_BoundMesh = std::make_shared<Mesh>();
-	std::vector<Vertex> vertices;
-	std::vector<unsigned> indices;
-
-	std::vector<std::vector<glm::vec3>> rings;
-
-	const float sliceAngle = 360.0f / SectorAmount;
-	const int totalAngleStep = 3;
-	const int totalLevelStep = 2;
-	const float stepAngle = sliceAngle / (totalAngleStep - 1);
-	const float heightLevel = _MaxHeight / SliceAmount;
-	const float stepLevel = heightLevel / (totalLevelStep - 1);
-	rings.resize(SliceAmount * totalLevelStep);
-	vertices.resize(SliceAmount * totalLevelStep * SectorAmount * totalAngleStep);
-
-	indices.resize(6 * (SliceAmount * totalLevelStep - 1) * SectorAmount * totalAngleStep);
-	for (int tierIndex = 0; tierIndex < SliceAmount; tierIndex++)
-	{
-		for (int levelStep = 0; levelStep < totalLevelStep; levelStep++) {
-			const int actualLevelStep = tierIndex * totalLevelStep + levelStep;
-			rings[actualLevelStep].resize(SectorAmount * totalAngleStep);
-			for (int sliceIndex = 0; sliceIndex < SectorAmount; sliceIndex++)
-			{
-				for (int angleStep = 0; angleStep < totalAngleStep; angleStep++) {
-					const int actualAngleStep = sliceIndex * totalAngleStep + angleStep;
-					const float currentHeight = heightLevel * tierIndex + stepLevel * levelStep;
-					float currentAngle = sliceAngle * sliceIndex + stepAngle * angleStep;
-					if (currentAngle >= 360) currentAngle = 0;
-					float x = glm::abs(glm::tan(glm::radians(currentAngle)));
-					float z = 1.0f;
-					if (currentAngle >= 0 && currentAngle <= 90)
-					{
-						z *= -1;
-						x *= -1;
-					}
-					else if (currentAngle > 90 && currentAngle <= 180)
-					{
-						x *= -1;
-					}
-					else if (currentAngle > 270 && currentAngle <= 360)
-					{
-						z *= -1;
-					}
-					glm::vec3 position = glm::normalize(glm::vec3(x, 0.0f, z)) * CakeTiers[tierIndex][sliceIndex].MaxDistance;
-					position.y = currentHeight;
-					rings[actualLevelStep][actualAngleStep] = position;
-					vertices[actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep].Position = position;
-					vertices[actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep].TexCoords0 = glm::vec2(0.0f);
-				}
-			}
-		}
-		for (int levelStep = 0; levelStep < totalLevelStep; levelStep++)
-		{
-			const int actualLevelStep = tierIndex * totalLevelStep + levelStep; //0-2
-			if (actualLevelStep == SliceAmount * totalLevelStep - 1) break;
-			for (int sliceIndex = 0; sliceIndex < SectorAmount; sliceIndex++)
-			{
-				for (int angleStep = 0; angleStep < totalAngleStep; angleStep++) {
-					const int actualAngleStep = sliceIndex * totalAngleStep + angleStep; //0-5
-					//Fill a quad here.
-					if (actualAngleStep < SectorAmount * totalAngleStep - 1) {
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep)] = actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep;
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep) + 1] = actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep + 1;
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep) + 2] = (actualLevelStep + 1) * totalAngleStep * SectorAmount + actualAngleStep;
-
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep) + 3] = (actualLevelStep + 1) * totalAngleStep * SectorAmount + actualAngleStep + 1;
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep) + 4] = (actualLevelStep + 1) * totalAngleStep * SectorAmount + actualAngleStep;
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep) + 5] = actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep + 1;
-					}
-					else
-					{
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep)] = actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep;
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep) + 1] = actualLevelStep * totalAngleStep * SectorAmount;
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep) + 2] = (actualLevelStep + 1) * totalAngleStep * SectorAmount + actualAngleStep;
-
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep) + 3] = (actualLevelStep + 1) * totalAngleStep * SectorAmount;
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep) + 4] = (actualLevelStep + 1) * totalAngleStep * SectorAmount + actualAngleStep;
-						indices[6 * (actualLevelStep * totalAngleStep * SectorAmount + actualAngleStep) + 5] = actualLevelStep * totalAngleStep * SectorAmount;
-					}
-				}
-			}
-		}
-	}
-
-	_BoundMesh->SetVertices(17, vertices, indices);
-	*/
 	_MeshGenerated = true;
 }
 
@@ -252,6 +164,7 @@ std::string CakeTower::Save()
 	output += std::to_string(SliceAmount) + "\n";
 	output += std::to_string(SectorAmount) + "\n";
 	output += std::to_string(_MaxHeight) + "\n";
+	output += std::to_string(_MaxRadius) + "\n";
 	int tierIndex = 0;
 	for (const auto& tier : CakeTiers)
 	{
@@ -290,6 +203,7 @@ void CakeTower::Load(const std::string& path)
 		ifs >> SliceAmount;
 		ifs >> SectorAmount;
 		ifs >> _MaxHeight;
+		ifs >> _MaxRadius;
 		CakeTiers.resize(SliceAmount);
 		for (auto& tier : CakeTiers)
 		{
@@ -364,9 +278,10 @@ bool CakeTower::InVolume(glm::vec3 position) const
 
 void CakeTower::OnGui()
 {
-	ImGui::DragFloat("Remove Distance", &_RemoveDistance);
-	ImGui::DragFloat("Attract Distance", &_AttractDistance);
+	ImGui::DragFloat("Remove Distance", &_RemoveDistance, 0.01f, 0.0f, 10.0f);
+	ImGui::DragFloat("Attract Distance", &_AttractDistance, 0.01f, _RemoveDistance, 10.0f);
 	ImGui::DragInt("AP Count", &_AttractionPointsCount);
+	ImGui::Checkbox("Enable Space Colonization", &_EnableSpaceColonization);
 	if(ImGui::Button("Generate attraction points"))
 	{
 		ClearAttractionPoints();
@@ -377,7 +292,8 @@ void CakeTower::OnGui()
 		const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
 		std::vector<GlobalTransform> points;
 		TreeManager::GetAttractionPointQuery().ToComponentDataArray(treeIndex, points);
-		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), 0.1f);
+		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 0.0f, 0.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), _RemoveDistance / 2.0f);
+		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 1.0f, 1.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), _AttractDistance / 2.0f);
 	}
 	ImGui::Checkbox("Prune Buds", &_PruneBuds);
 	ImGui::Checkbox("Display bounds", &_Display);
