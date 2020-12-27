@@ -13,6 +13,25 @@ void TreeVolume::CalculateVolume()
 {
 }
 
+void TreeVolume::GenerateAttractionPoints(int amount)
+{
+}
+
+void TreeVolume::GenerateAttractionPoints(glm::vec3 min, glm::vec3 max, int amount) const
+{
+	int count = 0;
+	const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
+	while(count < amount)
+	{
+		const glm::vec3 position = glm::linearRand(min, max);
+		if(InVolume(position))
+		{
+			count++;
+			const auto point = TreeManager::CreateAttractionPoint(treeIndex, position, GetOwner());
+		}
+	}
+}
+
 bool TreeVolume::InVolume(glm::vec3 position) const
 {
 	switch (_Type)

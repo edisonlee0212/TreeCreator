@@ -20,11 +20,12 @@ LightEstimator* TreeUtilities::TreeManager::_LightEstimator;
 
 TreeSystem* TreeUtilities::TreeManager::_TreeSystem;
 InternodeSystem* TreeUtilities::TreeManager::_InternodeSystem;
-
+EntityArchetype TreeUtilities::TreeManager::_AttractionPointArchetype;
 EntityArchetype TreeUtilities::TreeManager::_InternodeArchetype;
 EntityArchetype TreeUtilities::TreeManager::_TreeArchetype;
 
 EntityQuery TreeUtilities::TreeManager::_TreeQuery;
+EntityQuery TreeUtilities::TreeManager::_AttractionPointQuery;
 EntityQuery TreeUtilities::TreeManager::_InternodeQuery;
 
 TreeIndex TreeUtilities::TreeManager::_TreeIndex;
@@ -223,7 +224,12 @@ void TreeUtilities::TreeManager::Init()
 		TreeIndex(), TreeInfo(), TreeAge(),
 		TreeParameters()
 	);
+	_AttractionPointArchetype = EntityManager::CreateEntityArchetype("Attraction Point", Transform(),
+		GlobalTransform(), TreeIndex(), AttractionPointInfo());
 
+	_AttractionPointQuery = EntityManager::CreateEntityQuery();
+	_AttractionPointQuery.SetAllFilters(AttractionPointInfo());
+	
 	_InternodeQuery = EntityManager::CreateEntityQuery();
 	EntityManager::SetEntityQueryAllFilters(_InternodeQuery, GlobalTransform(), Connection(), Illumination(), InternodeIndex(), InternodeInfo(), TreeIndex());
 	_TreeQuery = EntityManager::CreateEntityQuery();
@@ -407,6 +413,11 @@ EntityQuery TreeUtilities::TreeManager::GetTreeQuery()
 	return _TreeQuery;
 }
 
+EntityQuery TreeManager::GetAttractionPointQuery()
+{
+	return _AttractionPointQuery;
+}
+
 InternodeSystem* TreeUtilities::TreeManager::GetInternodeSystem()
 {
 	return _InternodeSystem;
@@ -558,6 +569,17 @@ Entity TreeUtilities::TreeManager::CreateInternode(TreeIndex treeIndex, Entity p
 	internodeInfo.MaxChildOrder = 0;
 	EntityManager::SetComponentData(entity, internodeInfo);
 	return entity;
+}
+
+Entity TreeManager::CreateAttractionPoint(const TreeIndex& treeIndex, const glm::vec3& position, const Entity& tree)
+{
+	const auto entity = EntityManager::CreateEntity(_InternodeArchetype);
+	entity.SetName("Attraction Point");
+	entity.SetComponentData(treeIndex);
+	Transform transform;
+	transform.SetPosition(position);
+	entity.SetComponentData(transform);
+	EntityManager::SetParent(entity, tree);
 }
 
 void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::string filename, bool includeFoliage)

@@ -42,6 +42,8 @@ namespace TreeUtilities {
 
 	class InternodeData : public PrivateComponentBase {
 	public:
+		std::mutex InternodeLock;
+		std::vector<glm::vec3> Points;
 		std::vector<Bud> Buds;
 		std::vector<InternodeRingSegment> Rings;
 		glm::vec3 NormalDir;
@@ -55,6 +57,12 @@ namespace TreeUtilities {
 			return other.Value == Value;
 		}
 	};
+
+	struct AttractionPointInfo : ComponentBase
+	{
+		
+	};
+	
 	struct InternodeInfo : ComponentBase {
 		bool Activated = true;
 #pragma region General
@@ -115,6 +123,10 @@ namespace TreeUtilities {
 #pragma endregion
 
 		float CrownShyness = 1.0f;
+#pragma region Space Colonization
+		glm::vec3 DirectionVector;
+#pragma endregion
+
 	};
 #pragma endregion
 #pragma region Tree
@@ -230,10 +242,10 @@ namespace TreeUtilities {
 
 		static EntityArchetype _InternodeArchetype;
 		static EntityArchetype _TreeArchetype;
-
+		static EntityArchetype _AttractionPointArchetype;
 		static EntityQuery _TreeQuery;
 		static EntityQuery _InternodeQuery;
-
+		static EntityQuery _AttractionPointQuery;
 		static TreeIndex _TreeIndex;
 		static InternodeIndex _InternodeIndex;
 
@@ -249,7 +261,7 @@ namespace TreeUtilities {
 
 		static EntityQuery GetInternodeQuery();
 		static EntityQuery GetTreeQuery();
-
+		static EntityQuery GetAttractionPointQuery();
 		static InternodeSystem* GetInternodeSystem();
 		static TreeSystem* GetTreeSystem();
 
@@ -261,9 +273,10 @@ namespace TreeUtilities {
 		static void DeleteAllTrees();
 		static Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters& treeParameters);
 		static Entity CreateInternode(TreeIndex treeIndex, Entity parentEntity);
+		static Entity CreateAttractionPoint(const TreeIndex& treeIndex, const glm::vec3& position, const Entity& tree);
 
 		static void ExportTreeAsModel(Entity treeEntity, std::string filename, bool includeFoliage = false);
-
+		
 		static LightEstimator* GetLightEstimator();
 	};
 }
