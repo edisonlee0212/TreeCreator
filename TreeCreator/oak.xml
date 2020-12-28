@@ -6,7 +6,7 @@
 			<z>0.000000</z>
 		</Position>
 		<TreeParameters>
-			<Seed>3</Seed>
+			<Seed>1</Seed>
 			<Age>10</Age>
 			<LateralBudPerNode>3</LateralBudPerNode>
 			<VarianceApicalAngle>20.000000</VarianceApicalAngle>

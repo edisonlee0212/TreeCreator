@@ -160,17 +160,25 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetAttractionPointQuery(), [&treeEntity, treeIndex, &internodeTransforms, &internodes, attractDistance](int i, Entity entity, TreeIndex* index, GlobalTransform* globalTransform)
 		{
 			if (treeIndex.Value != index->Value) return;
+			float minDistance = FLT_MAX;
+			int minIndex = -1;
 			for (int i = 0; i < internodes.size(); i++)
 			{
 				const auto internodePos = internodeTransforms[i].GetPosition();
-				if (glm::distance(internodePos, globalTransform->GetPosition()) < attractDistance)
+				const float distance = glm::distance(internodePos, globalTransform->GetPosition());
+				if (distance < attractDistance && distance < minDistance)
 				{
-					auto& data = internodes[i].GetPrivateComponent<InternodeData>();
-					std::lock_guard<std::mutex> lock(data->InternodeLock);
-					data->Points.push_back(globalTransform->GetPosition() - internodePos);
+					minDistance = distance;
+					minIndex = i;
 				}
 			}
-
+			if(minIndex != -1)
+			{
+				const auto internodePos = internodeTransforms[minIndex].GetPosition();
+				auto& data = internodes[minIndex].GetPrivateComponent<InternodeData>();
+				std::lock_guard<std::mutex> lock(data->InternodeLock);
+				data->Points.push_back(globalTransform->GetPosition() - internodePos);
+			}
 		}
 	);
 #pragma endregion
