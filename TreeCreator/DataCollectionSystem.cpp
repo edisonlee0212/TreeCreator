@@ -123,6 +123,7 @@ void DataCollectionSystem::ExportParams(const std::string& path) const
 
 void DataCollectionSystem::ExportKDops(const std::string& path) const
 {
+	if(_KDopsOutputList.empty()) return;
 	std::ofstream ofs;
 	ofs.open((path + ".csv").c_str(), std::ofstream::out | std::ofstream::app);
 	if (ofs.is_open())
@@ -439,6 +440,10 @@ void DataCollectionSystem::Update()
 		break;
 	case DataCollectionSystemStatus::CaptureSemantic:
 		_SmallBranchFilter->AttachTexture(_SmallBranchBuffer.get(), GL_COLOR_ATTACHMENT0);
+		_SmallBranchFilter->Clear();
+		glDisable(GL_BLEND);
+		glDisable(GL_CULL_FACE);
+		glDisable(GL_DEPTH_TEST);
 		_SmallBranchFilter->GetFrameBuffer()->DrawBuffer(GL_COLOR_ATTACHMENT0);
 		_SmallBranchFilter->Bind();
 		_SmallBranchProgram->Bind();
@@ -454,11 +459,12 @@ void DataCollectionSystem::Update()
 		_SmallBranchCopyProgram->SetInt("InputTex", 0);
 		Default::GLPrograms::ScreenVAO->Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+		
 		path = _StorePath + "mask_" + (_IsTrain ? "train/" : "val/") +
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
-			+ ".jpg";
-		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+			+ ".png";
+		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
 			path);
 		_Status = DataCollectionSystemStatus::CollectData;
 		break;
@@ -473,8 +479,10 @@ void DataCollectionSystem::Update()
 			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, true);
 		
 		_TreeParametersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, treeParameters);
-		_CurrentTree.GetPrivateComponent<KDop>()->CalculateVolume();
-		_KDopsOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<KDop>());
+		if (_CurrentTree.HasPrivateComponent<KDop>()) {
+			_CurrentTree.GetPrivateComponent<KDop>()->CalculateVolume();
+			_KDopsOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<KDop>());
+		}
 		_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume();
 		_CakeTowersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
 		_Status = DataCollectionSystemStatus::CleanUp;

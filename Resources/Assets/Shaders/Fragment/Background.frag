@@ -9,5 +9,9 @@ in VS_OUT {
 
 void main()
 {
-	FragColor = texture(UE_DIFFUSE_MAP, fs_in.TexCoords).rgba;
+	vec2 texCoords = fs_in.TexCoords;
+	vec4 albedo = UE_PBR_ALBEDO;
+	if(UE_ALBEDO_MAP_ENABLED) albedo = vec4(texture(UE_ALBEDO_MAP, texCoords).rgb, 1.0);
+	else if(UE_DIFFUSE_MAP_ENABLED) albedo = texture(UE_DIFFUSE_MAP, texCoords).rgba;
+	FragColor = albedo;
 }
