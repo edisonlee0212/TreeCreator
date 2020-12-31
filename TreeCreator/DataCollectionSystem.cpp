@@ -371,6 +371,12 @@ void DataCollectionSystem::OnCreate()
 	vertShader = std::make_shared<GLShader>(ShaderType::Vertex, vertShaderCode);
 	fragShader = std::make_shared<GLShader>(ShaderType::Fragment, fragShaderCode);
 	MaskTrimmer::_FilterProgram = std::make_unique<GLProgram>(vertShader, fragShader);
+
+	fragShaderCode = std::string("#version 460 core\n") +
+		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/MaskPreprocess.frag");
+	fragShader = std::make_shared<GLShader>(ShaderType::Fragment, fragShaderCode);
+	MaskTrimmer::_MaskPreprocessProgram = std::make_unique<GLProgram>(vertShader, fragShader);
+	
 #pragma endregion
 
 	Enable();

@@ -147,6 +147,9 @@
     <ClCompile Include="MaskTrimmer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TreeReconstructionSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="quickhull\Structs\VertexDataSource.hpp">
@@ -255,6 +258,9 @@
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
     <ClInclude Include="MaskTrimmer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeReconstructionSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

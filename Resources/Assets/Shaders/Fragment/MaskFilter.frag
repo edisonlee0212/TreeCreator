@@ -15,8 +15,8 @@ void main()
 	vec3 maskColor = texture(MaskTex, vs_in.TexCoords).rgb;
 	if(maskColor != vec3(1.0, 1.0, 1.0))
 	{
-		originalColor = vec3(0.0, 0.0, 0.0);
+		originalColor = vec3(0.0);
 	}
-	if(vs_in.TexCoords.x > 0.5 - IgnoreWidth && vs_in.TexCoords.x < 0.5 + IgnoreWidth && vs_in.TexCoords.y > 0.0 && vs_in.TexCoords.y < IgnoreMaxHeight) originalColor = vec3(9999999.0, 1.0, 1.0);
+	if(vs_in.TexCoords.x > 0.5 - IgnoreWidth && vs_in.TexCoords.x < 0.5 + IgnoreWidth && vs_in.TexCoords.y > 0.0 && vs_in.TexCoords.y < IgnoreMaxHeight) originalColor = vec3(0.0);
 	FragColor = originalColor;
 }

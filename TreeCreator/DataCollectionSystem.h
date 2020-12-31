@@ -65,6 +65,7 @@ namespace TreeUtilities {
 	};
 	class DataCollectionSystem : public SystemBase
 	{
+		friend class TreeReconstructionSystem;
 		DataCollectionSystemStatus _Status = DataCollectionSystemStatus::Idle;
 		int _CurrentSelectedSequenceIndex = -1;
 		int _Counter = 0;

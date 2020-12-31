@@ -60,7 +60,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 				TreeManager::GenerateSimpleMeshForTree(tree, _MeshGenerationResolution, _MeshGenerationSubdivision);
 			}
 		}
-		GenerateLeavesForAllTrees(trees);
+		if(_AutoGenerateLeaves) GenerateLeavesForAllTrees(trees);
 		timer = Application::EngineTime() - timer;
 		Debug::Log("Mesh and leaves generation completed in " + std::to_string(timer) + " seconds.");
 	}
@@ -122,7 +122,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 #pragma endregion
 #pragma region Update branch structure information
 	auto& treeVolume = treeEntity.GetPrivateComponent<TreeVolume>();
-	const bool enableSpaceColonization = treeVolume->_EnableSpaceColonization;
+	const bool enableSpaceColonization = treeVolume->EnableSpaceColonization;
 	const float spaceColonizationWeight = 1.0f;
 	bool anyRemoved = false;
 	EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
@@ -1429,6 +1429,18 @@ void PlantSimulationSystem::ApplyTropism(glm::vec3 targetDir, float tropism, glm
 		front = glm::normalize(glm::rotate(front, glm::min(maxAngle, rotateAngle), left));
 		up = glm::normalize(glm::cross(glm::cross(front, up), front));
 	}
+}
+
+void PlantSimulationSystem::GenerateLeaves(const Entity& tree) const
+{
+	Entity rootInternode = Entity();
+	EntityManager::ForEachChild(tree, [&](Entity child)
+		{
+			if (child.HasComponentData<InternodeInfo>()) rootInternode = child;
+		}
+	);
+	if (rootInternode.IsNull()) return;
+	EntityManager::GetPrivateComponent<FoliageGeneratorBase>(tree)->Generate();
 }
 
 void PlantSimulationSystem::BuildHullForTree(Entity& tree)

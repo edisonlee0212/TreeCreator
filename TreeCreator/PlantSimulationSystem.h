@@ -15,9 +15,11 @@ namespace TreeUtilities {
 		public SystemBase
 	{
 		friend class DataCollectionSystem;
+		friend class TreeReconstructionSystem;
 		friend class MaskTrimmer;
 #pragma region Stuff
 		bool _AutoGenerateMesh = true;
+		bool _AutoGenerateLeaves = true;
 		float _GrowthTimer;
 		float _DirectionPruningLimitAngle = 60;
 		bool _DisplayConvexHull = false;
@@ -76,6 +78,7 @@ namespace TreeUtilities {
 #pragma region Helpers
 		static void SetAllInternodeActivated(Entity tree, bool value);
 		static void ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up);
+		void GenerateLeaves(const Entity& tree) const;
 		void GenerateLeavesForAllTrees(std::vector<Entity>& trees) const;
 		void RefreshTrees();
 		void ExportSettingsAsXml(const std::string& path);

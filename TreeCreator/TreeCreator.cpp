@@ -7,6 +7,7 @@
 #include "TreeManager.h"
 #include "SorghumReconstructionSystem.h"
 #include "DataCollectionSystem.h"
+#include "TreeReconstructionSystem.h"
 #include "Bloom.h"
 #include "SSAO.h"
 using namespace UniEngine;
@@ -15,6 +16,7 @@ using namespace SorghumReconstruction;
 void InitGround();
 PlantSimulationSystem* InitPlantSimulationSystem();
 DataCollectionSystem* InitImageCollectionSystem();
+TreeReconstructionSystem* InitTreeReconstructionSystem();
 SorghumReconstructionSystem* InitSorghumReconstructionSystem();
 void EngineSetup();
 void main()
@@ -36,13 +38,20 @@ void main()
 	EntityManager::SetComponentData(dle, dlc);
 	EntityManager::SetComponentData(dle, transform);
 #pragma endregion
-	
+	bool reconstructTrees = true;
 	bool generateLearningData = false;
 	bool generateSorghum = false;
 	bool generateSorghumField = true;
 	PlantSimulationSystem* pss = InitPlantSimulationSystem();
 	DataCollectionSystem* ics = InitImageCollectionSystem();
+	TreeReconstructionSystem* trs = InitTreeReconstructionSystem();
 	ics->SetPlantSimulationSystem(pss);
+	trs->SetPlantSimulationSystem(pss);
+	trs->SetDataCollectionSystem(ics);
+	if(reconstructTrees)
+	{
+		trs->Init();
+	}
 	if (generateLearningData) {
 		RenderManager::SetAmbientLight(1.0f);
 		dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
@@ -194,6 +203,11 @@ PlantSimulationSystem* InitPlantSimulationSystem() {
 DataCollectionSystem* InitImageCollectionSystem()
 {
 	return Application::GetCurrentWorld()->CreateSystem<DataCollectionSystem>(SystemGroup::SimulationSystemGroup);
+}
+
+TreeReconstructionSystem* InitTreeReconstructionSystem()
+{
+	return Application::GetCurrentWorld()->CreateSystem<TreeReconstructionSystem>(SystemGroup::SimulationSystemGroup);
 }
 
 SorghumReconstructionSystem* InitSorghumReconstructionSystem()

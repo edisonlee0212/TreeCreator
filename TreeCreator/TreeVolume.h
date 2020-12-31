@@ -13,7 +13,7 @@ namespace TreeUtilities
 		int _AttractionPointsCount = 2000;
 		float _RemoveDistance = 1.0f;
 		float _AttractDistance = 2.0f;
-		bool _EnableSpaceColonization;
+		
 		glm::vec3 _Center;
 		float _SphereRadius;
 		glm::vec4 _DisplayColor = glm::vec4(0.0f, 0.0f, 1.0f, 0.5f);
@@ -22,6 +22,7 @@ namespace TreeUtilities
 		TreeVolumeType _Type = TreeVolumeType::Default;
 		void GenerateAttractionPoints(glm::vec3 min, glm::vec3 max, int amount) const;
 	public:
+		bool EnableSpaceColonization;
 		void ClearAttractionPoints() const;
 		virtual void GenerateAttractionPoints(int amount);
 		void SetPruneBuds(bool value);

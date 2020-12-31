@@ -6,8 +6,49 @@ unsigned TreeUtilities::MaskTrimmer::_ResolutionX;
 unsigned TreeUtilities::MaskTrimmer::_ResolutionY;
 std::unique_ptr<GLProgram> TreeUtilities::MaskTrimmer::_InternodeCaptureProgram;
 std::unique_ptr<GLProgram> TreeUtilities::MaskTrimmer::_FilterProgram;
+std::unique_ptr<GLProgram> TreeUtilities::MaskTrimmer::_MaskPreprocessProgram;
 std::unique_ptr<RenderTarget> TreeUtilities::MaskTrimmer::_Filter;
 std::unique_ptr<GLRenderBuffer> TreeUtilities::MaskTrimmer::_DepthStencilBuffer;
+
+void MaskTrimmer::Trim(int& totalChild, int& trimmedChild, std::map<int, Entity>& map, Entity internode)
+{
+	EntityManager::ForEachChild(internode, [&map, this, &totalChild, &trimmedChild](Entity child)
+		{
+			Trim(totalChild, trimmedChild, map, child);
+		}
+	);
+	if (EntityManager::GetChildrenAmount(internode) == 0)
+	{
+		if (map.find(internode.Index) != map.end())
+		{
+			trimmedChild++;
+			totalChild++;
+			return;
+		}
+	}
+	totalChild++;
+	if(internode.GetComponentData<InternodeInfo>().Order > _MainBranchOrderProtection && map.find(internode.Index) != map.end())
+	{
+		if (_TrimFactor == 0.0f || (float)trimmedChild / totalChild > _TrimFactor) {
+			EntityManager::DeleteEntity(internode);
+			trimmedChild++;
+		}
+	}
+}
+
+void MaskTrimmer::PreprocessMask() const
+{
+	_Filter->AttachTexture(_ProcessedMask.get(), GL_COLOR_ATTACHMENT0);
+	_Filter->GetFrameBuffer()->DrawBuffer(GL_COLOR_ATTACHMENT0);
+	glDisable(GL_DEPTH_TEST);
+	_Filter->Bind();
+	_MaskPreprocessProgram->Bind();
+	_Mask->Texture()->Bind(0);
+	_MaskPreprocessProgram->SetInt("InputTex", 0);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	Default::GLPrograms::ScreenVAO->Bind();
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+}
 
 void TreeUtilities::MaskTrimmer::ShotInternodes() const
 {
@@ -83,12 +124,13 @@ void TreeUtilities::MaskTrimmer::Filter() const
 {
 	if (!_Mask || !_CameraEntity.IsValid()) return;
 	ShotInternodes();
+	PreprocessMask();
 	_Filter->AttachTexture(_FilteredResult.get(), GL_COLOR_ATTACHMENT0);
 	_Filter->GetFrameBuffer()->DrawBuffer(GL_COLOR_ATTACHMENT0);
 	_Filter->Bind();
 	_FilterProgram->Bind();
 	_InternodeCaptureResult->Bind(0);
-	_Mask->Texture()->Bind(1);
+	_ProcessedMask->Bind(1);
 	_FilterProgram->SetInt("InputTex", 0);
 	_FilterProgram->SetInt("MaskTex", 1);
 	_FilterProgram->SetFloat("IgnoreMaxHeight", _IgnoreMaxHeight);
@@ -114,6 +156,14 @@ TreeUtilities::MaskTrimmer::MaskTrimmer()
 	_FilteredResult->SetInt(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	_FilteredResult->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	_FilteredResult->SetInt(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	
+	_ProcessedMask = std::make_unique<GLTexture2D>(1, GL_RGB32F, _ResolutionX, _ResolutionY);
+	_ProcessedMask->SetInt(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	_ProcessedMask->SetInt(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	_ProcessedMask->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	_ProcessedMask->SetInt(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+	
 	_Data.resize(_ResolutionX * _ResolutionY);
 	_Mask = nullptr;
 }
@@ -122,15 +172,30 @@ void TreeUtilities::MaskTrimmer::Trim()
 {
 	if (!_Mask || !_CameraEntity.IsValid()) return;
 	Filter();
-	for(const auto i : _Data)
+	std::map<int, Entity> _Candidates;
+	for (const auto i : _Data)
 	{
-		if(i != 0)
+		if (i != 0)
 		{
 			Entity entity = EntityManager::GetEntity(i);
-			if (!entity.IsDeleted()) EntityManager::DeleteEntity(entity);
+			if (!entity.IsDeleted()) {
+				//EntityManager::DeleteEntity(entity);
+				_Candidates.insert({ entity.Index, entity });
+			}
 		}
 	}
-	if(EntityManager::HasPrivateComponent<FoliageGeneratorBase>(GetOwner()))EntityManager::GetPrivateComponent<FoliageGeneratorBase>(GetOwner())->Generate();
+	Entity rootNode;
+	EntityManager::ForEachChild(GetOwner(), [&rootNode](Entity child)
+		{
+			if (child.HasComponentData<InternodeInfo>()) rootNode = child;
+		}
+	);
+	if (!rootNode.IsNull()) {
+		int totalChild = 0;
+		int trimmedChild = 0;
+		Trim(totalChild, trimmedChild, _Candidates, rootNode);
+	}
+	if (EntityManager::HasPrivateComponent<FoliageGeneratorBase>(GetOwner()))EntityManager::GetPrivateComponent<FoliageGeneratorBase>(GetOwner())->Generate();
 	TreeManager::GenerateSimpleMeshForTree(GetOwner(), PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
 }
 
@@ -138,7 +203,9 @@ void TreeUtilities::MaskTrimmer::OnGui()
 {
 	ImGui::DragFloat("Internode size", &_InternodeSize, 0.001f, 0.02f, 1.0f);
 	ImGui::DragFloat("Height ignore", &_IgnoreMaxHeight, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat("Trim factor", &_TrimFactor, 0.01f, 0.0f, 1.0f);
 	ImGui::DragFloat("Width ignore", &_IgnoreWidth, 0.01f, 0.0f, 0.5f);
+	ImGui::DragInt("Order protection", &_MainBranchOrderProtection, 1, 0, 99);
 	if (ImGui::Button("ShotInternodes"))
 	{
 		ShotInternodes();
@@ -155,7 +222,8 @@ void TreeUtilities::MaskTrimmer::OnGui()
 	EditorManager::DragAndDrop(_Mask);
 	ImGui::Text("Content: ");
 	if (_Mask)ImGui::Image((ImTextureID)_Mask->Texture()->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
-	ImGui::Separator();
+	ImGui::Text("Processed mask: ");
+	ImGui::Image((ImTextureID)_ProcessedMask->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::Text("Internode Capture: ");
 	ImGui::Image((ImTextureID)_InternodeCaptureResult->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::Text("Filtered Result: ");

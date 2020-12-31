@@ -3,7 +3,7 @@
 glm::ivec2 CakeTower::SelectSlice(glm::vec3 position) const
 {
 	glm::ivec2 retVal = glm::ivec2(0);
-	const float heightLevel = _MaxHeight / SliceAmount;
+	const float heightLevel = MaxHeight / SliceAmount;
 	const float sliceAngle = 360.0f / SectorAmount;
 	retVal.x = static_cast<int>(position.y / heightLevel);
 	if (retVal.x >= SliceAmount) retVal.x = SliceAmount - 1;
@@ -26,7 +26,7 @@ void CakeTower::GenerateMesh()
 		const int totalAngleStep = 3;
 		const int totalLevelStep = 2;
 		const float stepAngle = sliceAngle / (totalAngleStep - 1);
-		const float heightLevel = _MaxHeight / SliceAmount;
+		const float heightLevel = MaxHeight / SliceAmount;
 		const float stepLevel = heightLevel / (totalLevelStep - 1);
 		vertices.resize(totalLevelStep * SectorAmount * totalAngleStep * 2 + totalLevelStep);
 		indices.resize((12 * (totalLevelStep - 1) * totalAngleStep) * SectorAmount);
@@ -163,8 +163,8 @@ std::string CakeTower::Save()
 	std::string output;
 	output += std::to_string(SliceAmount) + "\n";
 	output += std::to_string(SectorAmount) + "\n";
-	output += std::to_string(_MaxHeight) + "\n";
-	output += std::to_string(_MaxRadius) + "\n";
+	output += std::to_string(MaxHeight) + "\n";
+	output += std::to_string(MaxRadius) + "\n";
 	int tierIndex = 0;
 	for (const auto& tier : CakeTiers)
 	{
@@ -202,8 +202,8 @@ void CakeTower::Load(const std::string& path)
 	{
 		ifs >> SliceAmount;
 		ifs >> SectorAmount;
-		ifs >> _MaxHeight;
-		ifs >> _MaxRadius;
+		ifs >> MaxHeight;
+		ifs >> MaxRadius;
 		CakeTiers.resize(SliceAmount);
 		for (auto& tier : CakeTiers)
 		{
@@ -230,14 +230,14 @@ void CakeTower::CalculateVolume()
 			return treeIndex.Value == targetTreeIndex.Value;
 		}
 	);
-	_MaxHeight = 0;
-	_MaxRadius = 0;
+	MaxHeight = 0;
+	MaxRadius = 0;
 	for (auto& i : internodeInfos)
 	{
 		const glm::vec3 position = i.GlobalTransform[3];
-		if (position.y > _MaxHeight) _MaxHeight = position.y;
+		if (position.y > MaxHeight) MaxHeight = position.y;
 		const float radius = glm::length(glm::vec2(position.x, position.z));
-		if (radius > _MaxRadius) _MaxRadius = radius;
+		if (radius > MaxRadius) MaxRadius = radius;
 	}
 
 	CakeTiers.resize(SliceAmount);
@@ -266,12 +266,59 @@ void CakeTower::CalculateVolume()
 	GenerateMesh();
 }
 
+void CakeTower::CalculateVolume(float maxHeight)
+{
+	Entity tree = GetOwner();
+	EntityQuery internodeDataQuery = EntityManager::CreateEntityQuery();
+	EntityManager::SetEntityQueryAllFilters(internodeDataQuery, InternodeInfo());
+	std::vector<InternodeInfo> internodeInfos;
+	TreeIndex targetTreeIndex = tree.GetComponentData<TreeIndex>();
+	internodeDataQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [targetTreeIndex](TreeIndex& treeIndex)
+		{
+			return treeIndex.Value == targetTreeIndex.Value;
+		}
+	);
+	MaxHeight = maxHeight;
+	MaxRadius = 0;
+	for (auto& i : internodeInfos)
+	{
+		const glm::vec3 position = i.GlobalTransform[3];
+		const float radius = glm::length(glm::vec2(position.x, position.z));
+		if (radius > MaxRadius) MaxRadius = radius;
+	}
+
+	CakeTiers.resize(SliceAmount);
+	for (auto& tier : CakeTiers)
+	{
+		tier.resize(SectorAmount);
+		for (auto& slice : tier)
+		{
+			slice.MaxDistance = 0.0f;
+		}
+	}
+	for (auto& i : internodeInfos)
+	{
+		const glm::vec3 position = i.GlobalTransform[3];
+		const auto sliceIndex = SelectSlice(position);
+		const float currentDistance = glm::length(glm::vec2(position.x, position.z));
+		if (currentDistance <= i.Thickness)
+		{
+			for (auto& slice : CakeTiers[sliceIndex.x])
+			{
+				if (slice.MaxDistance < currentDistance + i.Thickness) slice.MaxDistance = currentDistance + i.Thickness;
+			}
+		}
+		else if (CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance < currentDistance) CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance = currentDistance;
+	}
+	GenerateMesh();
+}
+
 bool CakeTower::InVolume(glm::vec3 position) const
 {
 	if (_MeshGenerated) {
 		const auto sliceIndex = SelectSlice(position);
 		const float currentDistance = glm::length(glm::vec2(position.x, position.z));
-		return CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance >= currentDistance && position.y <= _MaxHeight;
+		return CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance >= currentDistance && position.y <= MaxHeight;
 	}
 	return true;
 }
@@ -281,11 +328,11 @@ void CakeTower::OnGui()
 	ImGui::DragFloat("Remove Distance", &_RemoveDistance, 0.01f, 0.0f, 10.0f);
 	ImGui::DragFloat("Attract Distance", &_AttractDistance, 0.01f, _RemoveDistance, 10.0f);
 	ImGui::DragInt("AP Count", &_AttractionPointsCount);
-	ImGui::Checkbox("Enable Space Colonization", &_EnableSpaceColonization);
+	ImGui::Checkbox("Enable Space Colonization", &EnableSpaceColonization);
 	if(ImGui::Button("Generate attraction points"))
 	{
 		ClearAttractionPoints();
-		GenerateAttractionPoints(_AttractionPointsCount);
+		GenerateAttractionPoints();
 	}
 	if(_Display)
 	{
@@ -344,10 +391,15 @@ void CakeTower::OnGui()
 	}
 }
 
+void CakeTower::GenerateAttractionPoints()
+{
+	GenerateAttractionPoints(_AttractionPointsCount);
+}
+
 void CakeTower::GenerateAttractionPoints(int amount) 
 {
 	if (!_MeshGenerated) CalculateVolume();
-	glm::vec3 min = glm::vec3(-_MaxRadius, 0, -_MaxRadius);
-	glm::vec3 max = glm::vec3(_MaxRadius, _MaxHeight, _MaxRadius);
+	glm::vec3 min = glm::vec3(-MaxRadius, 0, -MaxRadius);
+	glm::vec3 max = glm::vec3(MaxRadius, MaxHeight, MaxRadius);
 	TreeVolume::GenerateAttractionPoints(min, max, amount);
 }
