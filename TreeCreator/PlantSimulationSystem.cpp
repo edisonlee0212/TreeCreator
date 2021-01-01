@@ -60,7 +60,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 				TreeManager::GenerateSimpleMeshForTree(tree, _MeshGenerationResolution, _MeshGenerationSubdivision);
 			}
 		}
-		if(_AutoGenerateLeaves) GenerateLeavesForAllTrees(trees);
+		if (_AutoGenerateLeaves) GenerateLeavesForAllTrees(trees);
 		timer = Application::EngineTime() - timer;
 		Debug::Log("Mesh and leaves generation completed in " + std::to_string(timer) + " seconds.");
 	}
@@ -123,7 +123,6 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 #pragma region Update branch structure information
 	auto& treeVolume = treeEntity.GetPrivateComponent<TreeVolume>();
 	const bool enableSpaceColonization = treeVolume->EnableSpaceColonization;
-	const float spaceColonizationWeight = 1.0f;
 	bool anyRemoved = false;
 	EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
 #pragma region Space colonization prep.
@@ -172,7 +171,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 					minIndex = i;
 				}
 			}
-			if(minIndex != -1)
+			if (minIndex != -1)
 			{
 				const auto internodePos = internodeTransforms[minIndex].GetPosition();
 				auto& data = internodes[minIndex].GetPrivateComponent<InternodeData>();
@@ -192,7 +191,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	);
 #pragma endregion
 #pragma endregion
-	const bool growed = GrowShoots(rootInternode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value, enableSpaceColonization, spaceColonizationWeight);
+	const bool growed = GrowShoots(rootInternode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value, enableSpaceColonization, _ControlLevel);
 	if (growed) {
 		UpdateDistanceToBranchEnd(rootInternode, treeParameters, treeAge.Value);
 		UpdateDistanceToBranchStart(rootInternode);
@@ -724,7 +723,7 @@ Entity PlantSimulationSystem::CreateTree(TreeParameters parameters, glm::vec3 po
 	return CreateTree(mat, parameters, position, enabled);
 }
 
-bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::unique_ptr<TreeVolume>& treeVolume, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform, bool enableSpaceColonization, float weight)
+bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::unique_ptr<TreeVolume>& treeVolume, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform, bool enableSpaceColonization, int controlLevel)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	internodeInfo.Inhibitor = 0;
@@ -732,9 +731,9 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 
 #pragma region Grow child
 	bool ret = false;
-	EntityManager::ForEachChild(internode, [&ret, this, &internodeInfo, &treeData, &treeAge, &treeParameters, &treeIndex, &treeTransform, &treeVolume, enableSpaceColonization, weight](Entity childNode)
+	EntityManager::ForEachChild(internode, [&ret, this, &internodeInfo, &treeData, &treeAge, &treeParameters, &treeIndex, &treeTransform, &treeVolume, enableSpaceColonization, controlLevel](Entity childNode)
 		{
-			if (GrowShoots(childNode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeTransform, enableSpaceColonization, weight)) ret = true;
+			if (GrowShoots(childNode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeTransform, enableSpaceColonization, controlLevel)) ret = true;
 			const auto childNodeInfo = EntityManager::GetComponentData<InternodeInfo>(childNode);
 			internodeInfo.Inhibitor += childNodeInfo.Inhibitor * childNodeInfo.ParentInhibitorFactor;
 		}
@@ -849,7 +848,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 						break;
 					}
 				}
-				
+
 #pragma endregion
 #pragma endregion
 				prevEulerAngle = glm::vec3(
@@ -879,7 +878,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 				newInternodeCandidates.back().second.emplace_back(std::move(newInternodeData), newInternodeInfo);
 			}
 #pragma endregion
-			
+
 		}
 #pragma endregion
 	}
@@ -888,6 +887,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 		{
 			auto& bud = internodeData->Buds[candidate.first];
 			bool isLateral = !(bud.IsApical && EntityManager::GetChildrenAmount(internode) == 0);
+
 #pragma region Bud kill probability
 			float budKillProbability = 0;
 			if (bud.IsApical) {
@@ -946,7 +946,8 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 				}
 			}
 		}
-	}else
+	}
+	else
 	{
 		glm::vec3 direction = internodeInfo.DirectionVector;
 		int attractedPointsAmount = internodeData->Points.size();
@@ -962,11 +963,40 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 			i++;
 		}
 		i = 0;
-		for(auto it = ratings.rbegin(); it != ratings.rend(); ++it)
+		for (auto it = ratings.rbegin(); it != ratings.rend(); ++it)
 		{
 			auto& candidate = newInternodeCandidates[it->second];
 			auto& bud = internodeData->Buds[candidate.first];
-			if (attractedPointsAmount > 0 && i < 1) {
+			if (controlLevel >= 2) {
+#pragma region Bud kill probability
+				float budKillProbability = 0;
+				if (bud.IsApical) {
+					budKillProbability = EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(internode)) ? 0 : treeParameters.ApicalBudKillProbability;
+				}
+				else {
+					budKillProbability = treeParameters.LateralBudKillProbability;
+				}
+				float randomProb = glm::linearRand(0.0f, 1.0f);
+				if (randomProb < budKillProbability) {
+					bud.IsActive = false;
+					continue;
+				}
+#pragma endregion
+			}
+			bool flush = false;
+			if (controlLevel >= 1) {
+#pragma region Flush check
+				//compute probability that the given bud can grow
+				float budGrowProbability = 1.0f;
+				// first take into account the apical dominance
+				if (internodeInfo.Inhibitor > 0) budGrowProbability *= glm::exp(-internodeInfo.Inhibitor);
+				flush = treeAge.Value < 2 ? true : budGrowProbability >= glm::linearRand(0.0f, 1.0f);
+			}else
+			{
+				flush = i == 0;
+			}
+#pragma endregion
+			if (attractedPointsAmount > 0 && flush) {
 				ret = true;
 				bool isLateral = !(bud.IsApical && EntityManager::GetChildrenAmount(internode) == 0);
 				auto& chain = candidate.second;
@@ -988,7 +1018,8 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 				{
 					internodeInfo.Inhibitor += treeParameters.ApicalDominanceBase * static_cast<float>(internodeInfo.ActivatedBudsAmount) * glm::pow(treeParameters.ApicalDominanceAgeFactor, treeAge.Value);
 				}
-			}else
+			}
+			else
 			{
 				int budAge = treeAge.Value - internodeInfo.StartAge;
 				if (budAge > treeParameters.MaxBudAge) {

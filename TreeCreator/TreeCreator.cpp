@@ -68,15 +68,19 @@ void main()
 		
 
 
-		int counter = 0;
-		int startIndex = 1;
-		int endIndex = 100;
+		
+		int startIndex = 801;
+		int counter = (startIndex - 1) * 7;
+		int endIndex = 1000;
 
 		ics->ResetCounter(counter, startIndex, endIndex, true);
 		ics->SetIsTrain(true);
-		bool eval = true;
+		bool eval = false;
 		Application::RegisterUpdateFunction([&]()
 			{
+				counter = 28;
+				startIndex = 5;
+				endIndex = 200;
 				if (eval && generateLearningData && !ics->IsExport())
 				{
 					ics->ResetCounter(counter, startIndex, endIndex, true);

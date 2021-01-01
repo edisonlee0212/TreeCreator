@@ -6,6 +6,16 @@
 using namespace UniEngine;
 namespace TreeUtilities
 {
+	enum class TreeType
+	{
+		Acacia,
+		Apple,
+		Willow,
+		Maple,
+		Birch,
+		Oak,
+		Pine
+	};
 	enum class TreeReconstructionSystemStatus
 	{
 		Idle,
@@ -18,7 +28,8 @@ namespace TreeUtilities
 	class TreeReconstructionSystem :
 		public SystemBase
 	{
-		bool _EnableSpaceColonization;
+		TreeType _Type = TreeType::Maple;
+		bool _EnableSpaceColonization = false;
 		bool _EnableMaskTrimmer = false;
 		std::string _StorePath = "./tree_recon/";
 		DataCollectionSystem* _DataCollectionSystem = nullptr;
@@ -31,6 +42,7 @@ namespace TreeUtilities
 		std::shared_ptr<Texture2D> _TargetMask;
 		std::string _TargetCakeTowerPath = "./tree_recon/AppleTarget.ct";
 		int _AgeForMainBranches = 4;
+		int _ControlLevel = 0;
 		int _TargetInternodeSize = 1601;
 		TreeParameters _TargetTreeParameter;
 		std::string _TreeParametersPath;

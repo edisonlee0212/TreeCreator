@@ -37,7 +37,7 @@ namespace TreeUtilities {
 		std::vector<glm::vec3> _NewTreePositions;
 		std::shared_ptr<Texture2D> _DefaultTreeSurfaceSurfTex1;
 		std::shared_ptr<Texture2D> _DefaultTreeSurfaceNormTex1;
-		
+		int _ControlLevel = 0;
 		std::shared_ptr<Texture2D> _DefaultTreeSurfaceSurfTex2;
 		std::shared_ptr<Texture2D> _DefaultTreeSurfaceSpecTex2;
 		std::shared_ptr<Texture2D> _DefaultTreeSurfaceNormTex2;
@@ -56,7 +56,7 @@ namespace TreeUtilities {
 		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::mat4& treeLTW);
 		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, bool isLeft);
 		
-		bool GrowShoots(Entity& internode, std::unique_ptr<TreeVolume>& treeVolume, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform, bool enableSpaceColonization, float weight = 0.0f);
+		bool GrowShoots(Entity& internode, std::unique_ptr<TreeVolume>& treeVolume, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform, bool enableSpaceColonization, int controlLevel = 0);
 		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
 		bool EvaluateRemoval(Entity& internode, TreeParameters& treeParameters, bool& anyRemoved);
 		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);

@@ -10,7 +10,7 @@ void TreeUtilities::TreeReconstructionSystem::OnGui()
 
 void TreeReconstructionSystem::ExportAllData()
 {
-	ExportCakeTower(_StorePath + _Name + "/" + "CakeTowers" + (_EnableSpaceColonization ? "SC" : "IPM"));
+	ExportCakeTower(_StorePath + _Name + "/" + "CakeTowers" + (_EnableSpaceColonization ? "SC" + std::to_string(_ControlLevel) : "IPM"));
 	_CakeTowersOutputList.clear();
 }
 
@@ -26,26 +26,100 @@ void TreeReconstructionSystem::SetDataCollectionSystem(DataCollectionSystem* val
 
 void TreeReconstructionSystem::Init()
 {
-	_Name = "Apple";
-	_StorePath = "./tree_recon/";
-	_TargetCakeTowerPath = "./tree_recon/AppleTarget.ct";
-	_MaskPath = "./tree_recon/AppleMask.png";
-	_TreeParametersPath = "./apple";
+	int cameraTransformIndex;
+	switch (_Type) {
+	case TreeType::Acacia:
+		_Name = "Acacia";
+		_StorePath = "./tree_recon/";
+		_TargetCakeTowerPath = "./tree_recon/Acacia/AcaciaTarget.ct";
+		_MaskPath = "./tree_recon/Acacia/AcaciaMask.png";
+		_TreeParametersPath = "./acacia";
+		cameraTransformIndex = 0;
+		_ControlLevel = 0;
+		_AgeForMainBranches = 4;
+		_TargetInternodeSize = 2260;
+		break;
+	case TreeType::Apple:
+		_Name = "Apple";
+		_StorePath = "./tree_recon/";
+		_TargetCakeTowerPath = "./tree_recon/Apple/AppleTarget.ct";
+		_MaskPath = "./tree_recon/Apple/AppleMask.png";
+		_TreeParametersPath = "./apple";
+		cameraTransformIndex = 1;
+		_ControlLevel = 0;
+		_AgeForMainBranches = 4;
+		_TargetInternodeSize = 1601;
+		break;
+	case TreeType::Willow:
+		_Name = "Willow";
+		_StorePath = "./tree_recon/";
+		_TargetCakeTowerPath = "./tree_recon/Willow/WillowTarget.ct";
+		_MaskPath = "./tree_recon/Willow/WillowMask.png";
+		_TreeParametersPath = "./willow";
+		cameraTransformIndex = 2;
+		_ControlLevel = 0;
+		_AgeForMainBranches = 4;
+		_TargetInternodeSize = 2615;
+		break;
+	case TreeType::Maple:
+		_Name = "Maple";
+		_StorePath = "./tree_recon/";
+		_TargetCakeTowerPath = "./tree_recon/Maple/MapleTarget.ct";
+		_MaskPath = "./tree_recon/Maple/MapleMask.png";
+		_TreeParametersPath = "./maple";
+		cameraTransformIndex = 3;
+		_ControlLevel = 0;
+		_AgeForMainBranches = 4;
+		_TargetInternodeSize = 7995;
+		break;
+	case TreeType::Birch:
+		_Name = "Birch";
+		_StorePath = "./tree_recon/";
+		_TargetCakeTowerPath = "./tree_recon/Birch/BirchTarget.ct";
+		_MaskPath = "./tree_recon/Maple/BirchMask.png";
+		_TreeParametersPath = "./birch";
+		cameraTransformIndex = 4;
+		_ControlLevel = 0;
+		_AgeForMainBranches = 4;
+		_TargetInternodeSize = 5120;
+		break;
+	case TreeType::Oak:
+		_Name = "Oak";
+		_StorePath = "./tree_recon/";
+		_TargetCakeTowerPath = "./tree_recon/Oak/OakTarget.ct";
+		_MaskPath = "./tree_recon/Oak/OakMask.png";
+		_TreeParametersPath = "./oak";
+		cameraTransformIndex = 5;
+		_ControlLevel = 0;
+		_AgeForMainBranches = 4;
+		_TargetInternodeSize = 4487;
+		break;
+	case TreeType::Pine:
+		_Name = "Pine";
+		_StorePath = "./tree_recon/";
+		_TargetCakeTowerPath = "./tree_recon/Pine/PineTarget.ct";
+		_MaskPath = "./tree_recon/Pine/PineMask.png";
+		_TreeParametersPath = "./pine";
+		cameraTransformIndex = 6;
+		_ControlLevel = 0;
+		_AgeForMainBranches = 4;
+		_TargetInternodeSize = 8538;
+		break;
+	}
 	
-	_AgeForMainBranches = 4;
-	_TargetInternodeSize = 1601;
-
 	_StartIndex = 1;
 	_EndIndex = 50;
 	_MaxAge = 30;
 
 	_EnableSpaceColonization = false;
 	
+	auto& sequence = _DataCollectionSystem->_ImageCaptureSequences[cameraTransformIndex].first;
+	_DataCollectionSystem->SetCameraPose(sequence.CameraPos, sequence.CameraEulerDegreeRot);
+	
 	_TargetTreeParameter = _PlantSimulationSystem->LoadParameters(_TreeParametersPath);
 	_TargetMask = ResourceManager::LoadTexture(_MaskPath);
 	_TargetCakeTower = std::make_unique<CakeTower>();
 	_TargetCakeTower->Load(_TargetCakeTowerPath);
-	_CakeTowersOutputList.emplace_back(1, _Name, _TargetCakeTower);
 	_NeedExport = true;
 	Enable();
 }
@@ -100,13 +174,56 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			{
 				_TargetTreeParameter.Seed = _StartIndex;
 				_TargetTreeParameter.Age = _AgeForMainBranches;
+				_PlantSimulationSystem->_ControlLevel = _ControlLevel;
 				_CurrentTree = _PlantSimulationSystem->CreateTree(_TargetTreeParameter, glm::vec3(0.0f));
 				_Status = TreeReconstructionSystemStatus::MainBranches;
 			}
 			else
 			{
 				ExportAllData();
-				_NeedExport = false;
+				if (!_EnableSpaceColonization) {
+					_StartIndex = 1;
+					_EnableSpaceColonization = true;
+				}
+				else if (_ControlLevel < 2)
+				{
+					_ControlLevel++;
+					_StartIndex = 1;
+				}
+				else {
+					switch (_Type) {
+					case TreeType::Acacia:
+						_Type = TreeType::Apple;
+						Init();
+						break;
+					case TreeType::Apple:
+						_Type = TreeType::Willow;
+						Init();
+						break;
+					case TreeType::Willow:
+						_Type = TreeType::Maple;
+						Init();
+						break;
+					case TreeType::Maple:
+						_NeedExport = false;
+						break;
+						_Type = TreeType::Birch;
+						Init();
+						break;
+					case TreeType::Birch:
+						_Type = TreeType::Oak;
+						Init();
+						break;
+					case TreeType::Oak:
+						_Type = TreeType::Pine;
+						Init();
+						break;
+					case TreeType::Pine:
+						_NeedExport = false;
+						break;
+					}
+				}
+				
 			}
 		}
 		break;
@@ -155,7 +272,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		_Status = TreeReconstructionSystemStatus::CollectData;
 		break;
 	case TreeReconstructionSystemStatus::CollectData:
-		path = _StorePath + _Name + "/" + (_EnableSpaceColonization ? "SC" : "IPM") + "/" +
+		path = _StorePath + _Name + "/" + (_EnableSpaceColonization ? "SC" + std::to_string(_ControlLevel) : "IPM") + "/" +
 			std::string(5 - std::to_string(_StartIndex).length(), '0') + std::to_string(_StartIndex)
 			+ ".jpg";
 		_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
