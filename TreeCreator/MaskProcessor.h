@@ -12,6 +12,7 @@ namespace TreeUtilities {
 		float _AttractDistance = 1.0f;
 		friend class DataCollectionSystem;
 		static Entity _CameraEntity;
+		static Entity _Background;
 		static unsigned _ResolutionX;
 		static unsigned _ResolutionY;
 		static std::unique_ptr<GLProgram> _InternodeCaptureProgram;

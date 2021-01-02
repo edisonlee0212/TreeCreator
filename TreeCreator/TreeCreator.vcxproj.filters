@@ -144,11 +144,11 @@
     <ClCompile Include="CakeTower.cpp">
       <Filter>Source Files\TreeVolume</Filter>
     </ClCompile>
-    <ClCompile Include="TreeReconstructionSystem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MaskProcessor.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeReconstructionSystem.cpp">
+      <Filter>Source Files\Systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

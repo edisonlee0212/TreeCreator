@@ -293,6 +293,7 @@ void DataCollectionSystem::OnCreate()
 	mmr->ReceiveShadow = false;
 	mmr->CastShadow = false;
 	mmr->Material = _BackgroundMaterial;
+	_BackgroundMaterial->CullingMode = MaterialCullingMode::OFF;
 	transform.SetPosition(glm::vec3(0, 17, -13));
 	transform.SetEulerRotation(glm::radians(glm::vec3(75, -0, -180)));
 	transform.SetScale(glm::vec3(30, 1, 30));
@@ -302,7 +303,7 @@ void DataCollectionSystem::OnCreate()
 	_Background.SetComponentData(transform);
 	_Background.SetPrivateComponent(std::move(mmr));
 	_Background.SetName("Background");
-
+	MaskProcessor::_Background = _Background;
 
 #pragma region Load parameters
 	ImageCaptureSequence sequence;
@@ -402,6 +403,7 @@ void DataCollectionSystem::Update()
 			treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
 			treeParameters.Seed = _StartIndex + (_IsTrain ? 0 : 9999);
 			_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
+			_PlantSimulationSystem->ResumeGrowth();
 			_Status = DataCollectionSystemStatus::Growing;
 		}
 		else if (_NeedExport)

@@ -176,6 +176,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 				_TargetTreeParameter.Age = _AgeForMainBranches;
 				_PlantSimulationSystem->_ControlLevel = _ControlLevel;
 				_CurrentTree = _PlantSimulationSystem->CreateTree(_TargetTreeParameter, glm::vec3(0.0f));
+				_PlantSimulationSystem->ResumeGrowth();
 				_Status = TreeReconstructionSystemStatus::MainBranches;
 			}
 			else

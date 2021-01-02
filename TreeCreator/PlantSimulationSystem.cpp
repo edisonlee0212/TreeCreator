@@ -698,7 +698,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	UpdateLocalTransform(internode, treeParameters, id, globalTransform.Value, true);
 	EntityManager::SetComponentData(treeEntity, treeParameters);
 	EntityManager::SetComponentData(treeEntity, age);
-	ResumeGrowth();
+	//ResumeGrowth();
 	return treeEntity;
 }
 

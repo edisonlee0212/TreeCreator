@@ -3,6 +3,7 @@
 #include "PlantSimulationSystem.h"
 #include "Ray.h"
 Entity TreeUtilities::MaskProcessor::_CameraEntity;
+Entity TreeUtilities::MaskProcessor::_Background;
 unsigned TreeUtilities::MaskProcessor::_ResolutionX;
 unsigned TreeUtilities::MaskProcessor::_ResolutionY;
 std::unique_ptr<GLProgram> TreeUtilities::MaskProcessor::_InternodeCaptureProgram;
@@ -258,8 +259,27 @@ void TreeUtilities::MaskProcessor::OnGui()
 		TreeManager::GetAttractionPointQuery().ToComponentDataArray(treeIndex, points);
 		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 0.0f, 0.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), _RemoveDistance / 2.0f);
 		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 1.0f, 1.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), _AttractDistance / 2.0f);
+		
 	}
-
+	if(ImGui::Button("Display mask"))
+	{
+		if (_Background.IsValid())
+		{
+			Transform transform;
+			GlobalTransform cameraTransform = _CameraEntity.GetComponentData<GlobalTransform>();
+			glm::vec3 position;
+			Ray cameraRay = _CameraEntity.GetPrivateComponent<CameraComponent>()->ScreenPointToRay(cameraTransform, glm::vec2(-(int)_ResolutionY / 2, _ResolutionX / 2));
+			auto start = cameraRay.Start;
+			auto direction = glm::normalize(cameraRay.Direction);
+			direction /= direction.z;
+			position = start - direction * (start.z + 12.0f);
+			transform.SetPosition(position);
+			transform.SetScale(glm::vec3(15.0f));
+			transform.SetRotation(glm::lookAt(position, position + glm::vec3(0, 1, 0), direction));
+			_Background.SetComponentData(transform);
+			if(_Mask)_Background.GetPrivateComponent<MeshRenderer>()->Material->SetTexture(_Mask);
+		}
+	}
 	ImGui::DragFloat("Internode size", &_InternodeSize, 0.001f, 0.02f, 1.0f);
 	ImGui::DragFloat("Height ignore", &_IgnoreMaxHeight, 0.01f, 0.0f, 1.0f);
 	ImGui::DragFloat("Trim factor", &_TrimFactor, 0.01f, 0.0f, 1.0f);

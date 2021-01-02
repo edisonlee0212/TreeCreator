@@ -38,8 +38,8 @@ void main()
 	EntityManager::SetComponentData(dle, dlc);
 	EntityManager::SetComponentData(dle, transform);
 #pragma endregion
-	bool reconstructTrees = false;
-	bool generateLearningData = true;
+	bool reconstructTrees = true;
+	bool generateLearningData = false;
 	bool generateSorghum = false;
 	bool generateSorghumField = true;
 	PlantSimulationSystem* pss = InitPlantSimulationSystem();
@@ -64,11 +64,7 @@ void main()
 		lightTransform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
 		EntityManager::SetComponentData(dle, dlc);
 		EntityManager::SetComponentData(dle, lightTransform);
-		
-		
 
-
-		
 		int startIndex = 1;
 		int counter = (startIndex - 1) * 7;
 		int endIndex = 10;
