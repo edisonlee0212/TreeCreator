@@ -34,7 +34,7 @@ namespace TreeUtilities {
 	{
 		DefaultFoliageInfo _DefaultFoliageInfo;
 		EntityArchetype _Archetype;
-		std::shared_ptr<Texture2D> _LeafSurfaceTex;
+		static std::shared_ptr<Texture2D> _LeafSurfaceTex;
 		std::shared_ptr<Material> _LeafMaterial;
 		void GenerateLeaves(Entity& internode, glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft);
 	public:

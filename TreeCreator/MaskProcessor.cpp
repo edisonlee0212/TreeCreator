@@ -39,6 +39,11 @@ void MaskProcessor::Trim(int& totalChild, int& trimmedChild, std::map<int, Entit
 
 void MaskProcessor::PlaceAttractionPoints()
 {
+	if(_Skeleton == nullptr || _Mask == nullptr)
+	{
+		Debug::Error("Skeleton or mask not ready!");
+		return;
+	}
 	const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
 	_Mask->Texture()->Bind(0);
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (void*)_MaskData.data());
@@ -46,7 +51,7 @@ void MaskProcessor::PlaceAttractionPoints()
 	{
 		for (int y = 0; y < _ResolutionY; y++)
 		{
-			if (_MaskData[x * _ResolutionY + y] == glm::vec3(0, 0, 1))
+			if (_MaskData[x * _ResolutionY + y] == glm::vec3(1, 0, 0))
 			{
 				GlobalTransform cameraTransform = _CameraEntity.GetComponentData<GlobalTransform>();
 				glm::vec3 position;
@@ -191,7 +196,9 @@ TreeUtilities::MaskProcessor::MaskProcessor()
 
 	_Data.resize(_ResolutionX * _ResolutionY);
 	_MaskData.resize(_ResolutionX * _ResolutionY);
+	_SkeletonData.resize(_ResolutionX * _ResolutionY);
 	_Mask = nullptr;
+	_Skeleton = nullptr;
 }
 
 void TreeUtilities::MaskProcessor::Trim()
@@ -270,6 +277,8 @@ void TreeUtilities::MaskProcessor::OnGui()
 	{
 		Trim();
 	}
+	ImGui::Text("Target Skeleton: ");
+	EditorManager::DragAndDrop(_Skeleton);
 	ImGui::Text("Target Mask: ");
 	EditorManager::DragAndDrop(_Mask);
 	ImGui::Text("Content: ");

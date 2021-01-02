@@ -39,7 +39,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 	bool growed = false;
 
 	for (auto& tree : trees) {
-		growed = growed || GrowTree(tree, true);
+		growed = growed || GrowTree(tree, false);
 	}
 	RefreshTrees();
 	if (!growed) {

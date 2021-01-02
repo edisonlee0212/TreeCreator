@@ -3,6 +3,7 @@
 #include <gtx/matrix_decompose.hpp>
 
 #include "TreeManager.h"
+std::shared_ptr<Texture2D> TreeUtilities::DefaultFoliageGenerator::_LeafSurfaceTex = nullptr;
 
 void TreeUtilities::DefaultFoliageGenerator::GenerateLeaves(Entity& internode, 
 	glm::mat4& treeTransform, std::vector<glm::mat4>& leafTransforms, bool isLeft)
@@ -85,7 +86,7 @@ DefaultFoliageGenerator::DefaultFoliageGenerator()
 	_LeafMaterial->AlphaDiscardEnabled = true;
 	_LeafMaterial->AlphaDiscardOffset = 0.1f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
-	_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/Pine/level0.png");
+	if (!_LeafSurfaceTex) _LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/Pine/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex);
 }
 

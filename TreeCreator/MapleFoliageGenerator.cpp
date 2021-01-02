@@ -1,5 +1,7 @@
 #include "MapleFoliageGenerator.h"
 #include "TreeManager.h"
+std::shared_ptr<Texture2D> TreeUtilities::MapleFoliageGenerator::_LeafSurfaceTex = nullptr;
+
 TreeUtilities::MapleFoliageGenerator::MapleFoliageGenerator()
 {
 	_DefaultFoliageInfo = MapleFoliageInfo();

@@ -17,7 +17,7 @@ namespace TreeUtilities {
 	{
 		PineFoliageInfo _DefaultFoliageInfo;
 		EntityArchetype _Archetype;
-		std::shared_ptr<Texture2D> _LeafSurfaceTex;
+		static std::shared_ptr<Texture2D> _LeafSurfaceTex;
 		std::shared_ptr<Material> _LeafMaterial;
 	public:
 		PineFoliageGenerator();

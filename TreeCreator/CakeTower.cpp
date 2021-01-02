@@ -5,7 +5,9 @@ glm::ivec2 CakeTower::SelectSlice(glm::vec3 position) const
 	glm::ivec2 retVal = glm::ivec2(0);
 	const float heightLevel = MaxHeight / SliceAmount;
 	const float sliceAngle = 360.0f / SectorAmount;
-	retVal.x = static_cast<int>(position.y / heightLevel);
+	auto x = static_cast<int>(position.y / heightLevel);
+	if (x < 0) x = 0;
+	retVal.x = x;
 	if (retVal.x >= SliceAmount) retVal.x = SliceAmount - 1;
 	if (position.x == 0 && position.z == 0) retVal.y = 0;
 	else retVal.y = static_cast<int>((glm::degrees(glm::atan(position.x, position.z)) + 180.0f) / sliceAngle);

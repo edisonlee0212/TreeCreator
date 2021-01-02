@@ -22,8 +22,10 @@ namespace TreeUtilities {
 		std::unique_ptr<GLTexture2D> _InternodeCaptureResult;
 		std::unique_ptr<GLTexture2D> _FilteredResult;
 		std::shared_ptr<Texture2D> _Mask;
+		std::shared_ptr<Texture2D> _Skeleton;
 		std::unique_ptr<GLTexture2D> _ProcessedMask;
 		std::vector<float> _Data;
+		std::vector<float> _SkeletonData;
 		std::vector<glm::vec3> _MaskData;
 		float _InternodeSize = 0.075f;
 		float _IgnoreMaxHeight = 0.3f;

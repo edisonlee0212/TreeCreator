@@ -23,8 +23,8 @@ namespace TreeUtilities {
 	{
 		WillowFoliageInfo _DefaultFoliageInfo;
 		EntityArchetype _Archetype;
-		std::shared_ptr<Texture2D> _LeafSurfaceTex;
-		std::shared_ptr<Texture2D> _BranchletSurfaceTex;
+		static std::shared_ptr<Texture2D> _LeafSurfaceTex;
+		static std::shared_ptr<Texture2D> _BranchletSurfaceTex;
 		std::shared_ptr<Material> _LeafMaterial;
 		std::shared_ptr<Material> _BranchletMaterial;
 

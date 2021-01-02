@@ -1,6 +1,8 @@
 #include "AppleFoliageGenerator.h"
 #include "PlantSimulationSystem.h"
 
+std::shared_ptr<Texture2D> AppleFoliageGenerator::_LeafSurfaceTex = nullptr;
+
 AppleFoliageGenerator::AppleFoliageGenerator()
 {
 	_DefaultFoliageInfo = AppleFoliageInfo();
@@ -12,7 +14,7 @@ AppleFoliageGenerator::AppleFoliageGenerator()
 	_LeafMaterial->AlphaDiscardEnabled = true;
 	_LeafMaterial->AlphaDiscardOffset = 0.7f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
-	_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/PrunusAvium/A/level0.png");
+	if(!_LeafSurfaceTex) _LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/PrunusAvium/A/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex);
 }
 

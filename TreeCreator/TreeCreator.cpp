@@ -39,7 +39,7 @@ void main()
 	EntityManager::SetComponentData(dle, transform);
 #pragma endregion
 	bool reconstructTrees = false;
-	bool generateLearningData = false;
+	bool generateLearningData = true;
 	bool generateSorghum = false;
 	bool generateSorghumField = true;
 	PlantSimulationSystem* pss = InitPlantSimulationSystem();
@@ -69,9 +69,9 @@ void main()
 
 
 		
-		int startIndex = 801;
+		int startIndex = 1;
 		int counter = (startIndex - 1) * 7;
-		int endIndex = 1000;
+		int endIndex = 10;
 
 		ics->ResetCounter(counter, startIndex, endIndex, true);
 		ics->SetIsTrain(true);

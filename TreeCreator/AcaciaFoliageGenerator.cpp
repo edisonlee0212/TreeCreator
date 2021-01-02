@@ -1,6 +1,6 @@
 #include "AcaciaFoliageGenerator.h"
 #include "TreeManager.h"
-
+std::shared_ptr<Texture2D> TreeUtilities::AcaciaFoliageGenerator::_LeafSurfaceTex = nullptr;
 TreeUtilities::AcaciaFoliageGenerator::AcaciaFoliageGenerator()
 {
 	_DefaultFoliageInfo = AcaciaFoliageInfo();
@@ -12,7 +12,7 @@ TreeUtilities::AcaciaFoliageGenerator::AcaciaFoliageGenerator()
 	_LeafMaterial->AlphaDiscardOffset = 0.5f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/Delonix/level0.png");
+	if(!_LeafSurfaceTex)_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/Delonix/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex);
 }
 

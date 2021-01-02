@@ -1,5 +1,7 @@
 #include "PineFoliageGenerator.h"
 #include "TreeManager.h"
+std::shared_ptr<Texture2D> TreeUtilities::PineFoliageGenerator::_LeafSurfaceTex = nullptr;
+
 TreeUtilities::PineFoliageGenerator::PineFoliageGenerator()
 {
 	_DefaultFoliageInfo = PineFoliageInfo();
@@ -11,7 +13,7 @@ TreeUtilities::PineFoliageGenerator::PineFoliageGenerator()
 	_LeafMaterial->AlphaDiscardEnabled = true;
 	_LeafMaterial->AlphaDiscardOffset = 0.1f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
-	_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/Pine/level0.png");
+	if (!_LeafSurfaceTex) _LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/Pine/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex);
 }
 
