@@ -38,7 +38,7 @@ void main()
 	EntityManager::SetComponentData(dle, dlc);
 	EntityManager::SetComponentData(dle, transform);
 #pragma endregion
-	bool reconstructTrees = true;
+	bool reconstructTrees = false;
 	bool generateLearningData = false;
 	bool generateSorghum = false;
 	bool generateSorghumField = true;

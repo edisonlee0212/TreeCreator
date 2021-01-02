@@ -16,7 +16,7 @@ namespace TreeUtilities {
 	{
 		friend class DataCollectionSystem;
 		friend class TreeReconstructionSystem;
-		friend class MaskTrimmer;
+		friend class MaskProcessor;
 #pragma region Stuff
 		bool _AutoGenerateMesh = true;
 		bool _AutoGenerateLeaves = true;
@@ -53,10 +53,11 @@ namespace TreeUtilities {
 		inline void OnGui();
 		void UpdateDistanceToBranchEnd(Entity& internode, TreeParameters& treeParameters, int treeAge);
 		void UpdateDistanceToBranchStart(Entity& internode);
-		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::mat4& treeLTW);
+		void UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::mat4& treeLTW, bool calculateForce);
 		void UpdateInternodeResource(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, glm::mat4& treeTransform, bool isLeft);
 		
 		bool GrowShoots(Entity& internode, std::unique_ptr<TreeVolume>& treeVolume, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform, bool enableSpaceColonization, int controlLevel = 0);
+		bool GrowShootsSpaceColonization(Entity& rootInternode, std::unique_ptr<TreeVolume>& treeVolume, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform);
 		void EvaluatePruning(Entity& internode, TreeParameters& treeParameters, TreeAge& treeAge, TreeInfo& treeInfo);
 		bool EvaluateRemoval(Entity& internode, TreeParameters& treeParameters, bool& anyRemoved);
 		void EvaluateDirectionPruning(Entity& internode, glm::vec3 escapeDirection, float limitAngle);
@@ -86,8 +87,8 @@ namespace TreeUtilities {
 		TreeParameters LoadParameters(const std::string& path);
 		static void LoadDefaultTreeParameters(int preset, TreeParameters& tps);
 		void TryGrowAllTrees(std::vector<Entity>& trees);
-		bool GrowTree(Entity& treeEntity);
-		void CalculatePhysics(Entity tree);
+		bool GrowTree(Entity& treeEntity, bool mainBranch = false);
+		void CalculatePhysics(Entity tree, bool calculateForce);
 
 		Entity CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters parameters, glm::vec3 position, bool enabled = true);
 		Entity CreateTree(TreeParameters parameters, glm::vec3 position, bool enabled = true);

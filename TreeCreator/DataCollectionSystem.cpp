@@ -11,7 +11,7 @@
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
 
-#include "MaskTrimmer.h"
+#include "MaskProcessor.h"
 
 void DataCollectionSystem::ResetCounter(int value, int startIndex, int endIndex, bool needExport)
 {
@@ -347,13 +347,13 @@ void DataCollectionSystem::OnCreate()
 #pragma endregion
 
 #pragma region MaskTrimmer
-	MaskTrimmer::_ResolutionX = _TargetResolution;
-	MaskTrimmer::_ResolutionY = _TargetResolution;
-	MaskTrimmer::_CameraEntity = _SemanticMaskCameraEntity;
-	MaskTrimmer::_Filter = std::make_unique<RenderTarget>(_TargetResolution, _TargetResolution);
-	MaskTrimmer::_DepthStencilBuffer = std::make_unique<GLRenderBuffer>();
-	MaskTrimmer::_DepthStencilBuffer->AllocateStorage(GL_DEPTH24_STENCIL8, _TargetResolution, _TargetResolution);
-	MaskTrimmer::_Filter->AttachRenderBuffer(MaskTrimmer::_DepthStencilBuffer.get(), GL_DEPTH_STENCIL_ATTACHMENT);
+	MaskProcessor::_ResolutionX = _TargetResolution;
+	MaskProcessor::_ResolutionY = _TargetResolution;
+	MaskProcessor::_CameraEntity = _SemanticMaskCameraEntity;
+	MaskProcessor::_Filter = std::make_unique<RenderTarget>(_TargetResolution, _TargetResolution);
+	MaskProcessor::_DepthStencilBuffer = std::make_unique<GLRenderBuffer>();
+	MaskProcessor::_DepthStencilBuffer->AllocateStorage(GL_DEPTH24_STENCIL8, _TargetResolution, _TargetResolution);
+	MaskProcessor::_Filter->AttachRenderBuffer(MaskProcessor::_DepthStencilBuffer.get(), GL_DEPTH_STENCIL_ATTACHMENT);
 
 	vertShaderCode = std::string("#version 460 core\n") +
 		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Vertex/LightSnapShot.vert");
@@ -361,7 +361,7 @@ void DataCollectionSystem::OnCreate()
 		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/LightSnapShot.frag");
 	auto vertShader = std::make_shared<GLShader>(ShaderType::Vertex, vertShaderCode);
 	auto fragShader = std::make_shared<GLShader>(ShaderType::Fragment, fragShaderCode);
-	MaskTrimmer::_InternodeCaptureProgram = std::make_unique<GLProgram>(vertShader, fragShader);
+	MaskProcessor::_InternodeCaptureProgram = std::make_unique<GLProgram>(vertShader, fragShader);
 
 	
 	vertShaderCode = std::string("#version 460 core\n") +
@@ -370,12 +370,12 @@ void DataCollectionSystem::OnCreate()
 		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/MaskFilter.frag");
 	vertShader = std::make_shared<GLShader>(ShaderType::Vertex, vertShaderCode);
 	fragShader = std::make_shared<GLShader>(ShaderType::Fragment, fragShaderCode);
-	MaskTrimmer::_FilterProgram = std::make_unique<GLProgram>(vertShader, fragShader);
+	MaskProcessor::_FilterProgram = std::make_unique<GLProgram>(vertShader, fragShader);
 
 	fragShaderCode = std::string("#version 460 core\n") +
 		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/MaskPreprocess.frag");
 	fragShader = std::make_shared<GLShader>(ShaderType::Fragment, fragShaderCode);
-	MaskTrimmer::_MaskPreprocessProgram = std::make_unique<GLProgram>(vertShader, fragShader);
+	MaskProcessor::_MaskPreprocessProgram = std::make_unique<GLProgram>(vertShader, fragShader);
 	
 #pragma endregion
 

@@ -12,7 +12,7 @@ namespace TreeUtilities
 	protected:
 		int _AttractionPointsCount = 2000;
 		float _RemoveDistance = 1.0f;
-		float _AttractDistance = 2.0f;
+		float _AttractDistance = 6.0f;
 		
 		glm::vec3 _Center;
 		float _SphereRadius;

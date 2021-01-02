@@ -22,7 +22,7 @@
 #include "BirchFoliageGenerator.h"
 
 #include "TreeVolume.h"
-
+#include "MaskProcessor.h"
 float TreeUtilities::PlantSimulationSystem::_MeshGenerationResolution = 0.01f;
 float TreeUtilities::PlantSimulationSystem::_MeshGenerationSubdivision = 0.1f;
 
@@ -39,7 +39,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 	bool growed = false;
 
 	for (auto& tree : trees) {
-		growed = growed || GrowTree(tree);
+		growed = growed || GrowTree(tree, true);
 	}
 	RefreshTrees();
 	if (!growed) {
@@ -65,7 +65,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 		Debug::Log("Mesh and leaves generation completed in " + std::to_string(timer) + " seconds.");
 	}
 }
-bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
+bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mainBranch)
 {
 	if (!treeEntity.Enabled()) return false;
 	Entity rootInternode = Entity();
@@ -124,10 +124,10 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	auto& treeVolume = treeEntity.GetPrivateComponent<TreeVolume>();
 	const bool enableSpaceColonization = treeVolume->EnableSpaceColonization;
 	bool anyRemoved = false;
-	EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
+	if (!mainBranch) EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
 #pragma region Space colonization prep.
-	float removeDistance = treeEntity.GetPrivateComponent<TreeVolume>()->_RemoveDistance;
-	float attractDistance = treeEntity.GetPrivateComponent<TreeVolume>()->_AttractDistance;
+	float removeDistance = mainBranch ? treeEntity.GetPrivateComponent<MaskProcessor>()->_RemoveDistance : treeEntity.GetPrivateComponent<TreeVolume>()->_RemoveDistance;
+	float attractDistance = mainBranch ? treeEntity.GetPrivateComponent<MaskProcessor>()->_AttractDistance : treeEntity.GetPrivateComponent<TreeVolume>()->_AttractDistance;
 #pragma region Remove attraction points.
 	std::vector<Entity> internodes;
 	std::vector<GlobalTransform> internodeTransforms;
@@ -156,9 +156,8 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	_InternodeQuery.ToComponentDataArray(treeIndex, internodeTransforms);
 #pragma endregion
 #pragma region Assign attraction points.
-	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetAttractionPointQuery(), [&treeEntity, treeIndex, &internodeTransforms, &internodes, attractDistance](int i, Entity entity, TreeIndex* index, GlobalTransform* globalTransform)
+	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetAttractionPointQuery(), [ &internodeTransforms, &internodes, attractDistance](int i, Entity entity, TreeIndex* index, GlobalTransform* globalTransform)
 		{
-			if (treeIndex.Value != index->Value) return;
 			float minDistance = FLT_MAX;
 			int minIndex = -1;
 			for (int i = 0; i < internodes.size(); i++)
@@ -182,7 +181,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	);
 #pragma endregion
 #pragma region Calculate direction vector
-	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [treeIndex](int i, Entity entity, InternodeInfo* info)
+	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity entity, InternodeInfo* info)
 		{
 			auto& data = entity.GetPrivateComponent<InternodeData>();
 			info->DirectionVector = glm::vec3(0);
@@ -191,11 +190,14 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity)
 	);
 #pragma endregion
 #pragma endregion
-	const bool growed = GrowShoots(rootInternode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value, enableSpaceColonization, _ControlLevel);
+	const bool growed = mainBranch ?
+		GrowShootsSpaceColonization(rootInternode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value)
+		:
+		GrowShoots(rootInternode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value, enableSpaceColonization, _ControlLevel);
 	if (growed) {
 		UpdateDistanceToBranchEnd(rootInternode, treeParameters, treeAge.Value);
 		UpdateDistanceToBranchStart(rootInternode);
-		CalculatePhysics(treeEntity);
+		CalculatePhysics(treeEntity, ! mainBranch);
 	}
 	treeAge.Value++;
 	treeAge.ToGrowIteration--;
@@ -693,7 +695,7 @@ Entity TreeUtilities::PlantSimulationSystem::CreateTree(std::shared_ptr<Material
 	auto& treeData = EntityManager::GetPrivateComponent<TreeData>(treeEntity);
 	treeData->MeshGenerated = false;
 	auto id = glm::translate(glm::vec3(0.0f)) * glm::mat4_cast(glm::quat(glm::vec3(0.0f))) * glm::scale(glm::vec3(1.0f));
-	UpdateLocalTransform(internode, treeParameters, id, globalTransform.Value);
+	UpdateLocalTransform(internode, treeParameters, id, globalTransform.Value, true);
 	EntityManager::SetComponentData(treeEntity, treeParameters);
 	EntityManager::SetComponentData(treeEntity, age);
 	ResumeGrowth();
@@ -991,7 +993,8 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 				// first take into account the apical dominance
 				if (internodeInfo.Inhibitor > 0) budGrowProbability *= glm::exp(-internodeInfo.Inhibitor);
 				flush = treeAge.Value < 2 ? true : budGrowProbability >= glm::linearRand(0.0f, 1.0f);
-			}else
+			}
+			else
 			{
 				flush = i == 0;
 			}
@@ -1047,6 +1050,155 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 	EntityManager::SetComponentData(internode, internodeInfo);
 	return ret;
 }
+
+bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, std::unique_ptr<TreeVolume>& treeVolume,
+	std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex,
+	glm::mat4& treeTransform)
+{
+	std::mutex growMutex;
+	bool growed = false;
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(_InternodeQuery, [&growed, &growMutex, this, &treeData, &treeParameters, &treeAge, &treeIndex, &treeTransform](int i, Entity internode, InternodeInfo* info, TreeIndex* currentTreeIndex)
+		{
+			if (currentTreeIndex->Value != treeIndex.Value) return;
+			const auto direction = info->DirectionVector;
+			if (direction != glm::vec3(0.0f))
+			{
+				bool isLateral = !EntityManager::GetChildrenAmount(internode) == 0;
+#pragma region Compute total grow distance and internodes amount.
+				int order = info->Order;
+				int level = info->Level;
+				if (isLateral) {
+					order++;
+					level++;
+				}
+#pragma endregion
+#pragma region Grow new shoot
+				auto& internodeData = EntityManager::GetPrivateComponent<InternodeData>(internode);
+				if(internodeData->Buds.empty())
+				{
+					return;
+				}
+				auto& bud = isLateral ? internodeData->Buds.back() : internodeData->Buds.front();
+				float internodeLength = 1.0f;
+				internodeLength *= treeParameters.InternodeLengthBase * glm::pow(treeParameters.InternodeLengthAgeFactor, treeAge.Value);
+				Entity prevInternode = internode;
+				glm::quat prevInternodeRotation;
+				glm::vec3 prevEulerAngle = bud.EulerAngles;
+				glm::vec3 scale;
+				glm::vec3 trans;
+				glm::quat rotation;
+				glm::vec3 skew;
+				glm::vec4 perspective;
+				glm::decompose(info->GlobalTransform, scale, rotation, trans, skew, perspective);
+				prevInternodeRotation = rotation;
+				glm::vec3 prevInternodeTranslation = trans;
+
+				std::lock_guard<std::mutex> lock(growMutex);
+				growed = true;
+#pragma region Create internode
+#pragma region Setup internode
+				Entity newInternode = TreeManager::CreateInternode(treeIndex, prevInternode);
+				InternodeInfo newInternodeInfo = EntityManager::GetComponentData<InternodeInfo>(newInternode);
+				newInternodeInfo.ApicalBudExist = true;
+				newInternodeInfo.ActivatedBudsAmount = treeParameters.LateralBudPerNode + 1;
+
+				newInternodeInfo.DistanceToParent = internodeLength;
+				treeData->ActiveLength += internodeLength;
+				newInternodeInfo.Order = order;
+				newInternodeInfo.Level = level;
+				newInternodeInfo.Pruned = false;
+				newInternodeInfo.StartAge = treeAge.Value;
+				newInternodeInfo.ParentInhibitorFactor = glm::pow(treeParameters.ApicalDominanceDistanceFactor, newInternodeInfo.DistanceToParent);
+				newInternodeInfo.ParentTranslation = prevInternodeTranslation;
+
+#pragma endregion
+#pragma region Transforms for internode
+				newInternodeInfo.DesiredLocalRotation = glm::quat(prevEulerAngle);
+#pragma region Roll internode
+				glm::vec3 rollAngles = glm::vec3(0.0f, 0.0f, glm::radians(glm::gaussRand(treeParameters.RollAngleMean, treeParameters.RollAngleVariance)));
+				newInternodeInfo.DesiredLocalRotation *= glm::quat(rollAngles);
+#pragma endregion
+#pragma region Apply Space Colonization direction
+				glm::vec3 translation;
+				glm::decompose(treeTransform, scale, rotation, translation, skew, perspective);
+
+				glm::quat globalRawRotation = rotation * prevInternodeRotation * newInternodeInfo.DesiredLocalRotation;
+				glm::vec3 desiredFront = glm::normalize(direction);
+				glm::vec3 desiredUp = globalRawRotation * glm::vec3(0.0f, 1.0f, 0.0f);
+
+				desiredFront = glm::normalize(desiredFront);
+				desiredUp = glm::normalize(glm::cross(glm::cross(desiredFront, desiredUp), desiredFront));
+				globalRawRotation = glm::quatLookAt(desiredFront, desiredUp);
+				newInternodeInfo.DesiredLocalRotation = glm::inverse(rotation) * glm::inverse(prevInternodeRotation) * globalRawRotation;
+				prevInternodeRotation = globalRawRotation;
+				prevInternodeTranslation = prevInternodeTranslation + newInternodeInfo.DistanceToParent * desiredFront;
+				newInternodeInfo.GlobalTransform = glm::translate(prevInternodeTranslation);
+#pragma endregion
+
+#pragma endregion
+				auto& newInternodeData = EntityManager::GetPrivateComponent<InternodeData>(newInternode);
+#pragma region Create Apical Bud
+
+				Bud newApicalBud;
+				newApicalBud.EulerAngles = glm::vec3(
+					glm::gaussRand(glm::vec2(0.0f), glm::vec2(glm::radians(treeParameters.VarianceApicalAngle))),
+					0.0f);
+				newApicalBud.IsActive = true;
+				newApicalBud.IsApical = true;
+				newInternodeData->Buds.push_back(newApicalBud);
+
+#pragma endregion
+#pragma region Create Lateral Buds
+				for (int selectedNewBudIndex = 0; selectedNewBudIndex < treeParameters.LateralBudPerNode; selectedNewBudIndex++) {
+					Bud newLateralBud;
+					float rollAngle = 360.0f * (selectedNewBudIndex + 1) / treeParameters.LateralBudPerNode + treeParameters.BranchingAngleVariance * glm::linearRand(-1, 1);
+					float branchAngle = glm::gaussRand(treeParameters.BranchingAngleMean, treeParameters.BranchingAngleVariance);
+					newLateralBud.EulerAngles = glm::vec3(glm::radians(branchAngle), 0.0f, glm::radians(rollAngle));
+					newLateralBud.IsActive = true;
+					newLateralBud.IsApical = false;
+					newInternodeData->Buds.push_back(newLateralBud);
+				}
+#pragma endregion
+				prevInternode = newInternode;
+#pragma region Apply new internode info
+				EntityManager::SetComponentData(newInternode, newInternodeInfo);
+#pragma endregion
+
+#pragma endregion
+				if (isLateral)
+				{
+					for (int index = 0; index < internodeData->Buds.size(); index++)
+					{
+						if (!internodeData->Buds[index].IsApical)
+						{
+							//internodeData->Buds.erase(internodeData->Buds.begin() + index);
+							break;
+						}
+					}
+
+				}
+				else
+				{
+					for (int index = 0; index < internodeData->Buds.size(); index++)
+					{
+						if (internodeData->Buds[index].IsApical)
+						{
+							//internodeData->Buds.erase(internodeData->Buds.begin() + index);
+							info->ApicalBudExist = false;
+							break;
+						}
+					}
+				}
+				info->ActivatedBudsAmount = internodeData->Buds.size();
+#pragma endregion
+
+			}
+		}
+	);
+
+	return growed;
+}
+
 inline float TreeUtilities::PlantSimulationSystem::GetApicalControl(std::unique_ptr<TreeData>& treeInfo, InternodeInfo& internodeInfo, TreeParameters& treeParameters, TreeAge& treeAge, int level) const
 {
 	float apicalControl = treeParameters.ApicalControlBase * glm::pow(treeParameters.ApicalControlAgeFactor, treeAge.Value);
@@ -1206,14 +1358,14 @@ bool PlantSimulationSystem::EvaluateRemoval(Entity& internode, TreeParameters& t
 }
 #pragma endregion
 #pragma region Physics
-void TreeUtilities::PlantSimulationSystem::CalculatePhysics(Entity tree)
+void TreeUtilities::PlantSimulationSystem::CalculatePhysics(Entity tree, bool calculateForce)
 {
 	GlobalTransform ltw = EntityManager::GetComponentData<GlobalTransform>(tree);
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
 	if (EntityManager::GetChildrenAmount(tree) == 0) return;
 	Entity rootInternode = EntityManager::GetChildren(tree).at(0);
 	auto id = glm::translate(glm::vec3(0.0f)) * glm::mat4_cast(glm::quat(glm::vec3(0.0f))) * glm::scale(glm::vec3(1.0f));
-	UpdateLocalTransform(rootInternode, treeParameters, id, ltw.Value);
+	UpdateLocalTransform(rootInternode, treeParameters, id, ltw.Value, calculateForce);
 	ApplyLocalTransform(tree);
 }
 void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntity) const
@@ -1341,7 +1493,7 @@ void TreeUtilities::PlantSimulationSystem::UpdateDistanceToBranchStart(Entity& i
 	);
 	EntityManager::SetComponentData(internode, internodeInfo);
 }
-void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::mat4& treeLTW)
+void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internode, TreeParameters& treeParameters, glm::mat4& parentLTW, glm::mat4& treeLTW, bool calculateForce)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	glm::vec3 scale;
@@ -1351,44 +1503,45 @@ void TreeUtilities::PlantSimulationSystem::UpdateLocalTransform(Entity& internod
 	glm::vec3 translation;
 	glm::decompose(parentLTW, scale, internodeInfo.ParentRotation, internodeInfo.ParentTranslation, skew, perspective);
 	glm::quat actualLocalRotation;
-#pragma region Apply force here.
+	
 	glm::decompose(treeLTW, scale, rotation, translation, skew, perspective);
 	glm::quat newGlobalRotation = rotation * internodeInfo.ParentRotation * internodeInfo.DesiredLocalRotation;
-	glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
-	glm::vec3 up = newGlobalRotation * glm::vec3(0, 1, 0);
-	float strength = glm::vec2(internodeInfo.ChildBranchesMeanPosition.x - translation.x, internodeInfo.ChildBranchesMeanPosition.z - translation.z).length();
-	strength *= glm::pow(internodeInfo.MeanWeight, 2.0f) * treeParameters.GravityBendingStrength * internodeInfo.DistanceToParent;
-	const float dotP = glm::abs(glm::dot(front, glm::vec3(0, -1, 0)));
-	strength *= 1.0f - dotP;
-	float panaltyF = glm::pow(treeParameters.GravityBendingAngleFactor, internodeInfo.MeanWeight);
-	float maxStrength = 90.0f * panaltyF;
-	strength = glm::abs(maxStrength * (1.0f - glm::exp(-glm::abs(strength) / maxStrength)));
-	if (strength > internodeInfo.Sagging && dotP < 0.95f) {
-		const glm::vec3 left = glm::cross(front, glm::vec3(0, -1, 0));
-		float maxAngle = glm::acos(dotP);
-		front = glm::normalize(glm::rotate(front, glm::min(maxAngle, glm::radians(strength - internodeInfo.Sagging)), left));
-		up = glm::normalize(glm::cross(glm::cross(front, up), front));
-		internodeInfo.Sagging = strength;
+	
+#pragma region Apply force here.
+	if (calculateForce) {
+		glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
+		glm::vec3 up = newGlobalRotation * glm::vec3(0, 1, 0);
+		float strength = glm::vec2(internodeInfo.ChildBranchesMeanPosition.x - translation.x, internodeInfo.ChildBranchesMeanPosition.z - translation.z).length();
+		strength *= glm::pow(internodeInfo.MeanWeight, 2.0f) * treeParameters.GravityBendingStrength * internodeInfo.DistanceToParent;
+		const float dotP = glm::abs(glm::dot(front, glm::vec3(0, -1, 0)));
+		strength *= 1.0f - dotP;
+		float panaltyF = glm::pow(treeParameters.GravityBendingAngleFactor, internodeInfo.MeanWeight);
+		float maxStrength = 90.0f * panaltyF;
+		strength = glm::abs(maxStrength * (1.0f - glm::exp(-glm::abs(strength) / maxStrength)));
+		if (strength > internodeInfo.Sagging && dotP < 0.95f) {
+			const glm::vec3 left = glm::cross(front, glm::vec3(0, -1, 0));
+			float maxAngle = glm::acos(dotP);
+			front = glm::normalize(glm::rotate(front, glm::min(maxAngle, glm::radians(strength - internodeInfo.Sagging)), left));
+			up = glm::normalize(glm::cross(glm::cross(front, up), front));
+			internodeInfo.Sagging = strength;
+		}
+		newGlobalRotation = glm::quatLookAt(front, up);
+		
 	}
-	newGlobalRotation = glm::quatLookAt(front, up);
+#pragma endregion
 	actualLocalRotation = glm::inverse(rotation) * glm::inverse(internodeInfo.ParentRotation) * newGlobalRotation;
 	internodeInfo.DesiredLocalRotation = actualLocalRotation;
-#pragma endregion
-
 	internodeInfo.LocalTransform = glm::translate(glm::mat4(1.0f), actualLocalRotation * glm::vec3(0, 0, -1)
 		* internodeInfo.DistanceToParent) * glm::mat4_cast(actualLocalRotation)
 		* glm::scale(glm::vec3(1.0f));
 
 	internodeInfo.GlobalTransform = parentLTW * internodeInfo.LocalTransform;
-
-
-
 	float mainChildThickness = 0;
 	InternodeInfo mainChildInfo;
 	unsigned mainChildEntityIndex = 0;
-	EntityManager::ForEachChild(internode, [this, &mainChildInfo, &mainChildEntityIndex, &mainChildThickness, &treeParameters, &internodeInfo, &treeLTW](Entity child)
+	EntityManager::ForEachChild(internode, [this, &mainChildInfo, &mainChildEntityIndex, &mainChildThickness, &treeParameters, &internodeInfo, &treeLTW, calculateForce](Entity child)
 		{
-			UpdateLocalTransform(child, treeParameters, internodeInfo.GlobalTransform, treeLTW);
+			UpdateLocalTransform(child, treeParameters, internodeInfo.GlobalTransform, treeLTW, calculateForce);
 			InternodeInfo childInternodeInfo = EntityManager::GetComponentData<InternodeInfo>(child);
 			childInternodeInfo.ParentThickness = internodeInfo.Thickness;
 			if (mainChildThickness < childInternodeInfo.Thickness) {

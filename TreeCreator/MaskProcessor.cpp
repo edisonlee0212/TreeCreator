@@ -1,16 +1,17 @@
-#include "MaskTrimmer.h"
+#include "MaskProcessor.h"
 #include "TreeManager.h"
 #include "PlantSimulationSystem.h"
-Entity TreeUtilities::MaskTrimmer::_CameraEntity;
-unsigned TreeUtilities::MaskTrimmer::_ResolutionX;
-unsigned TreeUtilities::MaskTrimmer::_ResolutionY;
-std::unique_ptr<GLProgram> TreeUtilities::MaskTrimmer::_InternodeCaptureProgram;
-std::unique_ptr<GLProgram> TreeUtilities::MaskTrimmer::_FilterProgram;
-std::unique_ptr<GLProgram> TreeUtilities::MaskTrimmer::_MaskPreprocessProgram;
-std::unique_ptr<RenderTarget> TreeUtilities::MaskTrimmer::_Filter;
-std::unique_ptr<GLRenderBuffer> TreeUtilities::MaskTrimmer::_DepthStencilBuffer;
+#include "Ray.h"
+Entity TreeUtilities::MaskProcessor::_CameraEntity;
+unsigned TreeUtilities::MaskProcessor::_ResolutionX;
+unsigned TreeUtilities::MaskProcessor::_ResolutionY;
+std::unique_ptr<GLProgram> TreeUtilities::MaskProcessor::_InternodeCaptureProgram;
+std::unique_ptr<GLProgram> TreeUtilities::MaskProcessor::_FilterProgram;
+std::unique_ptr<GLProgram> TreeUtilities::MaskProcessor::_MaskPreprocessProgram;
+std::unique_ptr<RenderTarget> TreeUtilities::MaskProcessor::_Filter;
+std::unique_ptr<GLRenderBuffer> TreeUtilities::MaskProcessor::_DepthStencilBuffer;
 
-void MaskTrimmer::Trim(int& totalChild, int& trimmedChild, std::map<int, Entity>& map, Entity internode)
+void MaskProcessor::Trim(int& totalChild, int& trimmedChild, std::map<int, Entity>& map, Entity internode)
 {
 	EntityManager::ForEachChild(internode, [&map, this, &totalChild, &trimmedChild](Entity child)
 		{
@@ -27,7 +28,7 @@ void MaskTrimmer::Trim(int& totalChild, int& trimmedChild, std::map<int, Entity>
 		}
 	}
 	totalChild++;
-	if(internode.GetComponentData<InternodeInfo>().Order > _MainBranchOrderProtection && map.find(internode.Index) != map.end())
+	if (internode.GetComponentData<InternodeInfo>().Order > _MainBranchOrderProtection && map.find(internode.Index) != map.end())
 	{
 		if (_TrimFactor == 0.0f || (float)trimmedChild / totalChild > _TrimFactor) {
 			EntityManager::DeleteEntity(internode);
@@ -36,7 +37,31 @@ void MaskTrimmer::Trim(int& totalChild, int& trimmedChild, std::map<int, Entity>
 	}
 }
 
-void MaskTrimmer::PreprocessMask() const
+void MaskProcessor::PlaceAttractionPoints()
+{
+	const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
+	_Mask->Texture()->Bind(0);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (void*)_MaskData.data());
+	for (int x = 0; x < _ResolutionX; x++)
+	{
+		for (int y = 0; y < _ResolutionY; y++)
+		{
+			if (_MaskData[x * _ResolutionY + y] == glm::vec3(0, 0, 1))
+			{
+				GlobalTransform cameraTransform = _CameraEntity.GetComponentData<GlobalTransform>();
+				glm::vec3 position;
+				Ray cameraRay = _CameraEntity.GetPrivateComponent<CameraComponent>()->ScreenPointToRay(cameraTransform, glm::vec2(y - (int)_ResolutionY, _ResolutionX - x));
+				auto start = cameraRay.Start;
+				auto direction = glm::normalize(cameraRay.Direction);
+				direction /= direction.z;
+				position = start - direction * start.z;
+				TreeManager::CreateAttractionPoint(treeIndex, position, GetOwner());
+			}
+		}
+	}
+}
+
+void MaskProcessor::PreprocessMask() const
 {
 	_Filter->AttachTexture(_ProcessedMask.get(), GL_COLOR_ATTACHMENT0);
 	_Filter->GetFrameBuffer()->DrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -50,7 +75,7 @@ void MaskTrimmer::PreprocessMask() const
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void TreeUtilities::MaskTrimmer::ShotInternodes() const
+void TreeUtilities::MaskProcessor::ShotInternodes() const
 {
 	if (!_CameraEntity.IsValid()) return;
 	const auto targetTreeIndex = GetOwner().GetComponentData<TreeIndex>();
@@ -120,7 +145,7 @@ void TreeUtilities::MaskTrimmer::ShotInternodes() const
 	RenderTarget::BindDefault();
 }
 
-void TreeUtilities::MaskTrimmer::Filter() const
+void TreeUtilities::MaskProcessor::Filter() const
 {
 	if (!_Mask || !_CameraEntity.IsValid()) return;
 	ShotInternodes();
@@ -143,7 +168,7 @@ void TreeUtilities::MaskTrimmer::Filter() const
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, (void*)_Data.data());
 }
 
-TreeUtilities::MaskTrimmer::MaskTrimmer()
+TreeUtilities::MaskProcessor::MaskProcessor()
 {
 	_InternodeCaptureResult = std::make_unique<GLTexture2D>(1, GL_R32F, _ResolutionX, _ResolutionY);
 	_InternodeCaptureResult->SetInt(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -156,19 +181,20 @@ TreeUtilities::MaskTrimmer::MaskTrimmer()
 	_FilteredResult->SetInt(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	_FilteredResult->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	_FilteredResult->SetInt(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	
+
 	_ProcessedMask = std::make_unique<GLTexture2D>(1, GL_RGB32F, _ResolutionX, _ResolutionY);
 	_ProcessedMask->SetInt(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	_ProcessedMask->SetInt(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	_ProcessedMask->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	_ProcessedMask->SetInt(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 
-	
+
 	_Data.resize(_ResolutionX * _ResolutionY);
+	_MaskData.resize(_ResolutionX * _ResolutionY);
 	_Mask = nullptr;
 }
 
-void TreeUtilities::MaskTrimmer::Trim()
+void TreeUtilities::MaskProcessor::Trim()
 {
 	if (!_Mask || !_CameraEntity.IsValid()) return;
 	Filter();
@@ -199,8 +225,34 @@ void TreeUtilities::MaskTrimmer::Trim()
 	TreeManager::GenerateSimpleMeshForTree(GetOwner(), PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
 }
 
-void TreeUtilities::MaskTrimmer::OnGui()
+void TreeUtilities::MaskProcessor::ClearAttractionPoints() const
 {
+	const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
+	std::vector<Entity> points;
+	TreeManager::GetAttractionPointQuery().ToEntityArray(treeIndex, points);
+	for (auto& i : points) EntityManager::DeleteEntity(i);
+}
+
+void TreeUtilities::MaskProcessor::OnGui()
+{
+	ImGui::DragFloat("Remove Distance", &_RemoveDistance, 0.01f, 0.0f, 10.0f);
+	ImGui::DragFloat("Attract Distance", &_AttractDistance, 0.01f, _RemoveDistance, 10.0f);
+	ImGui::DragInt("AP Count", &_AttractionPointsCount);
+	ImGui::Checkbox("Display attraction points", &_Display);
+	if (ImGui::Button("Generate attraction points"))
+	{
+		ClearAttractionPoints();
+		PlaceAttractionPoints();
+	}
+	if (_Display)
+	{
+		const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
+		std::vector<GlobalTransform> points;
+		TreeManager::GetAttractionPointQuery().ToComponentDataArray(treeIndex, points);
+		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 0.0f, 0.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), _RemoveDistance / 2.0f);
+		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 1.0f, 1.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), _AttractDistance / 2.0f);
+	}
+
 	ImGui::DragFloat("Internode size", &_InternodeSize, 0.001f, 0.02f, 1.0f);
 	ImGui::DragFloat("Height ignore", &_IgnoreMaxHeight, 0.01f, 0.0f, 1.0f);
 	ImGui::DragFloat("Trim factor", &_TrimFactor, 0.01f, 0.0f, 1.0f);

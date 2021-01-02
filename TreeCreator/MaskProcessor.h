@@ -3,8 +3,13 @@
 
 using namespace UniEngine;
 namespace TreeUtilities {
-	class MaskTrimmer : public PrivateComponentBase
+	class MaskProcessor : public PrivateComponentBase
 	{
+		friend class PlantSimulationSystem;
+		int _AttractionPointsCount = 2000;
+		bool _Display = true;
+		float _RemoveDistance = 0.5f;
+		float _AttractDistance = 1.0f;
 		friend class DataCollectionSystem;
 		static Entity _CameraEntity;
 		static unsigned _ResolutionX;
@@ -19,6 +24,7 @@ namespace TreeUtilities {
 		std::shared_ptr<Texture2D> _Mask;
 		std::unique_ptr<GLTexture2D> _ProcessedMask;
 		std::vector<float> _Data;
+		std::vector<glm::vec3> _MaskData;
 		float _InternodeSize = 0.075f;
 		float _IgnoreMaxHeight = 0.3f;
 		float _IgnoreWidth = 0.1f;
@@ -26,10 +32,12 @@ namespace TreeUtilities {
 		int _MainBranchOrderProtection = 6;
 		void Trim(int& totalChild, int& trimmedChild, std::map<int, Entity>& map, Entity internode);
 	public:
+		void ClearAttractionPoints() const;
+		void PlaceAttractionPoints();
 		void PreprocessMask() const;
 		void ShotInternodes() const;
 		void Filter() const;
-		MaskTrimmer();
+		MaskProcessor();
 		void Trim();
 		void OnGui() override;
 	};
