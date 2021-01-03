@@ -374,6 +374,12 @@ void TreeUtilities::TreeManager::Init()
 				ImGui::Text(("CrownShyness: " + std::to_string(internodeInfo->CrownShyness)).c_str());
 				ImGui::TreePop();
 			}
+			if (ImGui::TreeNode("Space Colonization"))
+			{
+				ImGui::InputFloat3("DirectionVector", (float*)(void*)&internodeInfo->DirectionVector, "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::InputFloat3("ApicalDirectionVector", (float*)(void*)&internodeInfo->ApicalDirectionVector, "%.3f", ImGuiInputTextFlags_ReadOnly);
+				ImGui::TreePop();
+			}
 		}
 	);
 

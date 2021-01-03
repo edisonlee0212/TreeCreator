@@ -28,7 +28,7 @@ namespace TreeUtilities
 	class TreeReconstructionSystem :
 		public SystemBase
 	{
-		TreeType _Type = TreeType::Maple;
+		TreeType _Type = TreeType::Apple;
 		bool _EnableSpaceColonization = false;
 		bool _EnableMaskTrimmer = false;
 		std::string _StorePath = "./tree_recon/";
@@ -51,9 +51,12 @@ namespace TreeUtilities
 		int _EndIndex = 5;
 		int _MaxAge = 30;
 		bool _NeedExport = false;
+		bool _Growing = false;
 		void OnGui();
 		std::vector<CakeTowerOutput> _CakeTowersOutputList;
 		void ExportAllData();
+		void TryGrowTree();
+		void PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW);
 	public:
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);
 		void SetDataCollectionSystem(DataCollectionSystem* value);

@@ -16,7 +16,7 @@ TreeUtilities::OakFoliageGenerator::OakFoliageGenerator()
 	_LeafMaterial->AlphaDiscardEnabled = true;
 	_LeafMaterial->AlphaDiscardOffset = 0.7f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
-	if (!_LeafSurfaceTex)_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/PrunusAvium/A/level0.png");
+	if (!_LeafSurfaceTex)_LeafSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Leaf/PrunusAvium/A/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex);
 }
 

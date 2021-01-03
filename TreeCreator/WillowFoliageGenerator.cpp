@@ -16,7 +16,7 @@ TreeUtilities::WillowFoliageGenerator::WillowFoliageGenerator()
 	_BranchletMaterial = std::make_shared<Material>();
 	_BranchletMaterial->Shininess = 32.0f;
 	_BranchletMaterial->SetProgram(Default::GLPrograms::StandardProgram);
-	if(!_BranchletSurfaceTex)_BranchletSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_baseColor.jpg");
+	if(!_BranchletSurfaceTex)_BranchletSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_baseColor.jpg");
 	_BranchletMaterial->SetTexture(_BranchletSurfaceTex);
 
 	_LeafMaterial = std::make_shared<Material>();
@@ -25,7 +25,7 @@ TreeUtilities::WillowFoliageGenerator::WillowFoliageGenerator()
 	_LeafMaterial->AlphaDiscardOffset = 0.2f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	if (!_LeafSurfaceTex)_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/Willow/level0.png");
+	if (!_LeafSurfaceTex)_LeafSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Leaf/Willow/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex);
 }
 

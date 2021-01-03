@@ -125,6 +125,7 @@ namespace TreeUtilities {
 		float CrownShyness = 1.0f;
 #pragma region Space Colonization
 		glm::vec3 DirectionVector;
+		glm::vec3 ApicalDirectionVector;
 #pragma endregion
 
 	};

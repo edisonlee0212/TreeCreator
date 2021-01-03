@@ -1,7 +1,8 @@
 #include "TreeReconstructionSystem.h"
-
+#include "Ray.h"
 #include "CakeTower.h"
-
+#include "MaskProcessor.h"
+#include "glm/glm/gtx/intersect.hpp"
 using namespace TreeUtilities;
 void TreeUtilities::TreeReconstructionSystem::OnGui()
 {
@@ -12,6 +13,143 @@ void TreeReconstructionSystem::ExportAllData()
 {
 	ExportCakeTower(_StorePath + _Name + "/" + "CakeTowers" + (_EnableSpaceColonization ? "SC" + std::to_string(_ControlLevel) : "IPM"));
 	_CakeTowersOutputList.clear();
+}
+
+void TreeReconstructionSystem::TryGrowTree()
+{
+	if(_CurrentTree.IsNull() || !_CurrentTree.IsValid() || _CurrentTree.IsDeleted()) return;
+	if (!_Growing) return;
+	_Growing = _PlantSimulationSystem->GrowTree(_CurrentTree, true);
+	
+	if (_Growing) {
+		_PlantSimulationSystem->RefreshTrees();
+		return;
+	}//TODO: Check growing condition;
+	GlobalTransform treeLTW = _CurrentTree.GetComponentData<GlobalTransform>();
+	GlobalTransform cameraLTW = _DataCollectionSystem->_SemanticMaskCameraEntity.GetComponentData<GlobalTransform>();
+	Entity rootInternode = Entity();
+	EntityManager::ForEachChild(_CurrentTree, [&](Entity child)
+		{
+			if (child.HasComponentData<InternodeInfo>()) rootInternode = child;
+		}
+	);
+	if (rootInternode.IsNull()) return;
+	auto id = glm::translate(glm::vec3(0.0f)) * glm::mat4_cast(glm::quat(glm::vec3(0.0f))) * glm::scale(glm::vec3(1.0f));
+	PushInternode(rootInternode, cameraLTW, treeLTW);
+	_PlantSimulationSystem->ApplyLocalTransform(_CurrentTree);
+}
+
+void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW)
+{
+	auto parentLTW = internode.GetComponentData<InternodeInfo>().GlobalTransform;
+	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW, &parentLTW](Entity child)
+		{
+			auto internodeInfo = child.GetComponentData<InternodeInfo>();
+			glm::vec3 scale;
+			glm::vec3 skew;
+			glm::vec4 perspective;
+			glm::quat rotation;
+			glm::vec3 translation;
+			glm::decompose(parentLTW, scale, internodeInfo.ParentRotation, internodeInfo.ParentTranslation, skew, perspective);
+			glm::quat actualLocalRotation;
+
+			glm::decompose(treeLTW.Value, scale, rotation, translation, skew, perspective);
+			glm::quat newGlobalRotation = rotation * internodeInfo.ParentRotation * internodeInfo.DesiredLocalRotation;
+			auto globalTransform = child.GetComponentData<GlobalTransform>();
+			Ray ray;
+			ray.Start = cameraTransform.GetPosition();
+			ray.Direction = globalTransform.GetPosition() - ray.Start;
+			ray.Length = glm::length(ray.Direction);
+			ray.Direction = glm::normalize(ray.Direction);
+			if (internodeInfo.IsMaxChild)
+			{
+				//Is max child, no rotation.
+				//glm::vec3 closestPointOnRay = glm::closestPointOnLine();
+				//glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
+				//glm::vec3 up = newGlobalRotation * glm::vec3(0, 1, 0);
+			}
+			else
+			{
+				//1. Calculate the plane in 3d space.
+				glm::vec3 orig = globalTransform.GetPosition();
+				
+				glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
+				
+				auto test = orig + (glm::vec3(front.x, 0, front.z) * 100.0f);
+				auto slice = _TargetCakeTower->SelectSlice(test);
+				slice.x += 1;
+				Debug::Log(std::to_string(slice.x) + "-" + std::to_string(slice.y));
+				glm::vec3 weight = glm::vec3(0);
+				const float sliceAngle = 360.0f / _TargetCakeTower->SectorAmount;
+				float maxDistance = 0;
+				
+				for (int i = -2; i <= 2; i++)
+				{
+					auto y = slice.y + i;
+					if (_TargetCakeTower->CakeTiers[slice.x][y].MaxDistance == 0) continue;
+					if (y < 0) y += _TargetCakeTower->SectorAmount;
+					if (y >= _TargetCakeTower->SectorAmount) y -= _TargetCakeTower->SectorAmount;
+
+					float currentAngle = sliceAngle * (static_cast<float>(y) + 0.5f);
+					if (currentAngle >= 360) currentAngle = 0;
+					float x = glm::abs(glm::tan(glm::radians(currentAngle)));
+					float z = 1.0f;
+					if (currentAngle >= 0 && currentAngle <= 90)
+					{
+						z *= -1;
+						x *= -1;
+					}
+					else if (currentAngle > 90 && currentAngle <= 180)
+					{
+						x *= -1;
+					}
+					else if (currentAngle > 270 && currentAngle <= 360)
+					{
+						z *= -1;
+					}
+					glm::vec3 position = glm::normalize(glm::vec3(x, 0.0f, z)) * _TargetCakeTower->CakeTiers[slice.x][y].MaxDistance;
+					weight += position;
+				}
+				front = glm::normalize(weight);
+				glm::vec3 normal = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
+				Debug::Log("Target branch direction: " + std::to_string(front.x) + "," + std::to_string(front.y) + "," + std::to_string(front.z));
+				Debug::Log("Plane normal: " + std::to_string(normal.x) + "," + std::to_string(normal.y) + "," + std::to_string(normal.z));
+				auto d = glm::dot(ray.Direction, normal);
+				Debug::Log(std::to_string(ray.Length));
+				ray.Length = glm::dot(orig - ray.Start, normal) / d;
+				//glm::intersectRayPlane(ray.Start, -ray.Direction, orig, normal, ray.Length);
+				Debug::Log(std::to_string(ray.Length));
+				glm::vec3 target = ray.GetEnd();
+				Debug::Log("Ray Start: " + std::to_string(ray.Start.x) + "," + std::to_string(ray.Start.y) + "," + std::to_string(ray.Start.z));
+				Debug::Log("Ray Dir: " + std::to_string(ray.Direction.x) + "," + std::to_string(ray.Direction.y) + "," + std::to_string(ray.Direction.z));
+				Debug::Log("Target point: " + std::to_string(target.x) + "," + std::to_string(target.y) + "," + std::to_string(target.z));
+				Debug::Log("Parent Position: " + std::to_string(internodeInfo.ParentTranslation.x) + "," + std::to_string(internodeInfo.ParentTranslation.y) + "," + std::to_string(internodeInfo.ParentTranslation.z));
+				front = target - internodeInfo.ParentTranslation;
+				glm::vec3 up = newGlobalRotation * glm::vec3(0, 1, 0);
+				internodeInfo.DistanceToParent = glm::length(front);
+				front = glm::normalize(front);
+				up = glm::normalize(glm::cross(glm::cross(front, up), front));
+				Debug::Log("Branch direction: " + std::to_string(front.x) + "," + std::to_string(front.y) + "," + std::to_string(front.z));
+				newGlobalRotation = glm::quatLookAt(front, up);
+			}
+
+			actualLocalRotation = glm::inverse(rotation) * glm::inverse(internodeInfo.ParentRotation) * newGlobalRotation;
+			internodeInfo.DesiredLocalRotation = actualLocalRotation;
+			internodeInfo.LocalTransform = glm::translate(glm::mat4(1.0f), actualLocalRotation * glm::vec3(0, 0, -1)
+				* internodeInfo.DistanceToParent) * glm::mat4_cast(actualLocalRotation)
+				* glm::scale(glm::vec3(1.0f));
+			if(!internodeInfo.IsMaxChild) Debug::Log("Original Position: " + std::to_string(internodeInfo.GlobalTransform[3].x) + "," + std::to_string(internodeInfo.GlobalTransform[3].y) + "," + std::to_string(internodeInfo.GlobalTransform[3].z));
+			internodeInfo.GlobalTransform = parentLTW * internodeInfo.LocalTransform;
+			if(!internodeInfo.IsMaxChild) Debug::Log("Result Position: " + std::to_string(internodeInfo.GlobalTransform[3].x) + "," + std::to_string(internodeInfo.GlobalTransform[3].y) + "," + std::to_string(internodeInfo.GlobalTransform[3].z));
+			EntityManager::SetComponentData(child, internodeInfo);
+			globalTransform.Value = treeLTW.Value * internodeInfo.GlobalTransform * glm::scale(glm::vec3(_TargetTreeParameter.InternodeSize));
+			EntityManager::SetComponentData(child, globalTransform);
+		}
+	);
+	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW](Entity child)
+	{
+		PushInternode(child, cameraTransform, treeLTW);
+	});
 }
 
 void TreeReconstructionSystem::SetPlantSimulationSystem(PlantSimulationSystem* value)
@@ -108,7 +246,7 @@ void TreeReconstructionSystem::Init()
 	}
 	
 	_StartIndex = 1;
-	_EndIndex = 50;
+	_EndIndex = 1;
 	_MaxAge = 30;
 
 	_EnableSpaceColonization = false;
@@ -117,7 +255,7 @@ void TreeReconstructionSystem::Init()
 	_DataCollectionSystem->SetCameraPose(sequence.CameraPos, sequence.CameraEulerDegreeRot);
 	
 	_TargetTreeParameter = _PlantSimulationSystem->LoadParameters(_TreeParametersPath);
-	_TargetMask = ResourceManager::LoadTexture(_MaskPath);
+	_TargetMask = ResourceManager::LoadTexture(false, _MaskPath);
 	_TargetCakeTower = std::make_unique<CakeTower>();
 	_TargetCakeTower->Load(_TargetCakeTowerPath);
 	_NeedExport = true;
@@ -172,12 +310,15 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		if (_NeedExport) {
 			if (_StartIndex <= _EndIndex)
 			{
-				_TargetTreeParameter.Seed = _StartIndex;
-				_TargetTreeParameter.Age = _AgeForMainBranches;
+				auto parameters = _TargetTreeParameter;
+				parameters.Seed = _StartIndex;
+				parameters.Age = 999;// _TargetTreeParameter.Age - _AgeForMainBranches;
 				_PlantSimulationSystem->_ControlLevel = _ControlLevel;
-				_CurrentTree = _PlantSimulationSystem->CreateTree(_TargetTreeParameter, glm::vec3(0.0f));
-				_PlantSimulationSystem->ResumeGrowth();
+				_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
+
+				_CurrentTree.GetPrivateComponent<MaskProcessor>()->PlaceAttractionPoints();
 				_Status = TreeReconstructionSystemStatus::MainBranches;
+				_Growing = true;
 			}
 			else
 			{
@@ -198,6 +339,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 						Init();
 						break;
 					case TreeType::Apple:
+						break;
 						_Type = TreeType::Willow;
 						Init();
 						break;
@@ -206,8 +348,6 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 						Init();
 						break;
 					case TreeType::Maple:
-						_NeedExport = false;
-						break;
 						_Type = TreeType::Birch;
 						Init();
 						break;
@@ -224,13 +364,14 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 						break;
 					}
 				}
-				
 			}
 		}
 		break;
 	case TreeReconstructionSystemStatus::MainBranches:
-		if (!_PlantSimulationSystem->_Growing)
+		TryGrowTree();
+		if (!_Growing)
 		{
+			return;
 			_Status = TreeReconstructionSystemStatus::NormalGrowth;
 			auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
 			cakeTower->Load(_TargetCakeTowerPath);
@@ -238,12 +379,12 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			cakeTower->ClearAttractionPoints();
 			cakeTower->GenerateAttractionPoints(2000);
 			cakeTower->EnableSpaceColonization = _EnableSpaceColonization;
+			_PlantSimulationSystem->ResumeGrowth();
 		}
 		break;
 	case TreeReconstructionSystemStatus::NormalGrowth:
 		if (!_PlantSimulationSystem->_Growing)
 		{
-			
 			_Internodes.resize(0);
 			const auto treeIndex = _CurrentTree.GetComponentData<TreeIndex>();
 			TreeManager::GetInternodeQuery().ToEntityArray(treeIndex, _Internodes);

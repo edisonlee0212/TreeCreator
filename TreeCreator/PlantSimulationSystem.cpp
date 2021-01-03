@@ -132,6 +132,10 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 	std::vector<Entity> internodes;
 	std::vector<GlobalTransform> internodeTransforms;
 	_InternodeQuery.ToEntityArray(treeIndex, internodes);
+	for(auto& i : internodes)
+	{
+		i.GetPrivateComponent<InternodeData>()->Points.clear();
+	}
 	_InternodeQuery.ToComponentDataArray(treeIndex, internodeTransforms);
 	std::vector<Entity> removeList;
 	std::mutex m;
@@ -181,11 +185,21 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 	);
 #pragma endregion
 #pragma region Calculate direction vector
-	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity entity, InternodeInfo* info)
+	float cone = glm::cos(glm::radians(treeParameters.VarianceApicalAngle / 2.0f));
+	EntityManager::ForEach<InternodeInfo, GlobalTransform>(_InternodeQuery, [cone](int i, Entity entity, InternodeInfo* info, GlobalTransform* globalTransform)
 		{
 			auto& data = entity.GetPrivateComponent<InternodeData>();
 			info->DirectionVector = glm::vec3(0);
-			for (const auto& pointPos : data->Points) info->DirectionVector += pointPos;
+			info->ApicalDirectionVector = glm::vec3(0);
+			for (const auto& pointPos : data->Points) {
+				info->DirectionVector += pointPos;
+				glm::vec3 front = globalTransform->GetRotation() * glm::vec3(0, 0, -1);
+				const float angle = glm::dot(front, glm::normalize(pointPos));
+				if (angle > cone)
+				{
+					info->ApicalDirectionVector += pointPos;
+				}
+			}
 		}
 	);
 #pragma endregion
@@ -1061,9 +1075,23 @@ bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, s
 		{
 			if (currentTreeIndex->Value != treeIndex.Value) return;
 			const auto direction = info->DirectionVector;
+			const auto apicalDirection = info->ApicalDirectionVector;
 			if (direction != glm::vec3(0.0f))
 			{
 				bool isLateral = !EntityManager::GetChildrenAmount(internode) == 0;
+				if(!isLateral)
+				{
+					if(apicalDirection == glm::vec3(0.0f))
+					{
+						isLateral = true;
+					}
+				}else
+				{
+					if (apicalDirection != glm::vec3(0.0f))
+					{
+						return;
+					}
+				}
 #pragma region Compute total grow distance and internodes amount.
 				int order = info->Order;
 				int level = info->Level;
@@ -1079,8 +1107,8 @@ bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, s
 					return;
 				}
 				auto& bud = isLateral ? internodeData->Buds.back() : internodeData->Buds.front();
-				float internodeLength = 1.0f;
-				internodeLength *= treeParameters.InternodeLengthBase * glm::pow(treeParameters.InternodeLengthAgeFactor, treeAge.Value);
+				float internodeLength = 0.2;
+				internodeLength *= treeParameters.InternodeLengthBase;// * glm::pow(treeParameters.InternodeLengthAgeFactor, treeAge.Value);
 				Entity prevInternode = internode;
 				glm::quat prevInternodeRotation;
 				glm::vec3 prevEulerAngle = bud.EulerAngles;
@@ -1123,10 +1151,9 @@ bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, s
 				glm::decompose(treeTransform, scale, rotation, translation, skew, perspective);
 
 				glm::quat globalRawRotation = rotation * prevInternodeRotation * newInternodeInfo.DesiredLocalRotation;
-				glm::vec3 desiredFront = glm::normalize(direction);
 				glm::vec3 desiredUp = globalRawRotation * glm::vec3(0.0f, 1.0f, 0.0f);
 
-				desiredFront = glm::normalize(desiredFront);
+				glm::vec3 desiredFront = isLateral ? glm::normalize(direction) : glm::normalize(apicalDirection);
 				desiredUp = glm::normalize(glm::cross(glm::cross(desiredFront, desiredUp), desiredFront));
 				globalRawRotation = glm::quatLookAt(desiredFront, desiredUp);
 				newInternodeInfo.DesiredLocalRotation = glm::inverse(rotation) * glm::inverse(prevInternodeRotation) * globalRawRotation;
@@ -1363,7 +1390,13 @@ void TreeUtilities::PlantSimulationSystem::CalculatePhysics(Entity tree, bool ca
 	GlobalTransform ltw = EntityManager::GetComponentData<GlobalTransform>(tree);
 	TreeParameters treeParameters = EntityManager::GetComponentData<TreeParameters>(tree);
 	if (EntityManager::GetChildrenAmount(tree) == 0) return;
-	Entity rootInternode = EntityManager::GetChildren(tree).at(0);
+	Entity rootInternode = Entity();
+	EntityManager::ForEachChild(tree, [&](Entity child)
+		{
+			if (child.HasComponentData<InternodeInfo>()) rootInternode = child;
+		}
+	);
+	if (rootInternode.IsNull()) return;
 	auto id = glm::translate(glm::vec3(0.0f)) * glm::mat4_cast(glm::quat(glm::vec3(0.0f))) * glm::scale(glm::vec3(1.0f));
 	UpdateLocalTransform(rootInternode, treeParameters, id, ltw.Value, calculateForce);
 	ApplyLocalTransform(tree);
@@ -1777,12 +1810,12 @@ void TreeUtilities::PlantSimulationSystem::OnCreate()
 	_DefaultConvexHullSurfaceMaterial->SetProgram(Default::GLPrograms::StandardProgram);
 	_DefaultConvexHullSurfaceMaterial->SetTexture(Default::Textures::StandardTexture);
 
-	_DefaultTreeSurfaceSurfTex1 = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_baseColor.jpg", TextureType::ALBEDO);
-	_DefaultTreeSurfaceNormTex1 = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_normal.jpg", TextureType::NORMAL);
+	_DefaultTreeSurfaceSurfTex1 = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_baseColor.jpg", TextureType::ALBEDO);
+	_DefaultTreeSurfaceNormTex1 = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_normal.jpg", TextureType::NORMAL);
 
-	_DefaultTreeSurfaceSurfTex2 = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg", TextureType::ALBEDO);
-	_DefaultTreeSurfaceSpecTex2 = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg", TextureType::SPECULAR);
-	_DefaultTreeSurfaceNormTex2 = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_NORM.jpg", TextureType::NORMAL);
+	_DefaultTreeSurfaceSurfTex2 = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_COLOR.jpg", TextureType::ALBEDO);
+	_DefaultTreeSurfaceSpecTex2 = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_SPEC.jpg", TextureType::SPECULAR);
+	_DefaultTreeSurfaceNormTex2 = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Aspen_bark_001_NORM.jpg", TextureType::NORMAL);
 
 	_NewTreeParameters.resize(1);
 	LoadDefaultTreeParameters(1, _NewTreeParameters[_CurrentFocusedNewTreeIndex]);

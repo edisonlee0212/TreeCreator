@@ -19,7 +19,7 @@ namespace TreeUtilities {
 	class CakeTower :
 		public TreeVolume
 	{
-		glm::ivec2 SelectSlice(glm::vec3 position) const;
+		
 		EntityArchetype _CakeTowerArchetype;
 		
 		std::vector<std::shared_ptr<Mesh>> _BoundMeshes;
@@ -27,6 +27,7 @@ namespace TreeUtilities {
 		std::shared_ptr<Material> _CakeTowerMaterial;
 		
 	public:
+		glm::ivec2 SelectSlice(glm::vec3 position) const;
 		float MaxHeight = 0.0f;
 		float MaxRadius = 0.0f;
 		void GenerateMesh();

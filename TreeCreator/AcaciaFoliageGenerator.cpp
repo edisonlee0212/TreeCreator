@@ -12,7 +12,7 @@ TreeUtilities::AcaciaFoliageGenerator::AcaciaFoliageGenerator()
 	_LeafMaterial->AlphaDiscardOffset = 0.5f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	if(!_LeafSurfaceTex)_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/Delonix/level0.png");
+	if(!_LeafSurfaceTex)_LeafSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Leaf/Delonix/level0.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex);
 }
 

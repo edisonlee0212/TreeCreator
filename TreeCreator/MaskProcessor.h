@@ -22,8 +22,8 @@ namespace TreeUtilities {
 		static std::unique_ptr<GLRenderBuffer> _DepthStencilBuffer;
 		std::unique_ptr<GLTexture2D> _InternodeCaptureResult;
 		std::unique_ptr<GLTexture2D> _FilteredResult;
-		std::shared_ptr<Texture2D> _Mask;
-		std::shared_ptr<Texture2D> _Skeleton;
+		static std::shared_ptr<Texture2D> _Mask;
+		static std::shared_ptr<Texture2D> _Skeleton;
 		std::unique_ptr<GLTexture2D> _ProcessedMask;
 		std::vector<float> _Data;
 		std::vector<float> _SkeletonData;

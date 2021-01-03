@@ -306,17 +306,17 @@ void InitGround() {
 
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
-	const auto textureD = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-albedo.png", TextureType::ALBEDO);
+	const auto textureD = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-albedo.png", TextureType::ALBEDO);
 	mat->SetTexture(Default::Textures::StandardTexture);
-	const auto textureN = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-normal-ogl.png", TextureType::NORMAL);
+	const auto textureN = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-normal-ogl.png", TextureType::NORMAL);
 	mat->SetTexture(textureN);
-	const auto textureH = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-height.png", TextureType::DISPLACEMENT);
+	const auto textureH = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-height.png", TextureType::DISPLACEMENT);
 	mat->SetTexture(textureH);
-	const auto textureA = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-ao.png", TextureType::AO);
+	const auto textureA = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-ao.png", TextureType::AO);
 	mat->SetTexture(textureA);
-	const auto textureM = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-metallic.png", TextureType::METALLIC);
+	const auto textureM = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-metallic.png", TextureType::METALLIC);
 	mat->SetTexture(textureM);
-	const auto textureR = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-roughness.png", TextureType::ROUGHNESS);
+	const auto textureR = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-roughness.png", TextureType::ROUGHNESS);
 	mat->SetTexture(textureR);
 	mat->Shininess = 32.0f;
 	auto meshMaterial = std::make_unique<MeshRenderer>();

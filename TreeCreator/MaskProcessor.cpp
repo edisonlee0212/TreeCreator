@@ -6,6 +6,8 @@ Entity TreeUtilities::MaskProcessor::_CameraEntity;
 Entity TreeUtilities::MaskProcessor::_Background;
 unsigned TreeUtilities::MaskProcessor::_ResolutionX;
 unsigned TreeUtilities::MaskProcessor::_ResolutionY;
+std::shared_ptr<Texture2D> TreeUtilities::MaskProcessor::_Mask;
+std::shared_ptr<Texture2D> TreeUtilities::MaskProcessor::_Skeleton;
 std::unique_ptr<GLProgram> TreeUtilities::MaskProcessor::_InternodeCaptureProgram;
 std::unique_ptr<GLProgram> TreeUtilities::MaskProcessor::_FilterProgram;
 std::unique_ptr<GLProgram> TreeUtilities::MaskProcessor::_MaskPreprocessProgram;
@@ -52,7 +54,7 @@ void MaskProcessor::PlaceAttractionPoints()
 	{
 		for (int y = 0; y < _ResolutionY; y++)
 		{
-			if (_MaskData[x * _ResolutionY + y] == glm::vec3(1, 0, 0))
+			if (_MaskData[x * _ResolutionY + y] == glm::vec3(0, 0, 1) || _MaskData[x * _ResolutionY + y] == glm::vec3(1, 0, 0))
 			{
 				GlobalTransform cameraTransform = _CameraEntity.GetComponentData<GlobalTransform>();
 				glm::vec3 position;
@@ -198,8 +200,6 @@ TreeUtilities::MaskProcessor::MaskProcessor()
 	_Data.resize(_ResolutionX * _ResolutionY);
 	_MaskData.resize(_ResolutionX * _ResolutionY);
 	_SkeletonData.resize(_ResolutionX * _ResolutionY);
-	_Mask = nullptr;
-	_Skeleton = nullptr;
 }
 
 void TreeUtilities::MaskProcessor::Trim()

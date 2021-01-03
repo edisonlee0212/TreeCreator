@@ -13,7 +13,7 @@ TreeUtilities::MapleFoliageGenerator::MapleFoliageGenerator()
 	_LeafMaterial->AlphaDiscardOffset = 0.5f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	_LeafSurfaceTex = ResourceManager::LoadTexture(FileIO::GetAssetFolderPath() + "Textures/Leaf/maple.png");
+	_LeafSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Leaf/maple.png");
 	_LeafMaterial->SetTexture(_LeafSurfaceTex);
 }
 
