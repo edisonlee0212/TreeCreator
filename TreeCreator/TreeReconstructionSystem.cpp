@@ -6,7 +6,7 @@
 using namespace TreeUtilities;
 void TreeUtilities::TreeReconstructionSystem::OnGui()
 {
-	
+
 }
 
 void TreeReconstructionSystem::ExportAllData()
@@ -17,10 +17,10 @@ void TreeReconstructionSystem::ExportAllData()
 
 void TreeReconstructionSystem::TryGrowTree()
 {
-	if(_CurrentTree.IsNull() || !_CurrentTree.IsValid() || _CurrentTree.IsDeleted()) return;
+	if (_CurrentTree.IsNull() || !_CurrentTree.IsValid() || _CurrentTree.IsDeleted()) return;
 	if (!_Growing) return;
 	_Growing = _PlantSimulationSystem->GrowTree(_CurrentTree, true);
-	
+
 	if (_Growing) {
 		_PlantSimulationSystem->RefreshTrees();
 		return;
@@ -35,12 +35,20 @@ void TreeReconstructionSystem::TryGrowTree()
 	);
 	if (rootInternode.IsNull()) return;
 	auto id = glm::translate(glm::vec3(0.0f)) * glm::mat4_cast(glm::quat(glm::vec3(0.0f))) * glm::scale(glm::vec3(1.0f));
-	PushInternode(rootInternode, cameraLTW, treeLTW);
+	PushInternode(rootInternode, cameraLTW, treeLTW, 0);
 	_PlantSimulationSystem->ApplyLocalTransform(_CurrentTree);
+	_Internodes.resize(0);
+	const auto treeIndex = _CurrentTree.GetComponentData<TreeIndex>();
+	TreeManager::GetInternodeQuery().ToEntityArray(treeIndex, _Internodes);
+	_MainBranchInternodeSize = _Internodes.size();
 }
 
-void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW)
+void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW, int branchingLevel)
 {
+	if (branchingLevel > 2) {
+		EntityManager::DeleteEntity(internode);
+		return;
+	}
 	auto parentLTW = internode.GetComponentData<InternodeInfo>().GlobalTransform;
 	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW, &parentLTW](Entity child)
 		{
@@ -71,18 +79,17 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 			else
 			{
 				//1. Calculate the plane in 3d space.
-				glm::vec3 orig = globalTransform.GetPosition();
-				
+				glm::vec3 orig = internodeInfo.ParentTranslation;
+
 				glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
-				
+
 				auto test = orig + (glm::vec3(front.x, 0, front.z) * 100.0f);
 				auto slice = _TargetCakeTower->SelectSlice(test);
 				slice.x += 1;
+				if (slice.x >= _TargetCakeTower->SliceAmount) slice.x = _TargetCakeTower->SliceAmount - 1;
 				Debug::Log(std::to_string(slice.x) + "-" + std::to_string(slice.y));
 				glm::vec3 weight = glm::vec3(0);
 				const float sliceAngle = 360.0f / _TargetCakeTower->SectorAmount;
-				float maxDistance = 0;
-				
 				for (int i = -2; i <= 2; i++)
 				{
 					auto y = slice.y + i;
@@ -138,18 +145,26 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 			internodeInfo.LocalTransform = glm::translate(glm::mat4(1.0f), actualLocalRotation * glm::vec3(0, 0, -1)
 				* internodeInfo.DistanceToParent) * glm::mat4_cast(actualLocalRotation)
 				* glm::scale(glm::vec3(1.0f));
-			if(!internodeInfo.IsMaxChild) Debug::Log("Original Position: " + std::to_string(internodeInfo.GlobalTransform[3].x) + "," + std::to_string(internodeInfo.GlobalTransform[3].y) + "," + std::to_string(internodeInfo.GlobalTransform[3].z));
+			if (!internodeInfo.IsMaxChild) Debug::Log("Original Position: " + std::to_string(internodeInfo.GlobalTransform[3].x) + "," + std::to_string(internodeInfo.GlobalTransform[3].y) + "," + std::to_string(internodeInfo.GlobalTransform[3].z));
 			internodeInfo.GlobalTransform = parentLTW * internodeInfo.LocalTransform;
-			if(!internodeInfo.IsMaxChild) Debug::Log("Result Position: " + std::to_string(internodeInfo.GlobalTransform[3].x) + "," + std::to_string(internodeInfo.GlobalTransform[3].y) + "," + std::to_string(internodeInfo.GlobalTransform[3].z));
+			if (!internodeInfo.IsMaxChild) Debug::Log("Result Position: " + std::to_string(internodeInfo.GlobalTransform[3].x) + "," + std::to_string(internodeInfo.GlobalTransform[3].y) + "," + std::to_string(internodeInfo.GlobalTransform[3].z));
+			internodeInfo.StartAge = 0;
 			EntityManager::SetComponentData(child, internodeInfo);
 			globalTransform.Value = treeLTW.Value * internodeInfo.GlobalTransform * glm::scale(glm::vec3(_TargetTreeParameter.InternodeSize));
 			EntityManager::SetComponentData(child, globalTransform);
 		}
 	);
-	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW](Entity child)
-	{
-		PushInternode(child, cameraTransform, treeLTW);
-	});
+	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW, branchingLevel](Entity child)
+		{
+			auto internodeInfo = child.GetComponentData<InternodeInfo>();
+			if (internodeInfo.IsMaxChild)
+			{
+				PushInternode(child, cameraTransform, treeLTW, branchingLevel);
+			}else
+			{
+				PushInternode(child, cameraTransform, treeLTW, branchingLevel + 1);
+			}
+		});
 }
 
 void TreeReconstructionSystem::SetPlantSimulationSystem(PlantSimulationSystem* value)
@@ -171,6 +186,7 @@ void TreeReconstructionSystem::Init()
 		_StorePath = "./tree_recon/";
 		_TargetCakeTowerPath = "./tree_recon/Acacia/AcaciaTarget.ct";
 		_MaskPath = "./tree_recon/Acacia/AcaciaMask.png";
+		_SkeletonPath = "./tree_recon/Acacia/Skeleton.png";
 		_TreeParametersPath = "./acacia";
 		cameraTransformIndex = 0;
 		_ControlLevel = 0;
@@ -182,6 +198,7 @@ void TreeReconstructionSystem::Init()
 		_StorePath = "./tree_recon/";
 		_TargetCakeTowerPath = "./tree_recon/Apple/AppleTarget.ct";
 		_MaskPath = "./tree_recon/Apple/AppleMask.png";
+		_SkeletonPath = "./tree_recon/Apple/Skeleton.png";
 		_TreeParametersPath = "./apple";
 		cameraTransformIndex = 1;
 		_ControlLevel = 0;
@@ -193,6 +210,7 @@ void TreeReconstructionSystem::Init()
 		_StorePath = "./tree_recon/";
 		_TargetCakeTowerPath = "./tree_recon/Willow/WillowTarget.ct";
 		_MaskPath = "./tree_recon/Willow/WillowMask.png";
+		_SkeletonPath = "./tree_recon/Willow/Skeleton.png";
 		_TreeParametersPath = "./willow";
 		cameraTransformIndex = 2;
 		_ControlLevel = 0;
@@ -204,6 +222,7 @@ void TreeReconstructionSystem::Init()
 		_StorePath = "./tree_recon/";
 		_TargetCakeTowerPath = "./tree_recon/Maple/MapleTarget.ct";
 		_MaskPath = "./tree_recon/Maple/MapleMask.png";
+		_SkeletonPath = "./tree_recon/Maple/Skeleton.png";
 		_TreeParametersPath = "./maple";
 		cameraTransformIndex = 3;
 		_ControlLevel = 0;
@@ -215,6 +234,7 @@ void TreeReconstructionSystem::Init()
 		_StorePath = "./tree_recon/";
 		_TargetCakeTowerPath = "./tree_recon/Birch/BirchTarget.ct";
 		_MaskPath = "./tree_recon/Maple/BirchMask.png";
+		_SkeletonPath = "./tree_recon/Birch/Skeleton.png";
 		_TreeParametersPath = "./birch";
 		cameraTransformIndex = 4;
 		_ControlLevel = 0;
@@ -226,6 +246,7 @@ void TreeReconstructionSystem::Init()
 		_StorePath = "./tree_recon/";
 		_TargetCakeTowerPath = "./tree_recon/Oak/OakTarget.ct";
 		_MaskPath = "./tree_recon/Oak/OakMask.png";
+		_SkeletonPath = "./tree_recon/Oak/Skeleton.png";
 		_TreeParametersPath = "./oak";
 		cameraTransformIndex = 5;
 		_ControlLevel = 0;
@@ -237,6 +258,7 @@ void TreeReconstructionSystem::Init()
 		_StorePath = "./tree_recon/";
 		_TargetCakeTowerPath = "./tree_recon/Pine/PineTarget.ct";
 		_MaskPath = "./tree_recon/Pine/PineMask.png";
+		_SkeletonPath = "./tree_recon/Pine/Skeleton.png";
 		_TreeParametersPath = "./pine";
 		cameraTransformIndex = 6;
 		_ControlLevel = 0;
@@ -244,18 +266,19 @@ void TreeReconstructionSystem::Init()
 		_TargetInternodeSize = 8538;
 		break;
 	}
-	
+
 	_StartIndex = 1;
-	_EndIndex = 1;
+	_EndIndex = 50;
 	_MaxAge = 30;
 
 	_EnableSpaceColonization = false;
-	
+
 	auto& sequence = _DataCollectionSystem->_ImageCaptureSequences[cameraTransformIndex].first;
 	_DataCollectionSystem->SetCameraPose(sequence.CameraPos, sequence.CameraEulerDegreeRot);
-	
+
 	_TargetTreeParameter = _PlantSimulationSystem->LoadParameters(_TreeParametersPath);
 	_TargetMask = ResourceManager::LoadTexture(false, _MaskPath);
+	_TargetSkeleton = ResourceManager::LoadTexture(false, _SkeletonPath);
 	_TargetCakeTower = std::make_unique<CakeTower>();
 	_TargetCakeTower->Load(_TargetCakeTowerPath);
 	_NeedExport = true;
@@ -295,12 +318,12 @@ void TreeReconstructionSystem::ExportCakeTower(const std::string path)
 
 void TreeUtilities::TreeReconstructionSystem::OnCreate()
 {
-	
+
 }
 
 void TreeUtilities::TreeReconstructionSystem::Update()
 {
-	if(_PlantSimulationSystem == nullptr) return;
+	if (_PlantSimulationSystem == nullptr) return;
 	_PlantSimulationSystem->_AutoGenerateMesh = false;
 	_PlantSimulationSystem->_AutoGenerateLeaves = false;
 	std::string path;
@@ -315,7 +338,9 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 				parameters.Age = 999;// _TargetTreeParameter.Age - _AgeForMainBranches;
 				_PlantSimulationSystem->_ControlLevel = _ControlLevel;
 				_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
-
+				
+				_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Skeleton = _TargetSkeleton;
+				_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Mask = _TargetMask;
 				_CurrentTree.GetPrivateComponent<MaskProcessor>()->PlaceAttractionPoints();
 				_Status = TreeReconstructionSystemStatus::MainBranches;
 				_Growing = true;
@@ -339,7 +364,6 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 						Init();
 						break;
 					case TreeType::Apple:
-						break;
 						_Type = TreeType::Willow;
 						Init();
 						break;
@@ -371,7 +395,6 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		TryGrowTree();
 		if (!_Growing)
 		{
-			return;
 			_Status = TreeReconstructionSystemStatus::NormalGrowth;
 			auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
 			cakeTower->Load(_TargetCakeTowerPath);
@@ -380,33 +403,41 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			cakeTower->GenerateAttractionPoints(2000);
 			cakeTower->EnableSpaceColonization = _EnableSpaceColonization;
 			_PlantSimulationSystem->ResumeGrowth();
+			TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
+			age.Value = _AgeForMainBranches;
+			age.ToGrowIteration = _TargetTreeParameter.Age - _AgeForMainBranches;
+			_CurrentTree.SetComponentData(age);
 		}
 		break;
 	case TreeReconstructionSystemStatus::NormalGrowth:
-		if (!_PlantSimulationSystem->_Growing)
 		{
+			bool stop = false;
 			_Internodes.resize(0);
 			const auto treeIndex = _CurrentTree.GetComponentData<TreeIndex>();
 			TreeManager::GetInternodeQuery().ToEntityArray(treeIndex, _Internodes);
-			if(_Internodes.size() > _TargetInternodeSize)
+			TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
+			if (_Internodes.size() > _TargetInternodeSize + _MainBranchInternodeSize)
 			{
-				TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
-				_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
-				_Status = TreeReconstructionSystemStatus::Render;
-			}else
-			{
-				TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
-				if(age.ToGrowIteration != 0 || age.Value > _MaxAge)
+				stop = true;
+			}
+			if (!stop && !_PlantSimulationSystem->_Growing) {
+				if (age.ToGrowIteration != 0 || age.Value > _MaxAge)
 				{
-					TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
-					_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
-					_Status = TreeReconstructionSystemStatus::Render;
-				}else
+					stop = true;
+				}
+				else
 				{
 					_PlantSimulationSystem->_Growing = true;
 					age.ToGrowIteration++;
 					_CurrentTree.SetComponentData(age);
 				}
+			}
+			if (stop)
+			{
+				_PlantSimulationSystem->PauseGrowth();
+				TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
+				_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
+				_Status = TreeReconstructionSystemStatus::Render;
 			}
 		}
 		break;
@@ -425,9 +456,9 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		_Status = TreeReconstructionSystemStatus::CleanUp;
 		break;
 	case TreeReconstructionSystemStatus::CleanUp:
-		TreeManager::DeleteAllTrees();
+		//TreeManager::DeleteAllTrees();
 		_StartIndex++;
-		
+		Disable();
 		_Status = TreeReconstructionSystemStatus::Idle;
 		break;
 	}

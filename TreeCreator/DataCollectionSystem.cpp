@@ -304,8 +304,6 @@ void DataCollectionSystem::OnCreate()
 	_Background.SetPrivateComponent(std::move(mmr));
 	_Background.SetName("Background");
 	MaskProcessor::_Background = _Background;
-	MaskProcessor::_Mask = ResourceManager::LoadTexture(false, "./tree_recon/Apple/skeleton.png");
-	MaskProcessor::_Skeleton = ResourceManager::LoadTexture(false, "./tree_recon/Apple/skeleton.png");
 #pragma region Load parameters
 	ImageCaptureSequence sequence;
 	char dir[256] = {};

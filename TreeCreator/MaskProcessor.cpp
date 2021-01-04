@@ -6,8 +6,6 @@ Entity TreeUtilities::MaskProcessor::_CameraEntity;
 Entity TreeUtilities::MaskProcessor::_Background;
 unsigned TreeUtilities::MaskProcessor::_ResolutionX;
 unsigned TreeUtilities::MaskProcessor::_ResolutionY;
-std::shared_ptr<Texture2D> TreeUtilities::MaskProcessor::_Mask;
-std::shared_ptr<Texture2D> TreeUtilities::MaskProcessor::_Skeleton;
 std::unique_ptr<GLProgram> TreeUtilities::MaskProcessor::_InternodeCaptureProgram;
 std::unique_ptr<GLProgram> TreeUtilities::MaskProcessor::_FilterProgram;
 std::unique_ptr<GLProgram> TreeUtilities::MaskProcessor::_MaskPreprocessProgram;
@@ -42,19 +40,19 @@ void MaskProcessor::Trim(int& totalChild, int& trimmedChild, std::map<int, Entit
 
 void MaskProcessor::PlaceAttractionPoints()
 {
-	if(_Skeleton == nullptr || _Mask == nullptr)
+	if(_Skeleton == nullptr)
 	{
-		Debug::Error("Skeleton or mask not ready!");
+		Debug::Error("Skeleton not ready!");
 		return;
 	}
 	const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
-	_Mask->Texture()->Bind(0);
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (void*)_MaskData.data());
+	_Skeleton->Texture()->Bind(0);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, (void*)_SkeletonData.data());
 	for (int x = 0; x < _ResolutionX; x++)
 	{
 		for (int y = 0; y < _ResolutionY; y++)
 		{
-			if (_MaskData[x * _ResolutionY + y] == glm::vec3(0, 0, 1) || _MaskData[x * _ResolutionY + y] == glm::vec3(1, 0, 0))
+			if (_SkeletonData[x * _ResolutionY + y] == 1)
 			{
 				GlobalTransform cameraTransform = _CameraEntity.GetComponentData<GlobalTransform>();
 				glm::vec3 position;

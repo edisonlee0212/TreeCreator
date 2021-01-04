@@ -38,9 +38,12 @@ namespace TreeUtilities
 		std::unique_ptr<CakeTower> _TargetCakeTower;
 		Entity _CurrentTree;
 		std::vector<Entity> _Internodes;
-		std::string _MaskPath = "./tree_recon/AppleMask.png";
+		std::string _MaskPath = "";
+		std::string _SkeletonPath = "";
 		std::shared_ptr<Texture2D> _TargetMask;
-		std::string _TargetCakeTowerPath = "./tree_recon/AppleTarget.ct";
+		std::string _TargetCakeTowerPath = "";
+		std::shared_ptr<Texture2D> _TargetSkeleton;
+		int _MainBranchInternodeSize;
 		int _AgeForMainBranches = 4;
 		int _ControlLevel = 0;
 		int _TargetInternodeSize = 1601;
@@ -56,7 +59,7 @@ namespace TreeUtilities
 		std::vector<CakeTowerOutput> _CakeTowersOutputList;
 		void ExportAllData();
 		void TryGrowTree();
-		void PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW);
+		void PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW, int branchingLevel);
 	public:
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);
 		void SetDataCollectionSystem(DataCollectionSystem* value);

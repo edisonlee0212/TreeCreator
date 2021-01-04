@@ -11,6 +11,7 @@ namespace TreeUtilities {
 		float _RemoveDistance = 0.5f;
 		float _AttractDistance = 1.0f;
 		friend class DataCollectionSystem;
+		friend class TreeReconstructionSystem;
 		static Entity _CameraEntity;
 		static Entity _Background;
 		static unsigned _ResolutionX;
@@ -22,12 +23,13 @@ namespace TreeUtilities {
 		static std::unique_ptr<GLRenderBuffer> _DepthStencilBuffer;
 		std::unique_ptr<GLTexture2D> _InternodeCaptureResult;
 		std::unique_ptr<GLTexture2D> _FilteredResult;
-		static std::shared_ptr<Texture2D> _Mask;
-		static std::shared_ptr<Texture2D> _Skeleton;
+		std::shared_ptr<Texture2D> _Mask;
+		std::shared_ptr<Texture2D> _Skeleton;
 		std::unique_ptr<GLTexture2D> _ProcessedMask;
 		std::vector<float> _Data;
 		std::vector<float> _SkeletonData;
 		std::vector<glm::vec3> _MaskData;
+		
 		float _InternodeSize = 0.075f;
 		float _IgnoreMaxHeight = 0.3f;
 		float _IgnoreWidth = 0.1f;
