@@ -13,7 +13,7 @@
 
 #include "MaskProcessor.h"
 
-void DataCollectionSystem::ResetCounter(int value, int startIndex, int endIndex, bool needExport)
+void DataCollectionSystem::ResetCounter(int value, int startIndex, int endIndex, bool obj, bool graph)
 {
 	_Counter = value;
 	_StartIndex = startIndex;
@@ -21,7 +21,9 @@ void DataCollectionSystem::ResetCounter(int value, int startIndex, int endIndex,
 	_Timer = Application::EngineTime();
 	_Status = DataCollectionSystemStatus::Idle;
 	_CurrentSelectedSequenceIndex = 0;
-	_NeedExport = needExport;
+	_NeedExport = true;
+	_ExportOBJ = obj;
+	_ExportGraph = graph;
 }
 
 void DataCollectionSystem::SetIsTrain(bool value)
@@ -37,7 +39,67 @@ auto DataCollectionSystem::IsExport() const -> bool
 void DataCollectionSystem::PushImageCaptureSequence(ImageCaptureSequence sequence)
 {
 	_ImageCaptureSequences.emplace_back(sequence, _PlantSimulationSystem->LoadParameters(sequence.ParamPath));
-	
+}
+
+void DataCollectionSystem::OnGui()
+{
+	if (ImGui::BeginMainMenuBar()) {
+		if (ImGui::BeginMenu("Data Generation")) {
+			if (ImGui::Button("Create new data set...")) {
+				ImGui::OpenPopup("Data set wizard");
+			}
+			const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+			if (ImGui::BeginPopupModal("Data set wizard", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+				ImGui::Text("Export options:");
+				ImGui::DragInt("Export Resolution", &_TargetResolution, 1, 1, _CaptureResolution);
+				ImGui::DragInt("Camera Resolution", &_CaptureResolution, 1, _TargetResolution, 5120);
+				ImGui::Checkbox("Generate OBJ", &_ExportOBJ);
+				ImGui::Checkbox("Generate graph", &_ExportGraph);
+
+				ImGui::Text("Data set options:");
+				ImGui::Checkbox("Batched", &_Batched);
+				ImGui::Separator();
+				ImGui::Text("Training data");
+				if (_Batched) {
+					ImGui::DragInt("Start Index##Train", &_StartIndex, 1, 0, _EndIndex);
+					ImGui::DragInt("End Index##Train", &_EndIndex, 1, _StartIndex, 5000);
+				}
+				else
+				{
+					ImGui::DragInt("Amount##Train", &_EndIndex, 1, 1, 5000);
+				}
+				ImGui::Separator();
+				ImGui::Text("Evaluation data");
+				if (_Batched) {
+					ImGui::DragInt("Start Index##Eval", &_EvalStartIndex, 1, 0, _EvalEndIndex);
+					ImGui::DragInt("End Index##Eval", &_EvalEndIndex, 1, _EvalStartIndex, 5000);
+				}
+				else
+				{
+					ImGui::DragInt("Amount##Eval", &_EvalEndIndex, 1, 1, 5000);
+				}
+
+
+				if (ImGui::Button("Start Generation"))
+				{
+					if (!_Batched)
+					{
+						_StartIndex = 1;
+						_EvalStartIndex = 1;
+					}
+					ResetCounter((_StartIndex - 1) * 7, _StartIndex, _EndIndex, _ExportOBJ, _ExportGraph);
+					_NeedEval = true;
+					_IsTrain = true;
+					_NeedExport = true;
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	}
 }
 
 void DataCollectionSystem::ExportAllData()
@@ -55,7 +117,7 @@ void DataCollectionSystem::ExportAllData()
 void DataCollectionSystem::ExportParams(const std::string& path) const
 {
 	std::ofstream ofs;
-	ofs.open((path + ".csv").c_str(), std::ofstream::out | std::ofstream::app);
+	ofs.open((path + ".csv").c_str(), std::ofstream::out | (_Batched ? std::ofstream::app : std::ofstream::trunc));
 	if (ofs.is_open())
 	{
 		for (auto& instance : _TreeParametersOutputList) {
@@ -125,7 +187,7 @@ void DataCollectionSystem::ExportKDops(const std::string& path) const
 {
 	if(_KDopsOutputList.empty()) return;
 	std::ofstream ofs;
-	ofs.open((path + ".csv").c_str(), std::ofstream::out | std::ofstream::app);
+	ofs.open((path + ".csv").c_str(), std::ofstream::out | (_Batched ? std::ofstream::app : std::ofstream::trunc));
 	if (ofs.is_open())
 	{
 		for (auto& instance : _KDopsOutputList) {
@@ -153,7 +215,7 @@ void DataCollectionSystem::ExportKDops(const std::string& path) const
 void TreeUtilities::DataCollectionSystem::ExportCakeTower(const std::string& path) const
 {
 	std::ofstream ofs;
-	ofs.open((path + ".csv").c_str(), std::ofstream::out | std::ofstream::app);
+	ofs.open((path + ".csv").c_str(), std::ofstream::out | (_Batched ? std::ofstream::app : std::ofstream::trunc));
 	if (ofs.is_open())
 	{
 		for (auto& instance : _CakeTowersOutputList) {
@@ -396,19 +458,31 @@ void DataCollectionSystem::Update()
 	switch (_Status)
 	{
 	case DataCollectionSystemStatus::Idle:
-		if (_StartIndex <= _EndIndex)
+		if (_NeedExport) {
+			if (_StartIndex <= _EndIndex)
+			{
+				SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
+				treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
+				treeParameters.Seed = _StartIndex + (_IsTrain ? 0 : 9999);
+				_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
+				_PlantSimulationSystem->ResumeGrowth();
+				_Status = DataCollectionSystemStatus::Growing;
+			}
+			else if(_NeedEval)
+			{
+				_StartIndex = _EvalStartIndex;
+				_EndIndex = _EvalEndIndex;
+				ResetCounter((_StartIndex - 1) * 7, _StartIndex, _EndIndex, _ExportOBJ, _ExportGraph);
+				_NeedEval = false;
+				_IsTrain = false;
+			}
+			else{
+				ExportAllData();
+				_NeedExport = false;
+			}
+		}else
 		{
-			SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
-			treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
-			treeParameters.Seed = _StartIndex + (_IsTrain ? 0 : 9999);
-			_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
-			_PlantSimulationSystem->ResumeGrowth();
-			_Status = DataCollectionSystemStatus::Growing;
-		}
-		else if (_NeedExport)
-		{
-			ExportAllData();
-			_NeedExport = false;
+			OnGui();
 		}
 		break;
 	case DataCollectionSystemStatus::Growing:
@@ -473,18 +547,29 @@ void DataCollectionSystem::Update()
 			+ ".png";
 		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
 			path);
+		HideFoliage();
+		_Status = DataCollectionSystemStatus::CaptureBranch;
+		break;
+	case DataCollectionSystemStatus::CaptureBranch:
+		path = _StorePath + "branch_" + (_IsTrain ? "train/" : "val/") +
+			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
+			+ ".png";
+		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
+			path);
 		_Status = DataCollectionSystemStatus::CollectData;
 		break;
 	case DataCollectionSystemStatus::CollectData:
-		/*
-		TreeManager::SerializeTreeGraph(_StorePath + "graph_" + (_IsTrain ? "train/ " : "val/ ") +
-			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
-			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, _CurrentTree);
-		
-		TreeManager::ExportTreeAsModel(_CurrentTree, _StorePath + "obj_" + (_IsTrain ? "train/ " : "val/ ") +
-			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
-			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, true);
-		*/
+		if (_ExportGraph) {
+			TreeManager::SerializeTreeGraph(_StorePath + "graph_" + (_IsTrain ? "train/ " : "val/ ") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, _CurrentTree);
+		}
+		if (_ExportOBJ) {
+			TreeManager::ExportTreeAsModel(_CurrentTree, _StorePath + "obj_" + (_IsTrain ? "train/ " : "val/ ") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, true);
+		}
 		_TreeParametersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, treeParameters);
 		if (_CurrentTree.HasPrivateComponent<KDop>()) {
 			_CurrentTree.GetPrivateComponent<KDop>()->CalculateVolume();
@@ -560,4 +645,55 @@ void DataCollectionSystem::EnableSemantic() const
 	branchRenderer->ForwardRendering = true;
 	branchRenderer->Material = TreeManager::SemanticTreeBranchMaterial;
 
+}
+
+void DataCollectionSystem::HideFoliage() const
+{
+	Entity foliageEntity;
+	EntityManager::ForEachChild(_CurrentTree, [&foliageEntity](Entity child)
+		{
+			if (child.HasComponentData<WillowFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<AppleFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<AcaciaFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<BirchFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<OakFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<MapleFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<DefaultFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+			else if (child.HasComponentData<PineFoliageInfo>())
+			{
+				foliageEntity = child;
+			}
+		}
+	);
+	if (foliageEntity.HasPrivateComponent<MeshRenderer>())
+	{
+		auto& branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
+		branchletRenderer->SetEnabled(false);
+	}
+	if (foliageEntity.HasPrivateComponent<Particles>())
+	{
+		auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
+		leavesRenderer->SetEnabled(false);
+	}
 }

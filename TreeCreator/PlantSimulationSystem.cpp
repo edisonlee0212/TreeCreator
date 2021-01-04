@@ -1855,8 +1855,9 @@ void TreeUtilities::PlantSimulationSystem::Update()
 				_InternodeSystem->RefreshConnections();
 			}
 		}
+		OnGui();
 	}
-	OnGui();
+	
 }
 void PlantSimulationSystem::CreateDefaultTree()
 {
