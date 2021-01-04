@@ -189,7 +189,6 @@ void TreeReconstructionSystem::Init()
 		_SkeletonPath = "./tree_recon/Acacia/Skeleton.png";
 		_TreeParametersPath = "./acacia";
 		cameraTransformIndex = 0;
-		_ControlLevel = 0;
 		_AgeForMainBranches = 4;
 		_TargetInternodeSize = 2260;
 		break;
@@ -201,7 +200,6 @@ void TreeReconstructionSystem::Init()
 		_SkeletonPath = "./tree_recon/Apple/Skeleton.png";
 		_TreeParametersPath = "./apple";
 		cameraTransformIndex = 1;
-		_ControlLevel = 0;
 		_AgeForMainBranches = 4;
 		_TargetInternodeSize = 1601;
 		break;
@@ -213,7 +211,6 @@ void TreeReconstructionSystem::Init()
 		_SkeletonPath = "./tree_recon/Willow/Skeleton.png";
 		_TreeParametersPath = "./willow";
 		cameraTransformIndex = 2;
-		_ControlLevel = 0;
 		_AgeForMainBranches = 4;
 		_TargetInternodeSize = 2615;
 		break;
@@ -225,7 +222,6 @@ void TreeReconstructionSystem::Init()
 		_SkeletonPath = "./tree_recon/Maple/Skeleton.png";
 		_TreeParametersPath = "./maple";
 		cameraTransformIndex = 3;
-		_ControlLevel = 0;
 		_AgeForMainBranches = 4;
 		_TargetInternodeSize = 7995;
 		break;
@@ -237,7 +233,6 @@ void TreeReconstructionSystem::Init()
 		_SkeletonPath = "./tree_recon/Birch/Skeleton.png";
 		_TreeParametersPath = "./birch";
 		cameraTransformIndex = 4;
-		_ControlLevel = 0;
 		_AgeForMainBranches = 4;
 		_TargetInternodeSize = 5120;
 		break;
@@ -249,7 +244,6 @@ void TreeReconstructionSystem::Init()
 		_SkeletonPath = "./tree_recon/Oak/Skeleton.png";
 		_TreeParametersPath = "./oak";
 		cameraTransformIndex = 5;
-		_ControlLevel = 0;
 		_AgeForMainBranches = 4;
 		_TargetInternodeSize = 4487;
 		break;
@@ -261,14 +255,13 @@ void TreeReconstructionSystem::Init()
 		_SkeletonPath = "./tree_recon/Pine/Skeleton.png";
 		_TreeParametersPath = "./pine";
 		cameraTransformIndex = 6;
-		_ControlLevel = 0;
 		_AgeForMainBranches = 4;
 		_TargetInternodeSize = 8538;
 		break;
 	}
-
+	_ControlLevel = 2;
 	_StartIndex = 1;
-	_EndIndex = 50;
+	_EndIndex = 20;
 	_MaxAge = 30;
 
 	_EnableSpaceColonization = false;
@@ -452,13 +445,14 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
 		_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume(_TargetCakeTower->MaxHeight);
 		_CakeTowersOutputList.emplace_back(_StartIndex, _Name, _CurrentTree.GetPrivateComponent<CakeTower>());
-
+		TreeManager::SerializeTreeGraph(_StorePath + _Name + "/" + (_EnableSpaceColonization ? "SC" + std::to_string(_ControlLevel) + "-graph" : "IPM-graph") + "/" +
+			std::string(5 - std::to_string(_StartIndex).length(), '0') + std::to_string(_StartIndex), _CurrentTree);
 		_Status = TreeReconstructionSystemStatus::CleanUp;
 		break;
 	case TreeReconstructionSystemStatus::CleanUp:
-		//TreeManager::DeleteAllTrees();
+		TreeManager::DeleteAllTrees();
 		_StartIndex++;
-		Disable();
+		//Disable();
 		_Status = TreeReconstructionSystemStatus::Idle;
 		break;
 	}

@@ -17,6 +17,7 @@
 mono_crash.*
 
 TreeCreator/tree_data/*
+TreeCreator/tree_recon/*
 
 # Build results
 [Dd]ebug/
