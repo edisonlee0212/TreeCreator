@@ -38,8 +38,8 @@ void main()
 	EntityManager::SetComponentData(dle, dlc);
 	EntityManager::SetComponentData(dle, transform);
 #pragma endregion
-	bool reconstructTrees = true;
-	bool generateLearningData = false;
+	bool reconstructTrees = false;
+	bool generateLearningData = true;
 	bool generateSorghum = false;
 	bool generateSorghumField = true;
 	PlantSimulationSystem* pss = InitPlantSimulationSystem();
@@ -67,16 +67,16 @@ void main()
 
 		int startIndex = 1;
 		int counter = (startIndex - 1) * 7;
-		int endIndex = 10;
+		int endIndex = 1000;
 
 		ics->ResetCounter(counter, startIndex, endIndex, true);
 		ics->SetIsTrain(true);
-		bool eval = false;
+		bool eval = true;
 		Application::RegisterUpdateFunction([&]()
 			{
-				counter = 28;
-				startIndex = 5;
-				endIndex = 200;
+				startIndex = 1;
+				counter = (startIndex - 1) * 7;
+				endIndex = 400;
 				if (eval && generateLearningData && !ics->IsExport())
 				{
 					ics->ResetCounter(counter, startIndex, endIndex, true);

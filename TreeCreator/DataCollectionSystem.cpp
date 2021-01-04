@@ -476,11 +476,11 @@ void DataCollectionSystem::Update()
 		_Status = DataCollectionSystemStatus::CollectData;
 		break;
 	case DataCollectionSystemStatus::CollectData:
-		
+		/*
 		TreeManager::SerializeTreeGraph(_StorePath + "graph_" + (_IsTrain ? "train/ " : "val/ ") +
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, _CurrentTree);
-		/*
+		
 		TreeManager::ExportTreeAsModel(_CurrentTree, _StorePath + "obj_" + (_IsTrain ? "train/ " : "val/ ") +
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, true);

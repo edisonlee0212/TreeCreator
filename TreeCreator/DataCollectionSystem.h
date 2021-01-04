@@ -76,8 +76,8 @@ namespace TreeUtilities {
 		Entity _CurrentTree;
 		Entity _Background;
 		bool _NeedExport = false;
-		size_t _TargetResolution = 320;
-		size_t _CaptureResolution = 960;
+		size_t _TargetResolution = 1280;
+		size_t _CaptureResolution = 1280;
 		double _Timer;
 		std::unique_ptr<RenderTarget> _SmallBranchFilter;
 		std::unique_ptr<GLProgram> _SmallBranchProgram;
