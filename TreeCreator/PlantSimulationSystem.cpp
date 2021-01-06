@@ -45,8 +45,8 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 	if (!growed) {
 		_Growing = false;
 		float timer = Application::EngineTime() - _GrowthTimer;
-		Debug::Log("Structural growth completed in " + std::to_string(timer) + " seconds.");
-		Debug::Log("Generating mesh and leaves...");
+		//Debug::Log("Structural growth completed in " + std::to_string(timer) + " seconds.");
+		//Debug::Log("Generating mesh and leaves...");
 		timer = Application::EngineTime();
 		if (_AutoGenerateMesh) {
 			for (auto& tree : trees) {
@@ -62,7 +62,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 		}
 		if (_AutoGenerateLeaves) GenerateLeavesForAllTrees(trees);
 		timer = Application::EngineTime() - timer;
-		Debug::Log("Mesh and leaves generation completed in " + std::to_string(timer) + " seconds.");
+		//Debug::Log("Mesh and leaves generation completed in " + std::to_string(timer) + " seconds.");
 	}
 }
 bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mainBranch)

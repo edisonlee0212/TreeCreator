@@ -470,6 +470,7 @@ void DataCollectionSystem::Update()
 			}
 			else if(_NeedEval)
 			{
+				ExportAllData();
 				_StartIndex = _EvalStartIndex;
 				_EndIndex = _EvalEndIndex;
 				ResetCounter((_StartIndex - 1) * 7, _StartIndex, _EndIndex, _ExportOBJ, _ExportGraph);
