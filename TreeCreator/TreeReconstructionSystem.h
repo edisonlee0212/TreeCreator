@@ -28,7 +28,7 @@ namespace TreeUtilities
 	class TreeReconstructionSystem :
 		public SystemBase
 	{
-		TreeType _Type = TreeType::Apple;
+		TreeType _Type = TreeType::Acacia;
 		bool _EnableSpaceColonization = false;
 		bool _EnableMaskTrimmer = false;
 		std::string _StorePath = "./tree_recon/";
@@ -64,7 +64,7 @@ namespace TreeUtilities
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);
 		void SetDataCollectionSystem(DataCollectionSystem* value);
 		void Init();
-		void ExportCakeTower(const std::string path);
+		void ExportCakeTower(const std::string& path);
 		void OnCreate() override;
 		void Update() override;
 	};

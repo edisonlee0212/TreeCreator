@@ -48,15 +48,19 @@ void MaskProcessor::PlaceAttractionPoints()
 	const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
 	_Skeleton->Texture()->Bind(0);
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, (void*)_SkeletonData.data());
-	for (int x = 0; x < _ResolutionX; x++)
+	int resolutionX, resolutionY;
+	auto resolution = _Skeleton->GetResolution();
+	resolutionX = resolution.x;
+	resolutionY = resolution.y;
+	for (int x = 0; x < resolutionX; x++)
 	{
-		for (int y = 0; y < _ResolutionY; y++)
+		for (int y = 0; y < resolutionY; y++)
 		{
-			if (_SkeletonData[x * _ResolutionY + y] == 1)
+			if (_SkeletonData[x * resolutionY + y] == 1)
 			{
 				GlobalTransform cameraTransform = _CameraEntity.GetComponentData<GlobalTransform>();
 				glm::vec3 position;
-				Ray cameraRay = _CameraEntity.GetPrivateComponent<CameraComponent>()->ScreenPointToRay(cameraTransform, glm::vec2(y - (int)_ResolutionY, _ResolutionX - x));
+				Ray cameraRay = _CameraEntity.GetPrivateComponent<CameraComponent>()->ScreenPointToRay(cameraTransform, glm::vec2((static_cast<float>(y) - static_cast<float>(resolutionY)) / (static_cast<float>(resolutionY) / _ResolutionY), (static_cast<float>(resolutionX) - x) / (static_cast<float>(resolutionX) / _ResolutionX)));
 				auto start = cameraRay.Start;
 				auto direction = glm::normalize(cameraRay.Direction);
 				direction /= direction.z;
@@ -299,8 +303,15 @@ void TreeUtilities::MaskProcessor::OnGui()
 	EditorManager::DragAndDrop(_Skeleton);
 	ImGui::Text("Target Mask: ");
 	EditorManager::DragAndDrop(_Mask);
-	ImGui::Text("Content: ");
-	if (_Mask)ImGui::Image((ImTextureID)_Mask->Texture()->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
+	
+	if (_Skeleton) {
+		ImGui::Text("Skeleton: ");
+		ImGui::Image((ImTextureID)_Skeleton->Texture()->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
+	}
+	if (_Mask) {
+		ImGui::Text("Mask: ");
+		ImGui::Image((ImTextureID)_Mask->Texture()->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
+	}
 	ImGui::Text("Processed mask: ");
 	ImGui::Image((ImTextureID)_ProcessedMask->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::Text("Internode Capture: ");

@@ -119,24 +119,13 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 				}
 				front = glm::normalize(weight);
 				glm::vec3 normal = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
-				Debug::Log("Target branch direction: " + std::to_string(front.x) + "," + std::to_string(front.y) + "," + std::to_string(front.z));
-				Debug::Log("Plane normal: " + std::to_string(normal.x) + "," + std::to_string(normal.y) + "," + std::to_string(normal.z));
-				auto d = glm::dot(ray.Direction, normal);
-				Debug::Log(std::to_string(ray.Length));
-				ray.Length = glm::dot(orig - ray.Start, normal) / d;
-				//glm::intersectRayPlane(ray.Start, -ray.Direction, orig, normal, ray.Length);
-				Debug::Log(std::to_string(ray.Length));
+				glm::intersectRayPlane(ray.Start, -ray.Direction, orig, normal, ray.Length);
 				glm::vec3 target = ray.GetEnd();
-				Debug::Log("Ray Start: " + std::to_string(ray.Start.x) + "," + std::to_string(ray.Start.y) + "," + std::to_string(ray.Start.z));
-				Debug::Log("Ray Dir: " + std::to_string(ray.Direction.x) + "," + std::to_string(ray.Direction.y) + "," + std::to_string(ray.Direction.z));
-				Debug::Log("Target point: " + std::to_string(target.x) + "," + std::to_string(target.y) + "," + std::to_string(target.z));
-				Debug::Log("Parent Position: " + std::to_string(internodeInfo.ParentTranslation.x) + "," + std::to_string(internodeInfo.ParentTranslation.y) + "," + std::to_string(internodeInfo.ParentTranslation.z));
 				front = target - internodeInfo.ParentTranslation;
 				glm::vec3 up = newGlobalRotation * glm::vec3(0, 1, 0);
 				internodeInfo.DistanceToParent = glm::length(front);
 				front = glm::normalize(front);
 				up = glm::normalize(glm::cross(glm::cross(front, up), front));
-				Debug::Log("Branch direction: " + std::to_string(front.x) + "," + std::to_string(front.y) + "," + std::to_string(front.z));
 				newGlobalRotation = glm::quatLookAt(front, up);
 			}
 
@@ -145,9 +134,7 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 			internodeInfo.LocalTransform = glm::translate(glm::mat4(1.0f), actualLocalRotation * glm::vec3(0, 0, -1)
 				* internodeInfo.DistanceToParent) * glm::mat4_cast(actualLocalRotation)
 				* glm::scale(glm::vec3(1.0f));
-			if (!internodeInfo.IsMaxChild) Debug::Log("Original Position: " + std::to_string(internodeInfo.GlobalTransform[3].x) + "," + std::to_string(internodeInfo.GlobalTransform[3].y) + "," + std::to_string(internodeInfo.GlobalTransform[3].z));
 			internodeInfo.GlobalTransform = parentLTW * internodeInfo.LocalTransform;
-			if (!internodeInfo.IsMaxChild) Debug::Log("Result Position: " + std::to_string(internodeInfo.GlobalTransform[3].x) + "," + std::to_string(internodeInfo.GlobalTransform[3].y) + "," + std::to_string(internodeInfo.GlobalTransform[3].z));
 			internodeInfo.StartAge = 0;
 			EntityManager::SetComponentData(child, internodeInfo);
 			globalTransform.Value = treeLTW.Value * internodeInfo.GlobalTransform * glm::scale(glm::vec3(_TargetTreeParameter.InternodeSize));
@@ -278,7 +265,7 @@ void TreeReconstructionSystem::Init()
 	Enable();
 }
 
-void TreeReconstructionSystem::ExportCakeTower(const std::string path)
+void TreeReconstructionSystem::ExportCakeTower(const std::string& path)
 {
 	std::ofstream ofs;
 	ofs.open((path + ".csv").c_str(), std::ofstream::out | std::ofstream::trunc);
@@ -450,9 +437,9 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		_Status = TreeReconstructionSystemStatus::CleanUp;
 		break;
 	case TreeReconstructionSystemStatus::CleanUp:
-		TreeManager::DeleteAllTrees();
+		//TreeManager::DeleteAllTrees();
 		_StartIndex++;
-		//Disable();
+		Disable();
 		_Status = TreeReconstructionSystemStatus::Idle;
 		break;
 	}

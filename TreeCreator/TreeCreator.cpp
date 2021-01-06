@@ -38,7 +38,7 @@ void main()
 	EntityManager::SetComponentData(dle, dlc);
 	EntityManager::SetComponentData(dle, transform);
 #pragma endregion
-	bool reconstructTrees = false;
+	bool reconstructTrees = true;
 	bool generateLearningData = true;
 	bool generateSorghum = false;
 	bool generateSorghumField = true;
@@ -68,7 +68,6 @@ void main()
 	else
 	{
 		InitGround();
-
 	}
 	if (generateSorghum) {
 		auto srSys = InitSorghumReconstructionSystem();

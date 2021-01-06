@@ -144,11 +144,11 @@
     <ClCompile Include="CakeTower.cpp">
       <Filter>Source Files\TreeVolume</Filter>
     </ClCompile>
-    <ClCompile Include="MaskProcessor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TreeReconstructionSystem.cpp">
       <Filter>Source Files\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="MaskProcessor.cpp">
+      <Filter>Source Files\Utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -257,11 +257,11 @@
     <ClInclude Include="DataCollectionSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="TreeReconstructionSystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MaskProcessor.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeReconstructionSystem.h">
+      <Filter>Header Files\Systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
