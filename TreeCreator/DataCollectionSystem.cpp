@@ -44,7 +44,7 @@ void DataCollectionSystem::PushImageCaptureSequence(ImageCaptureSequence sequenc
 void DataCollectionSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
-		if (ImGui::BeginMenu("Data Generation")) {
+		if (ImGui::BeginMenu("Learning Data Generation")) {
 			if (ImGui::Button("Create new data set...")) {
 				ImGui::OpenPopup("Data set wizard");
 			}
@@ -87,6 +87,22 @@ void DataCollectionSystem::OnGui()
 					{
 						_StartIndex = 1;
 						_EvalStartIndex = 1;
+
+						std::filesystem::remove_all("tree_data");
+						std::filesystem::create_directory("tree_data");
+						std::filesystem::create_directory("tree_data/branch_train");
+						std::filesystem::create_directory("tree_data/graph_train");
+						std::filesystem::create_directory("tree_data/mask_train");
+						std::filesystem::create_directory("tree_data/obj_train");
+						std::filesystem::create_directory("tree_data/rgb_train");
+						std::filesystem::create_directory("tree_data/white_train");
+
+						std::filesystem::create_directory("tree_data/branch_val");
+						std::filesystem::create_directory("tree_data/graph_val");
+						std::filesystem::create_directory("tree_data/mask_val");
+						std::filesystem::create_directory("tree_data/obj_val");
+						std::filesystem::create_directory("tree_data/rgb_val");
+						std::filesystem::create_directory("tree_data/white_val");
 					}
 					ResetCounter((_StartIndex - 1) * 7, _StartIndex, _EndIndex, _ExportOBJ, _ExportGraph);
 					_NeedEval = true;
@@ -453,8 +469,8 @@ void DataCollectionSystem::Update()
 {
 	if (_ImageCaptureSequences.empty() || _CurrentSelectedSequenceIndex < 0) return;
 	std::string path;
-	auto& imageCaptureSequence = _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first;
-	auto& treeParameters = _ImageCaptureSequences[_CurrentSelectedSequenceIndex].second;
+	auto& imageCaptureSequence = _Reconstruction ? _ImageCaptureSequences[_Index].first : _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first;
+	auto& treeParameters = _Reconstruction ? _ImageCaptureSequences[_Index].second : _ImageCaptureSequences[_CurrentSelectedSequenceIndex].second;
 	switch (_Status)
 	{
 	case DataCollectionSystemStatus::Idle:
@@ -468,7 +484,7 @@ void DataCollectionSystem::Update()
 				_PlantSimulationSystem->ResumeGrowth();
 				_Status = DataCollectionSystemStatus::Growing;
 			}
-			else if(_NeedEval)
+			else if (_NeedEval)
 			{
 				ExportAllData();
 				_StartIndex = _EvalStartIndex;
@@ -477,12 +493,21 @@ void DataCollectionSystem::Update()
 				_NeedEval = false;
 				_IsTrain = false;
 			}
-			else{
+			else {
 				ExportAllData();
 				_NeedExport = false;
 			}
-		}else
+		}
+		else if (_Reconstruction)
 		{
+			SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
+			treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
+			treeParameters.Seed = _Seed;
+			_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
+			_PlantSimulationSystem->ResumeGrowth();
+			_Status = DataCollectionSystemStatus::Growing;
+		}
+		else {
 			OnGui();
 		}
 		break;
@@ -497,10 +522,16 @@ void DataCollectionSystem::Update()
 		_Status = DataCollectionSystemStatus::CaptureOriginal;
 		break;
 	case DataCollectionSystemStatus::CaptureOriginal:
-		path = _StorePath + "white_" + (_IsTrain ? "train/" : "val/") +
-			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
-			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
-			+ ".jpg";
+		if (!_Reconstruction) {
+			path = _StorePath + "white_" + (_IsTrain ? "train/" : "val/") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + imageCaptureSequence.Name
+				+ ".jpg";
+		}
+		else
+		{
+			path = _ReconPath + ".jpg";
+		}
 		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 			path, _TargetResolution, _TargetResolution);
 
@@ -511,11 +542,13 @@ void DataCollectionSystem::Update()
 	case DataCollectionSystemStatus::CaptureRandom:
 		path = _StorePath + "rgb_" + (_IsTrain ? "train/" : "val/") +
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
-			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
+			+ "_" + imageCaptureSequence.Name
 			+ ".jpg";
-		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
-			path, _TargetResolution, _TargetResolution);
-
+		if (!_Reconstruction)
+		{
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _TargetResolution, _TargetResolution);
+		}
 		_Status = DataCollectionSystemStatus::CaptureSemantic;
 		_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 		EnableSemantic();
@@ -541,11 +574,16 @@ void DataCollectionSystem::Update()
 		_SmallBranchCopyProgram->SetInt("InputTex", 0);
 		Default::GLPrograms::ScreenVAO->Bind();
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-		
-		path = _StorePath + "mask_" + (_IsTrain ? "train/" : "val/") +
-			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
-			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
-			+ ".png";
+		if (!_Reconstruction) {
+			path = _StorePath + "mask_" + (_IsTrain ? "train/" : "val/") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + imageCaptureSequence.Name
+				+ ".png";
+		}
+		else
+		{
+			path = _ReconPath + ".png";
+		}
 		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
 			path);
 		HideFoliage();
@@ -554,22 +592,22 @@ void DataCollectionSystem::Update()
 	case DataCollectionSystemStatus::CaptureBranch:
 		path = _StorePath + "branch_" + (_IsTrain ? "train/" : "val/") +
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
-			+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name
+			+ "_" + imageCaptureSequence.Name
 			+ ".png";
-		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
+		if(!_Reconstruction) _SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
 			path);
 		_Status = DataCollectionSystemStatus::CollectData;
 		break;
 	case DataCollectionSystemStatus::CollectData:
-		if (_ExportGraph) {
-			TreeManager::SerializeTreeGraph(_StorePath + "graph_" + (_IsTrain ? "train/ " : "val/ ") +
+		if (_ExportGraph || _Reconstruction) {
+			TreeManager::SerializeTreeGraph(_Reconstruction ? _ReconPath : _StorePath + "graph_" + (_IsTrain ? "train/ " : "val/ ") +
 				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
-				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, _CurrentTree);
+				+ "_" + imageCaptureSequence.Name, _CurrentTree);
 		}
-		if (_ExportOBJ) {
-			TreeManager::ExportTreeAsModel(_CurrentTree, _StorePath + "obj_" + (_IsTrain ? "train/ " : "val/ ") +
+		if (_ExportOBJ || _Reconstruction) {
+			TreeManager::ExportTreeAsModel(_CurrentTree, _Reconstruction ? _ReconPath : _StorePath + "obj_" + (_IsTrain ? "train/ " : "val/ ") +
 				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
-				+ "_" + _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first.Name, true);
+				+ "_" + imageCaptureSequence.Name, true);
 		}
 		_TreeParametersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, treeParameters);
 		if (_CurrentTree.HasPrivateComponent<KDop>()) {
@@ -577,15 +615,32 @@ void DataCollectionSystem::Update()
 			_KDopsOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<KDop>());
 		}
 		_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume();
-		_CakeTowersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
+		if (!_Reconstruction) {
+			_CakeTowersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
+		}
+		else
+		{
+			path = _ReconPath + ".ct";
+			const std::string data = _CurrentTree.GetPrivateComponent<CakeTower>()->Save();
+			std::ofstream ofs;
+			ofs.open(path.c_str(), std::ofstream::out | std::ofstream::trunc);
+			ofs.write(data.c_str(), data.length());
+			ofs.flush();
+			ofs.close();
+		}
+		
 		_Status = DataCollectionSystemStatus::CleanUp;
 		break;
 	case DataCollectionSystemStatus::CleanUp:
+		
 		TreeManager::DeleteAllTrees();
-		_CurrentSelectedSequenceIndex++;
-		_CurrentSelectedSequenceIndex %= _ImageCaptureSequences.size();
-		if (_CurrentSelectedSequenceIndex == 0) _StartIndex++;
-		_Counter++;
+		if (!_Reconstruction) {
+			_CurrentSelectedSequenceIndex++;
+			_CurrentSelectedSequenceIndex %= _ImageCaptureSequences.size();
+			if (_CurrentSelectedSequenceIndex == 0) _StartIndex++;
+			_Counter++;
+		}
+		_Reconstruction = false;
 		_Status = DataCollectionSystemStatus::Idle;
 		break;
 	}

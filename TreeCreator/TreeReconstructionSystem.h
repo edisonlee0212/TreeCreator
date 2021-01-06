@@ -23,13 +23,16 @@ namespace TreeUtilities
 		NormalGrowth,
 		Render,
 		CollectData,
-		CleanUp
+		CleanUp,
+		Reconstruction
 	};
 	class TreeReconstructionSystem :
 		public SystemBase
 	{
+		int _Amount = 10;
+		int _ReconAmount = 10;
+		
 		TreeType _Type = TreeType::Acacia;
-		bool _EnableSpaceColonization = false;
 		bool _EnableMaskTrimmer = false;
 		std::string _StorePath = "./tree_recon/";
 		DataCollectionSystem* _DataCollectionSystem = nullptr;
@@ -45,7 +48,6 @@ namespace TreeUtilities
 		std::shared_ptr<Texture2D> _TargetSkeleton;
 		int _MainBranchInternodeSize;
 		int _AgeForMainBranches = 4;
-		int _ControlLevel = 0;
 		int _TargetInternodeSize = 1601;
 		TreeParameters _TargetTreeParameter;
 		std::string _TreeParametersPath;

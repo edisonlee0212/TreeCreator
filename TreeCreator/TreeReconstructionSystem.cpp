@@ -6,12 +6,53 @@
 using namespace TreeUtilities;
 void TreeUtilities::TreeReconstructionSystem::OnGui()
 {
+	if (ImGui::BeginMainMenuBar()) {
+		if (ImGui::BeginMenu("Reconstruction Data Generation")) {
+			if (ImGui::Button("Create new data set...")) {
+				ImGui::OpenPopup("Data set wizard");
+			}
+			const ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+			if (ImGui::BeginPopupModal("Data set wizard", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+				ImGui::Text("Data set options:");
+				ImGui::DragInt("Target Amount##Reconstruction", &_Amount, 1, 1, 50);
+				ImGui::DragInt("Reconstructions per target##Reconstruction", &_ReconAmount, 1, 1, 50);
+				if (ImGui::Button("Start Generation"))
+				{
+					std::filesystem::remove_all("tree_recon");
+					std::filesystem::create_directory("tree_recon");
+					for (const auto& seq : _DataCollectionSystem->_ImageCaptureSequences)
+					{
+						std::filesystem::create_directory("tree_recon/" + seq.first.Name);
+						for (auto i = 0; i < _Amount; i++)
+						{
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i));
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/recon");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/recon/image");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/recon/volume");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/recon/obj");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/recon/graph");
+						}
 
+					}
+					_Status = TreeReconstructionSystemStatus::Reconstruction;
+					_DataCollectionSystem->_Reconstruction = true;
+					_DataCollectionSystem->_Index = 0;
+					_DataCollectionSystem->_Seed = 0;
+					_DataCollectionSystem->_ReconPath = "tree_recon/" + _DataCollectionSystem->_ImageCaptureSequences[_DataCollectionSystem->_Index].first.Name + "/seed_" + std::to_string(_DataCollectionSystem->_Seed) + "/target";
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	}
 }
 
 void TreeReconstructionSystem::ExportAllData()
 {
-	ExportCakeTower(_StorePath + _Name + "/" + "CakeTowers" + (_EnableSpaceColonization ? "SC" + std::to_string(_ControlLevel) : "IPM"));
+	ExportCakeTower(_StorePath + _Name + "/" + "CakeTowers");
 	_CakeTowersOutputList.clear();
 }
 
@@ -147,7 +188,8 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 			if (internodeInfo.IsMaxChild)
 			{
 				PushInternode(child, cameraTransform, treeLTW, branchingLevel);
-			}else
+			}
+			else
 			{
 				PushInternode(child, cameraTransform, treeLTW, branchingLevel + 1);
 			}
@@ -246,12 +288,10 @@ void TreeReconstructionSystem::Init()
 		_TargetInternodeSize = 8538;
 		break;
 	}
-	_ControlLevel = 2;
 	_StartIndex = 1;
 	_EndIndex = 20;
 	_MaxAge = 30;
 
-	_EnableSpaceColonization = false;
 
 	auto& sequence = _DataCollectionSystem->_ImageCaptureSequences[cameraTransformIndex].first;
 	_DataCollectionSystem->SetCameraPose(sequence.CameraPos, sequence.CameraEulerDegreeRot);
@@ -262,7 +302,7 @@ void TreeReconstructionSystem::Init()
 	_TargetCakeTower = std::make_unique<CakeTower>();
 	_TargetCakeTower->Load(_TargetCakeTowerPath);
 	_NeedExport = true;
-	Enable();
+
 }
 
 void TreeReconstructionSystem::ExportCakeTower(const std::string& path)
@@ -298,17 +338,39 @@ void TreeReconstructionSystem::ExportCakeTower(const std::string& path)
 
 void TreeUtilities::TreeReconstructionSystem::OnCreate()
 {
-
+	Enable();
 }
 
 void TreeUtilities::TreeReconstructionSystem::Update()
 {
 	if (_PlantSimulationSystem == nullptr) return;
-	_PlantSimulationSystem->_AutoGenerateMesh = false;
-	_PlantSimulationSystem->_AutoGenerateLeaves = false;
+	_PlantSimulationSystem->_AutoGenerateMesh = _Status == TreeReconstructionSystemStatus::Reconstruction;
+	_PlantSimulationSystem->_AutoGenerateLeaves = _Status == TreeReconstructionSystemStatus::Reconstruction;
 	std::string path;
 	switch (_Status)
 	{
+	case TreeReconstructionSystemStatus::Reconstruction:
+		if (!_DataCollectionSystem->_Reconstruction)
+		{
+			if (_DataCollectionSystem->_Index < static_cast<int>(_DataCollectionSystem->_ImageCaptureSequences.size()) - 1)
+			{
+				_DataCollectionSystem->_Index++;
+			}
+			else
+			{
+				_DataCollectionSystem->_Index = 0;
+				_DataCollectionSystem->_Seed++;
+			}
+			if (_DataCollectionSystem->_Seed < _Amount) {
+				_DataCollectionSystem->_Reconstruction = true;
+				_DataCollectionSystem->_ReconPath = "tree_recon/" + _DataCollectionSystem->_ImageCaptureSequences[_DataCollectionSystem->_Index].first.Name + "/seed_" + std::to_string(_DataCollectionSystem->_Seed) + "/target";
+			}
+			else
+			{
+				_Status = TreeReconstructionSystemStatus::Idle;
+			}
+		}
+		break;
 	case TreeReconstructionSystemStatus::Idle:
 		if (_NeedExport) {
 			if (_StartIndex <= _EndIndex)
@@ -316,9 +378,9 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 				auto parameters = _TargetTreeParameter;
 				parameters.Seed = _StartIndex;
 				parameters.Age = 999;// _TargetTreeParameter.Age - _AgeForMainBranches;
-				_PlantSimulationSystem->_ControlLevel = _ControlLevel;
+				_PlantSimulationSystem->_ControlLevel = 2;
 				_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
-				
+
 				_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Skeleton = _TargetSkeleton;
 				_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Mask = _TargetMask;
 				_CurrentTree.GetPrivateComponent<MaskProcessor>()->PlaceAttractionPoints();
@@ -328,47 +390,42 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			else
 			{
 				ExportAllData();
-				if (!_EnableSpaceColonization) {
-					_StartIndex = 1;
-					_EnableSpaceColonization = true;
+
+				switch (_Type) {
+				case TreeType::Acacia:
+					_Type = TreeType::Apple;
+					Init();
+					break;
+				case TreeType::Apple:
+					_Type = TreeType::Willow;
+					Init();
+					break;
+				case TreeType::Willow:
+					_Type = TreeType::Maple;
+					Init();
+					break;
+				case TreeType::Maple:
+					_Type = TreeType::Birch;
+					Init();
+					break;
+				case TreeType::Birch:
+					_Type = TreeType::Oak;
+					Init();
+					break;
+				case TreeType::Oak:
+					_Type = TreeType::Pine;
+					Init();
+					break;
+				case TreeType::Pine:
+					_NeedExport = false;
+					break;
 				}
-				else if (_ControlLevel < 2)
-				{
-					_ControlLevel++;
-					_StartIndex = 1;
-				}
-				else {
-					switch (_Type) {
-					case TreeType::Acacia:
-						_Type = TreeType::Apple;
-						Init();
-						break;
-					case TreeType::Apple:
-						_Type = TreeType::Willow;
-						Init();
-						break;
-					case TreeType::Willow:
-						_Type = TreeType::Maple;
-						Init();
-						break;
-					case TreeType::Maple:
-						_Type = TreeType::Birch;
-						Init();
-						break;
-					case TreeType::Birch:
-						_Type = TreeType::Oak;
-						Init();
-						break;
-					case TreeType::Oak:
-						_Type = TreeType::Pine;
-						Init();
-						break;
-					case TreeType::Pine:
-						_NeedExport = false;
-						break;
-					}
-				}
+
 			}
+		}
+		else
+		{
+			OnGui();
 		}
 		break;
 	case TreeReconstructionSystemStatus::MainBranches:
@@ -381,7 +438,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			cakeTower->GenerateMesh();
 			cakeTower->ClearAttractionPoints();
 			cakeTower->GenerateAttractionPoints(2000);
-			cakeTower->EnableSpaceColonization = _EnableSpaceColonization;
+			cakeTower->EnableSpaceColonization = true;
 			_PlantSimulationSystem->ResumeGrowth();
 			TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
 			age.Value = _AgeForMainBranches;
@@ -390,49 +447,49 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		}
 		break;
 	case TreeReconstructionSystemStatus::NormalGrowth:
+	{
+		bool stop = false;
+		_Internodes.resize(0);
+		const auto treeIndex = _CurrentTree.GetComponentData<TreeIndex>();
+		TreeManager::GetInternodeQuery().ToEntityArray(treeIndex, _Internodes);
+		TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
+		if (_Internodes.size() > _TargetInternodeSize + _MainBranchInternodeSize)
 		{
-			bool stop = false;
-			_Internodes.resize(0);
-			const auto treeIndex = _CurrentTree.GetComponentData<TreeIndex>();
-			TreeManager::GetInternodeQuery().ToEntityArray(treeIndex, _Internodes);
-			TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
-			if (_Internodes.size() > _TargetInternodeSize + _MainBranchInternodeSize)
+			stop = true;
+		}
+		if (!stop && !_PlantSimulationSystem->_Growing) {
+			if (age.ToGrowIteration != 0 || age.Value > _MaxAge)
 			{
 				stop = true;
 			}
-			if (!stop && !_PlantSimulationSystem->_Growing) {
-				if (age.ToGrowIteration != 0 || age.Value > _MaxAge)
-				{
-					stop = true;
-				}
-				else
-				{
-					_PlantSimulationSystem->_Growing = true;
-					age.ToGrowIteration++;
-					_CurrentTree.SetComponentData(age);
-				}
-			}
-			if (stop)
+			else
 			{
-				_PlantSimulationSystem->PauseGrowth();
-				TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
-				_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
-				_Status = TreeReconstructionSystemStatus::Render;
+				_PlantSimulationSystem->_Growing = true;
+				age.ToGrowIteration++;
+				_CurrentTree.SetComponentData(age);
 			}
 		}
-		break;
+		if (stop)
+		{
+			_PlantSimulationSystem->PauseGrowth();
+			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
+			_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
+			_Status = TreeReconstructionSystemStatus::Render;
+		}
+	}
+	break;
 	case TreeReconstructionSystemStatus::Render:
 		_Status = TreeReconstructionSystemStatus::CollectData;
 		break;
 	case TreeReconstructionSystemStatus::CollectData:
-		path = _StorePath + _Name + "/" + (_EnableSpaceColonization ? "SC" + std::to_string(_ControlLevel) : "IPM") + "/" +
+		path = _StorePath + _Name + "/" +
 			std::string(5 - std::to_string(_StartIndex).length(), '0') + std::to_string(_StartIndex)
 			+ ".jpg";
 		_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 			path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
 		_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume(_TargetCakeTower->MaxHeight);
 		_CakeTowersOutputList.emplace_back(_StartIndex, _Name, _CurrentTree.GetPrivateComponent<CakeTower>());
-		TreeManager::SerializeTreeGraph(_StorePath + _Name + "/" + (_EnableSpaceColonization ? "SC" + std::to_string(_ControlLevel) + "-graph" : "IPM-graph") + "/" +
+		TreeManager::SerializeTreeGraph(_StorePath + _Name + "/" +
 			std::string(5 - std::to_string(_StartIndex).length(), '0') + std::to_string(_StartIndex), _CurrentTree);
 		_Status = TreeReconstructionSystemStatus::CleanUp;
 		break;

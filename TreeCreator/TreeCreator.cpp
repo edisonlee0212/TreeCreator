@@ -38,7 +38,6 @@ void main()
 	EntityManager::SetComponentData(dle, dlc);
 	EntityManager::SetComponentData(dle, transform);
 #pragma endregion
-	bool reconstructTrees = true;
 	bool generateLearningData = true;
 	bool generateSorghum = false;
 	bool generateSorghumField = true;
@@ -48,10 +47,9 @@ void main()
 	ics->SetPlantSimulationSystem(pss);
 	trs->SetPlantSimulationSystem(pss);
 	trs->SetDataCollectionSystem(ics);
-	if(reconstructTrees)
-	{
-		trs->Init();
-	}
+
+	
+	
 	if (generateLearningData) {
 		RenderManager::SetAmbientLight(1.0f);
 		dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);

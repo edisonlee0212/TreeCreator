@@ -101,6 +101,13 @@ namespace TreeUtilities {
 		std::vector<KDopOutput> _KDopsOutputList;
 		std::vector<CakeTowerOutput> _CakeTowersOutputList;
 		std::vector<std::shared_ptr<Texture2D>> _BackgroundTextures;
+
+
+		bool _Reconstruction;
+		int _Index;
+		int _Seed;
+		std::string _ReconPath;
+		
 		void OnGui();
 	public:
 		void ExportAllData();
