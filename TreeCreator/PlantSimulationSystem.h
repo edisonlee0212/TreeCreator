@@ -81,7 +81,7 @@ namespace TreeUtilities {
 		static void ApplyTropism(glm::vec3 targetDir, float tropism, glm::vec3& front, glm::vec3& up);
 		void GenerateLeaves(const Entity& tree) const;
 		void GenerateLeavesForAllTrees(std::vector<Entity>& trees) const;
-		void RefreshTrees();
+		void RefreshTrees(bool removal = true);
 		void ExportSettingsAsXml(const std::string& path);
 		void ImportSettings(const std::string& path);
 		TreeParameters LoadParameters(const std::string& path);

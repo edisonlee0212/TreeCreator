@@ -478,6 +478,9 @@ void DataCollectionSystem::Update()
 			if (_StartIndex <= _EndIndex)
 			{
 				SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
+				_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
+				_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
+
 				treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
 				treeParameters.Seed = _StartIndex + (_IsTrain ? 0 : 9999);
 				_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
@@ -585,7 +588,7 @@ void DataCollectionSystem::Update()
 			path = _ReconPath + ".png";
 		}
 		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
-			path);
+			path, _TargetResolution, _TargetResolution);
 		HideFoliage();
 		_Status = DataCollectionSystemStatus::CaptureBranch;
 		break;

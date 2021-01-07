@@ -56,7 +56,7 @@ void MaskProcessor::PlaceAttractionPoints()
 	{
 		for (int y = 0; y < resolutionY; y++)
 		{
-			if (_SkeletonData[x * resolutionY + y] == 1)
+			if (_SkeletonData[x * resolutionY + y] != 0)
 			{
 				GlobalTransform cameraTransform = _CameraEntity.GetComponentData<GlobalTransform>();
 				glm::vec3 position;

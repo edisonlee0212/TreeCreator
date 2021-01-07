@@ -1769,7 +1769,7 @@ void PlantSimulationSystem::GenerateLeavesForAllTrees(std::vector<Entity>& trees
 	}
 }
 
-void PlantSimulationSystem::RefreshTrees()
+void PlantSimulationSystem::RefreshTrees(bool removal)
 {
 	auto trees = std::vector<Entity>();
 	_TreeQuery.ToEntityArray(trees);

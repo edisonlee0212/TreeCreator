@@ -592,10 +592,11 @@ Entity TreeManager::CreateAttractionPoint(const TreeIndex& treeIndex, const glm:
 void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::string filename, bool includeFoliage)
 {
 	auto mesh = EntityManager::GetPrivateComponent<MeshRenderer>(treeEntity)->Mesh;
+	if (!mesh) return;
 	auto vertices = mesh->GetVerticesUnsafe();
 	auto indices = mesh->GetIndicesUnsafe();
 	
-	if (vertices.size() == 0) {
+	if (vertices.empty()) {
 		Debug::Log("Mesh not generated!");
 		return;
 	}

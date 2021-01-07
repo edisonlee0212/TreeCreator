@@ -31,8 +31,12 @@ namespace TreeUtilities
 	{
 		int _Amount = 10;
 		int _ReconAmount = 10;
+
+		int _ReconIndex = 0;
+		int _ReconSeed = 0;
+		int _ReconCounter = 0;
+		int _ReconMainBranchInternodeLimit = 1000;
 		
-		TreeType _Type = TreeType::Acacia;
 		bool _EnableMaskTrimmer = false;
 		std::string _StorePath = "./tree_recon/";
 		DataCollectionSystem* _DataCollectionSystem = nullptr;
@@ -50,10 +54,9 @@ namespace TreeUtilities
 		int _AgeForMainBranches = 4;
 		int _TargetInternodeSize = 1601;
 		TreeParameters _TargetTreeParameter;
-		std::string _TreeParametersPath;
-		int _StartIndex = 1;
+
 		std::string _Name = "Apple";
-		int _EndIndex = 5;
+		
 		int _MaxAge = 30;
 		bool _NeedExport = false;
 		bool _Growing = false;
