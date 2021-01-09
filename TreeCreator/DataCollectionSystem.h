@@ -102,7 +102,16 @@ namespace TreeUtilities {
 		std::vector<CakeTowerOutput> _CakeTowersOutputList;
 		std::vector<std::shared_ptr<Texture2D>> _BackgroundTextures;
 
-
+		Entity _DirectionalLightEntity;
+		Entity _DirectionalLightEntity1;
+		Entity _DirectionalLightEntity2;
+		DirectionalLight _DirectionalLight;
+		Transform _LightTransform;
+		DirectionalLight _DirectionalLight1;
+		Transform _LightTransform1;
+		DirectionalLight _DirectionalLight2;
+		Transform _LightTransform2;
+		
 		bool _Reconstruction;
 		int _Index;
 		int _Seed;
@@ -110,6 +119,7 @@ namespace TreeUtilities {
 		
 		void OnGui();
 	public:
+		void SetDirectionalLightEntity(Entity entity, Entity entity1, Entity entity2);
 		void ExportAllData();
 		void ResetCounter(int value, int startIndex, int endIndex, bool obj, bool graph);
 		void SetIsTrain(bool value);
@@ -122,6 +132,7 @@ namespace TreeUtilities {
 		void OnCreate() override;
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);
 		void Update() override;
+		void LateUpdate() override;
 		void EnableSemantic() const;
 		void HideFoliage() const;
 	};

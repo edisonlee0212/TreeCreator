@@ -64,6 +64,11 @@ void TreeUtilities::TreeReconstructionSystem::OnGui()
 				}
 				ImGui::EndPopup();
 			}
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel"))
+			{
+				ImGui::CloseCurrentPopup();
+			}
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
@@ -338,8 +343,8 @@ void TreeUtilities::TreeReconstructionSystem::OnCreate()
 void TreeUtilities::TreeReconstructionSystem::Update()
 {
 	if (_PlantSimulationSystem == nullptr) return;
-	_PlantSimulationSystem->_AutoGenerateMesh = _Status == TreeReconstructionSystemStatus::Reconstruction;
-	_PlantSimulationSystem->_AutoGenerateLeaves = _Status == TreeReconstructionSystemStatus::Reconstruction;
+	_PlantSimulationSystem->_AutoGenerateMesh = _Status == TreeReconstructionSystemStatus::Reconstruction || _Status == TreeReconstructionSystemStatus::Idle;
+	_PlantSimulationSystem->_AutoGenerateLeaves = _Status == TreeReconstructionSystemStatus::Reconstruction || _Status == TreeReconstructionSystemStatus::Idle;
 	std::string path;
 	switch (_Status)
 	{

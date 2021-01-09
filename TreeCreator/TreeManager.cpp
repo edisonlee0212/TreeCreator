@@ -502,8 +502,8 @@ Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurf
 	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
 	
 	EntityManager::SetPrivateComponent(entity, std::make_unique<TreeData>());
-	//EntityManager::SetPrivateComponent(entity, std::move(std::make_unique<KDop>()));
 	EntityManager::SetPrivateComponent(entity, std::make_unique<CakeTower>());
+	EntityManager::SetPrivateComponent(entity, std::make_unique<KDop>());
 	EntityManager::SetPrivateComponent(entity, std::make_unique<MaskProcessor>());
 	EntityManager::SetComponentData(entity, _TreeIndex);
 	auto mmc = std::make_unique<MeshRenderer>();

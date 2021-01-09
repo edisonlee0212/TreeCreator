@@ -6,7 +6,9 @@ using namespace UniEngine;
 namespace TreeUtilities {
 	struct AcaciaFoliageInfo : ComponentBase
 	{
-		int OrderLimit = 11;
+		float LengthLimit = 2.0f;
+		float HeightLimit = 7.0f;
+		int OrderProtect = 20;
 		int LeafAmount = 30;
 		float GenerationRadius = 1.0f;
 		float YCompress = 0.2f;

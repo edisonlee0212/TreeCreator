@@ -721,7 +721,7 @@ Entity PlantSimulationSystem::CreateTree(TreeParameters parameters, glm::vec3 po
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
 	mat->Shininess = 32.0f;
-
+	mat->Metallic = 0.0f;
 	switch (parameters.FoliageType)
 	{
 	case 7:

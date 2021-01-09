@@ -87,7 +87,12 @@ DefaultFoliageGenerator::DefaultFoliageGenerator()
 	_LeafMaterial->AlphaDiscardOffset = 0.1f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	if (!_LeafSurfaceTex) _LeafSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Leaf/Pine/level0.png");
-	_LeafMaterial->SetTexture(_LeafSurfaceTex);
+	//_LeafMaterial->SetTexture(_LeafSurfaceTex);
+	_LeafMaterial->AlbedoColor = glm::normalize(glm::vec3(60.0f / 256.0f, 140.0f / 256.0f, 0.0f));
+	_LeafMaterial->Metallic = 0.0f;
+	_LeafMaterial->Roughness = 0.3f;
+	_LeafMaterial->AmbientOcclusion = glm::linearRand(0.4f, 0.8f);
+
 }
 
 void TreeUtilities::DefaultFoliageGenerator::Generate()
@@ -112,8 +117,7 @@ void TreeUtilities::DefaultFoliageGenerator::Generate()
 		auto particleSys = std::make_unique<Particles>();
 		particleSys->Material = _LeafMaterial;
 		particleSys->Mesh = Default::Primitives::Quad;
-		particleSys->ForwardRendering = true;
-		particleSys->ReceiveShadow = false;
+		particleSys->ForwardRendering = false;
 		Transform transform;
 		transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));

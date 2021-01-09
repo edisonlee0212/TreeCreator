@@ -17,7 +17,13 @@ TreeUtilities::OakFoliageGenerator::OakFoliageGenerator()
 	_LeafMaterial->AlphaDiscardOffset = 0.7f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	if (!_LeafSurfaceTex)_LeafSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Leaf/PrunusAvium/A/level0.png");
-	_LeafMaterial->SetTexture(_LeafSurfaceTex);
+	//_LeafMaterial->SetTexture(_LeafSurfaceTex);
+	float random = glm::linearRand(-30, 30);
+	_LeafMaterial->AlbedoColor = glm::normalize(glm::vec3((98.0f + random) / 256.0f, (140.0f - random) / 256.0f, 0.0f));
+	_LeafMaterial->Metallic = 0.0f;
+	_LeafMaterial->Roughness = 0.3f;
+	_LeafMaterial->AmbientOcclusion = glm::linearRand(0.4f, 0.8f);
+
 }
 
 
@@ -43,8 +49,7 @@ void TreeUtilities::OakFoliageGenerator::Generate()
 		auto particleSys = std::make_unique<Particles>();
 		particleSys->Material = _LeafMaterial;
 		particleSys->Mesh = Default::Primitives::Quad;
-		particleSys->ForwardRendering = true;
-		particleSys->ReceiveShadow = false;
+		particleSys->ForwardRendering = false;
 		Transform ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
@@ -60,7 +65,7 @@ void TreeUtilities::OakFoliageGenerator::Generate()
 	
 	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
 		{
-			if (info->Order < _DefaultFoliageInfo.OrderLimit) return;
+			if (info->AccumulatedLength > _DefaultFoliageInfo.LengthLimit || info->DistanceToRoot < _DefaultFoliageInfo.DistanceLimit) return;
 			if (ti.Value != index->Value) return;
 			std::lock_guard<std::mutex> lock(m);
 			internodeInfos.push_back(*info);
@@ -98,7 +103,8 @@ void TreeUtilities::OakFoliageGenerator::Generate()
 void TreeUtilities::OakFoliageGenerator::OnGui()
 {
 	if (ImGui::Button("Regenerate")) Generate();
-	ImGui::DragInt("Order Limit", &_DefaultFoliageInfo.OrderLimit, 1.0f, 0);
+	ImGui::DragFloat("Length Limit", &_DefaultFoliageInfo.LengthLimit, 0.01f, 0);
+	ImGui::DragFloat("Dis Limit", &_DefaultFoliageInfo.DistanceLimit, 0.01f, 0);
 	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f, 0);
 	ImGui::DragInt("Leaf Amount", &_DefaultFoliageInfo.LeafAmount, 1, 0);
 	ImGui::DragFloat("GenerationRadius", &_DefaultFoliageInfo.GenerationRadius, 0.01f);

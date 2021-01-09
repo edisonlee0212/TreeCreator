@@ -1,0 +1,19 @@
+tree_recon
+	acacia, apple, ...: The folder with the name of the species, contains all data related to this specie.
+		seed_0, seed_1, ...: The folder contains the target instance and all reconstructions for this instance. 
+							 The name includes the seed for the target instance.
+			graph: The folder contains the graph of reconstructed instance with used seed as name in json format.
+				00001.json, 00002.json, ...
+			image: The folder contains the image of reconstructed instance with used seed as name in jpg format.
+				00001.jpg, 00002.jpg, ...
+			obj: The folder contains the obj model of reconstructed instance with used seed as name in obj format.
+				00001.obj, 00002.obj, ...
+			volume: The folder contains the caketower of reconstructed instances with used seed as name in ct format.
+				00001.ct, 00002.ct, ...
+			CakeTowers.csv: The list of caketowers for reconstructed instances.
+			skeleton.png: The medial axis of the target tree.
+			target.ct: The caketower of the target instance.
+			target.jpg: The image of the target instance.
+			target.json: The graph of the target instance.
+			target.obj: The obj model of the target instance.
+			target.png: The mask of the target instance.

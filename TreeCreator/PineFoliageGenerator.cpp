@@ -14,7 +14,11 @@ TreeUtilities::PineFoliageGenerator::PineFoliageGenerator()
 	_LeafMaterial->AlphaDiscardOffset = 0.1f;
 	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
 	if (!_LeafSurfaceTex) _LeafSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Leaf/Pine/level0.png");
-	_LeafMaterial->SetTexture(_LeafSurfaceTex);
+	//_LeafMaterial->SetTexture(_LeafSurfaceTex);
+	_LeafMaterial->AlbedoColor = glm::normalize(glm::vec3(60.0f / 256.0f, 140.0f / 256.0f, 0.0f));
+	_LeafMaterial->Metallic = 0.0f;
+	_LeafMaterial->Roughness = 0.3f;
+	_LeafMaterial->AmbientOcclusion = glm::linearRand(0.4f, 0.8f);
 }
 
 void TreeUtilities::PineFoliageGenerator::Generate()
@@ -39,8 +43,7 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 		auto particleSys = std::make_unique<Particles>();
 		particleSys->Material = _LeafMaterial;
 		particleSys->Mesh = Default::Primitives::Quad;
-		particleSys->ForwardRendering = true;
-		particleSys->ReceiveShadow = false;
+		particleSys->ForwardRendering = false;
 		Transform ltp;
 		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
@@ -55,8 +58,7 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 	std::mutex m;
 	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
 		{
-			if (info->Inhibitor > _DefaultFoliageInfo.InhibitorLimit) return;
-			if (illumination->Value < _DefaultFoliageInfo.IlluminationLimit) return;
+			if (info->AccumulatedLength > _DefaultFoliageInfo.LengthLimit) return;
 			if (ti.Value != index->Value) return;
 			std::lock_guard<std::mutex> lock(m);
 			internodeInfos.push_back(*info);
@@ -102,8 +104,7 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 void TreeUtilities::PineFoliageGenerator::OnGui()
 {
 	if (ImGui::Button("Regenerate")) Generate();
-	ImGui::DragFloat("Inhibitor Limit", &_DefaultFoliageInfo.InhibitorLimit, 0.01f, 0);
-	ImGui::DragFloat("Illumination Limit", &_DefaultFoliageInfo.IlluminationLimit, 0.01f, 0);
+	ImGui::DragFloat("Length Limit", &_DefaultFoliageInfo.LengthLimit, 0.01f, 0);
 	ImGui::DragFloat3("Leaf Size", (float*)(void*)&_DefaultFoliageInfo.LeafSize, 0.01f, 0);
 	ImGui::DragInt("Side Leaf Amount", &_DefaultFoliageInfo.SideLeafAmount, 1, 0);
 	ImGui::DragFloat("BendAngleMean", &_DefaultFoliageInfo.BendAngleMean, 0.01f);

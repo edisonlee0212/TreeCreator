@@ -27,7 +27,7 @@ void main()
 	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), GlobalTransform(), Transform());
 	DirectionalLight dlc;
 	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
-	dlc.diffuseBrightness = 1.0f;
+	dlc.diffuseBrightness = 2.0f;
 	dlc.specularBrightness = 1.0f;
 	dlc.bias = 0.3f;
 	dlc.normalOffset = 0.01f;
@@ -35,6 +35,8 @@ void main()
 	Transform transform;
 	transform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
 	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
+	Entity dle1 = EntityManager::CreateEntity(lightArchetype, "Directional Light");
+	Entity dle2 = EntityManager::CreateEntity(lightArchetype, "Directional Light");
 	EntityManager::SetComponentData(dle, dlc);
 	EntityManager::SetComponentData(dle, transform);
 #pragma endregion
@@ -46,27 +48,11 @@ void main()
 	TreeReconstructionSystem* trs = InitTreeReconstructionSystem();
 	ics->SetPlantSimulationSystem(pss);
 	trs->SetPlantSimulationSystem(pss);
+	ics->SetDirectionalLightEntity(dle, dle1, dle2);
 	trs->SetDataCollectionSystem(ics);
 
-	
-	
-	if (generateLearningData) {
-		RenderManager::SetAmbientLight(1.0f);
-		dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
-		dlc.diffuseBrightness = 0.5f;
-		dlc.specularBrightness = 1.0f;
-		dlc.bias = 0.3f;
-		dlc.normalOffset = 0.01f;
-		dlc.lightSize = 1.0;
-		Transform lightTransform;
-		lightTransform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
-		EntityManager::SetComponentData(dle, dlc);
-		EntityManager::SetComponentData(dle, lightTransform);
-	}
-	else
-	{
-		InitGround();
-	}
+	InitGround();
+
 	if (generateSorghum) {
 		auto srSys = InitSorghumReconstructionSystem();
 		Entity plant1 = srSys->ImportPlant("skeleton_procedural_1.txt", 0.01f, "Sorghum 1");
@@ -196,12 +182,8 @@ void EngineSetup()
 #pragma region Engine Setup
 #pragma region Global light settings
 	RenderManager::SetPCSSScaleFactor(1.0f);
-	//RenderManager::SetSSAOKernelBias(0.08);
-	//RenderManager::SetSSAOKernelRadius(0.05f);
-	//RenderManager::SetSSAOSampleSize(32);
 	RenderManager::SetAmbientLight(0.5f);
-	//RenderManager::SetSSAOFactor(10.0f);
-	RenderManager::SetShadowMapResolution(4096);
+	RenderManager::SetShadowMapResolution(8192);
 	RenderManager::SetStableFit(false);
 	RenderManager::SetSeamFixRatio(0.05f);
 	RenderManager::SetMaxShadowDistance(100);
@@ -302,6 +284,7 @@ void InitGround() {
 	meshMaterial->ForwardRendering = false;
 	meshMaterial->Material->DisplacementMapScale = -0.02f;
 	EntityManager::SetPrivateComponent<MeshRenderer>(entity, std::move(meshMaterial));
+	entity.SetEnabled(false);
 }
 
 

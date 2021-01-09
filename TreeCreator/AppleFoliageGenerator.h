@@ -6,7 +6,8 @@ using namespace UniEngine;
 namespace TreeUtilities {
 	struct AppleFoliageInfo : ComponentBase
 	{
-		int OrderLimit = 6;
+		float LengthLimit = 2.0f;
+		float DistanceLimit = 8.0f;
 		int LeafAmount = 30;
 		float GenerationRadius = 0.25f;
 		float YCompress = 1.0f;

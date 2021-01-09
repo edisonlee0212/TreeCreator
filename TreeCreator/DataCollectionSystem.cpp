@@ -12,7 +12,8 @@
 #include "BirchFoliageGenerator.h"
 
 #include "MaskProcessor.h"
-
+#include "Bloom.h"
+#include "SSAO.h"
 void DataCollectionSystem::ResetCounter(int value, int startIndex, int endIndex, bool obj, bool graph)
 {
 	_Counter = value;
@@ -110,12 +111,24 @@ void DataCollectionSystem::OnGui()
 					_NeedExport = true;
 					ImGui::CloseCurrentPopup();
 				}
+				ImGui::SameLine();
+				if (ImGui::Button("Cancel"))
+				{
+					ImGui::CloseCurrentPopup();
+				}
 				ImGui::EndPopup();
 			}
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
 	}
+}
+
+void DataCollectionSystem::SetDirectionalLightEntity(Entity entity, Entity entity1, Entity entity2)
+{
+	_DirectionalLightEntity = entity;
+	_DirectionalLightEntity1 = entity1;
+	_DirectionalLightEntity2 = entity2;
 }
 
 void DataCollectionSystem::ExportAllData()
@@ -272,6 +285,31 @@ void DataCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation)
 
 void DataCollectionSystem::OnCreate()
 {
+	_DirectionalLight.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
+	_DirectionalLight.diffuseBrightness = 2.0f;
+	_DirectionalLight.specularBrightness = 1.0f;
+	_DirectionalLight.bias = 0.3f;
+	_DirectionalLight.normalOffset = 0.01f;
+	_DirectionalLight.lightSize = 0.2f;
+	
+	_DirectionalLight1.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
+	_DirectionalLight1.diffuseBrightness = 2.0f;
+	_DirectionalLight1.specularBrightness = 1.0f;
+	_DirectionalLight1.bias = 0.3f;
+	_DirectionalLight1.normalOffset = 0.01f;
+	_DirectionalLight1.lightSize = 0.2f;
+	
+	_DirectionalLight2.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
+	_DirectionalLight2.diffuseBrightness = 2.0f;
+	_DirectionalLight2.specularBrightness = 1.0f;
+	_DirectionalLight2.bias = 0.3f;
+	_DirectionalLight2.normalOffset = 0.01f;
+	_DirectionalLight2.lightSize = 0.2f;
+
+	
+	_LightTransform = Transform();
+	_LightTransform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
+	
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", GlobalTransform(), Transform());
 	_ImageCameraEntity = EntityManager::CreateEntity(archetype);
 	TreeManager::GetInternodeSystem()->_CameraEntity = _ImageCameraEntity;
@@ -280,14 +318,18 @@ void DataCollectionSystem::OnCreate()
 	transform.SetEulerRotation(_CameraEulerRotation);
 	_ImageCameraEntity.SetComponentData(transform);
 	auto cameraComponent = std::make_unique<CameraComponent>();
-	cameraComponent->ResizeResolution(_CaptureResolution, _CaptureResolution);
 	cameraComponent->DrawSkyBox = false;
-	cameraComponent->AllowAutoResize = false;
+	
 	cameraComponent->ClearColor = glm::vec3(1.0f);
 	_ImageCameraEntity.SetName("ImageCap Camera");
 	_ImageCameraEntity.SetPrivateComponent(std::move(cameraComponent));
-
-
+	auto postProcessing = std::make_unique<PostProcessing>();
+	postProcessing->PushLayer(std::make_unique<Bloom>());
+	postProcessing->PushLayer(std::make_unique<SSAO>());
+	_ImageCameraEntity.SetPrivateComponent(std::move(postProcessing));
+	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
+	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->AllowAutoResize = false;
+	
 	_SemanticMaskCameraEntity = EntityManager::CreateEntity(archetype);
 	transform.SetPosition(_CameraPosition);
 	transform.SetEulerRotation(_CameraEulerRotation);
@@ -300,22 +342,12 @@ void DataCollectionSystem::OnCreate()
 	_SemanticMaskCameraEntity.SetName("Semantic Mask Camera");
 	_SemanticMaskCameraEntity.SetPrivateComponent(std::move(cameraComponent));
 
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/2236927059_a18cdd9196.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/2289428141_c758f436a1.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/2814264828_bb3f9d7ca9.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/3397325268_dc6135c432.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/69498568_e43c0e8520.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/1122838735_bc116c7a7c.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/1123280110_dda3037a69.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/3837561150_9f786dc7e5.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/st-andrewgate-2_300px.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/winecentre.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/calle-2.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/calle-3.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/calle+3.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/MainStreet_t.jpg"));
-	_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Street/st-andrewgate-2_300px.jpg"));
-
+	for(int i = 1; i < 10; i++)
+	{
+		int index = i * 4;
+		_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + 
+			"Textures/StreetView/" + std::string(6 - std::to_string(index).length(), '0') + std::to_string(index) + "_2.jpg"));
+	}	
 
 	_BackgroundMaterial = std::make_shared<Material>();
 	_BackgroundMaterial->Shininess = 32.0f;
@@ -467,6 +499,11 @@ void DataCollectionSystem::SetPlantSimulationSystem(PlantSimulationSystem* value
 
 void DataCollectionSystem::Update()
 {
+	if (!_NeedExport) OnGui();
+}
+
+void DataCollectionSystem::LateUpdate()
+{
 	if (_ImageCaptureSequences.empty() || _CurrentSelectedSequenceIndex < 0) return;
 	std::string path;
 	auto& imageCaptureSequence = _Reconstruction ? _ImageCaptureSequences[_Index].first : _ImageCaptureSequences[_CurrentSelectedSequenceIndex].first;
@@ -478,6 +515,25 @@ void DataCollectionSystem::Update()
 			if (_StartIndex <= _EndIndex)
 			{
 				SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
+
+				RenderManager::SetAmbientLight(0.6f);
+				float brightness = glm::linearRand(3.2f, 3.6f);
+				_DirectionalLight.diffuseBrightness = brightness / 2.0f;
+				_DirectionalLight1.diffuseBrightness = brightness / 4.0f;
+				_DirectionalLight2.diffuseBrightness = brightness / 4.0f;
+				glm::vec3 mainLightAngle = glm::vec3(150 + glm::linearRand(-30, 30), glm::linearRand(0, 360), 0);
+				float lightFocus = glm::linearRand(25, 35);
+				_LightTransform.SetEulerRotation(glm::radians(mainLightAngle));
+				_LightTransform1.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -lightFocus, 0)));
+				_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, lightFocus, 0)));
+
+				_DirectionalLightEntity.SetComponentData(_DirectionalLight);
+				_DirectionalLightEntity.SetComponentData(_LightTransform);
+				_DirectionalLightEntity1.SetComponentData(_DirectionalLight1);
+				_DirectionalLightEntity1.SetComponentData(_LightTransform1);
+				_DirectionalLightEntity2.SetComponentData(_DirectionalLight2);
+				_DirectionalLightEntity2.SetComponentData(_LightTransform2);
+				
 				_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 				_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 
@@ -509,9 +565,6 @@ void DataCollectionSystem::Update()
 			_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
 			_PlantSimulationSystem->ResumeGrowth();
 			_Status = DataCollectionSystemStatus::Growing;
-		}
-		else {
-			OnGui();
 		}
 		break;
 	case DataCollectionSystemStatus::Growing:

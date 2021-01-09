@@ -6,12 +6,11 @@ using namespace UniEngine;
 namespace TreeUtilities {
 	struct PineFoliageInfo : ComponentBase
 	{
-		float InhibitorLimit = 0.001f;
-		float IlluminationLimit = 0.001f;
-		glm::vec3 LeafSize = glm::vec3(0.1f, 1.0f, 0.15f);
+		float LengthLimit = 1.0f;
+		glm::vec3 LeafSize = glm::vec3(0.015f, 1.0f, 0.2f);
 		int SideLeafAmount = 5;
-		float BendAngleMean = 60;
-		float BendAngleVariance = 10;
+		float BendAngleMean = -50;
+		float BendAngleVariance = 5;
 	};
 	class PineFoliageGenerator : public FoliageGeneratorBase
 	{
