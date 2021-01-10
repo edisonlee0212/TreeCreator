@@ -172,7 +172,7 @@ namespace TreeUtilities {
 		float ApicalControlLevelFactor;
 		float ApicalControlDistanceFactor;
 
-		int MaxBudAge;
+		int MaxBudAge = 999;
 #pragma endregion
 #pragma region Environmental
 		float InternodeSize = 0.3f;
@@ -184,7 +184,7 @@ namespace TreeUtilities {
 		float PruningFactor;
 		float LowBranchPruningFactor;
 
-		float ThicknessRemovalFactor;
+		float ThicknessRemovalFactor = 99.0f;
 
 		float GravityBendingStrength;
 		float GravityBendingAngleFactor;
@@ -197,7 +197,7 @@ namespace TreeUtilities {
 		float ThicknessControlFactor;
 
 #pragma region CrownShyness
-		float CrownShynessBase;
+		float CrownShynessBase = 1.0f;
 		float CrownShynessFactor = 1.0f;
 #pragma endregion
 

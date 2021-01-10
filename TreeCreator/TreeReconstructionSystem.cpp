@@ -52,6 +52,7 @@ void TreeUtilities::TreeReconstructionSystem::OnGui()
 			if (ImGui::BeginPopupModal("Reconstruction wizard", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			{
 				ImGui::DragInt("Reconstruction Amount##Reconstruction", &_ReconAmount, 1, 1, 50);
+				ImGui::Checkbox("Use volume for main branches", &_UseCakeTower);
 				if (ImGui::Button("Start Reconstruction"))
 				{
 					_ReconCounter = -1;
@@ -155,41 +156,45 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 				glm::vec3 orig = internodeInfo.ParentTranslation;
 
 				glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
+				auto test = orig + glm::vec3(front.x, 0, front.z) * 100.0f;
+				if (_UseCakeTower) {
+					auto slice = _TargetCakeTower->SelectSlice(test);
+					slice.x += 1;
+					if (slice.x >= _TargetCakeTower->SliceAmount) slice.x = _TargetCakeTower->SliceAmount - 1;
+					glm::vec3 weight = glm::vec3(0);
+					const float sliceAngle = 360.0f / _TargetCakeTower->SectorAmount;
+					for (int i = -2; i <= 2; i++)
+					{
+						auto y = slice.y + i;
+						if (_TargetCakeTower->CakeTiers[slice.x][y].MaxDistance == 0) continue;
+						if (y < 0) y += _TargetCakeTower->SectorAmount;
+						if (y >= _TargetCakeTower->SectorAmount) y -= _TargetCakeTower->SectorAmount;
 
-				auto test = orig + (glm::vec3(front.x, 0, front.z) * 100.0f);
-				auto slice = _TargetCakeTower->SelectSlice(test);
-				slice.x += 1;
-				if (slice.x >= _TargetCakeTower->SliceAmount) slice.x = _TargetCakeTower->SliceAmount - 1;
-				glm::vec3 weight = glm::vec3(0);
-				const float sliceAngle = 360.0f / _TargetCakeTower->SectorAmount;
-				for (int i = -2; i <= 2; i++)
+						float currentAngle = sliceAngle * (static_cast<float>(y) + 0.5f);
+						if (currentAngle >= 360) currentAngle = 0;
+						float x = glm::abs(glm::tan(glm::radians(currentAngle)));
+						float z = 1.0f;
+						if (currentAngle >= 0 && currentAngle <= 90)
+						{
+							z *= -1;
+							x *= -1;
+						}
+						else if (currentAngle > 90 && currentAngle <= 180)
+						{
+							x *= -1;
+						}
+						else if (currentAngle > 270 && currentAngle <= 360)
+						{
+							z *= -1;
+						}
+						glm::vec3 position = glm::normalize(glm::vec3(x, 0.0f, z)) * glm::pow(_TargetCakeTower->CakeTiers[slice.x][y].MaxDistance, 3.0f);
+						weight += position;
+					}
+					front = glm::normalize(weight);
+				}else
 				{
-					auto y = slice.y + i;
-					if (_TargetCakeTower->CakeTiers[slice.x][y].MaxDistance == 0) continue;
-					if (y < 0) y += _TargetCakeTower->SectorAmount;
-					if (y >= _TargetCakeTower->SectorAmount) y -= _TargetCakeTower->SectorAmount;
-
-					float currentAngle = sliceAngle * (static_cast<float>(y) + 0.5f);
-					if (currentAngle >= 360) currentAngle = 0;
-					float x = glm::abs(glm::tan(glm::radians(currentAngle)));
-					float z = 1.0f;
-					if (currentAngle >= 0 && currentAngle <= 90)
-					{
-						z *= -1;
-						x *= -1;
-					}
-					else if (currentAngle > 90 && currentAngle <= 180)
-					{
-						x *= -1;
-					}
-					else if (currentAngle > 270 && currentAngle <= 360)
-					{
-						z *= -1;
-					}
-					glm::vec3 position = glm::normalize(glm::vec3(x, 0.0f, z)) * glm::pow(_TargetCakeTower->CakeTiers[slice.x][y].MaxDistance, 3.0f);
-					weight += position;
+					front = glm::rotate(glm::vec3(front.x, 0, front.z), glm::linearRand(-30.0f, 30.0f), glm::vec3(0, 1, 0));
 				}
-				front = glm::normalize(weight);
 				glm::vec3 normal = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
 				float stored = ray.Length;
 				auto d = glm::dot(ray.Direction, normal);
@@ -416,15 +421,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		TryGrowTree();
 		if (!_Growing)
 		{
-			if (false) {
-				_PlantSimulationSystem->PauseGrowth();
-				TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
-				_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
-				_Status = TreeReconstructionSystemStatus::Render;
-			}else
-			{
-				_Status = TreeReconstructionSystemStatus::NormalGrowth;
-			}
+			_Status = TreeReconstructionSystemStatus::NormalGrowth;
 			auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
 			cakeTower->Load(_TargetCakeTowerPath);
 			cakeTower->GenerateMesh();

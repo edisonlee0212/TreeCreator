@@ -17,6 +17,7 @@ namespace TreeUtilities {
 		friend class DataCollectionSystem;
 		friend class TreeReconstructionSystem;
 		friend class MaskProcessor;
+		friend class TreeCollectionGenerationSystem;
 #pragma region Stuff
 		bool _AutoGenerateMesh = true;
 		bool _AutoGenerateLeaves = true;
@@ -66,10 +67,12 @@ namespace TreeUtilities {
 		inline void PruneInternode(Entity& internode, int pruneReason) const;
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);
 		void BuildHullForTree(Entity& tree);
-		void ResumeGrowth();
-		void PauseGrowth();
+		
+		
 #pragma endregion
 	public:
+		void PauseGrowth();
+		void ResumeGrowth();
 		void OnCreate() override;
 		void OnDestroy() override;
 		//Function will be called each frame.

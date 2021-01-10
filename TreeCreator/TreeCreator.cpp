@@ -8,6 +8,7 @@
 #include "SorghumReconstructionSystem.h"
 #include "DataCollectionSystem.h"
 #include "TreeReconstructionSystem.h"
+#include "TreeCollectionGenerationSystem.h"
 #include "Bloom.h"
 #include "SSAO.h"
 using namespace UniEngine;
@@ -18,39 +19,76 @@ PlantSimulationSystem* InitPlantSimulationSystem();
 DataCollectionSystem* InitImageCollectionSystem();
 TreeReconstructionSystem* InitTreeReconstructionSystem();
 SorghumReconstructionSystem* InitSorghumReconstructionSystem();
+TreeCollectionGenerationSystem* InitTreeCollectionGenerationSystem();
 void EngineSetup();
 void main()
 {
 	EngineSetup();
-
-#pragma region Lights
-	EntityArchetype lightArchetype = EntityManager::CreateEntityArchetype("Directional Light", DirectionalLight(), GlobalTransform(), Transform());
-	DirectionalLight dlc;
-	dlc.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
-	dlc.diffuseBrightness = 2.0f;
-	dlc.specularBrightness = 1.0f;
-	dlc.bias = 0.3f;
-	dlc.normalOffset = 0.01f;
-	dlc.lightSize = 1.0;
 	Transform transform;
-	transform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
-	Entity dle = EntityManager::CreateEntity(lightArchetype, "Directional Light");
-	Entity dle1 = EntityManager::CreateEntity(lightArchetype, "Directional Light");
-	Entity dle2 = EntityManager::CreateEntity(lightArchetype, "Directional Light");
-	EntityManager::SetComponentData(dle, dlc);
+	
+#pragma region Lights
+	RenderManager::SetAmbientLight(0.1f);
+	float brightness = 5.0f;
+	auto dlc = std::make_unique<DirectionalLight>();
+	dlc->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+	dlc->diffuseBrightness = brightness / 2.0f;
+	dlc->bias = 0.3f;
+	dlc->normalOffset = 0.01f;
+	dlc->lightSize = 1.0;
+	dlc->CastShadow = true;
+	auto dlc1 = std::make_unique<DirectionalLight>();
+	dlc1->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+	dlc1->diffuseBrightness = brightness / 3.0f;
+	dlc1->bias = 0.3f;
+	dlc1->normalOffset = 0.01f;
+	dlc1->lightSize = 1.0;
+	dlc->CastShadow = true;
+	auto dlc2 = std::make_unique<DirectionalLight>();
+	dlc2->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+	dlc2->diffuseBrightness = brightness / 3.0f;
+	dlc2->bias = 0.3f;
+	dlc2->normalOffset = 0.01f;
+	dlc2->lightSize = 1.0;
+	dlc->CastShadow = true;
+	auto dlc3 = std::make_unique<DirectionalLight>();
+	dlc3->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+	dlc3->diffuseBrightness = brightness / 8.0f;
+	dlc3->bias = 0.3f;
+	dlc3->normalOffset = 0.01f;
+	dlc3->lightSize = 1.0;
+	dlc->CastShadow = true;
+	
+	float angle = 30;
+	transform.SetEulerRotation(glm::radians(glm::vec3(150, angle, 0)));
+	Entity dle = EntityManager::CreateEntity("Directional Light Main");
+	Entity dle1 = EntityManager::CreateEntity("Directional Light Left");
+	Entity dle2 = EntityManager::CreateEntity("Directional Light Right");
+	Entity dle3 = EntityManager::CreateEntity("Directional Light Back");
+	EntityManager::SetPrivateComponent(dle, std::move(dlc));
+	EntityManager::SetPrivateComponent(dle1, std::move(dlc1));
+	EntityManager::SetPrivateComponent(dle2, std::move(dlc2));
+	EntityManager::SetPrivateComponent(dle3, std::move(dlc3));
 	EntityManager::SetComponentData(dle, transform);
+	transform.SetEulerRotation(glm::radians(glm::vec3(150, angle - 35, 0)));
+	EntityManager::SetComponentData(dle1, transform);
+	transform.SetEulerRotation(glm::radians(glm::vec3(150, angle + 35, 0)));
+	EntityManager::SetComponentData(dle2, transform);
+	transform.SetEulerRotation(glm::radians(glm::vec3(150, -angle, 0)));
+	EntityManager::SetComponentData(dle3, transform);
+	
 #pragma endregion
-	bool generateLearningData = true;
 	bool generateSorghum = false;
 	bool generateSorghumField = true;
 	PlantSimulationSystem* pss = InitPlantSimulationSystem();
-	DataCollectionSystem* ics = InitImageCollectionSystem();
+	DataCollectionSystem* dcs = InitImageCollectionSystem();
 	TreeReconstructionSystem* trs = InitTreeReconstructionSystem();
-	ics->SetPlantSimulationSystem(pss);
+	TreeCollectionGenerationSystem* tcgs = InitTreeCollectionGenerationSystem();
+	dcs->SetPlantSimulationSystem(pss);
 	trs->SetPlantSimulationSystem(pss);
-	ics->SetDirectionalLightEntity(dle, dle1, dle2);
-	trs->SetDataCollectionSystem(ics);
-
+	dcs->SetDirectionalLightEntity(dle, dle1, dle2, dle3);
+	trs->SetDataCollectionSystem(dcs);
+	tcgs->SetDataCollectionSystem(dcs);
+	tcgs->ImportCsv("./parameters.csv");
 	InitGround();
 
 	if (generateSorghum) {
@@ -177,12 +215,17 @@ SorghumReconstructionSystem* InitSorghumReconstructionSystem()
 	return Application::GetCurrentWorld()->CreateSystem<SorghumReconstructionSystem>(SystemGroup::SimulationSystemGroup);
 }
 
+TreeCollectionGenerationSystem* InitTreeCollectionGenerationSystem()
+{
+	return Application::GetCurrentWorld()->CreateSystem<TreeCollectionGenerationSystem>(SystemGroup::SimulationSystemGroup);
+}
+
 void EngineSetup()
 {
 #pragma region Engine Setup
 #pragma region Global light settings
 	RenderManager::SetPCSSScaleFactor(1.0f);
-	RenderManager::SetAmbientLight(0.5f);
+	RenderManager::SetAmbientLight(0.4f);
 	RenderManager::SetShadowMapResolution(8192);
 	RenderManager::SetStableFit(false);
 	RenderManager::SetSeamFixRatio(0.05f);

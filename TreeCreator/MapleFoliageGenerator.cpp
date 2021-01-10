@@ -18,7 +18,7 @@ TreeUtilities::MapleFoliageGenerator::MapleFoliageGenerator()
 	_LeafMaterial->AlbedoColor = glm::normalize(glm::vec3(173.0f / 256.0f, glm::linearRand(0, 255) / 256.0f, 0.0f));
 	_LeafMaterial->Metallic = 0.0f;
 	_LeafMaterial->Roughness = 0.3f;
-	_LeafMaterial->AmbientOcclusion = glm::linearRand(0.5f, 0.8f);
+	_LeafMaterial->AmbientOcclusion = glm::linearRand(0.6f, 1.0f);
 }
 
 void TreeUtilities::MapleFoliageGenerator::Generate()

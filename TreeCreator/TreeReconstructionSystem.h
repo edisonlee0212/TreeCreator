@@ -29,8 +29,8 @@ namespace TreeUtilities
 	class TreeReconstructionSystem :
 		public SystemBase
 	{
-		int _Amount = 10;
-		int _ReconAmount = 10;
+		int _Amount = 2;
+		int _ReconAmount = 2;
 
 		int _ReconIndex = 0;
 		int _ReconSeed = 0;
@@ -41,6 +41,7 @@ namespace TreeUtilities
 		std::string _StorePath = "./tree_recon/";
 		DataCollectionSystem* _DataCollectionSystem = nullptr;
 		PlantSimulationSystem* _PlantSimulationSystem = nullptr;
+		bool _UseCakeTower = true;
 		TreeReconstructionSystemStatus _Status = TreeReconstructionSystemStatus::Idle;
 		std::unique_ptr<CakeTower> _TargetCakeTower;
 		Entity _CurrentTree;

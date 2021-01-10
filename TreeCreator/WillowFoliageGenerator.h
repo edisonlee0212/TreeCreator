@@ -16,7 +16,7 @@ namespace TreeUtilities {
 		float BendAngleVariance = 5.0f;
 		int SubdivisionAmount = 3;
 		int LeafAmount = 15;
-		glm::vec3 LeafSize = glm::vec3(0.05f, 1.0f, 0.1f);
+		glm::vec3 LeafSize = glm::vec3(0.03f, 1.0f, 0.1f);
 	};
 	
 	class WillowFoliageGenerator : public FoliageGeneratorBase

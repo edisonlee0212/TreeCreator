@@ -246,7 +246,7 @@ void TreeUtilities::TreeManager::Init()
 	_LightEstimator = new LightEstimator();
 
 	EditorManager::RegisterComponentDataInspector<TreeAge>(
-		[](ComponentBase* data, bool isRoot)
+		[](Entity entity, ComponentBase* data, bool isRoot)
 		{
 			ImGui::Text(("Current age: " + std::to_string(*(int*)data)).c_str());
 			ImGui::DragInt("Iterations left", (int*)((char*)data + sizeof(int)));
@@ -254,14 +254,14 @@ void TreeUtilities::TreeManager::Init()
 	);
 
 	EditorManager::RegisterComponentDataInspector<TreeIndex>(
-		[](ComponentBase* data, bool isRoot)
+		[](Entity entity, ComponentBase* data, bool isRoot)
 		{
 			ImGui::Text(("Value: " + std::to_string(*(int*)data)).c_str());
 		}
 	);
 
 	EditorManager::RegisterComponentDataInspector<TreeParameters>(
-		[](ComponentBase* data, bool isRoot)
+		[](Entity entity, ComponentBase* data, bool isRoot)
 		{
 			auto tps = static_cast<TreeParameters*>(data);
 			ImGui::DragInt("Seed", &tps->Seed);
@@ -291,7 +291,7 @@ void TreeUtilities::TreeManager::Init()
 	);
 
 	EditorManager::RegisterComponentDataInspector<InternodeInfo>(
-		[](ComponentBase* data, bool isRoot)
+		[](Entity entity, ComponentBase* data, bool isRoot)
 		{
 			auto internodeInfo = static_cast<InternodeInfo*>(data);
 			if (ImGui::TreeNode("General")) {
@@ -384,7 +384,7 @@ void TreeUtilities::TreeManager::Init()
 	);
 
 	EditorManager::RegisterComponentDataInspector<Illumination>(
-		[](ComponentBase* data, bool isRoot)
+		[](Entity entity, ComponentBase* data, bool isRoot)
 		{
 			auto illumination = static_cast<Illumination*>(data);
 			ImGui::Text(("Value: " + std::to_string(illumination->Value)).c_str());
@@ -392,7 +392,7 @@ void TreeUtilities::TreeManager::Init()
 	);
 
 	EditorManager::RegisterComponentDataInspector<TreeInfo>(
-		[](ComponentBase* data, bool isRoot)
+		[](Entity entity, ComponentBase* data, bool isRoot)
 		{
 			const auto info = static_cast<TreeInfo*>(data);
 			ImGui::Text(("Current seed " + std::to_string(info->CurrentSeed)).c_str());
@@ -584,8 +584,9 @@ Entity TreeManager::CreateAttractionPoint(const TreeIndex& treeIndex, const glm:
 	entity.SetComponentData(treeIndex);
 	Transform transform;
 	transform.SetPosition(position);
-	entity.SetComponentData(transform);
+	
 	EntityManager::SetParent(entity, tree);
+	entity.SetComponentData(transform);
 	return entity;
 }
 

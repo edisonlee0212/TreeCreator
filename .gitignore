@@ -18,6 +18,7 @@ mono_crash.*
 
 TreeCreator/tree_data/*
 TreeCreator/tree_recon/*
+TreeCreator/tree_perceptual/*
 Resources/Assets/Textures/StreetView/*
 # Build results
 [Dd]ebug/

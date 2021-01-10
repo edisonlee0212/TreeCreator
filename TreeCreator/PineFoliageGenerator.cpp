@@ -18,7 +18,7 @@ TreeUtilities::PineFoliageGenerator::PineFoliageGenerator()
 	_LeafMaterial->AlbedoColor = glm::normalize(glm::vec3(60.0f / 256.0f, 140.0f / 256.0f, 0.0f));
 	_LeafMaterial->Metallic = 0.0f;
 	_LeafMaterial->Roughness = 0.3f;
-	_LeafMaterial->AmbientOcclusion = glm::linearRand(0.4f, 0.8f);
+	_LeafMaterial->AmbientOcclusion = glm::linearRand(0.5f, 0.8f);
 }
 
 void TreeUtilities::PineFoliageGenerator::Generate()
@@ -90,9 +90,9 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 			rightFront = glm::rotate(rightFront, glm::radians(glm::gaussRand(_DefaultFoliageInfo.BendAngleMean, _DefaultFoliageInfo.BendAngleVariance)), branchFront);
 
 			leftTransform = glm::inverse(treeTransform.Value) *
-				(glm::translate(glm::mat4(1.0f), translation + position - leftFront * _DefaultFoliageInfo.LeafSize.z) * glm::mat4_cast(glm::quatLookAt(leftFront, glm::vec3(0.0f, 1.0f, 0.0f))) * glm::scale(ls));
+				(glm::translate(glm::mat4(1.0f), translation + position - leftFront * _DefaultFoliageInfo.LeafSize.z) * glm::mat4_cast(glm::quatLookAt(leftFront, glm::sphericalRand(1.0f))) * glm::scale(ls));
 			rightTransform = glm::inverse(treeTransform.Value) *
-				(glm::translate(glm::mat4(1.0f), translation + position - rightFront * _DefaultFoliageInfo.LeafSize.z) * glm::mat4_cast(glm::quatLookAt(rightFront, glm::vec3(0.0f, 1.0f, 0.0f))) * glm::scale(ls));
+				(glm::translate(glm::mat4(1.0f), translation + position - rightFront * _DefaultFoliageInfo.LeafSize.z) * glm::mat4_cast(glm::quatLookAt(rightFront, glm::sphericalRand(1.0f))) * glm::scale(ls));
 
 			particleSys->Matrices.push_back(leftTransform);
 			particleSys->Matrices.push_back(rightTransform);

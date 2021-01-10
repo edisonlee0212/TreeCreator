@@ -317,6 +317,7 @@ void CakeTower::CalculateVolume(float maxHeight)
 
 bool CakeTower::InVolume(glm::vec3 position) const
 {
+	if (glm::any(glm::isnan(position))) return true;
 	if (_MeshGenerated) {
 		const auto sliceIndex = SelectSlice(position);
 		const float currentDistance = glm::length(glm::vec2(position.x, position.z));

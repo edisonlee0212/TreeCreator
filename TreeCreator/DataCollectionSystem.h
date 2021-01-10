@@ -67,6 +67,8 @@ namespace TreeUtilities {
 	class DataCollectionSystem : public SystemBase
 	{
 		friend class TreeReconstructionSystem;
+		friend class TreeCollectionGenerationSystem;
+		
 		DataCollectionSystemStatus _Status = DataCollectionSystemStatus::Idle;
 		int _CurrentSelectedSequenceIndex = 0;
 		int _Counter = 0;
@@ -105,12 +107,11 @@ namespace TreeUtilities {
 		Entity _DirectionalLightEntity;
 		Entity _DirectionalLightEntity1;
 		Entity _DirectionalLightEntity2;
-		DirectionalLight _DirectionalLight;
+		Entity _DirectionalLightEntity3;
 		Transform _LightTransform;
-		DirectionalLight _DirectionalLight1;
 		Transform _LightTransform1;
-		DirectionalLight _DirectionalLight2;
 		Transform _LightTransform2;
+		Transform _LightTransform3;
 		
 		bool _Reconstruction;
 		int _Index;
@@ -119,7 +120,7 @@ namespace TreeUtilities {
 		
 		void OnGui();
 	public:
-		void SetDirectionalLightEntity(Entity entity, Entity entity1, Entity entity2);
+		void SetDirectionalLightEntity(Entity entity, Entity entity1, Entity entity2, Entity entity3);
 		void ExportAllData();
 		void ResetCounter(int value, int startIndex, int endIndex, bool obj, bool graph);
 		void SetIsTrain(bool value);

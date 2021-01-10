@@ -124,11 +124,12 @@ void DataCollectionSystem::OnGui()
 	}
 }
 
-void DataCollectionSystem::SetDirectionalLightEntity(Entity entity, Entity entity1, Entity entity2)
+void DataCollectionSystem::SetDirectionalLightEntity(Entity entity, Entity entity1, Entity entity2, Entity entity3)
 {
 	_DirectionalLightEntity = entity;
 	_DirectionalLightEntity1 = entity1;
 	_DirectionalLightEntity2 = entity2;
+	_DirectionalLightEntity3 = entity3;
 }
 
 void DataCollectionSystem::ExportAllData()
@@ -285,28 +286,6 @@ void DataCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation)
 
 void DataCollectionSystem::OnCreate()
 {
-	_DirectionalLight.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
-	_DirectionalLight.diffuseBrightness = 2.0f;
-	_DirectionalLight.specularBrightness = 1.0f;
-	_DirectionalLight.bias = 0.3f;
-	_DirectionalLight.normalOffset = 0.01f;
-	_DirectionalLight.lightSize = 0.2f;
-	
-	_DirectionalLight1.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
-	_DirectionalLight1.diffuseBrightness = 2.0f;
-	_DirectionalLight1.specularBrightness = 1.0f;
-	_DirectionalLight1.bias = 0.3f;
-	_DirectionalLight1.normalOffset = 0.01f;
-	_DirectionalLight1.lightSize = 0.2f;
-	
-	_DirectionalLight2.diffuse = glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0);
-	_DirectionalLight2.diffuseBrightness = 2.0f;
-	_DirectionalLight2.specularBrightness = 1.0f;
-	_DirectionalLight2.bias = 0.3f;
-	_DirectionalLight2.normalOffset = 0.01f;
-	_DirectionalLight2.lightSize = 0.2f;
-
-	
 	_LightTransform = Transform();
 	_LightTransform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
 	
@@ -342,7 +321,7 @@ void DataCollectionSystem::OnCreate()
 	_SemanticMaskCameraEntity.SetName("Semantic Mask Camera");
 	_SemanticMaskCameraEntity.SetPrivateComponent(std::move(cameraComponent));
 
-	for(int i = 1; i < 10; i++)
+	for(int i = 1; i < 4; i++)
 	{
 		int index = i * 4;
 		_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + 
@@ -516,23 +495,24 @@ void DataCollectionSystem::LateUpdate()
 			{
 				SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
 
-				RenderManager::SetAmbientLight(0.6f);
-				float brightness = glm::linearRand(3.2f, 3.6f);
-				_DirectionalLight.diffuseBrightness = brightness / 2.0f;
-				_DirectionalLight1.diffuseBrightness = brightness / 4.0f;
-				_DirectionalLight2.diffuseBrightness = brightness / 4.0f;
+				RenderManager::SetAmbientLight(0.3f);
+				float brightness = glm::linearRand(5.0f, 7.0f);
+				_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 2.0f;
+				_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 3.0f;
+				_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 3.0f;
+				_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 8.0f;
 				glm::vec3 mainLightAngle = glm::vec3(150 + glm::linearRand(-30, 30), glm::linearRand(0, 360), 0);
-				float lightFocus = glm::linearRand(25, 35);
+				float lightFocus = 35;
 				_LightTransform.SetEulerRotation(glm::radians(mainLightAngle));
 				_LightTransform1.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -lightFocus, 0)));
 				_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, lightFocus, 0)));
-
-				_DirectionalLightEntity.SetComponentData(_DirectionalLight);
+				
+				_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -180, 0)));
+				
 				_DirectionalLightEntity.SetComponentData(_LightTransform);
-				_DirectionalLightEntity1.SetComponentData(_DirectionalLight1);
 				_DirectionalLightEntity1.SetComponentData(_LightTransform1);
-				_DirectionalLightEntity2.SetComponentData(_DirectionalLight2);
 				_DirectionalLightEntity2.SetComponentData(_LightTransform2);
+				_DirectionalLightEntity3.SetComponentData(_LightTransform3);
 				
 				_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 				_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
@@ -651,7 +631,7 @@ void DataCollectionSystem::LateUpdate()
 			+ "_" + imageCaptureSequence.Name
 			+ ".png";
 		if(!_Reconstruction) _SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
-			path);
+			path, _TargetResolution, _TargetResolution);
 		_Status = DataCollectionSystemStatus::CollectData;
 		break;
 	case DataCollectionSystemStatus::CollectData:
