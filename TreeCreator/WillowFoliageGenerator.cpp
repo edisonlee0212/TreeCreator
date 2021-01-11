@@ -52,6 +52,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 	if (!found)
 	{
 		foliageEntity = EntityManager::CreateEntity(_Archetype, "Foliage");
+		EntityManager::SetParent(foliageEntity, tree);
 		auto mmc = std::make_unique<MeshRenderer>();
 		mmc->Material = _BranchletMaterial;
 		mmc->ForwardRendering = true;
@@ -67,7 +68,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		foliageEntity.SetComponentData(transform);
 		foliageEntity.SetComponentData(_DefaultFoliageInfo);
 		foliageEntity.SetComponentData(ti);
-		EntityManager::SetParent(foliageEntity, tree);
+		
 	}
 	auto& mmc = foliageEntity.GetPrivateComponent<MeshRenderer>();
 	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();

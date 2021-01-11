@@ -40,6 +40,7 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 	if (!found)
 	{
 		foliageEntity = EntityManager::CreateEntity(_Archetype, "Foliage");
+		EntityManager::SetParent(foliageEntity, tree);
 		auto particleSys = std::make_unique<Particles>();
 		particleSys->Material = _LeafMaterial;
 		particleSys->Mesh = Default::Primitives::Quad;
@@ -50,7 +51,7 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 		foliageEntity.SetComponentData(ltp);
 		foliageEntity.SetComponentData(_DefaultFoliageInfo);
 		foliageEntity.SetComponentData(ti);
-		EntityManager::SetParent(foliageEntity, tree);
+		
 	}
 	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
 	particleSys->Matrices.clear();
@@ -94,10 +95,9 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 			rightTransform = glm::inverse(treeTransform.Value) *
 				(glm::translate(glm::mat4(1.0f), translation + position - rightFront * _DefaultFoliageInfo.LeafSize.z) * glm::mat4_cast(glm::quatLookAt(rightFront, glm::sphericalRand(1.0f))) * glm::scale(ls));
 
-			particleSys->Matrices.push_back(leftTransform);
-			particleSys->Matrices.push_back(rightTransform);
+			if(!glm::any(glm::isnan(leftTransform[3])))particleSys->Matrices.push_back(leftTransform);
+			if (!glm::any(glm::isnan(rightTransform[3])))particleSys->Matrices.push_back(rightTransform);
 		}
-		
 	}
 }
 

@@ -20,6 +20,8 @@
 #include "AppleFoliageGenerator.h"
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
+#include "CakeTower.h"
+#include "KDop.h"
 
 #include "TreeVolume.h"
 #include "MaskProcessor.h"
@@ -121,13 +123,14 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 	}
 #pragma endregion
 #pragma region Update branch structure information
-	auto& treeVolume = treeEntity.GetPrivateComponent<TreeVolume>();
-	const bool enableSpaceColonization = treeVolume->EnableSpaceColonization;
+	auto& cakeTower = treeEntity.GetPrivateComponent<CakeTower>();
+	auto& kdop = treeEntity.GetPrivateComponent<KDop>();
+	const bool enableSpaceColonization = cakeTower->EnableSpaceColonization || kdop->EnableSpaceColonization;
 	bool anyRemoved = false;
 	if (!mainBranch) EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
 #pragma region Space colonization prep.
-	float removeDistance = mainBranch ? treeEntity.GetPrivateComponent<MaskProcessor>()->_RemoveDistance : treeEntity.GetPrivateComponent<TreeVolume>()->_RemoveDistance;
-	float attractDistance = mainBranch ? treeEntity.GetPrivateComponent<MaskProcessor>()->_AttractDistance : treeEntity.GetPrivateComponent<TreeVolume>()->_AttractDistance;
+	float removeDistance = mainBranch ? treeEntity.GetPrivateComponent<MaskProcessor>()->RemovalDistance : treeEntity.GetPrivateComponent<TreeVolume>()->RemovalDistance;
+	float attractDistance = mainBranch ? treeEntity.GetPrivateComponent<MaskProcessor>()->AttractionDistance : treeEntity.GetPrivateComponent<TreeVolume>()->AttractionDistance;
 #pragma region Remove attraction points.
 	std::vector<Entity> internodes;
 	std::vector<GlobalTransform> internodeTransforms;
@@ -205,9 +208,9 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 #pragma endregion
 #pragma endregion
 	const bool growed = mainBranch ?
-		GrowShootsSpaceColonization(rootInternode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value)
+		GrowShootsSpaceColonization(rootInternode, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value)
 		:
-		GrowShoots(rootInternode, treeVolume, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value, enableSpaceColonization, _ControlLevel);
+		GrowShoots(rootInternode, cakeTower->EnableSpaceColonization ? dynamic_cast<TreeVolume*>(cakeTower.get()) : dynamic_cast<TreeVolume*>(kdop.get()), treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value, enableSpaceColonization, _ControlLevel);
 	if (growed) {
 		UpdateDistanceToBranchEnd(rootInternode, treeParameters, treeAge.Value);
 		UpdateDistanceToBranchStart(rootInternode);
@@ -217,7 +220,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 	treeAge.ToGrowIteration--;
 	EntityManager::SetComponentData(treeEntity, treeAge);
 #pragma endregion
-	return growed;
+	return true;
 }
 #pragma region Helpers
 #pragma region I/O
@@ -739,7 +742,7 @@ Entity PlantSimulationSystem::CreateTree(TreeParameters parameters, glm::vec3 po
 	return CreateTree(mat, parameters, position, enabled);
 }
 
-bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::unique_ptr<TreeVolume>& treeVolume, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform, bool enableSpaceColonization, int controlLevel)
+bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, TreeVolume* treeVolume, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex, glm::mat4& treeTransform, bool enableSpaceColonization, int controlLevel)
 {
 	InternodeInfo internodeInfo = EntityManager::GetComponentData<InternodeInfo>(internode);
 	internodeInfo.Inhibitor = 0;
@@ -1065,8 +1068,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, std::un
 	return ret;
 }
 
-bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, std::unique_ptr<TreeVolume>& treeVolume,
-	std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex,
+bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, std::unique_ptr<TreeData>& treeData, TreeAge& treeAge, TreeParameters& treeParameters, TreeIndex& treeIndex,
 	glm::mat4& treeTransform)
 {
 	std::mutex growMutex;
@@ -1107,7 +1109,7 @@ bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, s
 					return;
 				}
 				auto& bud = isLateral ? internodeData->Buds.back() : internodeData->Buds.front();
-				float internodeLength = 0.2;
+				float internodeLength = 0.3f;
 				internodeLength *= treeParameters.InternodeLengthBase;// * glm::pow(treeParameters.InternodeLengthAgeFactor, treeAge.Value);
 				Entity prevInternode = internode;
 				glm::quat prevInternodeRotation;

@@ -38,7 +38,7 @@ void TreeCollectionGenerationSystem::ImportCsv(const std::string& path)
 		treeParameters.LateralBudPerNode = values[24];
 		treeParameters.LateralBudKillProbability = values[25];
 		treeParameters.ApicalBudKillProbability = values[26];
-		treeParameters.GrowthRate = values[27] * 8.0f;
+		treeParameters.GrowthRate = values[27];
 		treeParameters.ApicalBudLightingFactor = values[28];
 		treeParameters.LateralBudLightingFactor = values[29];
 		treeParameters.EndNodeThickness = values[30];
@@ -148,7 +148,7 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 
 void TreeCollectionGenerationSystem::OnCreate()
 {
-	//Enable();
+	Enable();
 }
 
 void TreeCollectionGenerationSystem::SetDataCollectionSystem(DataCollectionSystem* value)

@@ -3,6 +3,7 @@
 #include "CakeTower.h"
 #include "MaskProcessor.h"
 #include "glm/glm/gtx/intersect.hpp"
+#include "rapidcsv/rapidcsv.h"
 using namespace TreeUtilities;
 void TreeUtilities::TreeReconstructionSystem::OnGui()
 {
@@ -94,11 +95,13 @@ void TreeReconstructionSystem::TryGrowTree()
 	{
 		_Growing = false;
 	}
-	if (!_Growing) return;
-	_Growing = _PlantSimulationSystem->GrowTree(_CurrentTree, true);
+	if (_Growing) {
+		_Growing = _PlantSimulationSystem->GrowTree(_CurrentTree, true);
+	}
 	if (_Growing) {
 		return;
 	}
+
 	GlobalTransform treeLTW = _CurrentTree.GetComponentData<GlobalTransform>();
 	GlobalTransform cameraLTW = _DataCollectionSystem->_SemanticMaskCameraEntity.GetComponentData<GlobalTransform>();
 	Entity rootInternode = Entity();
@@ -123,6 +126,11 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 		return;
 	}
 	auto parentLTW = internode.GetComponentData<InternodeInfo>().GlobalTransform;
+	if(glm::any(glm::isnan(parentLTW[3])))
+	{
+		EntityManager::DeleteEntity(internode);
+		return;
+	}
 	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW, &parentLTW, branchingLevel](Entity child)
 		{
 			auto internodeInfo = child.GetComponentData<InternodeInfo>();
@@ -166,10 +174,11 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 					for (int i = -2; i <= 2; i++)
 					{
 						auto y = slice.y + i;
-						if (_TargetCakeTower->CakeTiers[slice.x][y].MaxDistance == 0) continue;
 						if (y < 0) y += _TargetCakeTower->SectorAmount;
 						if (y >= _TargetCakeTower->SectorAmount) y -= _TargetCakeTower->SectorAmount;
 
+						if (_TargetCakeTower->CakeTiers[slice.x][y].MaxDistance == 0) continue;
+						
 						float currentAngle = sliceAngle * (static_cast<float>(y) + 0.5f);
 						if (currentAngle >= 360) currentAngle = 0;
 						float x = glm::abs(glm::tan(glm::radians(currentAngle)));
@@ -193,7 +202,7 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 					front = glm::normalize(weight);
 				}else
 				{
-					front = glm::rotate(glm::vec3(front.x, 0, front.z), glm::linearRand(-30.0f, 30.0f), glm::vec3(0, 1, 0));
+					//front = glm::rotate(glm::vec3(front.x, 0, front.z), glm::linearRand(-15.0f, 15.0f), glm::vec3(0, 1, 0));
 				}
 				glm::vec3 normal = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
 				float stored = ray.Length;
@@ -255,6 +264,7 @@ void TreeReconstructionSystem::Init()
 	_Name = seq.first.Name;
 	_StorePath = "./tree_recon/" + _Name + "/seed_" + std::to_string(_ReconSeed);
 	_TargetCakeTowerPath = _StorePath + "/target.ct";
+	_TargetKdopPath = _StorePath + "/target.csv";
 	_MaskPath = _StorePath + "/target.png";
 	_SkeletonPath = _StorePath + "/skeleton.png";
 	
@@ -303,8 +313,15 @@ void TreeReconstructionSystem::Init()
 	_TargetTreeParameter = seq.second;
 	_TargetMask = ResourceManager::LoadTexture(false, _MaskPath);
 	_TargetSkeleton = ResourceManager::LoadTexture(false, _SkeletonPath);
+
+	
 	_TargetCakeTower = std::make_unique<CakeTower>();
 	_TargetCakeTower->Load(_TargetCakeTowerPath);
+
+	_TargetKDop = std::make_unique<KDop>();
+	rapidcsv::Document doc(_TargetKdopPath, rapidcsv::LabelParams(-1, -1));
+	_TargetKDop->DirectionalDistance = doc.GetRow<float>(0);
+	
 	_NeedExport = true;
 
 }
@@ -404,6 +421,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 
 				_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Skeleton = _TargetSkeleton;
 				_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Mask = _TargetMask;
+				_CurrentTree.GetPrivateComponent<MaskProcessor>()->AttractionDistance = 1.0f;
 				_CurrentTree.GetPrivateComponent<MaskProcessor>()->PlaceAttractionPoints();
 				_Status = TreeReconstructionSystemStatus::MainBranches;
 				_Growing = true;
@@ -422,12 +440,21 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		if (!_Growing)
 		{
 			_Status = TreeReconstructionSystemStatus::NormalGrowth;
-			auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
-			cakeTower->Load(_TargetCakeTowerPath);
-			cakeTower->GenerateMesh();
-			cakeTower->ClearAttractionPoints();
-			cakeTower->GenerateAttractionPoints(2000);
-			cakeTower->EnableSpaceColonization = true;
+			if (_UseCakeTower) {
+				auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
+				cakeTower->Load(_TargetCakeTowerPath);
+				cakeTower->GenerateMesh();
+				cakeTower->ClearAttractionPoints();
+				cakeTower->GenerateAttractionPoints(2000);
+				cakeTower->EnableSpaceColonization = true;
+			}else
+			{
+				auto& kdop = _CurrentTree.GetPrivateComponent<KDop>();
+				kdop->DirectionalDistance = _TargetKDop->DirectionalDistance;
+				kdop->ClearAttractionPoints();
+				kdop->GenerateAttractionPoints(2000);
+				kdop->EnableSpaceColonization = true;
+			}
 			_PlantSimulationSystem->ResumeGrowth();
 			TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
 			age.Value = _AgeForMainBranches;

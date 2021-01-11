@@ -40,6 +40,7 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 	if (!found)
 	{
 		foliageEntity = EntityManager::CreateEntity(_Archetype, "Foliage");
+		EntityManager::SetParent(foliageEntity, tree);
 		auto particleSys = std::make_unique<Particles>();
 		particleSys->Material = _LeafMaterial;
 		particleSys->Mesh = Default::Primitives::Quad;
@@ -50,7 +51,7 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 		foliageEntity.SetComponentData(transform);
 		foliageEntity.SetComponentData(_DefaultFoliageInfo);
 		foliageEntity.SetComponentData(ti);
-		EntityManager::SetParent(foliageEntity, tree);
+		
 	}
 	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
 	particleSys->Matrices.clear();

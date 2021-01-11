@@ -215,7 +215,7 @@ void DataCollectionSystem::ExportParams(const std::string& path) const
 
 void DataCollectionSystem::ExportKDops(const std::string& path) const
 {
-	if(_KDopsOutputList.empty()) return;
+	if (_KDopsOutputList.empty()) return;
 	std::ofstream ofs;
 	ofs.open((path + ".csv").c_str(), std::ofstream::out | (_Batched ? std::ofstream::app : std::ofstream::trunc));
 	if (ofs.is_open())
@@ -225,7 +225,7 @@ void DataCollectionSystem::ExportKDops(const std::string& path) const
 			std::string output = "";
 			output += std::to_string(instance.Index) + ",";
 			output += instance.Name;
-			for(auto& i : kdop)
+			for (auto& i : kdop)
 			{
 				output += "," + std::to_string(i);
 			}
@@ -255,7 +255,7 @@ void TreeUtilities::DataCollectionSystem::ExportCakeTower(const std::string& pat
 			output += instance.Name;
 			for (auto& tier : cakeTower)
 			{
-				for(auto& slice : tier)
+				for (auto& slice : tier)
 				{
 					output += "," + std::to_string(slice.MaxDistance);
 				}
@@ -288,7 +288,7 @@ void DataCollectionSystem::OnCreate()
 {
 	_LightTransform = Transform();
 	_LightTransform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
-	
+
 	EntityArchetype archetype = EntityManager::CreateEntityArchetype("General", GlobalTransform(), Transform());
 	_ImageCameraEntity = EntityManager::CreateEntity(archetype);
 	TreeManager::GetInternodeSystem()->_CameraEntity = _ImageCameraEntity;
@@ -298,7 +298,7 @@ void DataCollectionSystem::OnCreate()
 	_ImageCameraEntity.SetComponentData(transform);
 	auto cameraComponent = std::make_unique<CameraComponent>();
 	cameraComponent->DrawSkyBox = false;
-	
+
 	cameraComponent->ClearColor = glm::vec3(1.0f);
 	_ImageCameraEntity.SetName("ImageCap Camera");
 	_ImageCameraEntity.SetPrivateComponent(std::move(cameraComponent));
@@ -308,7 +308,7 @@ void DataCollectionSystem::OnCreate()
 	_ImageCameraEntity.SetPrivateComponent(std::move(postProcessing));
 	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->AllowAutoResize = false;
-	
+
 	_SemanticMaskCameraEntity = EntityManager::CreateEntity(archetype);
 	transform.SetPosition(_CameraPosition);
 	transform.SetEulerRotation(_CameraEulerRotation);
@@ -321,12 +321,12 @@ void DataCollectionSystem::OnCreate()
 	_SemanticMaskCameraEntity.SetName("Semantic Mask Camera");
 	_SemanticMaskCameraEntity.SetPrivateComponent(std::move(cameraComponent));
 
-	for(int i = 1; i < 4; i++)
+	for (int i = 1; i < 4; i++)
 	{
 		int index = i * 4;
-		_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + 
+		_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() +
 			"Textures/StreetView/" + std::string(6 - std::to_string(index).length(), '0') + std::to_string(index) + "_2.jpg"));
-	}	
+	}
 
 	_BackgroundMaterial = std::make_shared<Material>();
 	_BackgroundMaterial->Shininess = 32.0f;
@@ -344,11 +344,11 @@ void DataCollectionSystem::OnCreate()
 	auto standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
 	standardfrag->Compile(fragShaderCode);
 	auto program = std::make_shared<GLProgram>(standardvert, standardfrag);
-	
+
 
 
 	_BackgroundMaterial->SetProgram(program);
-	
+
 
 	vertShaderCode = std::string("#version 460 core\n") +
 		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/TexturePassThrough.vert"));
@@ -369,7 +369,7 @@ void DataCollectionSystem::OnCreate()
 	standardfrag->Compile(fragShaderCode);
 
 	_SmallBranchCopyProgram = std::make_unique<GLProgram>(standardvert, standardfrag);
-	
+
 	_SmallBranchFilter = std::make_unique<RenderTarget>(_TargetResolution, _TargetResolution);
 	_SmallBranchBuffer = std::make_unique<GLTexture2D>(1, GL_RGB32F, _TargetResolution, _TargetResolution, true);
 	_SmallBranchBuffer->SetInt(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -452,7 +452,7 @@ void DataCollectionSystem::OnCreate()
 	auto fragShader = std::make_shared<GLShader>(ShaderType::Fragment, fragShaderCode);
 	MaskProcessor::_InternodeCaptureProgram = std::make_unique<GLProgram>(vertShader, fragShader);
 
-	
+
 	vertShaderCode = std::string("#version 460 core\n") +
 		FileIO::LoadFileAsString(FileIO::GetResourcePath("Shaders/Vertex/TexturePassThrough.vert"));
 	fragShaderCode = std::string("#version 460 core\n") +
@@ -465,7 +465,7 @@ void DataCollectionSystem::OnCreate()
 		FileIO::LoadFileAsString(FileIO::GetAssetFolderPath() + "Shaders/Fragment/MaskPreprocess.frag");
 	fragShader = std::make_shared<GLShader>(ShaderType::Fragment, fragShaderCode);
 	MaskProcessor::_MaskPreprocessProgram = std::make_unique<GLProgram>(vertShader, fragShader);
-	
+
 #pragma endregion
 
 	Enable();
@@ -506,14 +506,14 @@ void DataCollectionSystem::LateUpdate()
 				_LightTransform.SetEulerRotation(glm::radians(mainLightAngle));
 				_LightTransform1.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -lightFocus, 0)));
 				_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, lightFocus, 0)));
-				
+
 				_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -180, 0)));
-				
+
 				_DirectionalLightEntity.SetComponentData(_LightTransform);
 				_DirectionalLightEntity1.SetComponentData(_LightTransform1);
 				_DirectionalLightEntity2.SetComponentData(_LightTransform2);
 				_DirectionalLightEntity3.SetComponentData(_LightTransform3);
-				
+
 				_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 				_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 
@@ -630,7 +630,7 @@ void DataCollectionSystem::LateUpdate()
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + imageCaptureSequence.Name
 			+ ".png";
-		if(!_Reconstruction) _SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
+		if (!_Reconstruction) _SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
 			path, _TargetResolution, _TargetResolution);
 		_Status = DataCollectionSystemStatus::CollectData;
 		break;
@@ -660,15 +660,43 @@ void DataCollectionSystem::LateUpdate()
 			const std::string data = _CurrentTree.GetPrivateComponent<CakeTower>()->Save();
 			std::ofstream ofs;
 			ofs.open(path.c_str(), std::ofstream::out | std::ofstream::trunc);
-			ofs.write(data.c_str(), data.length());
-			ofs.flush();
-			ofs.close();
+			if (ofs.is_open())
+			{
+				ofs.write(data.c_str(), data.length());
+				ofs.flush();
+				ofs.close();
+			}
+			else
+			{
+				Debug::Error("Can't open file!");
+			}
+			ofs.open((_ReconPath + ".csv").c_str(), std::ofstream::trunc);
+			if (ofs.is_open())
+			{
+				auto& kdop = _CurrentTree.GetPrivateComponent<KDop>()->DirectionalDistance;
+				std::string output;
+				for (int i = 0; i < kdop.size(); i++)
+				{
+					output += std::to_string(kdop[i]);
+					if (i < kdop.size() - 1) output += ",";
+				}
+				output += "\n";
+				ofs.write(output.c_str(), output.size());
+				ofs.flush();
+
+				ofs.close();
+				Debug::Log("Tree group saved: " + _ReconPath + ".csv");
+			}
+			else
+			{
+				Debug::Error("Can't open file!");
+			}
 		}
-		
+
 		_Status = DataCollectionSystemStatus::CleanUp;
 		break;
 	case DataCollectionSystemStatus::CleanUp:
-		
+
 		TreeManager::DeleteAllTrees();
 		if (!_Reconstruction) {
 			_CurrentSelectedSequenceIndex++;

@@ -29,8 +29,8 @@ namespace TreeUtilities
 	class TreeReconstructionSystem :
 		public SystemBase
 	{
-		int _Amount = 2;
-		int _ReconAmount = 2;
+		int _Amount = 10;
+		int _ReconAmount = 10;
 
 		int _ReconIndex = 0;
 		int _ReconSeed = 0;
@@ -44,12 +44,16 @@ namespace TreeUtilities
 		bool _UseCakeTower = true;
 		TreeReconstructionSystemStatus _Status = TreeReconstructionSystemStatus::Idle;
 		std::unique_ptr<CakeTower> _TargetCakeTower;
+
+		std::unique_ptr<KDop> _TargetKDop;
+		
 		Entity _CurrentTree;
 		std::vector<Entity> _Internodes;
 		std::string _MaskPath = "";
 		std::string _SkeletonPath = "";
 		std::shared_ptr<Texture2D> _TargetMask;
 		std::string _TargetCakeTowerPath = "";
+		std::string _TargetKdopPath = "";
 		std::shared_ptr<Texture2D> _TargetSkeleton;
 		int _MainBranchInternodeSize;
 		int _AgeForMainBranches = 4;

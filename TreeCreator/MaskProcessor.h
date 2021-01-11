@@ -8,8 +8,7 @@ namespace TreeUtilities {
 		friend class PlantSimulationSystem;
 		int _AttractionPointsCount = 2000;
 		bool _Display = true;
-		float _RemoveDistance = 0.5f;
-		float _AttractDistance = 1.0f;
+		
 		friend class DataCollectionSystem;
 		friend class TreeReconstructionSystem;
 		static Entity _CameraEntity;
@@ -37,6 +36,8 @@ namespace TreeUtilities {
 		int _MainBranchOrderProtection = 6;
 		void Trim(int& totalChild, int& trimmedChild, std::map<int, Entity>& map, Entity internode);
 	public:
+		float RemovalDistance = 0.5f;
+		float AttractionDistance = 1.0f;
 		void ClearAttractionPoints() const;
 		void PlaceAttractionPoints();
 		void PreprocessMask() const;
