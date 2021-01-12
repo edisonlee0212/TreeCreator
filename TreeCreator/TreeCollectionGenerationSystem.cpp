@@ -5,18 +5,7 @@ void TreeCollectionGenerationSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Perception Tree Data Generation")) {
-			if (ImGui::Button("Load csv (Stava)..."))
-			{
-				auto result = FileIO::OpenFile("Parameters list (*.csv)\0*.csv\0");
-				if (result.has_value())
-				{
-					const std::string path = result.value();
-					if (!path.empty())
-					{
-						ImportCsv(path);
-					}
-				}
-			}
+			
 			if (ImGui::Button("Load csv..."))
 			{
 				auto result = FileIO::OpenFile("Parameters list (*.csv)\0*.csv\0");
@@ -26,6 +15,18 @@ void TreeCollectionGenerationSystem::OnGui()
 					if (!path.empty())
 					{
 						ImportCsv2(path);
+					}
+				}
+			}
+			if (ImGui::Button("Load csv (Old version - Stava)..."))
+			{
+				auto result = FileIO::OpenFile("Parameters list (*.csv)\0*.csv\0");
+				if (result.has_value())
+				{
+					const std::string path = result.value();
+					if (!path.empty())
+					{
+						ImportCsv(path);
 					}
 				}
 			}
@@ -200,7 +201,7 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 			_DataCollectionSystem->_DirectionalLightEntity1.SetComponentData(_DataCollectionSystem->_LightTransform1);
 			_DataCollectionSystem->_DirectionalLightEntity2.SetComponentData(_DataCollectionSystem->_LightTransform2);
 			_DataCollectionSystem->_DirectionalLightEntity3.SetComponentData(_DataCollectionSystem->_LightTransform3);
-
+			_GroundEntity.SetEnabled(true);
 			//_DataCollectionSystem->_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 			//_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 
@@ -219,7 +220,7 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 			}
 
 			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(1280, 1280);
-			
+			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<PostProcessing>()->SetEnableLayer("GreyScale", true);
 			_Status = TreeCollectionGenerationSystenStatus::Growing;
 		}else
 		{
@@ -278,4 +279,9 @@ void TreeCollectionGenerationSystem::OnCreate()
 void TreeCollectionGenerationSystem::SetDataCollectionSystem(DataCollectionSystem* value)
 {
 	_DataCollectionSystem = value;
+}
+
+void TreeCollectionGenerationSystem::SetGroundEntity(Entity value)
+{
+	_GroundEntity = value;
 }

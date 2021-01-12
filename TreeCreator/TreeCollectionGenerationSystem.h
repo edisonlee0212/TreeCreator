@@ -24,6 +24,7 @@ namespace TreeUtilities
 		glm::vec3 _Position = glm::vec3(-15, 10, -50);
 		glm::vec3 _Rotation = glm::vec3(-180, -20, -180);
 		Entity _CameraEntity;
+		Entity _GroundEntity;
 		int _CaptureResolution = 320;
 		float _CurrentDegrees = 0;
 		float _DegreeIncrementation = 60;
@@ -38,6 +39,7 @@ namespace TreeUtilities
 		void LateUpdate() override;
 		void OnCreate() override;
 		void SetDataCollectionSystem(DataCollectionSystem* value);
+		void SetGroundEntity(Entity value);
 	};
 }
 

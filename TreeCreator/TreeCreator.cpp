@@ -93,6 +93,7 @@ void main()
 	//tcgs->ImportCsv("./parameters.csv");
 	Entity ground = InitGround();
 	ground.SetEnabled(false);
+	tcgs->SetGroundEntity(ground);
 	if (generateSorghum) {
 		auto srSys = InitSorghumReconstructionSystem();
 		Entity plant1 = srSys->ImportPlant("skeleton_procedural_1.txt", 0.01f, "Sorghum 1");

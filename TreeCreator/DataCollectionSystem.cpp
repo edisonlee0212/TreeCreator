@@ -306,9 +306,7 @@ void DataCollectionSystem::OnCreate()
 	auto postProcessing = std::make_unique<PostProcessing>();
 	postProcessing->PushLayer(std::make_unique<Bloom>());
 	postProcessing->PushLayer(std::make_unique<SSAO>());
-	auto greyScale = std::make_unique<GreyScale>();
-	//greyScale->Enabled = true;
-	postProcessing->PushLayer(std::move(greyScale));
+	postProcessing->PushLayer(std::make_unique<GreyScale>());
 	_ImageCameraEntity.SetPrivateComponent(std::move(postProcessing));
 	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->AllowAutoResize = false;
