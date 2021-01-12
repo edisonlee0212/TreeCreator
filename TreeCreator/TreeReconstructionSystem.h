@@ -69,7 +69,7 @@ namespace TreeUtilities
 		std::vector<CakeTowerOutput> _CakeTowersOutputList;
 		void ExportAllData();
 		void TryGrowTree();
-		void PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW, int branchingLevel);
+		void PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW);
 	public:
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);
 		void SetDataCollectionSystem(DataCollectionSystem* value);

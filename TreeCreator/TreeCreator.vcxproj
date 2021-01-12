@@ -123,7 +123,6 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClCompile Include="PineFoliageGenerator.cpp" />
     <ClCompile Include="PlantSimulationSystem.cpp" />
     <ClCompile Include="pugixml\pugixml.cpp" />
-    <ClCompile Include="quickhull\QuickHull.cpp" />
     <ClCompile Include="InternodeRingSegment.cpp" />
     <ClCompile Include="SorghumReconstructionSystem.cpp" />
     <ClCompile Include="TreeCollectionGenerationSystem.cpp" />
@@ -156,16 +155,6 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClInclude Include="PlantSimulationSystem.h" />
     <ClInclude Include="pugixml\pugiconfig.hpp" />
     <ClInclude Include="pugixml\pugixml.hpp" />
-    <ClInclude Include="quickhull\ConvexHull.hpp" />
-    <ClInclude Include="quickhull\HalfEdgeMesh.hpp" />
-    <ClInclude Include="quickhull\MathUtils.hpp" />
-    <ClInclude Include="quickhull\QuickHull.hpp" />
-    <ClInclude Include="quickhull\Structs\Mesh.hpp" />
-    <ClInclude Include="quickhull\Structs\Plane.hpp" />
-    <ClInclude Include="quickhull\Structs\Pool.hpp" />
-    <ClInclude Include="quickhull\Structs\Ray.hpp" />
-    <ClInclude Include="quickhull\Structs\Vector3.hpp" />
-    <ClInclude Include="quickhull\Structs\VertexDataSource.hpp" />
     <ClInclude Include="InternodeRingSegment.h" />
     <ClInclude Include="rapidcsv\rapidcsv.h" />
     <ClInclude Include="SorghumReconstructionSystem.h" />

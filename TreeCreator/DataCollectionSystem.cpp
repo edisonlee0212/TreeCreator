@@ -14,6 +14,7 @@
 #include "MaskProcessor.h"
 #include "Bloom.h"
 #include "SSAO.h"
+#include "GreyScale.h"
 void DataCollectionSystem::ResetCounter(int value, int startIndex, int endIndex, bool obj, bool graph)
 {
 	_Counter = value;
@@ -177,7 +178,7 @@ void DataCollectionSystem::ExportParams(const std::string& path) const
 			output += std::to_string(treeParameters.ApicalControlBase) + ",";
 			output += std::to_string(treeParameters.ApicalControlAgeFactor) + ",";
 			output += std::to_string(treeParameters.ApicalControlLevelFactor) + ",";
-			output += std::to_string(treeParameters.ApicalControlDistanceFactor) + ",";
+			output += std::to_string(0.0) + ",";
 			output += std::to_string(treeParameters.MaxBudAge) + ",";
 #pragma endregion
 #pragma region Environmental
@@ -305,6 +306,9 @@ void DataCollectionSystem::OnCreate()
 	auto postProcessing = std::make_unique<PostProcessing>();
 	postProcessing->PushLayer(std::make_unique<Bloom>());
 	postProcessing->PushLayer(std::make_unique<SSAO>());
+	auto greyScale = std::make_unique<GreyScale>();
+	//greyScale->Enabled = true;
+	postProcessing->PushLayer(std::move(greyScale));
 	_ImageCameraEntity.SetPrivateComponent(std::move(postProcessing));
 	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->AllowAutoResize = false;
@@ -498,9 +502,20 @@ void DataCollectionSystem::LateUpdate()
 				RenderManager::SetAmbientLight(0.3f);
 				float brightness = glm::linearRand(5.0f, 7.0f);
 				_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 2.0f;
+				_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->lightSize = 1.0f;
+				_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->bias = 0.3f;
 				_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 3.0f;
 				_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 3.0f;
 				_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 8.0f;
+				_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+				_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+				_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+				_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+				_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
+				_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
+				_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
+				_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
+
 				glm::vec3 mainLightAngle = glm::vec3(150 + glm::linearRand(-30, 30), glm::linearRand(0, 360), 0);
 				float lightFocus = 35;
 				_LightTransform.SetEulerRotation(glm::radians(mainLightAngle));

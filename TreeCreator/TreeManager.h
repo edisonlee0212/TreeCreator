@@ -170,7 +170,6 @@ namespace TreeUtilities {
 		float ApicalControlBase;
 		float ApicalControlAgeFactor;
 		float ApicalControlLevelFactor;
-		float ApicalControlDistanceFactor;
 
 		int MaxBudAge = 999;
 #pragma endregion

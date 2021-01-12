@@ -22,9 +22,6 @@
     <Filter Include="Header Files\External\pugixml">
       <UniqueIdentifier>{d89a30ee-9332-48ee-b499-12c5917dfad4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\External\quickhull">
-      <UniqueIdentifier>{5f615228-4e3a-487b-b594-461888eb3d85}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Foliage">
       <UniqueIdentifier>{3c943877-9f76-4d18-af5f-df97fd7b8fd6}</UniqueIdentifier>
     </Filter>
@@ -42,9 +39,6 @@
     </Filter>
     <Filter Include="Source Files\External\pugixml">
       <UniqueIdentifier>{2e0e61ac-89c1-42e3-9ef4-7fc04265f248}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\External\quickhull">
-      <UniqueIdentifier>{54632908-53ed-4954-ab43-dc5d89bef97f}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Foliage">
       <UniqueIdentifier>{06d8dc90-fcab-48cc-8cca-463aa5e52948}</UniqueIdentifier>
@@ -65,9 +59,6 @@
   <ItemGroup>
     <ClCompile Include="TreeCreator.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="quickhull\QuickHull.cpp">
-      <Filter>Source Files\External\quickhull</Filter>
     </ClCompile>
     <ClCompile Include="SorghumReconstructionSystem.cpp">
       <Filter>Source Files\SorghumReconstruction</Filter>
@@ -155,36 +146,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="quickhull\Structs\VertexDataSource.hpp">
-      <Filter>Header Files\External\quickhull</Filter>
-    </ClInclude>
-    <ClInclude Include="quickhull\Structs\Mesh.hpp">
-      <Filter>Header Files\External\quickhull</Filter>
-    </ClInclude>
-    <ClInclude Include="quickhull\Structs\Plane.hpp">
-      <Filter>Header Files\External\quickhull</Filter>
-    </ClInclude>
-    <ClInclude Include="quickhull\Structs\Pool.hpp">
-      <Filter>Header Files\External\quickhull</Filter>
-    </ClInclude>
-    <ClInclude Include="quickhull\Structs\Ray.hpp">
-      <Filter>Header Files\External\quickhull</Filter>
-    </ClInclude>
-    <ClInclude Include="quickhull\Structs\Vector3.hpp">
-      <Filter>Header Files\External\quickhull</Filter>
-    </ClInclude>
-    <ClInclude Include="quickhull\MathUtils.hpp">
-      <Filter>Header Files\External\quickhull</Filter>
-    </ClInclude>
-    <ClInclude Include="quickhull\ConvexHull.hpp">
-      <Filter>Header Files\External\quickhull</Filter>
-    </ClInclude>
-    <ClInclude Include="quickhull\HalfEdgeMesh.hpp">
-      <Filter>Header Files\External\quickhull</Filter>
-    </ClInclude>
-    <ClInclude Include="quickhull\QuickHull.hpp">
-      <Filter>Header Files\External\quickhull</Filter>
-    </ClInclude>
     <ClInclude Include="SorghumReconstructionSystem.h">
       <Filter>Header Files\SorghumReconstruction</Filter>
     </ClInclude>

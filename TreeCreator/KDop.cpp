@@ -65,7 +65,7 @@ bool KDop::InVolume(glm::vec3 position) const
 				if (x != 0 || y != 0 || z != 0)
 				{
 					glm::vec3 direction = glm::vec3(x, y, z);
-					glm::vec3 pointOnLine = glm::closestPointOnLine(position, direction * 10000.0f, direction * -10000.0f);
+					glm::vec3 pointOnLine = glm::closestPointOnLine(position, direction * 100.0f, direction * -100.0f);
 					float distance = glm::dot(direction, pointOnLine) > 0 ? 1.0f : -1.0f;
 					distance *= glm::length(pointOnLine);
 					if (DirectionalDistance[index] < distance)
@@ -108,4 +108,11 @@ void KDop::OnGui()
 			}
 		}
 	}
+}
+
+void KDop::GenerateAttractionPoints(int amount)
+{
+	glm::vec3 min = glm::vec3(-20, 0, -20);
+	glm::vec3 max = glm::vec3(20, 40, 20);
+	TreeVolume::GenerateAttractionPoints(min, max, amount);
 }

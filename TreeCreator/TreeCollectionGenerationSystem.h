@@ -21,8 +21,8 @@ namespace TreeUtilities
 		TreeCollectionGenerationSystenStatus _Status = TreeCollectionGenerationSystenStatus::Idle;
 		DataCollectionSystem* _DataCollectionSystem = nullptr;
 		double _Timer;
-		glm::vec3 _Position = glm::vec3(0, 2, 20);
-		glm::vec3 _Rotation = glm::vec3(13, 0, 0);
+		glm::vec3 _Position = glm::vec3(-15, 10, -50);
+		glm::vec3 _Rotation = glm::vec3(-180, -20, -180);
 		Entity _CameraEntity;
 		int _CaptureResolution = 320;
 		float _CurrentDegrees = 0;
@@ -31,8 +31,10 @@ namespace TreeUtilities
 		std::queue<TreeParameters> _CreationQueue;
 		std::string _StorePath = "./tree_perceptual/";
 		int _Counter = 0;
+		void OnGui();
 	public:
 		void ImportCsv(const std::string& path);
+		void ImportCsv2(const std::string& path);
 		void LateUpdate() override;
 		void OnCreate() override;
 		void SetDataCollectionSystem(DataCollectionSystem* value);

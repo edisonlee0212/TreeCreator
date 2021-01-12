@@ -272,14 +272,14 @@ void TreeUtilities::TreeManager::Init()
 			ImGui::DragFloat2("Branching Angle M/Var", &tps->BranchingAngleMean);
 			ImGui::DragFloat2("Roll Angle M/Var", &tps->RollAngleMean);
 			ImGui::DragFloat2("Extinction Prob A/L", &tps->ApicalBudKillProbability);
-			ImGui::DragFloat3("AD Dis/Age", &tps->ApicalControlDistanceFactor);
+			ImGui::DragFloat3("AD Dis/Age", &tps->ApicalDominanceBase);
 			ImGui::DragFloat("Growth Rate", &tps->GrowthRate);
 			ImGui::DragFloat2("Node Len Base/Age", &tps->InternodeLengthBase);
-			ImGui::DragFloat4("AC Base/Age/Lvl/Dist", &tps->ApicalControlBase);
+			ImGui::DragFloat3("AC Base/Age/Lvl", &tps->ApicalControlBase);
 			ImGui::DragInt("Max Bud Age", &tps->MaxBudAge);
 			ImGui::DragFloat("InternodeSize", &tps->InternodeSize);
 			ImGui::DragFloat("Phototropism", &tps->Phototropism);
-			ImGui::DragFloat2("Gravitropism Base/Age", &tps->GravitropismBase);
+			ImGui::DragFloat2("Gravitropism Base/Level", &tps->GravitropismBase);
 			ImGui::DragFloat("PruningFactor", &tps->PruningFactor);
 			ImGui::DragFloat("LowBranchPruningFactor", &tps->LowBranchPruningFactor);
 			ImGui::DragFloat2("Gravity Strength/Angle", &tps->GravityBendingStrength);

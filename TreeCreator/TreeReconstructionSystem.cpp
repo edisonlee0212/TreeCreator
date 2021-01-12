@@ -112,26 +112,28 @@ void TreeReconstructionSystem::TryGrowTree()
 	);
 	if (rootInternode.IsNull()) return;
 	auto id = glm::translate(glm::vec3(0.0f)) * glm::mat4_cast(glm::quat(glm::vec3(0.0f))) * glm::scale(glm::vec3(1.0f));
-	PushInternode(rootInternode, cameraLTW, treeLTW, 0);
+	PushInternode(rootInternode, cameraLTW, treeLTW);
 	_PlantSimulationSystem->ApplyLocalTransform(_CurrentTree);
 	_Internodes.resize(0);
 	TreeManager::GetInternodeQuery().ToEntityArray(treeIndex, _Internodes);
 	_MainBranchInternodeSize = _Internodes.size();
 }
 
-void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW, int branchingLevel)
+void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW)
 {
-	if (branchingLevel > 3) {
+	auto info = internode.GetComponentData<InternodeInfo>();
+	if(info.DistanceToRoot > 9.0)
+	{
 		EntityManager::DeleteEntity(internode);
 		return;
 	}
-	auto parentLTW = internode.GetComponentData<InternodeInfo>().GlobalTransform;
+	auto parentLTW = info.GlobalTransform;
 	if(glm::any(glm::isnan(parentLTW[3])))
 	{
 		EntityManager::DeleteEntity(internode);
 		return;
 	}
-	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW, &parentLTW, branchingLevel](Entity child)
+	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW, &parentLTW](Entity child)
 		{
 			auto internodeInfo = child.GetComponentData<InternodeInfo>();
 			glm::vec3 scale;
@@ -202,7 +204,7 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 					front = glm::normalize(weight);
 				}else
 				{
-					//front = glm::rotate(glm::vec3(front.x, 0, front.z), glm::linearRand(-15.0f, 15.0f), glm::vec3(0, 1, 0));
+					front = glm::rotate(glm::vec3(front.x, 0, front.z), glm::radians(glm::linearRand(-10.0f, 10.0f)), glm::vec3(0, 1, 0));
 				}
 				glm::vec3 normal = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
 				float stored = ray.Length;
@@ -234,17 +236,9 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 			EntityManager::SetComponentData(child, globalTransform);
 		}
 	);
-	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW, branchingLevel](Entity child)
+	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW](Entity child)
 		{
-			auto internodeInfo = child.GetComponentData<InternodeInfo>();
-			if (internodeInfo.IsMaxChild)
-			{
-				PushInternode(child, cameraTransform, treeLTW, branchingLevel);
-			}
-			else
-			{
-				PushInternode(child, cameraTransform, treeLTW, branchingLevel + 1);
-			}
+			PushInternode(child, cameraTransform, treeLTW);
 		});
 }
 
@@ -365,8 +359,6 @@ void TreeUtilities::TreeReconstructionSystem::OnCreate()
 void TreeUtilities::TreeReconstructionSystem::Update()
 {
 	if (_PlantSimulationSystem == nullptr) return;
-	_PlantSimulationSystem->_AutoGenerateMesh = _Status == TreeReconstructionSystemStatus::Reconstruction || _Status == TreeReconstructionSystemStatus::Idle;
-	_PlantSimulationSystem->_AutoGenerateLeaves = _Status == TreeReconstructionSystemStatus::Reconstruction || _Status == TreeReconstructionSystemStatus::Idle;
 	std::string path;
 	switch (_Status)
 	{
@@ -415,7 +407,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			if (_ReconSeed < _Amount) {
 				auto parameters = _TargetTreeParameter;
 				parameters.Seed = _ReconCounter;
-				parameters.Age = 999;
+				parameters.Age = 200;
 				_PlantSimulationSystem->_ControlLevel = 2;
 				_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
 
@@ -442,6 +434,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			_Status = TreeReconstructionSystemStatus::NormalGrowth;
 			if (_UseCakeTower) {
 				auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
+				cakeTower->SetEnabled(true);
 				cakeTower->Load(_TargetCakeTowerPath);
 				cakeTower->GenerateMesh();
 				cakeTower->ClearAttractionPoints();
@@ -450,6 +443,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			}else
 			{
 				auto& kdop = _CurrentTree.GetPrivateComponent<KDop>();
+				kdop->SetEnabled(true);
 				kdop->DirectionalDistance = _TargetKDop->DirectionalDistance;
 				kdop->ClearAttractionPoints();
 				kdop->GenerateAttractionPoints(2000);
@@ -464,6 +458,8 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		break;
 	case TreeReconstructionSystemStatus::NormalGrowth:
 	{
+		_PlantSimulationSystem->_AutoGenerateMesh = _Status == TreeReconstructionSystemStatus::Reconstruction || _Status == TreeReconstructionSystemStatus::Idle;
+		_PlantSimulationSystem->_AutoGenerateLeaves = _Status == TreeReconstructionSystemStatus::Reconstruction || _Status == TreeReconstructionSystemStatus::Idle;
 		bool stop = false;
 		_Internodes.resize(0);
 		const auto treeIndex = _CurrentTree.GetComponentData<TreeIndex>();

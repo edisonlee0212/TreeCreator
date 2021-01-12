@@ -13,5 +13,6 @@ namespace TreeUtilities {
 		void CalculateVolume() override;
 		bool InVolume(glm::vec3 position) const override;
 		void OnGui() override;
+		void GenerateAttractionPoints(int amount) override;
 	};
 }

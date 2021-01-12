@@ -11,10 +11,12 @@
 #include "TreeCollectionGenerationSystem.h"
 #include "Bloom.h"
 #include "SSAO.h"
+
+#include "GreyScale.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
 using namespace SorghumReconstruction;
-void InitGround();
+Entity InitGround();
 PlantSimulationSystem* InitPlantSimulationSystem();
 DataCollectionSystem* InitImageCollectionSystem();
 TreeReconstructionSystem* InitTreeReconstructionSystem();
@@ -88,9 +90,9 @@ void main()
 	dcs->SetDirectionalLightEntity(dle, dle1, dle2, dle3);
 	trs->SetDataCollectionSystem(dcs);
 	tcgs->SetDataCollectionSystem(dcs);
-	tcgs->ImportCsv("./parameters.csv");
-	InitGround();
-
+	//tcgs->ImportCsv("./parameters.csv");
+	Entity ground = InitGround();
+	ground.SetEnabled(false);
 	if (generateSorghum) {
 		auto srSys = InitSorghumReconstructionSystem();
 		Entity plant1 = srSys->ImportPlant("skeleton_procedural_1.txt", 0.01f, "Sorghum 1");
@@ -262,6 +264,7 @@ void EngineSetup()
 		
 		postProcessing->PushLayer(std::make_unique<Bloom>());
 		postProcessing->PushLayer(std::make_unique<SSAO>());
+		
 		mainCamera->GetOwner().SetPrivateComponent(std::move(postProcessing));
 	}
 
@@ -297,28 +300,28 @@ void EngineSetup()
 #pragma endregion
 }
 
-void InitGround() {
+Entity InitGround() {
 	const auto entity = EntityManager::CreateEntity();
 	entity.SetName("Ground");
 	Transform transform;
 	transform.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	transform.SetScale(glm::vec3(10.0f, 10.0f, 10.0f));
+	transform.SetScale(glm::vec3(40.0f, 40.0f, 40.0f));
 	EntityManager::SetComponentData(entity, transform);
 
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
 	const auto textureD = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-albedo.png", TextureType::ALBEDO);
-	mat->SetTexture(Default::Textures::StandardTexture);
+	//mat->SetTexture(Default::Textures::StandardTexture);
 	const auto textureN = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-normal-ogl.png", TextureType::NORMAL);
-	mat->SetTexture(textureN);
+	//mat->SetTexture(textureN);
 	const auto textureH = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-height.png", TextureType::DISPLACEMENT);
-	mat->SetTexture(textureH);
+	//mat->SetTexture(textureH);
 	const auto textureA = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-ao.png", TextureType::AO);
-	mat->SetTexture(textureA);
+	//mat->SetTexture(textureA);
 	const auto textureM = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-metallic.png", TextureType::METALLIC);
-	mat->SetTexture(textureM);
+	//mat->SetTexture(textureM);
 	const auto textureR = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-roughness.png", TextureType::ROUGHNESS);
-	mat->SetTexture(textureR);
+	//mat->SetTexture(textureR);
 	mat->Shininess = 32.0f;
 	auto meshMaterial = std::make_unique<MeshRenderer>();
 	meshMaterial->Mesh = Default::Primitives::Quad;
@@ -326,8 +329,11 @@ void InitGround() {
 	meshMaterial->ReceiveShadow = true;
 	meshMaterial->ForwardRendering = false;
 	meshMaterial->Material->DisplacementMapScale = -0.02f;
+	meshMaterial->Material->Metallic = 0.0f;
+	meshMaterial->Material->Roughness = 0.0f;
+	meshMaterial->Material->AmbientOcclusion = 2.0f;
 	EntityManager::SetPrivateComponent<MeshRenderer>(entity, std::move(meshMaterial));
-	entity.SetEnabled(false);
+	return entity;
 }
 
 

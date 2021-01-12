@@ -23,7 +23,7 @@ namespace TreeUtilities {
 		bool _AutoGenerateLeaves = true;
 		float _GrowthTimer;
 		float _DirectionPruningLimitAngle = 60;
-		bool _DisplayConvexHull = false;
+		//bool _DisplayConvexHull = false;
 		bool _EnableDirectionPruning = false;
 		bool _DisplayFullParam = true;
 		char _CurrentWorkingDir[256] = {};
@@ -66,7 +66,7 @@ namespace TreeUtilities {
 		void CalculateCrownShyness(float detectionDistance = 5.0f);
 		inline void PruneInternode(Entity& internode, int pruneReason) const;
 		static inline void TreeParameterExportHelper(std::ofstream& ofs, TreeParameters& treeParameters);
-		void BuildHullForTree(Entity& tree);
+		//void BuildHullForTree(Entity& tree);
 		
 		
 #pragma endregion

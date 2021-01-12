@@ -1,7 +1,5 @@
 #include "PlantSimulationSystem.h"
 #include "TreeScene.h"
-
-#include "quickhull/QuickHull.hpp"
 #include <gtx/vector_angle.hpp>
 #include <gtx/matrix_decompose.hpp>
 #include <utility>
@@ -220,7 +218,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 	treeAge.ToGrowIteration--;
 	EntityManager::SetComponentData(treeEntity, treeAge);
 #pragma endregion
-	return true;
+	return growed;
 }
 #pragma region Helpers
 #pragma region I/O
@@ -359,10 +357,6 @@ void PlantSimulationSystem::ImportSettings(const std::string& path)
 			else if (name.compare("ApicalControlLevelFactor") == 0)
 			{
 				_NewTreeParameters[i].ApicalControlLevelFactor = std::atof(parameterNode.first_child().value());
-			}
-			else if (name.compare("ApicalControlDistanceFactor") == 0)
-			{
-				_NewTreeParameters[i].ApicalControlDistanceFactor = std::atof(parameterNode.first_child().value());
 			}
 			else if (name.compare("MaxBudAge") == 0)
 			{
@@ -529,10 +523,6 @@ TreeParameters PlantSimulationSystem::LoadParameters(const std::string& path)
 			{
 				retVal.ApicalControlLevelFactor = std::atof(parameterNode.first_child().value());
 			}
-			else if (name.compare("ApicalControlDistanceFactor") == 0)
-			{
-				retVal.ApicalControlDistanceFactor = std::atof(parameterNode.first_child().value());
-			}
 			else if (name.compare("MaxBudAge") == 0)
 			{
 				retVal.MaxBudAge = std::atoi(parameterNode.first_child().value());
@@ -634,7 +624,6 @@ void PlantSimulationSystem::TreeParameterExportHelper(std::ofstream& ofs, TreePa
 	output += "\t\t\t<ApicalControlBase>";  output += std::to_string(treeParameters.ApicalControlBase) + "</ApicalControlBase>\n";
 	output += "\t\t\t<ApicalControlAgeFactor>";  output += std::to_string(treeParameters.ApicalControlAgeFactor) + "</ApicalControlAgeFactor>\n";
 	output += "\t\t\t<ApicalControlLevelFactor>";  output += std::to_string(treeParameters.ApicalControlLevelFactor) + "</ApicalControlLevelFactor>\n";
-	output += "\t\t\t<ApicalControlDistanceFactor>";  output += std::to_string(treeParameters.ApicalControlDistanceFactor) + "</ApicalControlDistanceFactor>\n";
 	output += "\t\t\t<MaxBudAge>"; output += std::to_string(treeParameters.MaxBudAge) + "</MaxBudAge>\n";
 #pragma endregion
 #pragma region Environmental
@@ -1661,7 +1650,7 @@ void PlantSimulationSystem::GenerateLeaves(const Entity& tree) const
 	if (rootInternode.IsNull()) return;
 	EntityManager::GetPrivateComponent<FoliageGeneratorBase>(tree)->Generate();
 }
-
+/*
 void PlantSimulationSystem::BuildHullForTree(Entity& tree)
 {
 	std::vector<GlobalTransform> internodeLTWs;
@@ -1728,7 +1717,7 @@ void PlantSimulationSystem::BuildHullForTree(Entity& tree)
 	}
 	treeData->ConvexHull->SetVertices(17, vertices, indices, true);
 }
-
+*/
 void PlantSimulationSystem::ResumeGrowth()
 {
 	_Growing = true;
@@ -1834,6 +1823,7 @@ void TreeUtilities::PlantSimulationSystem::Update()
 		TryGrowAllTrees(trees);
 	}
 	else {
+		/*
 		if (_DisplayConvexHull)
 		{
 			std::vector<GlobalTransform> ltws;
@@ -1846,6 +1836,7 @@ void TreeUtilities::PlantSimulationSystem::Update()
 				}
 			}
 		}
+		*/
 		if (_InternodeSystem->GetConfigFlags() & InternodeSystem_DrawInternodes || _InternodeSystem->GetConfigFlags() & InternodeSystem_DrawConnections)
 		{
 			for (size_t i = 0; i < trees.size(); i++)
@@ -2402,7 +2393,7 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 
 		}
 		ImGui::Separator();
-
+		/*
 		ImGui::Checkbox("Display convex hulls", &_DisplayConvexHull);
 		if (ImGui::Button("Generate Convex Hull for all trees"))
 		{
@@ -2413,7 +2404,7 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 				BuildHullForTree(tree);
 			}
 		}
-
+		*/
 		ImGui::Separator();
 		ImGui::InputInt("Iterations", &_NewPushIteration);
 		if (ImGui::Button("Push iteration to all"))

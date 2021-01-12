@@ -1,3 +1,0 @@
-C:/Users/lllll/Documents/GitHub/TreeCreator/TreeCreator/quickhull/Tests/out/build/x64-Debug (default)/CMakeFiles/QuickHullTests.dir
-C:/Users/lllll/Documents/GitHub/TreeCreator/TreeCreator/quickhull/Tests/out/build/x64-Debug (default)/CMakeFiles/edit_cache.dir
-C:/Users/lllll/Documents/GitHub/TreeCreator/TreeCreator/quickhull/Tests/out/build/x64-Debug (default)/CMakeFiles/rebuild_cache.dir
