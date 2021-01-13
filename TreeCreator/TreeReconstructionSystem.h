@@ -3,6 +3,7 @@
 #include "UniEngine.h"
 #include "TreeManager.h"
 #include "PlantSimulationSystem.h"
+#include "rapidcsv/rapidcsv.h"
 using namespace UniEngine;
 namespace TreeUtilities
 {
@@ -29,14 +30,17 @@ namespace TreeUtilities
 	class TreeReconstructionSystem :
 		public SystemBase
 	{
-		int _Amount = 10;
+		int _GenerateAmount = 10;
 		int _ReconAmount = 10;
 
 		int _ReconIndex = 0;
 		int _ReconSeed = 0;
 		int _ReconCounter = 0;
 		int _ReconMainBranchInternodeLimit = 1000;
-		
+
+		rapidcsv::Document _TrainingDoc;
+		bool _FromTraining = false;
+		int _TrainingAmount;
 		bool _EnableMaskTrimmer = false;
 		std::string _StorePath = "./tree_recon/";
 		DataCollectionSystem* _DataCollectionSystem = nullptr;

@@ -98,13 +98,19 @@ void DataCollectionSystem::OnGui()
 						std::filesystem::create_directory("tree_data/obj_train");
 						std::filesystem::create_directory("tree_data/rgb_train");
 						std::filesystem::create_directory("tree_data/white_train");
-
+						
 						std::filesystem::create_directory("tree_data/branch_val");
 						std::filesystem::create_directory("tree_data/graph_val");
 						std::filesystem::create_directory("tree_data/mask_val");
 						std::filesystem::create_directory("tree_data/obj_val");
 						std::filesystem::create_directory("tree_data/rgb_val");
 						std::filesystem::create_directory("tree_data/white_val");
+
+						std::filesystem::create_directory("tree_data/recon_skeleton_val");
+						std::filesystem::create_directory("tree_data/recon_image_val");
+						std::filesystem::create_directory("tree_data/recon_graph_val");
+						std::filesystem::create_directory("tree_data/recon_obj_val");
+						std::filesystem::create_directory("tree_data/recon_volume_val");
 					}
 					ResetCounter((_StartIndex - 1) * 7, _StartIndex, _EndIndex, _ExportOBJ, _ExportGraph);
 					_NeedEval = true;
