@@ -48,12 +48,16 @@ namespace TreeUtilities {
 	{
 		int Index;
 		std::string Name;
+		float _MaxRadius;
+		float _MaxHeight;
 		std::vector<std::vector<CakeSlice>> data;
 		CakeTowerOutput(int index, std::string& name, std::unique_ptr<CakeTower>& cakeTower)
 		{
 			Index = index;
 			Name = name;
 			data = cakeTower->CakeTiers;
+			_MaxHeight = cakeTower->MaxHeight;
+			_MaxRadius = cakeTower->MaxRadius;
 		}
 	};
 	
@@ -80,6 +84,7 @@ namespace TreeUtilities {
 		bool _IsTrain = true;
 		Entity _CurrentTree;
 		Entity _Background;
+		
 		bool _NeedExport = false;
 		int _TargetResolution = 1280;
 		int _CaptureResolution = 1280;
@@ -101,6 +106,8 @@ namespace TreeUtilities {
 		std::vector<std::pair<ImageCaptureSequence, TreeParameters>> _ImageCaptureSequences;
 		std::vector<ParamsOutput> _TreeParametersOutputList;
 		std::vector<KDopOutput> _KDopsOutputList;
+		std::vector<CakeTowerOutput> _GeneralCakeTowersOutputList;
+		std::vector<CakeTowerOutput> _PerSpeciesCakeTowersOutputList;
 		std::vector<CakeTowerOutput> _CakeTowersOutputList;
 		std::vector<std::shared_ptr<Texture2D>> _BackgroundTextures;
 
@@ -129,6 +136,8 @@ namespace TreeUtilities {
 		void ExportParams(const std::string& path) const;
 		void ExportKDops(const std::string& path) const;
 		void ExportCakeTower(const std::string& path) const;
+		void ExportCakeTowerPerSpecies(const std::string& path) const;
+		void ExportCakeTowerGeneral(const std::string& path) const;
 		void SetCameraPose(glm::vec3 position, glm::vec3 rotation);
 		void OnCreate() override;
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);

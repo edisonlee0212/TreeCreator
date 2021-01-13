@@ -47,6 +47,16 @@ void DataCollectionSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Learning Data Generation")) {
+			if (ImGui::Button("Load Street Views"))
+			{
+				_BackgroundTextures.clear();
+				for (int i = 1; i < 4; i++)
+				{
+					int index = i * 4;
+					_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() +
+						"Textures/StreetView/" + std::string(6 - std::to_string(index).length(), '0') + std::to_string(index) + "_2.jpg"));
+				}
+			}
 			if (ImGui::Button("Create new data set...")) {
 				ImGui::OpenPopup("Data set wizard");
 			}
@@ -98,7 +108,7 @@ void DataCollectionSystem::OnGui()
 						std::filesystem::create_directory("tree_data/obj_train");
 						std::filesystem::create_directory("tree_data/rgb_train");
 						std::filesystem::create_directory("tree_data/white_train");
-						
+
 						std::filesystem::create_directory("tree_data/branch_val");
 						std::filesystem::create_directory("tree_data/graph_val");
 						std::filesystem::create_directory("tree_data/mask_val");
@@ -106,11 +116,11 @@ void DataCollectionSystem::OnGui()
 						std::filesystem::create_directory("tree_data/rgb_val");
 						std::filesystem::create_directory("tree_data/white_val");
 
-						std::filesystem::create_directory("tree_data/recon_skeleton_val");
-						std::filesystem::create_directory("tree_data/recon_image_val");
-						std::filesystem::create_directory("tree_data/recon_graph_val");
-						std::filesystem::create_directory("tree_data/recon_obj_val");
-						std::filesystem::create_directory("tree_data/recon_volume_val");
+						std::filesystem::create_directory("tree_data/skeleton_recon");
+						std::filesystem::create_directory("tree_data/image_recon");
+						std::filesystem::create_directory("tree_data/graph_recon");
+						std::filesystem::create_directory("tree_data/obj_recon");
+						std::filesystem::create_directory("tree_data/volume_recon");
 					}
 					ResetCounter((_StartIndex - 1) * 7, _StartIndex, _EndIndex, _ExportOBJ, _ExportGraph);
 					_NeedEval = true;
@@ -143,7 +153,11 @@ void DataCollectionSystem::ExportAllData()
 {
 	ExportParams(_StorePath + "params_" + (_IsTrain ? "train" : "val"));
 	ExportKDops(_StorePath + "kdops_" + (_IsTrain ? "train" : "val"));
-	ExportCakeTower(_StorePath + "cakes_" + (_IsTrain ? "train" : "val"));
+	ExportCakeTower(_StorePath + "rbv_" + (_IsTrain ? "train" : "val"));
+	ExportCakeTowerPerSpecies(_StorePath + "rbv_species_" + (_IsTrain ? "train" : "val"));
+	ExportCakeTowerGeneral(_StorePath + "rbv_general_" + (_IsTrain ? "train" : "val"));
+	_GeneralCakeTowersOutputList.clear();
+	_PerSpeciesCakeTowersOutputList.clear();
 	_TreeParametersOutputList.clear();
 	_CakeTowersOutputList.clear();
 	_KDopsOutputList.clear();
@@ -260,6 +274,70 @@ void TreeUtilities::DataCollectionSystem::ExportCakeTower(const std::string& pat
 			std::string output = "";
 			output += std::to_string(instance.Index) + ",";
 			output += instance.Name;
+			output += "," + std::to_string(instance._MaxHeight);
+			output += "," + std::to_string(instance._MaxRadius);
+			for (auto& tier : cakeTower)
+			{
+				for (auto& slice : tier)
+				{
+					output += "," + std::to_string(slice.MaxDistance / instance._MaxRadius);
+				}
+			}
+			output += "\n";
+			ofs.write(output.c_str(), output.size());
+			ofs.flush();
+		}
+		ofs.close();
+		Debug::Log("Tree group saved: " + path + ".csv");
+	}
+	else
+	{
+		Debug::Error("Can't open file!");
+	}
+}
+
+void DataCollectionSystem::ExportCakeTowerPerSpecies(const std::string& path) const
+{
+	std::ofstream ofs;
+	ofs.open((path + ".csv").c_str(), std::ofstream::out | (_Batched ? std::ofstream::app : std::ofstream::trunc));
+	if (ofs.is_open())
+	{
+		for (auto& instance : _PerSpeciesCakeTowersOutputList) {
+			auto cakeTower = instance.data;
+			std::string output = "";
+			output += std::to_string(instance.Index) + ",";
+			output += instance.Name;
+			for (auto& tier : cakeTower)
+			{
+				for (auto& slice : tier)
+				{
+					output += "," + std::to_string(slice.MaxDistance);
+				}
+			}
+			output += "\n";
+			ofs.write(output.c_str(), output.size());
+			ofs.flush();
+		}
+		ofs.close();
+		Debug::Log("Tree group saved: " + path + ".csv");
+	}
+	else
+	{
+		Debug::Error("Can't open file!");
+	}
+}
+
+void DataCollectionSystem::ExportCakeTowerGeneral(const std::string& path) const
+{
+	std::ofstream ofs;
+	ofs.open((path + ".csv").c_str(), std::ofstream::out | (_Batched ? std::ofstream::app : std::ofstream::trunc));
+	if (ofs.is_open())
+	{
+		for (auto& instance : _GeneralCakeTowersOutputList) {
+			auto cakeTower = instance.data;
+			std::string output = "";
+			output += std::to_string(instance.Index) + ",";
+			output += instance.Name;
 			for (auto& tier : cakeTower)
 			{
 				for (auto& slice : tier)
@@ -328,13 +406,6 @@ void DataCollectionSystem::OnCreate()
 	cameraComponent->ClearColor = glm::vec3(1.0f);
 	_SemanticMaskCameraEntity.SetName("Semantic Mask Camera");
 	_SemanticMaskCameraEntity.SetPrivateComponent(std::move(cameraComponent));
-
-	for (int i = 1; i < 4; i++)
-	{
-		int index = i * 4;
-		_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() +
-			"Textures/StreetView/" + std::string(6 - std::to_string(index).length(), '0') + std::to_string(index) + "_2.jpg"));
-	}
 
 	_BackgroundMaterial = std::make_shared<Material>();
 	_BackgroundMaterial->Shininess = 32.0f;
@@ -536,7 +607,6 @@ void DataCollectionSystem::LateUpdate()
 				_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 				_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 
-				treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
 				treeParameters.Seed = _StartIndex + (_IsTrain ? 0 : 9999);
 				_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
 				_PlantSimulationSystem->ResumeGrowth();
@@ -581,17 +651,19 @@ void DataCollectionSystem::LateUpdate()
 			path = _StorePath + "white_" + (_IsTrain ? "train/" : "val/") +
 				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 				+ "_" + imageCaptureSequence.Name
-				+ ".jpg";
+				+ ".png";
 		}
 		else
 		{
-			path = _ReconPath + ".jpg";
+			path = _ReconPath + ".png";
 		}
-		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
 			path, _TargetResolution, _TargetResolution);
 
 		_Status = DataCollectionSystemStatus::CaptureRandom;
-		_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)]);
+		if (!_BackgroundTextures.empty()) {
+			_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)]);
+		}
 		_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(true);
 		break;
 	case DataCollectionSystemStatus::CaptureRandom:
@@ -669,49 +741,83 @@ void DataCollectionSystem::LateUpdate()
 			_CurrentTree.GetPrivateComponent<KDop>()->CalculateVolume();
 			_KDopsOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<KDop>());
 		}
-		_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume();
-		if (!_Reconstruction) {
-			_CakeTowersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
-		}
-		else
-		{
-			path = _ReconPath + ".ct";
-			const std::string data = _CurrentTree.GetPrivateComponent<CakeTower>()->Save();
-			std::ofstream ofs;
-			ofs.open(path.c_str(), std::ofstream::out | std::ofstream::trunc);
-			if (ofs.is_open())
-			{
-				ofs.write(data.c_str(), data.length());
-				ofs.flush();
-				ofs.close();
+		if (_CurrentTree.HasPrivateComponent<CakeTower>()) {
+			if (!_Reconstruction) {
+				_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume(36);
+				_GeneralCakeTowersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
 			}
-			else
-			{
-				Debug::Error("Can't open file!");
-			}
-			ofs.open((_ReconPath + ".csv").c_str(), std::ofstream::trunc);
-			if (ofs.is_open())
-			{
-				auto& kdop = _CurrentTree.GetPrivateComponent<KDop>()->DirectionalDistance;
-				std::string output;
-				for (int i = 0; i < kdop.size(); i++)
+			if (!_Reconstruction) {
+				float height = 0;
+				switch (_CurrentSelectedSequenceIndex)
 				{
-					output += std::to_string(kdop[i]);
-					if (i < kdop.size() - 1) output += ",";
+				case 0:
+					height = 15;
+					break;
+				case 1:
+					height = 12.5;
+					break;
+				case 2:
+					height = 19;
+					break;
+				case 3:
+					height = 32;
+					break;
+				case 4:
+					height = 31;
+					break;
+				case 5:
+					height = 18.5;
+					break;
+				case 6:
+					height = 15;
+					break;
 				}
-				output += "\n";
-				ofs.write(output.c_str(), output.size());
-				ofs.flush();
-
-				ofs.close();
-				Debug::Log("Tree group saved: " + _ReconPath + ".csv");
+				_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume(height);
+				_PerSpeciesCakeTowersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
+			}
+			_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume();
+			if (!_Reconstruction) {
+				_CakeTowersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
 			}
 			else
 			{
-				Debug::Error("Can't open file!");
+				path = _ReconPath + ".ct";
+				const std::string data = _CurrentTree.GetPrivateComponent<CakeTower>()->Save();
+				std::ofstream ofs;
+				ofs.open(path.c_str(), std::ofstream::out | std::ofstream::trunc);
+				if (ofs.is_open())
+				{
+					ofs.write(data.c_str(), data.length());
+					ofs.flush();
+					ofs.close();
+				}
+				else
+				{
+					Debug::Error("Can't open file!");
+				}
+				ofs.open((_ReconPath + ".csv").c_str(), std::ofstream::trunc);
+				if (ofs.is_open())
+				{
+					auto& kdop = _CurrentTree.GetPrivateComponent<KDop>()->DirectionalDistance;
+					std::string output;
+					for (int i = 0; i < kdop.size(); i++)
+					{
+						output += std::to_string(kdop[i]);
+						if (i < kdop.size() - 1) output += ",";
+					}
+					output += "\n";
+					ofs.write(output.c_str(), output.size());
+					ofs.flush();
+
+					ofs.close();
+					Debug::Log("Tree group saved: " + _ReconPath + ".csv");
+				}
+				else
+				{
+					Debug::Error("Can't open file!");
+				}
 			}
 		}
-
 		_Status = DataCollectionSystemStatus::CleanUp;
 		break;
 	case DataCollectionSystemStatus::CleanUp:
