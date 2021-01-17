@@ -3,12 +3,12 @@
 glm::ivec2 CakeTower::SelectSlice(glm::vec3 position) const
 {
 	glm::ivec2 retVal = glm::ivec2(0);
-	const float heightLevel = MaxHeight / SliceAmount;
+	const float heightLevel = MaxHeight / LayerAmount;
 	const float sliceAngle = 360.0f / SectorAmount;
 	auto x = static_cast<int>(position.y / heightLevel);
 	if (x < 0) x = 0;
 	retVal.x = x;
-	if (retVal.x >= SliceAmount) retVal.x = SliceAmount - 1;
+	if (retVal.x >= LayerAmount) retVal.x = LayerAmount - 1;
 	if (position.x == 0 && position.z == 0) retVal.y = 0;
 	else retVal.y = static_cast<int>((glm::degrees(glm::atan(position.x, position.z)) + 180.0f) / sliceAngle);
 	if (retVal.y >= SectorAmount) retVal.y = SectorAmount - 1;
@@ -18,7 +18,7 @@ glm::ivec2 CakeTower::SelectSlice(glm::vec3 position) const
 void CakeTower::GenerateMesh()
 {
 	_BoundMeshes.clear();
-	for(int tierIndex = 0; tierIndex < SliceAmount; tierIndex++)
+	for (int tierIndex = 0; tierIndex < LayerAmount; tierIndex++)
 	{
 		auto mesh = std::make_shared<Mesh>();
 		std::vector<Vertex> vertices;
@@ -28,7 +28,7 @@ void CakeTower::GenerateMesh()
 		const int totalAngleStep = 3;
 		const int totalLevelStep = 2;
 		const float stepAngle = sliceAngle / (totalAngleStep - 1);
-		const float heightLevel = MaxHeight / SliceAmount;
+		const float heightLevel = MaxHeight / LayerAmount;
 		const float stepLevel = heightLevel / (totalLevelStep - 1);
 		vertices.resize(totalLevelStep * SectorAmount * totalAngleStep * 2 + totalLevelStep);
 		indices.resize((12 * (totalLevelStep - 1) * totalAngleStep) * SectorAmount);
@@ -38,7 +38,7 @@ void CakeTower::GenerateMesh()
 			{
 				for (int angleStep = 0; angleStep < totalAngleStep; angleStep++) {
 					const int actualAngleStep = sliceIndex * totalAngleStep + angleStep;
-					
+
 					float currentAngle = sliceAngle * sliceIndex + stepAngle * angleStep;
 					if (currentAngle >= 360) currentAngle = 0;
 					float x = glm::abs(glm::tan(glm::radians(currentAngle)));
@@ -112,7 +112,7 @@ void CakeTower::GenerateMesh()
 						indices[12 * (levelStep * totalAngleStep * SectorAmount + actualAngleStep) + 10] = vertices.size() - totalLevelStep + (levelStep + 1);
 						indices[12 * (levelStep * totalAngleStep * SectorAmount + actualAngleStep) + 11] = totalLevelStep * SectorAmount * totalAngleStep + (levelStep + 1) * totalAngleStep * SectorAmount + actualAngleStep;
 					}
-					
+
 				}
 			}
 		}
@@ -126,18 +126,21 @@ void CakeTower::FormEntity()
 {
 	if (!_MeshGenerated) CalculateVolume();
 	auto children = EntityManager::GetChildren(GetOwner());
-	for(auto& child : children)
+	for (auto& child : children)
 	{
 		if (child.HasComponentData<CakeTowerInfo>()) EntityManager::DeleteEntity(child);
 	}
 	children.clear();
 	Transform transform;
+	GlobalTransform globalTransform;
 	transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
-
+	globalTransform.Value = transform.Value;
 	const auto targetEntity = EntityManager::CreateEntity(_CakeTowerArchetype, "CakeTowers");
-	EntityManager::SetParent(targetEntity, GetOwner());
 	targetEntity.SetComponentData(transform);
-	for(int i = 0; i < _BoundMeshes.size(); i++)
+	targetEntity.SetComponentData(globalTransform);
+	EntityManager::SetParent(targetEntity, GetOwner());
+	
+	for (int i = 0; i < _BoundMeshes.size(); i++)
 	{
 		auto slice = EntityManager::CreateEntity(_CakeTowerArchetype, "CakeTower" + std::to_string(i));
 		auto mmc = std::make_unique<MeshRenderer>();
@@ -146,6 +149,7 @@ void CakeTower::FormEntity()
 		mmc->Mesh = _BoundMeshes[i];
 		slice.SetPrivateComponent(std::move(mmc));
 		slice.SetComponentData(transform);
+		slice.SetComponentData(globalTransform);
 		EntityManager::SetParent(slice, targetEntity);
 		slice.SetEnabled(false);
 	}
@@ -163,7 +167,7 @@ std::string CakeTower::Save()
 {
 	if (!_MeshGenerated) CalculateVolume();
 	std::string output;
-	output += std::to_string(SliceAmount) + "\n";
+	output += std::to_string(LayerAmount) + "\n";
 	output += std::to_string(SectorAmount) + "\n";
 	output += std::to_string(MaxHeight) + "\n";
 	output += std::to_string(MaxRadius) + "\n";
@@ -200,13 +204,13 @@ void CakeTower::Load(const std::string& path)
 	std::ifstream ifs;
 	ifs.open(path.c_str());
 	Debug::Log("Loading from " + path);
-	if(ifs.is_open())
+	if (ifs.is_open())
 	{
-		ifs >> SliceAmount;
+		ifs >> LayerAmount;
 		ifs >> SectorAmount;
 		ifs >> MaxHeight;
 		ifs >> MaxRadius;
-		CakeTiers.resize(SliceAmount);
+		CakeTiers.resize(LayerAmount);
 		for (auto& tier : CakeTiers)
 		{
 			tier.resize(SectorAmount);
@@ -217,7 +221,7 @@ void CakeTower::Load(const std::string& path)
 		}
 		GenerateMesh();
 	}
-	
+
 }
 
 void CakeTower::CalculateVolume()
@@ -242,7 +246,7 @@ void CakeTower::CalculateVolume()
 		if (radius > MaxRadius) MaxRadius = radius;
 	}
 
-	CakeTiers.resize(SliceAmount);
+	CakeTiers.resize(LayerAmount);
 	for (auto& tier : CakeTiers)
 	{
 		tier.resize(SectorAmount);
@@ -256,9 +260,9 @@ void CakeTower::CalculateVolume()
 		const glm::vec3 position = i.GlobalTransform[3];
 		const auto sliceIndex = SelectSlice(position);
 		const float currentDistance = glm::length(glm::vec2(position.x, position.z));
-		if(currentDistance <= i.Thickness)
+		if (currentDistance <= i.Thickness)
 		{
-			for(auto& slice : CakeTiers[sliceIndex.x])
+			for (auto& slice : CakeTiers[sliceIndex.x])
 			{
 				if (slice.MaxDistance < currentDistance + i.Thickness) slice.MaxDistance = currentDistance + i.Thickness;
 			}
@@ -289,7 +293,7 @@ void CakeTower::CalculateVolume(float maxHeight)
 		if (radius > MaxRadius) MaxRadius = radius;
 	}
 
-	CakeTiers.resize(SliceAmount);
+	CakeTiers.resize(LayerAmount);
 	for (auto& tier : CakeTiers)
 	{
 		tier.resize(SectorAmount);
@@ -298,6 +302,58 @@ void CakeTower::CalculateVolume(float maxHeight)
 			slice.MaxDistance = 0.0f;
 		}
 	}
+	const auto threadsAmount = JobManager::GetThreadPool().Size();
+	std::vector<std::vector<std::vector<CakeSlice>>> tempCakeTowers;
+	tempCakeTowers.resize(threadsAmount);
+	for (int i = 0; i < threadsAmount; i++)
+	{
+		tempCakeTowers[i].resize(LayerAmount);
+		for (auto& tier : tempCakeTowers[i])
+		{
+			tier.resize(SectorAmount);
+			for (auto& slice : tier)
+			{
+				slice.MaxDistance = 0.0f;
+			}
+		}
+	}
+	std::vector<std::shared_future<void>> results;
+	for (int threadIndex = 0; threadIndex < threadsAmount; threadIndex++)
+	{
+		results.push_back(JobManager::GetThreadPool().Push([&tempCakeTowers, threadIndex, &internodeInfos, this](int id)
+			{
+				auto& cakeTower = tempCakeTowers[threadIndex];
+				for (auto& i : internodeInfos)
+				{
+					const glm::vec3 position = i.GlobalTransform[3];
+					const auto sliceIndex = SelectSlice(position);
+					const float currentDistance = glm::length(glm::vec2(position.x, position.z));
+					if (currentDistance <= i.Thickness)
+					{
+						for (auto& slice : cakeTower[sliceIndex.x])
+						{
+							if (slice.MaxDistance < currentDistance + i.Thickness) slice.MaxDistance = currentDistance + i.Thickness;
+						}
+					}
+					else if (cakeTower[sliceIndex.x][sliceIndex.y].MaxDistance < currentDistance) cakeTower[sliceIndex.x][sliceIndex.y].MaxDistance = currentDistance;
+				}
+
+			}
+		).share());
+	}
+	for (const auto& i : results) i.wait();
+	for (int threadIndex = 0; threadIndex < threadsAmount; threadIndex++)
+	{
+		auto& cakeTower = tempCakeTowers[threadIndex];
+		for(int i = 0; i < LayerAmount; i++)
+		{
+			for(int j = 0; j < SectorAmount; j++)
+			{
+				if (CakeTiers[i][j].MaxDistance < cakeTower[i][j].MaxDistance) CakeTiers[i][j].MaxDistance = cakeTower[i][j].MaxDistance;
+			}
+		}
+	}
+	/*
 	for (auto& i : internodeInfos)
 	{
 		const glm::vec3 position = i.GlobalTransform[3];
@@ -311,7 +367,9 @@ void CakeTower::CalculateVolume(float maxHeight)
 			}
 		}
 		else if (CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance < currentDistance) CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance = currentDistance;
-	}
+	}*/
+
+
 	GenerateMesh();
 }
 
@@ -332,12 +390,12 @@ void CakeTower::OnGui()
 	ImGui::DragFloat("Attract Distance", &AttractionDistance, 0.01f, RemovalDistance, 10.0f);
 	ImGui::DragInt("AP Count", &_AttractionPointsCount);
 	ImGui::Checkbox("Enable Space Colonization", &EnableSpaceColonization);
-	if(ImGui::Button("Generate attraction points"))
+	if (ImGui::Button("Generate attraction points"))
 	{
 		ClearAttractionPoints();
 		GenerateAttractionPoints();
 	}
-	if(_Display)
+	if (_Display)
 	{
 		const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
 		std::vector<GlobalTransform> points;
@@ -350,8 +408,8 @@ void CakeTower::OnGui()
 	ImGui::ColorEdit4("Display Color", &DisplayColor.x);
 	ImGui::DragFloat("Display Scale", &DisplayScale, 0.01f, 0.01f, 1.0f);
 	bool edited = false;
-	if(ImGui::DragInt("Tier Amount", &SliceAmount, 1, 1, 100)) edited = true;
-	if(ImGui::DragInt("Slice Amount", &SectorAmount, 1, 1, 100)) edited = true;
+	if (ImGui::DragInt("Layer Amount", &LayerAmount, 1, 1, 100)) edited = true;
+	if (ImGui::DragInt("Slice Amount", &SectorAmount, 1, 1, 100)) edited = true;
 	if (ImGui::Button("Calculate Bounds") || edited) CalculateVolume();
 	if (ImGui::Button("Form Entity"))
 	{
@@ -373,10 +431,10 @@ void CakeTower::OnGui()
 			}
 		}
 	}
-	if(ImGui::Button("Load..."))
+	if (ImGui::Button("Load..."))
 	{
 		auto temp = FileIO::OpenFile("CakeTower (*.ct)\0*.ct\0");
-		if(temp.has_value())
+		if (temp.has_value())
 		{
 			const std::string path = temp.value();
 			if (!path.empty())
@@ -384,7 +442,7 @@ void CakeTower::OnGui()
 				Load(path);
 			}
 		}
-		
+
 	}
 	if (_Display && _MeshGenerated)
 	{
@@ -399,7 +457,7 @@ void CakeTower::GenerateAttractionPoints()
 	GenerateAttractionPoints(_AttractionPointsCount);
 }
 
-void CakeTower::GenerateAttractionPoints(int amount) 
+void CakeTower::GenerateAttractionPoints(int amount)
 {
 	if (!_MeshGenerated) CalculateVolume();
 	glm::vec3 min = glm::vec3(-MaxRadius, 0, -MaxRadius);

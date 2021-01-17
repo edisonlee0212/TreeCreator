@@ -21,11 +21,12 @@ namespace TreeUtilities
 		TreeCollectionGenerationSystenStatus _Status = TreeCollectionGenerationSystenStatus::Idle;
 		DataCollectionSystem* _DataCollectionSystem = nullptr;
 		double _Timer;
+		bool _Generation;
 		glm::vec3 _Position = glm::vec3(-15, 10, -50);
 		glm::vec3 _Rotation = glm::vec3(-180, -20, -180);
 		Entity _CameraEntity;
 		Entity _GroundEntity;
-		int _CaptureResolution = 320;
+		int _CaptureResolution = 1280;
 		float _CurrentDegrees = 0;
 		float _DegreeIncrementation = 60;
 		std::vector<Entity> _Internodes;

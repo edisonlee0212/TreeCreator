@@ -92,6 +92,9 @@ namespace TreeUtilities {
 		bool _NeedEval = true;
 		bool _ExportOBJ = false;
 		bool _ExportGraph = false;
+		bool _ExportImages = false;
+		bool _ExportKDop = false;
+		bool _ExportCakeTower = false;
 		std::unique_ptr<RenderTarget> _SmallBranchFilter;
 		std::unique_ptr<GLProgram> _SmallBranchProgram;
 		std::unique_ptr<GLTexture2D> _SmallBranchBuffer;
@@ -106,11 +109,10 @@ namespace TreeUtilities {
 		std::vector<std::pair<ImageCaptureSequence, TreeParameters>> _ImageCaptureSequences;
 		std::vector<ParamsOutput> _TreeParametersOutputList;
 		std::vector<KDopOutput> _KDopsOutputList;
-		std::vector<CakeTowerOutput> _GeneralCakeTowersOutputList;
-		std::vector<CakeTowerOutput> _PerSpeciesCakeTowersOutputList;
-		std::vector<CakeTowerOutput> _CakeTowersOutputList;
+		std::vector<std::pair<std::pair<int, int>, std::vector<CakeTowerOutput>>> _GeneralCakeTowersOutputList;
+		std::vector<std::pair<std::pair<int, int>, std::vector<CakeTowerOutput>>> _PerSpeciesCakeTowersOutputList;
+		std::vector<std::pair<std::pair<int, int>, std::vector<CakeTowerOutput>>> _CakeTowersOutputList;
 		std::vector<std::shared_ptr<Texture2D>> _BackgroundTextures;
-
 		Entity _DirectionalLightEntity;
 		Entity _DirectionalLightEntity1;
 		Entity _DirectionalLightEntity2;
@@ -135,9 +137,9 @@ namespace TreeUtilities {
 		void PushImageCaptureSequence(ImageCaptureSequence sequence);
 		void ExportParams(const std::string& path) const;
 		void ExportKDops(const std::string& path) const;
-		void ExportCakeTower(const std::string& path) const;
-		void ExportCakeTowerPerSpecies(const std::string& path) const;
-		void ExportCakeTowerGeneral(const std::string& path) const;
+		void ExportCakeTower(const std::string& path, bool isTrain) const;
+		void ExportCakeTowerPerSpecies(const std::string& path, bool isTrain) const;
+		void ExportCakeTowerGeneral(const std::string& path, bool isTrain) const;
 		void SetCameraPose(glm::vec3 position, glm::vec3 rotation);
 		void OnCreate() override;
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);

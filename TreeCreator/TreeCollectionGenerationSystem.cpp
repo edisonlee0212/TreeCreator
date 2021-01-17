@@ -5,7 +5,7 @@ void TreeCollectionGenerationSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Perception Tree Data Generation")) {
-			
+			ImGui::DragInt("Resolution", &_CaptureResolution, 1, 1, 2560);
 			if (ImGui::Button("Load csv..."))
 			{
 				auto result = FileIO::OpenFile("Parameters list (*.csv)\0*.csv\0");
@@ -15,6 +15,8 @@ void TreeCollectionGenerationSystem::OnGui()
 					if (!path.empty())
 					{
 						ImportCsv2(path);
+						_Timer = Application::EngineTime();
+						_Generation = true;
 					}
 				}
 			}
@@ -27,6 +29,8 @@ void TreeCollectionGenerationSystem::OnGui()
 					if (!path.empty())
 					{
 						ImportCsv(path);
+						_Timer = Application::EngineTime();
+						_Generation = true;
 					}
 				}
 			}
@@ -202,9 +206,7 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 			_DataCollectionSystem->_DirectionalLightEntity2.SetComponentData(_DataCollectionSystem->_LightTransform2);
 			_DataCollectionSystem->_DirectionalLightEntity3.SetComponentData(_DataCollectionSystem->_LightTransform3);
 			_GroundEntity.SetEnabled(true);
-			//_DataCollectionSystem->_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
-			//_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
-
+			
 			treeParameters.Seed = 0;
 			_DataCollectionSystem->_CurrentTree = _DataCollectionSystem->_PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
 			_DataCollectionSystem->_PlantSimulationSystem->ResumeGrowth();
@@ -219,11 +221,17 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 				Debug::Error("Can't open file!");
 			}
 
-			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(1280, 1280);
+			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<PostProcessing>()->SetEnableLayer("GreyScale", true);
 			_Status = TreeCollectionGenerationSystenStatus::Growing;
 		}else
 		{
+			if(_Generation)
+			{
+				_Generation = false;
+				const double spentTime = Application::EngineTime() - _Timer;
+				Debug::Log("Generation Finished. Used time: " + std::to_string(spentTime));
+			}
 			OnGui();
 		}
 
@@ -250,10 +258,10 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 		break;
 	case TreeCollectionGenerationSystenStatus::Rendering:
 	{
-		_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+		_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
 			_StorePath + "image/" +
 			std::string(7 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter) + ".jpg"
-			, 640, 640, true);
+			, _CaptureResolution, _CaptureResolution, true);
 		_Status = TreeCollectionGenerationSystenStatus::CollectData;
 	}
 		break;

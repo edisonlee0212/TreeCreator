@@ -916,5 +916,4 @@ void TreeManager::SerializeTreeGraph(std::string path, Entity tree)
 	ofs.write(output.c_str(), output.size());
 	ofs.flush();
 	ofs.close();
-	Debug::Log("Tree graph saved: " + path + ".json");
 }
