@@ -43,6 +43,51 @@ void DataCollectionSystem::PushImageCaptureSequence(ImageCaptureSequence sequenc
 	_ImageCaptureSequences.emplace_back(sequence, _PlantSimulationSystem->LoadParameters(sequence.ParamPath));
 }
 
+void DataCollectionSystem::ExportCakeTowerForRecon(int layer, int sector)
+{
+	auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
+	cakeTower->LayerAmount = layer;
+	cakeTower->SectorAmount = sector;
+	cakeTower->CalculateVolume();
+	std::string path = _ReconPath + "_" + std::to_string(layer) + "_" + std::to_string(sector) + ".ct";
+	const std::string data = cakeTower->Save();
+	std::ofstream ofs;
+	ofs.open(path.c_str(), std::ofstream::out | std::ofstream::trunc);
+	if (ofs.is_open())
+	{
+		ofs.write(data.c_str(), data.length());
+		ofs.flush();
+		ofs.close();
+	}
+	else
+	{
+		Debug::Error("Can't open file!");
+	}
+	/*
+	ofs.open((_ReconPath + ".csv").c_str(), std::ofstream::trunc);
+	if (ofs.is_open())
+	{
+		auto& kdop = _CurrentTree.GetPrivateComponent<KDop>()->DirectionalDistance;
+		std::string output;
+		for (int i = 0; i < kdop.size(); i++)
+		{
+			output += std::to_string(kdop[i]);
+			if (i < kdop.size() - 1) output += ",";
+		}
+		output += "\n";
+		ofs.write(output.c_str(), output.size());
+		ofs.flush();
+
+		ofs.close();
+		Debug::Log("Tree group saved: " + _ReconPath + ".csv");
+	}
+	else
+	{
+		Debug::Error("Can't open file!");
+	}
+	*/
+}
+
 void DataCollectionSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
@@ -50,11 +95,20 @@ void DataCollectionSystem::OnGui()
 			if (ImGui::Button("Load Street Views"))
 			{
 				_BackgroundTextures.clear();
-				for (int i = 1; i < 1000; i++)
+				int i = 1;
+				int amount = 1000;
+				while(i < amount)
 				{
-					int index = i * 4;
-					_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() +
-						"Textures/StreetView/" + std::string(6 - std::to_string(index).length(), '0') + std::to_string(index) + "_2.jpg"));
+					
+					int index = i * 2;
+					auto texture = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() +
+						"Textures/StreetView/" + std::string(6 - std::to_string(index).length(), '0') + std::to_string(index) + "_2.jpg");
+					if(texture)_BackgroundTextures.push_back(texture);
+					else
+					{
+						amount++;
+					}
+					i++;
 				}
 			}
 			if (ImGui::Button("Create new data set...")) {
@@ -113,6 +167,8 @@ void DataCollectionSystem::OnGui()
 						std::filesystem::create_directory("tree_data/obj_train");
 						std::filesystem::create_directory("tree_data/rgb_train");
 						std::filesystem::create_directory("tree_data/white_train");
+						std::filesystem::create_directory("tree_data/rgb_branch_train");
+						std::filesystem::create_directory("tree_data/white_branch_train");
 
 						std::filesystem::create_directory("tree_data/branch_val");
 						std::filesystem::create_directory("tree_data/graph_val");
@@ -120,7 +176,9 @@ void DataCollectionSystem::OnGui()
 						std::filesystem::create_directory("tree_data/obj_val");
 						std::filesystem::create_directory("tree_data/rgb_val");
 						std::filesystem::create_directory("tree_data/white_val");
-
+						std::filesystem::create_directory("tree_data/rgb_branch_val");
+						std::filesystem::create_directory("tree_data/white_branch_val");
+						
 						std::filesystem::create_directory("tree_data/skeleton_recon");
 						std::filesystem::create_directory("tree_data/image_recon");
 						std::filesystem::create_directory("tree_data/graph_recon");
@@ -382,10 +440,19 @@ void DataCollectionSystem::ExportCakeTowerGeneral(const std::string& path, bool 
 	}
 }
 
-void DataCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation)
+void DataCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation, bool random)
 {
 	_CameraPosition = position;
-	_CameraEulerRotation = glm::radians(rotation);
+	_CameraEulerRotation = glm::radians(random ? rotation + glm::linearRand(glm::vec3(-5, -5, 0), glm::vec3(5, 5, 0)) : rotation);
+	if(random)
+	{
+		float fov = glm::linearRand(90, 100);
+		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = fov;
+		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = fov;
+	}else{
+		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = 90;
+		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = 90;
+	}
 	Transform transform;
 	transform.SetPosition(_CameraPosition);
 	transform.SetEulerRotation(_CameraEulerRotation);
@@ -602,7 +669,7 @@ void DataCollectionSystem::LateUpdate()
 			if (_StartIndex <= _EndIndex)
 			{
 				if (_ExportImages) {
-					SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
+					SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, true);
 
 					RenderManager::SetAmbientLight(0.3f);
 					float brightness = glm::linearRand(5.0f, 7.0f);
@@ -661,7 +728,9 @@ void DataCollectionSystem::LateUpdate()
 		}
 		else if (_Reconstruction)
 		{
-			SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
+			_SmallBranchBuffer->ReSize(0, GL_RGB32F, GL_RGB, GL_FLOAT, 0, _TargetResolution, _TargetResolution);
+			_SmallBranchFilter->SetResolution(_TargetResolution, _TargetResolution);
+			SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, false);
 			treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
 			treeParameters.Seed = _Seed;
 			_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
@@ -693,38 +762,76 @@ void DataCollectionSystem::LateUpdate()
 		}
 		else
 		{
-			path = _ReconPath + ".png";
+			path = _ReconPath + "_main.jpg";
 		}
-		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
-			path, _TargetResolution, _TargetResolution, true);
-
-		_Status = DataCollectionSystemStatus::CaptureRandom;
-		if (!_BackgroundTextures.empty()) {
-			_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)]);
-		}
-		_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(true);
-		break;
-	case DataCollectionSystemStatus::CaptureRandom:
-		path = _StorePath + "rgb_" + (_IsTrain ? "train/" : "val/") +
-			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
-			+ "_" + imageCaptureSequence.Name
-			+ ".jpg";
-		if (!_Reconstruction)
+		if (!_Reconstruction) {
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
+				path, _TargetResolution, _TargetResolution, true);
+		}else
 		{
 			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 				path, _TargetResolution, _TargetResolution);
 		}
+		_Status = DataCollectionSystemStatus::CaptureOriginalBranch;
+		SetEnableFoliage(false);
+		break;
+	case DataCollectionSystemStatus::CaptureOriginalBranch:
+		if (!_Reconstruction) {
+			path = _StorePath + "white_branch_" + (_IsTrain ? "train/" : "val/") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + imageCaptureSequence.Name
+				+ ".png";
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
+				path, _TargetResolution, _TargetResolution, true);
+		}else
+		{
+			path = _ReconPath + "_branch.jpg";
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _TargetResolution, _TargetResolution);
+		}
+		
+		if (!_BackgroundTextures.empty()) {
+			_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)]);
+		}
+		_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(true);
+		SetEnableFoliage(true);
+		_Status = DataCollectionSystemStatus::CaptureRandom;
+		break;
+	case DataCollectionSystemStatus::CaptureRandom:
+		if (!_Reconstruction)
+		{
+			path = _StorePath + "rgb_" + (_IsTrain ? "train/" : "val/") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + imageCaptureSequence.Name
+				+ ".jpg";
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _TargetResolution, _TargetResolution);
+		}
+		SetEnableFoliage(false);
+		_Status = DataCollectionSystemStatus::CaptureRandomBranch;
+		break;
+	case DataCollectionSystemStatus::CaptureRandomBranch:
+		if (!_Reconstruction) {
+			path = _StorePath + "rgb_branch_" + (_IsTrain ? "train/" : "val/") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + imageCaptureSequence.Name
+				+ ".jpg";
+
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _TargetResolution, _TargetResolution);
+		}
+		SetEnableFoliage(true);
 		_Status = DataCollectionSystemStatus::CaptureSemantic;
 		_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 		EnableSemantic();
 		break;
 	case DataCollectionSystemStatus::CaptureSemantic:
 		_SmallBranchFilter->AttachTexture(_SmallBranchBuffer.get(), GL_COLOR_ATTACHMENT0);
-		_SmallBranchFilter->Clear();
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 		_SmallBranchFilter->GetFrameBuffer()->DrawBuffer(GL_COLOR_ATTACHMENT0);
+		_SmallBranchFilter->Clear();
 		_SmallBranchFilter->Bind();
 		_SmallBranchProgram->Bind();
 		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetTexture()->Texture()->Bind(0);
@@ -751,10 +858,10 @@ void DataCollectionSystem::LateUpdate()
 		}
 		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
 			path, _TargetResolution, _TargetResolution, false);
-		HideFoliage();
-		_Status = DataCollectionSystemStatus::CaptureBranch;
+		SetEnableFoliage(false);
+		_Status = DataCollectionSystemStatus::CaptureBranchMask;
 		break;
-	case DataCollectionSystemStatus::CaptureBranch:
+	case DataCollectionSystemStatus::CaptureBranchMask:
 		path = _StorePath + "branch_" + (_IsTrain ? "train/" : "val/") +
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + imageCaptureSequence.Name
@@ -831,42 +938,12 @@ void DataCollectionSystem::LateUpdate()
 			}
 			else if(_Reconstruction)
 			{
-				_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume();
-				path = _ReconPath + ".ct";
-				const std::string data = _CurrentTree.GetPrivateComponent<CakeTower>()->Save();
-				std::ofstream ofs;
-				ofs.open(path.c_str(), std::ofstream::out | std::ofstream::trunc);
-				if (ofs.is_open())
-				{
-					ofs.write(data.c_str(), data.length());
-					ofs.flush();
-					ofs.close();
-				}
-				else
-				{
-					Debug::Error("Can't open file!");
-				}
-				ofs.open((_ReconPath + ".csv").c_str(), std::ofstream::trunc);
-				if (ofs.is_open())
-				{
-					auto& kdop = _CurrentTree.GetPrivateComponent<KDop>()->DirectionalDistance;
-					std::string output;
-					for (int i = 0; i < kdop.size(); i++)
-					{
-						output += std::to_string(kdop[i]);
-						if (i < kdop.size() - 1) output += ",";
-					}
-					output += "\n";
-					ofs.write(output.c_str(), output.size());
-					ofs.flush();
-
-					ofs.close();
-					Debug::Log("Tree group saved: " + _ReconPath + ".csv");
-				}
-				else
-				{
-					Debug::Error("Can't open file!");
-				}
+				ExportCakeTowerForRecon(2, 2);
+				ExportCakeTowerForRecon(4, 4);
+				ExportCakeTowerForRecon(6, 6);
+				ExportCakeTowerForRecon(8, 8);
+				ExportCakeTowerForRecon(10, 10);
+				ExportCakeTowerForRecon(12, 12);
 			}
 		}
 		_Status = DataCollectionSystemStatus::CleanUp;
@@ -943,7 +1020,7 @@ void DataCollectionSystem::EnableSemantic() const
 
 }
 
-void DataCollectionSystem::HideFoliage() const
+void DataCollectionSystem::SetEnableFoliage(bool enabled) const
 {
 	Entity foliageEntity;
 	EntityManager::ForEachChild(_CurrentTree, [&foliageEntity](Entity child)
@@ -985,11 +1062,11 @@ void DataCollectionSystem::HideFoliage() const
 	if (foliageEntity.HasPrivateComponent<MeshRenderer>())
 	{
 		auto& branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
-		branchletRenderer->SetEnabled(false);
+		branchletRenderer->SetEnabled(enabled);
 	}
 	if (foliageEntity.HasPrivateComponent<Particles>())
 	{
 		auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
-		leavesRenderer->SetEnabled(false);
+		leavesRenderer->SetEnabled(enabled);
 	}
 }

@@ -836,7 +836,7 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	auto internodeEntity = EntityManager::GetChildren(treeEntity).at(0);
 
 	if (EntityManager::GetChildrenAmount(internodeEntity) != 0) {
-		SimpleMeshGenerator(EntityManager::GetChildren(internodeEntity).at(0), vertices, indices, glm::vec3(1, 0, 0), resolution);
+		SimpleMeshGenerator(EntityManager::GetChildren(internodeEntity).at(0), vertices, indices, glm::vec3(0, 0, 1), resolution);
 		mmc->Mesh = std::make_shared<Mesh>();
 		mmc->Mesh->SetVertices(17, vertices, indices, true);
 		treeData->MeshGenerated = true;

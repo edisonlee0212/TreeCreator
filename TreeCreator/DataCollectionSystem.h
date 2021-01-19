@@ -11,9 +11,11 @@ namespace TreeUtilities {
 		Growing,
 		Rendering,
 		CaptureOriginal,
+		CaptureOriginalBranch,
 		CaptureRandom,
+		CaptureRandomBranch,
 		CaptureSemantic,
-		CaptureBranch,
+		CaptureBranchMask,
 		CollectData,
 		CleanUp
 	};
@@ -86,8 +88,8 @@ namespace TreeUtilities {
 		Entity _Background;
 		
 		bool _NeedExport = false;
-		int _TargetResolution = 1280;
-		int _CaptureResolution = 1280;
+		int _TargetResolution = 960;
+		int _CaptureResolution = 960;
 		double _Timer;
 		bool _NeedEval = true;
 		bool _ExportOBJ = false;
@@ -126,7 +128,7 @@ namespace TreeUtilities {
 		int _Index;
 		int _Seed;
 		std::string _ReconPath;
-		
+		void ExportCakeTowerForRecon(int layer, int sector);
 		void OnGui();
 	public:
 		void SetDirectionalLightEntity(Entity entity, Entity entity1, Entity entity2, Entity entity3);
@@ -140,12 +142,12 @@ namespace TreeUtilities {
 		void ExportCakeTower(const std::string& path, bool isTrain) const;
 		void ExportCakeTowerPerSpecies(const std::string& path, bool isTrain) const;
 		void ExportCakeTowerGeneral(const std::string& path, bool isTrain) const;
-		void SetCameraPose(glm::vec3 position, glm::vec3 rotation);
+		void SetCameraPose(glm::vec3 position, glm::vec3 rotation, bool random = false);
 		void OnCreate() override;
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);
 		void Update() override;
 		void LateUpdate() override;
 		void EnableSemantic() const;
-		void HideFoliage() const;
+		void SetEnableFoliage(bool enabled) const;
 	};
 }

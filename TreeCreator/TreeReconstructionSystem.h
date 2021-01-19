@@ -23,6 +23,7 @@ namespace TreeUtilities
 		MainBranches,
 		NormalGrowth,
 		Render,
+		RenderBranch,
 		CollectData,
 		CleanUp,
 		Reconstruction
@@ -31,8 +32,8 @@ namespace TreeUtilities
 		public SystemBase
 	{
 		int _GenerateAmount = 10;
-		int _ReconAmount = 10;
-
+		int _ReconAmount = 3;
+		int _Add = 0;
 		int _ReconIndex = 0;
 		int _ReconSeed = 0;
 		int _ReconCounter = 0;
@@ -49,7 +50,6 @@ namespace TreeUtilities
 		TreeReconstructionSystemStatus _Status = TreeReconstructionSystemStatus::Idle;
 		std::unique_ptr<CakeTower> _TargetCakeTower;
 
-		std::unique_ptr<KDop> _TargetKDop;
 		
 		Entity _CurrentTree;
 		std::vector<Entity> _Internodes;
@@ -65,7 +65,7 @@ namespace TreeUtilities
 		TreeParameters _TargetTreeParameter;
 
 		std::string _Name = "Apple";
-		
+		std::string _Prefix = "_2_2";
 		int _MaxAge = 30;
 		bool _NeedExport = false;
 		bool _Growing = false;
@@ -73,6 +73,8 @@ namespace TreeUtilities
 		std::vector<CakeTowerOutput> _CakeTowersOutputList;
 		void ExportAllData();
 		void TryGrowTree();
+		void SetEnableFoliage(bool enabled) const;
+		
 		void PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW);
 	public:
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);

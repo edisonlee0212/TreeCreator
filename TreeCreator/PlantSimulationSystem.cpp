@@ -1133,10 +1133,6 @@ bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, s
 #pragma endregion
 #pragma region Transforms for internode
 				newInternodeInfo.DesiredLocalRotation = glm::quat(prevEulerAngle);
-#pragma region Roll internode
-				glm::vec3 rollAngles = glm::vec3(0.0f, 0.0f, glm::radians(glm::gaussRand(treeParameters.RollAngleMean, treeParameters.RollAngleVariance)));
-				newInternodeInfo.DesiredLocalRotation *= glm::quat(rollAngles);
-#pragma endregion
 #pragma region Apply Space Colonization direction
 				glm::vec3 translation;
 				glm::decompose(treeTransform, scale, rotation, translation, skew, perspective);
@@ -1158,9 +1154,7 @@ bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, s
 #pragma region Create Apical Bud
 
 				Bud newApicalBud;
-				newApicalBud.EulerAngles = glm::vec3(
-					glm::gaussRand(glm::vec2(0.0f), glm::vec2(glm::radians(treeParameters.VarianceApicalAngle))),
-					0.0f);
+				newApicalBud.EulerAngles = glm::vec3(0.0f);
 				newApicalBud.IsActive = true;
 				newApicalBud.IsApical = true;
 				newInternodeData->Buds.push_back(newApicalBud);
@@ -1169,9 +1163,7 @@ bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, s
 #pragma region Create Lateral Buds
 				for (int selectedNewBudIndex = 0; selectedNewBudIndex < treeParameters.LateralBudPerNode; selectedNewBudIndex++) {
 					Bud newLateralBud;
-					float rollAngle = 360.0f * (selectedNewBudIndex + 1) / treeParameters.LateralBudPerNode + treeParameters.BranchingAngleVariance * glm::linearRand(-1, 1);
-					float branchAngle = glm::gaussRand(treeParameters.BranchingAngleMean, treeParameters.BranchingAngleVariance);
-					newLateralBud.EulerAngles = glm::vec3(glm::radians(branchAngle), 0.0f, glm::radians(rollAngle));
+					newLateralBud.EulerAngles = glm::vec3(0.0f);
 					newLateralBud.IsActive = true;
 					newLateralBud.IsApical = false;
 					newInternodeData->Buds.push_back(newLateralBud);
