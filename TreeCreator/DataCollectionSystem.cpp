@@ -608,7 +608,7 @@ void DataCollectionSystem::OnCreate()
 #pragma region MaskTrimmer
 	MaskProcessor::_ResolutionX = _TargetResolution;
 	MaskProcessor::_ResolutionY = _TargetResolution;
-	MaskProcessor::_CameraEntity = _SemanticMaskCameraEntity;
+	MaskProcessor::_CameraEntity = _ImageCameraEntity;
 	MaskProcessor::_Filter = std::make_unique<RenderTarget>(_TargetResolution, _TargetResolution);
 	MaskProcessor::_DepthStencilBuffer = std::make_unique<GLRenderBuffer>();
 	MaskProcessor::_DepthStencilBuffer->AllocateStorage(GL_DEPTH24_STENCIL8, _TargetResolution, _TargetResolution);
