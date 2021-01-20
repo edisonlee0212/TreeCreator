@@ -87,7 +87,7 @@ void TreeUtilities::TreeReconstructionSystem::OnGui()
 					_FromTraining = true;
 					_ReconCounter = -1;
 					_ReconIndex = 0;
-					_UseMask = false;
+					_UseMask = true;
 					_TrainingDoc = rapidcsv::Document("./tree_data/predicted_rbv_species_8_8.csv", rapidcsv::LabelParams(-1, 1));
 					std::vector<std::string> firstColumn = _TrainingDoc.GetColumn<std::string>(0);
 					Debug::Log("Count: " + std::to_string(firstColumn.size()));
@@ -105,8 +105,8 @@ void TreeUtilities::TreeReconstructionSystem::OnGui()
 				ImGui::Checkbox("Use volume for main branches", &_UseCakeTower);
 				if (ImGui::Button("Start Reconstruction"))
 				{
-					_Prefix = "_4_4";
-					_UseMask = true;
+					_Prefix = "_2_2";
+					_UseMask = false;
 					_FromTraining = false;
 					_ReconCounter = -1;
 					_ReconIndex = 0;
@@ -448,7 +448,7 @@ void TreeReconstructionSystem::Init()
 			_TargetInternodeSize = 8538;
 			_ReconMainBranchInternodeLimit = 0;
 		}
-		
+
 		auto& seq = _DataCollectionSystem->_ImageCaptureSequences[index];
 		_DataCollectionSystem->SetCameraPose(seq.first.CameraPos, seq.first.CameraEulerDegreeRot);
 		_TargetTreeParameter = seq.second;
@@ -512,7 +512,7 @@ void TreeReconstructionSystem::Init()
 			_ReconMainBranchInternodeLimit = 0;
 		}
 
-		
+
 		_TargetTreeParameter = seq.second;
 		_TargetMask = ResourceManager::LoadTexture(false, _MaskPath);
 		_TargetSkeleton = ResourceManager::LoadTexture(false, _SkeletonPath);
@@ -592,7 +592,6 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		}
 		break;
 	case TreeReconstructionSystemStatus::Idle:
-		_DataCollectionSystem->SetCameraPose(_DataCollectionSystem->_ImageCaptureSequences[_ReconIndex].first.CameraPos, _DataCollectionSystem->_ImageCaptureSequences[_ReconIndex].first.CameraEulerDegreeRot);
 
 		if (_NeedExport) {
 			if (_FromTraining)
@@ -614,8 +613,8 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 					parameters.Age = 200;
 					_PlantSimulationSystem->_ControlLevel = 2;
 
-					
-					
+
+
 					_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
 					_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Skeleton = _TargetSkeleton;
 					_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Mask = _TargetMask;
@@ -631,7 +630,6 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 				}
 			}
 			else {
-				
 				if (_ReconCounter < _ReconAmount - 1)
 				{
 					_ReconCounter++;
@@ -648,33 +646,22 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 					_ReconCounter = 0;
 					_ReconIndex = 0;
 					_ReconSeed++;
-					Init();
+					if (_ReconSeed < _GenerateAmount)Init();
 				}
 				if (_ReconSeed < _GenerateAmount) {
-					auto parameters = _TargetTreeParameter;
-					parameters.Seed = _ReconCounter + 999;
-					parameters.Age = 200;
-					_PlantSimulationSystem->_ControlLevel = 2;
-					_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
-					
-					
-					_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Skeleton = _TargetSkeleton;
-					_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Mask = _TargetMask;
-					_CurrentTree.GetPrivateComponent<MaskProcessor>()->AttractionDistance = 1.0f;
-					_CurrentTree.GetPrivateComponent<MaskProcessor>()->PlaceAttractionPoints();
-					_Status = TreeReconstructionSystemStatus::MainBranches;
-					_Growing = true;
+					_DataCollectionSystem->SetCameraPose(_DataCollectionSystem->_ImageCaptureSequences[_ReconIndex].first.CameraPos, _DataCollectionSystem->_ImageCaptureSequences[_ReconIndex].first.CameraEulerDegreeRot);
+					_Status = TreeReconstructionSystemStatus::CreateTree;
 				}
 				else
 				{
 					bool mask = false;
-					if (_Prefix._Equal("_4_4"))
+					if (_Prefix._Equal("_2_2"))
+					{
+						_Prefix = "_4_4";
+					}
+					else if (_Prefix._Equal("_4_4"))
 					{
 						_Prefix = "_8_8";
-					}
-					else if (_Prefix._Equal("_8_8"))
-					{
-						_Prefix = "_12_12";
 					}
 					else
 					{
@@ -682,7 +669,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 					}
 					if (mask) {
 						if (!_UseMask) {
-							_Prefix = "_4_4";
+							_Prefix = "_2_2";
 							_UseMask = true;
 							_FromTraining = false;
 							_ReconCounter = -1;
@@ -713,6 +700,21 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			OnGui();
 		}
 		break;
+
+	case TreeReconstructionSystemStatus::CreateTree:
+	{
+		auto parameters = _TargetTreeParameter;
+		parameters.Seed = _ReconCounter + 999;
+		parameters.Age = 200;
+		_PlantSimulationSystem->_ControlLevel = 2;
+		_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
+		_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Skeleton = _TargetSkeleton;
+		_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Mask = _TargetMask;
+		_CurrentTree.GetPrivateComponent<MaskProcessor>()->AttractionDistance = 1.0f;
+		_CurrentTree.GetPrivateComponent<MaskProcessor>()->PlaceAttractionPoints();
+		_Status = TreeReconstructionSystemStatus::MainBranches;
+		_Growing = true; }
+	break;
 	case TreeReconstructionSystemStatus::MainBranches:
 		TryGrowTree();
 		if (!_Growing)
@@ -793,6 +795,11 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
 			_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
 			_Status = TreeReconstructionSystemStatus::Render;
+			auto seq = _DataCollectionSystem->_ImageCaptureSequences[_ReconIndex];
+			Transform cameraTransform;
+			cameraTransform.SetPosition(glm::vec3(0, seq.first.CameraPos.z * 1.5f, 0));
+			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
+			_DataCollectionSystem->_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
 		}
 
 	}
@@ -816,7 +823,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			(_FromTraining ? std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_" + _Name + "_" : "")
 			+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter)
 			+ _Prefix + ".jpg";
-		
+
 		_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 			path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
 
@@ -827,11 +834,11 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 
 		_DataCollectionSystem->_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 			path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
-		
+
 		_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume(_TargetCakeTower->MaxHeight);
-		
+
 		_CakeTowersOutputList.emplace_back(_ReconIndex, _Name, _CurrentTree.GetPrivateComponent<CakeTower>());
-		
+
 		{
 			path = _StorePath + (_FromTraining ? "volume_recon/" : "/volume/") + (_UseMask ? "mask/" : "no_mask/") +
 				(_FromTraining ? std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_" + _Name + "_" : "")
@@ -855,23 +862,20 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter) + _Prefix
 			, _CurrentTree);
 		*/
-		if(!_FromTraining && _Prefix._Equal("_8_8"))
+		if (!_FromTraining && _Prefix._Equal("_8_8"))
 		{
 			SetEnableFoliage(false);
-			/*
+
 			auto seq = _DataCollectionSystem->_ImageCaptureSequences[_ReconIndex];
 			Transform cameraTransform;
-			cameraTransform.SetPosition(glm::vec3(0, seq.first.CameraPos.z * 1.5f, 0));
-			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
-			_DataCollectionSystem->_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
 
-			cameraTransform.SetPosition(glm::vec3(seq.first.CameraPos.x, _CurrentTree.GetPrivateComponent<CakeTower>()->MaxHeight / 2.0f, seq.first.CameraPos.z));
+			cameraTransform.SetPosition(glm::vec3(seq.first.CameraPos.x, _CurrentTree.GetPrivateComponent<CakeTower>()->MaxHeight / 2.0f, seq.first.CameraPos.z * 1.5f));
 			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(0, 0, 0)));
 			_DataCollectionSystem->_ImageCameraEntity.SetComponentData(cameraTransform);
 
 			_CurrentTree.GetPrivateComponent<CakeTower>()->FormEntity();
 			_CurrentTree.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
-			*/
+
 			_Status = TreeReconstructionSystemStatus::CaptureCakeTower;
 		}
 		else _Status = TreeReconstructionSystemStatus::CleanUp;
@@ -896,6 +900,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			_DataCollectionSystem->_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 				path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
 		}
+
 		TreeManager::DeleteAllTrees();
 		_Status = TreeReconstructionSystemStatus::Idle;
 		break;

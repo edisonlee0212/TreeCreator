@@ -18,6 +18,7 @@ glm::ivec2 CakeTower::SelectSlice(glm::vec3 position) const
 void CakeTower::GenerateMesh()
 {
 	_BoundMeshes.clear();
+	if (CakeTiers.empty()) return;
 	for (int tierIndex = 0; tierIndex < LayerAmount; tierIndex++)
 	{
 		auto mesh = std::make_shared<Mesh>();
@@ -125,6 +126,7 @@ void CakeTower::GenerateMesh()
 void CakeTower::FormEntity()
 {
 	if (!_MeshGenerated) CalculateVolume();
+	if (!_MeshGenerated) return;
 	auto children = EntityManager::GetChildren(GetOwner());
 	for (auto& child : children)
 	{

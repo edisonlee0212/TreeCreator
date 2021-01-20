@@ -948,8 +948,8 @@ void DataCollectionSystem::LateUpdate()
 			}
 			else if(_Reconstruction)
 			{
+				ExportCakeTowerForRecon(2, 2);
 				ExportCakeTowerForRecon(4, 4);
-				ExportCakeTowerForRecon(12, 12);
 				ExportCakeTowerForRecon(8, 8);
 			}
 		}
@@ -959,7 +959,7 @@ void DataCollectionSystem::LateUpdate()
 			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
 			_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
 			
-			cameraTransform.SetPosition(glm::vec3(imageCaptureSequence.CameraPos.x, _CurrentTree.GetPrivateComponent<CakeTower>()->MaxHeight / 2.0f, imageCaptureSequence.CameraPos.z));
+			cameraTransform.SetPosition(glm::vec3(imageCaptureSequence.CameraPos.x, _CurrentTree.GetPrivateComponent<CakeTower>()->MaxHeight / 2.0f, imageCaptureSequence.CameraPos.z * 1.5f));
 			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(0, 0, 0)));
 			_ImageCameraEntity.SetComponentData(cameraTransform);
 			

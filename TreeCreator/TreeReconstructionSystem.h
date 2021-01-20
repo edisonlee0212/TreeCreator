@@ -20,6 +20,7 @@ namespace TreeUtilities
 	enum class TreeReconstructionSystemStatus
 	{
 		Idle,
+		CreateTree,
 		MainBranches,
 		NormalGrowth,
 		Render,
@@ -32,14 +33,14 @@ namespace TreeUtilities
 	class TreeReconstructionSystem :
 		public SystemBase
 	{
-		int _GenerateAmount = 2;
-		int _ReconAmount = 2;
+		int _GenerateAmount = 10;
+		int _ReconAmount = 7;
 		int _Add = 0;
 		int _ControlLevel = 0;
 		int _EnableSpaceColonization = true;
-		int _ReconIndex = 0;
-		int _ReconSeed = 0;
-		int _ReconCounter = 0;
+		int _ReconIndex = 0;	//0	
+		int _ReconSeed = 0;		//0	
+		int _ReconCounter = 0;	//0	1
 		int _ReconMainBranchInternodeLimit = 1000;
 
 		rapidcsv::Document _TrainingDoc;
