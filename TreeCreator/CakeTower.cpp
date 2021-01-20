@@ -151,7 +151,6 @@ void CakeTower::FormEntity()
 		slice.SetComponentData(transform);
 		slice.SetComponentData(globalTransform);
 		EntityManager::SetParent(slice, targetEntity);
-		slice.SetEnabled(false);
 	}
 }
 

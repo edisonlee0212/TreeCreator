@@ -25,15 +25,18 @@ namespace TreeUtilities
 		Render,
 		RenderBranch,
 		CollectData,
+		CaptureCakeTower,
 		CleanUp,
 		Reconstruction
 	};
 	class TreeReconstructionSystem :
 		public SystemBase
 	{
-		int _GenerateAmount = 10;
-		int _ReconAmount = 3;
+		int _GenerateAmount = 2;
+		int _ReconAmount = 2;
 		int _Add = 0;
+		int _ControlLevel = 0;
+		int _EnableSpaceColonization = true;
 		int _ReconIndex = 0;
 		int _ReconSeed = 0;
 		int _ReconCounter = 0;
@@ -68,13 +71,14 @@ namespace TreeUtilities
 		std::string _Prefix = "_2_2";
 		int _MaxAge = 30;
 		bool _NeedExport = false;
+		bool _UseMask = false;
 		bool _Growing = false;
 		void OnGui();
 		std::vector<CakeTowerOutput> _CakeTowersOutputList;
 		void ExportAllData();
 		void TryGrowTree();
 		void SetEnableFoliage(bool enabled) const;
-		
+		Entity FindFoliageEntity() const;
 		void PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW);
 	public:
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);

@@ -17,6 +17,7 @@ namespace TreeUtilities {
 		CaptureSemantic,
 		CaptureBranchMask,
 		CollectData,
+		CaptureCakeTower,
 		CleanUp
 	};
 

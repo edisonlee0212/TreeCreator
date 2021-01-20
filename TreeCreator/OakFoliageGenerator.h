@@ -16,6 +16,7 @@ namespace TreeUtilities {
 	class OakFoliageGenerator :
 		public FoliageGeneratorBase
 	{
+		friend class TreeReconstructionSystem;
 		OakFoliageInfo _DefaultFoliageInfo;
 		EntityArchetype _Archetype;
 		static std::shared_ptr<Texture2D> _LeafSurfaceTex;

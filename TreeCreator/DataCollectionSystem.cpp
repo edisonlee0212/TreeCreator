@@ -443,7 +443,7 @@ void DataCollectionSystem::ExportCakeTowerGeneral(const std::string& path, bool 
 void DataCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation, bool random)
 {
 	_CameraPosition = position;
-	_CameraEulerRotation = glm::radians(random ? rotation + glm::linearRand(glm::vec3(-5, -5, 0), glm::vec3(5, 5, 0)) : rotation);
+	_CameraEulerRotation = glm::radians(random ? rotation + glm::linearRand(glm::vec3(-6, -6, 0), glm::vec3(6, 6, 0)) : rotation);
 	if(random)
 	{
 		float fov = glm::linearRand(90, 100);
@@ -741,12 +741,19 @@ void DataCollectionSystem::LateUpdate()
 	case DataCollectionSystemStatus::Growing:
 		if (!_PlantSimulationSystem->_Growing)
 		{
+			if (_Reconstruction) {
+				Transform cameraTransform;
+				cameraTransform.SetPosition(glm::vec3(0, imageCaptureSequence.CameraPos.z * 1.5f, 0));
+				cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
+				_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
+			}
 			_Status = DataCollectionSystemStatus::Rendering;
 			_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 		}
 		break;
 	case DataCollectionSystemStatus::Rendering:
 		if (_ExportImages) {
+			
 			_Status = DataCollectionSystemStatus::CaptureOriginal;
 		}else
 		{
@@ -771,6 +778,9 @@ void DataCollectionSystem::LateUpdate()
 		{
 			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 				path, _TargetResolution, _TargetResolution);
+			_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				_ReconPath + "_main_top.jpg", _TargetResolution, _TargetResolution);
+			SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, false);
 		}
 		_Status = DataCollectionSystemStatus::CaptureOriginalBranch;
 		SetEnableFoliage(false);
@@ -938,18 +948,38 @@ void DataCollectionSystem::LateUpdate()
 			}
 			else if(_Reconstruction)
 			{
-				ExportCakeTowerForRecon(2, 2);
 				ExportCakeTowerForRecon(4, 4);
-				ExportCakeTowerForRecon(6, 6);
-				ExportCakeTowerForRecon(8, 8);
-				ExportCakeTowerForRecon(10, 10);
 				ExportCakeTowerForRecon(12, 12);
+				ExportCakeTowerForRecon(8, 8);
 			}
 		}
+		if (_Reconstruction) {
+			Transform cameraTransform;
+			cameraTransform.SetPosition(glm::vec3(0, imageCaptureSequence.CameraPos.z * 1.5f, 0));
+			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
+			_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
+			
+			cameraTransform.SetPosition(glm::vec3(imageCaptureSequence.CameraPos.x, _CurrentTree.GetPrivateComponent<CakeTower>()->MaxHeight / 2.0f, imageCaptureSequence.CameraPos.z));
+			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(0, 0, 0)));
+			_ImageCameraEntity.SetComponentData(cameraTransform);
+			
+			_CurrentTree.GetPrivateComponent<CakeTower>()->FormEntity();
+			_CurrentTree.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
+			_Status = DataCollectionSystemStatus::CaptureCakeTower;
+		}
+		else _Status = DataCollectionSystemStatus::CleanUp;
+		break;
+	case DataCollectionSystemStatus::CaptureCakeTower:
 		_Status = DataCollectionSystemStatus::CleanUp;
 		break;
 	case DataCollectionSystemStatus::CleanUp:
-
+		if (_Reconstruction) {
+			path = _ReconPath + "_rbv_main_8_8.jpg";
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _TargetResolution, _TargetResolution);
+			_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				_ReconPath + "_rbv_main__8_8_top.jpg", _TargetResolution, _TargetResolution);
+		}
 		TreeManager::DeleteAllTrees();
 		if (!_Reconstruction) {
 			_CurrentSelectedSequenceIndex++;

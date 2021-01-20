@@ -45,9 +45,26 @@ void TreeUtilities::TreeReconstructionSystem::OnGui()
 						{
 							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i));
 							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/image");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/image/mask");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/image/no_mask");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/image_top");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/image_top/mask");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/image_top/no_mask");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/tower");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/tower/mask");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/tower/no_mask");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/tower_top");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/tower_top/mask");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/tower_top/no_mask");
 							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/volume");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/volume/mask");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/volume/no_mask");
 							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/obj");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/obj/mask");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/obj/no_mask");
 							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/graph");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/graph/mask");
+							std::filesystem::create_directory("tree_recon/" + seq.first.Name + "/seed_" + std::to_string(i) + "/graph/no_mask");
 						}
 
 					}
@@ -70,7 +87,7 @@ void TreeUtilities::TreeReconstructionSystem::OnGui()
 					_FromTraining = true;
 					_ReconCounter = -1;
 					_ReconIndex = 0;
-
+					_UseMask = true;
 					_TrainingDoc = rapidcsv::Document("./tree_data/predicted_rbv_species_8_8.csv", rapidcsv::LabelParams(-1, 1));
 					std::vector<std::string> firstColumn = _TrainingDoc.GetColumn<std::string>(0);
 					Debug::Log("Count: " + std::to_string(firstColumn.size()));
@@ -88,6 +105,8 @@ void TreeUtilities::TreeReconstructionSystem::OnGui()
 				ImGui::Checkbox("Use volume for main branches", &_UseCakeTower);
 				if (ImGui::Button("Start Reconstruction"))
 				{
+					_Prefix = "_4_4";
+					_UseMask = true;
 					_FromTraining = false;
 					_ReconCounter = -1;
 					_ReconIndex = 0;
@@ -156,6 +175,21 @@ void TreeReconstructionSystem::TryGrowTree()
 
 void TreeReconstructionSystem::SetEnableFoliage(bool enabled) const
 {
+	auto foliageEntity = FindFoliageEntity();
+	if (foliageEntity.HasPrivateComponent<MeshRenderer>())
+	{
+		auto& branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
+		branchletRenderer->SetEnabled(enabled);
+	}
+	if (foliageEntity.HasPrivateComponent<Particles>())
+	{
+		auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
+		leavesRenderer->SetEnabled(enabled);
+	}
+}
+
+Entity TreeReconstructionSystem::FindFoliageEntity() const
+{
 	Entity foliageEntity;
 	EntityManager::ForEachChild(_CurrentTree, [&foliageEntity](Entity child)
 		{
@@ -193,16 +227,7 @@ void TreeReconstructionSystem::SetEnableFoliage(bool enabled) const
 			}
 		}
 	);
-	if (foliageEntity.HasPrivateComponent<MeshRenderer>())
-	{
-		auto& branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
-		branchletRenderer->SetEnabled(enabled);
-	}
-	if (foliageEntity.HasPrivateComponent<Particles>())
-	{
-		auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
-		leavesRenderer->SetEnabled(enabled);
-	}
+	return foliageEntity;
 }
 
 void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW)
@@ -344,6 +369,8 @@ void TreeReconstructionSystem::SetDataCollectionSystem(DataCollectionSystem* val
 
 void TreeReconstructionSystem::Init()
 {
+	_ControlLevel = 0;
+	_EnableSpaceColonization = true;
 	if (_FromTraining)
 	{
 		_TargetCakeTower = std::make_unique<CakeTower>();
@@ -386,38 +413,42 @@ void TreeReconstructionSystem::Init()
 		else if (_Name._Equal("willow")) {
 			index = 2;
 			_TargetCakeTower->MaxHeight = 19;
-			_AgeForMainBranches = 4;
+			_AgeForMainBranches = 1;
 			_TargetInternodeSize = 2615;
-			_ReconMainBranchInternodeLimit = 300;
+			_ReconMainBranchInternodeLimit = 0;
 		}
 		else if (_Name._Equal("maple")) {
 			index = 3;
+			_ControlLevel = 1;
 			_TargetCakeTower->MaxHeight = 32;
-			_AgeForMainBranches = 4;
+			_AgeForMainBranches = 1;
 			_TargetInternodeSize = 7995;
 			_ReconMainBranchInternodeLimit = 0;
 		}
 		else if (_Name._Equal("birch")) {
 			index = 4;
 			_TargetCakeTower->MaxHeight = 31;
-			_AgeForMainBranches = 4;
+			_AgeForMainBranches = 1;
 			_TargetInternodeSize = 6120;// 5120;
 			_ReconMainBranchInternodeLimit = 0;
 		}
 		else if (_Name._Equal("oak")) {
 			index = 5;
 			_TargetCakeTower->MaxHeight = 18.5;
-			_AgeForMainBranches = 4;
+			_AgeForMainBranches = 5;
 			_TargetInternodeSize = 4487;
 			_ReconMainBranchInternodeLimit = 300;
 		}
 		else if (_Name._Equal("pine")) {
+			_EnableSpaceColonization = false;
+			_ControlLevel = 2;
 			index = 6;
 			_TargetCakeTower->MaxHeight = 15;
-			_AgeForMainBranches = 4;
+			_AgeForMainBranches = 0;
 			_TargetInternodeSize = 8538;
 			_ReconMainBranchInternodeLimit = 0;
 		}
+		
 		auto& seq = _DataCollectionSystem->_ImageCaptureSequences[index];
 		_DataCollectionSystem->SetCameraPose(seq.first.CameraPos, seq.first.CameraEulerDegreeRot);
 		_TargetTreeParameter = seq.second;
@@ -445,37 +476,43 @@ void TreeReconstructionSystem::Init()
 			_ReconMainBranchInternodeLimit = 1000;
 			break;
 		case 2:
-			_AgeForMainBranches = 4;
+			_AgeForMainBranches = 0;
 			_TargetInternodeSize = 2615;
 			_ReconMainBranchInternodeLimit = 0;
 			break;
 		case 3:
-			_AgeForMainBranches = 4;
+			_ControlLevel = 1;
+			_AgeForMainBranches = 1;
 			_TargetInternodeSize = 7995;
 			_ReconMainBranchInternodeLimit = 0;
 			break;
 		case 4:
-			_AgeForMainBranches = 4;
+			_AgeForMainBranches = 1;
 			_TargetInternodeSize = 5120;
 			_ReconMainBranchInternodeLimit = 0;
 			break;
 		case 5:
-			_AgeForMainBranches = 4;
+			_AgeForMainBranches = 5;
 			_TargetInternodeSize = 4487;
 			_ReconMainBranchInternodeLimit = 1000;
 			break;
 		case 6:
-			_AgeForMainBranches = 4;
+			_EnableSpaceColonization = false;
+			_ControlLevel = 0;
+			_AgeForMainBranches = 0;
 			_TargetInternodeSize = 8538;
 			_ReconMainBranchInternodeLimit = 0;
 			break;
 		}
 		_MaxAge = 30;
 
+		if (!_UseMask)
+		{
+			_AgeForMainBranches = 0;
+			_ReconMainBranchInternodeLimit = 0;
+		}
 
-
-		_DataCollectionSystem->SetCameraPose(seq.first.CameraPos, seq.first.CameraEulerDegreeRot);
-
+		
 		_TargetTreeParameter = seq.second;
 		_TargetMask = ResourceManager::LoadTexture(false, _MaskPath);
 		_TargetSkeleton = ResourceManager::LoadTexture(false, _SkeletonPath);
@@ -574,8 +611,14 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 					parameters.Seed = _ReconCounter + 1;
 					parameters.Age = 200;
 					_PlantSimulationSystem->_ControlLevel = 2;
-					_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
 
+					_DataCollectionSystem->SetCameraPose(_DataCollectionSystem->_ImageCaptureSequences[_ReconIndex].first.CameraPos, _DataCollectionSystem->_ImageCaptureSequences[_ReconIndex].first.CameraEulerDegreeRot);
+					Transform cameraTransform;
+					cameraTransform.SetPosition(glm::vec3(0, _DataCollectionSystem->_ImageCaptureSequences[_ReconIndex].first.CameraPos.z * 1.5f, 0));
+					cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
+					_DataCollectionSystem->_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
+					
+					_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
 					_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Skeleton = _TargetSkeleton;
 					_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Mask = _TargetMask;
 					_CurrentTree.GetPrivateComponent<MaskProcessor>()->AttractionDistance = 1.0f;
@@ -610,7 +653,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 				}
 				if (_ReconSeed < _GenerateAmount) {
 					auto parameters = _TargetTreeParameter;
-					parameters.Seed = _ReconCounter;
+					parameters.Seed = _ReconCounter + 999;
 					parameters.Age = 200;
 					_PlantSimulationSystem->_ControlLevel = 2;
 					_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
@@ -624,30 +667,36 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 				}
 				else
 				{
-					bool quit = false;
-					if(_Prefix._Equal("_2_2"))
-					{
-						_Prefix = "_4_4";
-					}else if (_Prefix._Equal("_4_4"))
-					{
-						_Prefix = "_6_6";
-					}
-					else if (_Prefix._Equal("_6_6"))
+					bool mask = false;
+					if (_Prefix._Equal("_4_4"))
 					{
 						_Prefix = "_8_8";
 					}
 					else if (_Prefix._Equal("_8_8"))
 					{
-						_Prefix = "_10_10";
-					}
-					else if (_Prefix._Equal("_10_10"))
-					{
 						_Prefix = "_12_12";
-					}else
-					{
-						quit = true;
 					}
-					if(quit) _NeedExport = false;
+					else
+					{
+						mask = true;
+					}
+					if (mask) {
+						if (!_UseMask) {
+							_Prefix = "_4_4";
+							_UseMask = true;
+							_FromTraining = false;
+							_ReconCounter = -1;
+							_ReconIndex = 0;
+							_ReconSeed = 0;
+							Init();
+							_NeedExport = true;
+							_Status = TreeReconstructionSystemStatus::Idle;
+						}
+						else
+						{
+							_NeedExport = false;
+						}
+					}
 					else
 					{
 						_FromTraining = false;
@@ -682,7 +731,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 				cakeTower->GenerateMesh();
 				cakeTower->ClearAttractionPoints();
 				cakeTower->GenerateAttractionPoints(2000);
-				cakeTower->EnableSpaceColonization = true;
+				cakeTower->EnableSpaceColonization = _EnableSpaceColonization;
 			}
 			_PlantSimulationSystem->ResumeGrowth();
 			TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
@@ -753,7 +802,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		_Status = TreeReconstructionSystemStatus::RenderBranch;
 		break;
 	case TreeReconstructionSystemStatus::RenderBranch:
-		path = _StorePath + (_FromTraining ? "image_recon/" : "/image/") +
+		path = _StorePath + (_FromTraining ? "image_recon/" : "/image/") + (_UseMask ? "mask/" : "no_mask/") +
 			(_FromTraining ? std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_" + _Name + "_" : "")
 			+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter)
 			+ _Prefix + "_branch.jpg";
@@ -763,17 +812,28 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		_Status = TreeReconstructionSystemStatus::CollectData;
 		break;
 	case TreeReconstructionSystemStatus::CollectData:
-		path = _StorePath + (_FromTraining ? "image_recon/" : "/image/") +
+		path = _StorePath + (_FromTraining ? "image_recon/" : "/image/") + (_UseMask ? "mask/" : "no_mask/") +
 			(_FromTraining ? std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_" + _Name + "_" : "")
 			+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter)
 			+ _Prefix + ".jpg";
+		
 		_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 			path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
-		_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume(_TargetCakeTower->MaxHeight);
-		_CakeTowersOutputList.emplace_back(_ReconIndex, _Name, _CurrentTree.GetPrivateComponent<CakeTower>());
 
+		path = _StorePath + (_FromTraining ? "image_recon/" : "/image_top/") + (_UseMask ? "mask/" : "no_mask/") +
+			(_FromTraining ? std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_" + _Name + "_" : "")
+			+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter)
+			+ _Prefix + ".jpg";
+
+		_DataCollectionSystem->_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+			path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
+		
+		_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume(_TargetCakeTower->MaxHeight);
+		
+		_CakeTowersOutputList.emplace_back(_ReconIndex, _Name, _CurrentTree.GetPrivateComponent<CakeTower>());
+		
 		{
-			path = _StorePath + (_FromTraining ? "volume_recon/" : "/volume/") +
+			path = _StorePath + (_FromTraining ? "volume_recon/" : "/volume/") + (_UseMask ? "mask/" : "no_mask/") +
 				(_FromTraining ? std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_" + _Name + "_" : "")
 				+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter)
 				+ _Prefix + ".ct";
@@ -784,20 +844,56 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			ofs.flush();
 			ofs.close();
 		}
-
-		TreeManager::ExportTreeAsModel(_CurrentTree, _StorePath + (_FromTraining ? "obj_recon/" : "/obj/") +
+		/*
+		TreeManager::ExportTreeAsModel(_CurrentTree, _StorePath + (_FromTraining ? "obj_recon/" : "/obj/") + (_UseMask ? "mask/" : "no_mask/") +
 			(_FromTraining ? std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_" + _Name + "_" : "")
 			+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter) + _Prefix
 			, true);
 
-		TreeManager::SerializeTreeGraph(_StorePath + (_FromTraining ? "graph_recon/" : "/graph/") +
+		TreeManager::SerializeTreeGraph(_StorePath + (_FromTraining ? "graph_recon/" : "/graph/") + (_UseMask ? "mask/" : "no_mask/") +
 			(_FromTraining ? std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_" + _Name + "_" : "")
 			+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter) + _Prefix
 			, _CurrentTree);
+		*/
+		if(!_FromTraining && _Prefix._Equal("_8_8"))
+		{
+			SetEnableFoliage(false);
+			auto seq = _DataCollectionSystem->_ImageCaptureSequences[_ReconIndex];
+			Transform cameraTransform;
+			cameraTransform.SetPosition(glm::vec3(0, seq.first.CameraPos.z * 1.5f, 0));
+			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
+			_DataCollectionSystem->_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
 
+			cameraTransform.SetPosition(glm::vec3(seq.first.CameraPos.x, _CurrentTree.GetPrivateComponent<CakeTower>()->MaxHeight / 2.0f, seq.first.CameraPos.z));
+			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(0, 0, 0)));
+			_DataCollectionSystem->_ImageCameraEntity.SetComponentData(cameraTransform);
+
+			_CurrentTree.GetPrivateComponent<CakeTower>()->FormEntity();
+			_CurrentTree.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
+			_Status = TreeReconstructionSystemStatus::CaptureCakeTower;
+		}
+		else _Status = TreeReconstructionSystemStatus::CleanUp;
+		break;
+	case TreeReconstructionSystemStatus::CaptureCakeTower:
 		_Status = TreeReconstructionSystemStatus::CleanUp;
 		break;
 	case TreeReconstructionSystemStatus::CleanUp:
+		if (!_FromTraining && _Prefix._Equal("_8_8"))
+		{
+			path = _StorePath + "/tower/" + (_UseMask ? "mask/" : "no_mask/")
+				+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter)
+				+ _Prefix + ".jpg";
+
+			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
+
+			path = _StorePath + "/tower_top/" + (_UseMask ? "mask/" : "no_mask/")
+				+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter)
+				+ _Prefix + ".jpg";
+
+			_DataCollectionSystem->_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
+		}
 		TreeManager::DeleteAllTrees();
 		_Status = TreeReconstructionSystemStatus::Idle;
 		break;

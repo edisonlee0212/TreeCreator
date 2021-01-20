@@ -2342,116 +2342,117 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 		}
 		ImGui::EndMainMenuBar();
 	}
-	ImGui::Begin("Tree Utilities");
-	if (ImGui::CollapsingHeader("Tree Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
-		if (ImGui::Button("Enable nodes for all trees"))
-		{
-			EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity internode, InternodeInfo* info)
-				{
-					info->Activated = true;
-				}
-			);
-		}
-		if (ImGui::Button("Disable nodes for all trees"))
-		{
-			EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity internode, InternodeInfo* info)
-				{
-					info->Activated = false;
-				}
-			);
-		}
-		if (ImGui::Button("Refresh all trees"))
-		{
-			RefreshTrees();
-			auto trees = std::vector<Entity>();
-			_TreeQuery.ToEntityArray(trees);
-			for (auto& tree : trees)
+	if (ImGui::Begin("Tree Utilities")) {
+		if (ImGui::CollapsingHeader("Tree Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
+			if (ImGui::Button("Enable nodes for all trees"))
 			{
-				GenerateLeavesForAllTrees(trees);
+				EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity internode, InternodeInfo* info)
+					{
+						info->Activated = true;
+					}
+				);
 			}
-		}
-		ImGui::InputFloat("Limit angle", &_DirectionPruningLimitAngle, 0.0f, 0.0f, "%.1f");
-		ImGui::Checkbox("Enable direction pruning", &_EnableDirectionPruning);
-		ImGui::Checkbox("Auto Generate mesh after growth", &_AutoGenerateMesh);
-		ImGui::InputFloat("Mesh resolution", &_MeshGenerationResolution, 0.0f, 0.0f, "%.5f");
-		ImGui::InputFloat("Branch subdivision", &_MeshGenerationSubdivision, 0.0f, 0.0f, "%.5f");
-		if (ImGui::Button("Generate mesh for all trees")) {
-			auto trees = std::vector<Entity>();
-			_TreeQuery.ToEntityArray(trees);
-			for (auto& tree : trees)
+			if (ImGui::Button("Disable nodes for all trees"))
 			{
-				TreeManager::GenerateSimpleMeshForTree(tree, _MeshGenerationResolution, _MeshGenerationSubdivision);
+				EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity internode, InternodeInfo* info)
+					{
+						info->Activated = false;
+					}
+				);
 			}
+			if (ImGui::Button("Refresh all trees"))
+			{
+				RefreshTrees();
+				auto trees = std::vector<Entity>();
+				_TreeQuery.ToEntityArray(trees);
+				for (auto& tree : trees)
+				{
+					GenerateLeavesForAllTrees(trees);
+				}
+			}
+			ImGui::InputFloat("Limit angle", &_DirectionPruningLimitAngle, 0.0f, 0.0f, "%.1f");
+			ImGui::Checkbox("Enable direction pruning", &_EnableDirectionPruning);
+			ImGui::Checkbox("Auto Generate mesh after growth", &_AutoGenerateMesh);
+			ImGui::InputFloat("Mesh resolution", &_MeshGenerationResolution, 0.0f, 0.0f, "%.5f");
+			ImGui::InputFloat("Branch subdivision", &_MeshGenerationSubdivision, 0.0f, 0.0f, "%.5f");
+			if (ImGui::Button("Generate mesh for all trees")) {
+				auto trees = std::vector<Entity>();
+				_TreeQuery.ToEntityArray(trees);
+				for (auto& tree : trees)
+				{
+					TreeManager::GenerateSimpleMeshForTree(tree, _MeshGenerationResolution, _MeshGenerationSubdivision);
+				}
 
-		}
-		ImGui::Separator();
-		/*
-		ImGui::Checkbox("Display convex hulls", &_DisplayConvexHull);
-		if (ImGui::Button("Generate Convex Hull for all trees"))
-		{
-			std::vector<Entity> trees;
-			_TreeQuery.ToEntityArray(trees);
-			for (auto& tree : trees)
+			}
+			ImGui::Separator();
+			/*
+			ImGui::Checkbox("Display convex hulls", &_DisplayConvexHull);
+			if (ImGui::Button("Generate Convex Hull for all trees"))
 			{
-				BuildHullForTree(tree);
-			}
-		}
-		*/
-		ImGui::Separator();
-		ImGui::InputInt("Iterations", &_NewPushIteration);
-		if (ImGui::Button("Push iteration to all"))
-		{
-			EntityManager::ForEach<TreeAge>(_TreeQuery, [this](int i, Entity tree, TreeAge* age)
+				std::vector<Entity> trees;
+				_TreeQuery.ToEntityArray(trees);
+				for (auto& tree : trees)
 				{
-					age->ToGrowIteration += _NewPushIteration;
-				});
-		}
-		if (!_Growing) {
-			if (ImGui::Button("Resume growth")) {
-				ResumeGrowth();
+					BuildHullForTree(tree);
+				}
 			}
-			if (ImGui::Button("Grow 1 iteration"))
+			*/
+			ImGui::Separator();
+			ImGui::InputInt("Iterations", &_NewPushIteration);
+			if (ImGui::Button("Push iteration to all"))
 			{
 				EntityManager::ForEach<TreeAge>(_TreeQuery, [this](int i, Entity tree, TreeAge* age)
 					{
-						age->ToGrowIteration += 1;
+						age->ToGrowIteration += _NewPushIteration;
 					});
-				ResumeGrowth();
 			}
-		}
-		else
-		{
-			if (ImGui::Button("Pause growth")) {
-				PauseGrowth();
+			if (!_Growing) {
+				if (ImGui::Button("Resume growth")) {
+					ResumeGrowth();
+				}
+				if (ImGui::Button("Grow 1 iteration"))
+				{
+					EntityManager::ForEach<TreeAge>(_TreeQuery, [this](int i, Entity tree, TreeAge* age)
+						{
+							age->ToGrowIteration += 1;
+						});
+					ResumeGrowth();
+				}
+			}
+			else
+			{
+				if (ImGui::Button("Pause growth")) {
+					PauseGrowth();
+				}
+			}
+			ImGui::Separator();
+			if (ImGui::Button("Delete all trees")) {
+				ImGui::OpenPopup("Delete Warning");
+			}
+			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+			if (ImGui::BeginPopupModal("Delete Warning", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				ImGui::Text("Are you sure? All trees will be removed!");
+				if (ImGui::Button("Yes, delete all!", ImVec2(120, 0))) {
+					TreeManager::DeleteAllTrees();
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::SetItemDefaultFocus();
+				ImGui::SameLine();
+				if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+				ImGui::EndPopup();
 			}
 		}
 		ImGui::Separator();
-		if (ImGui::Button("Delete all trees")) {
-			ImGui::OpenPopup("Delete Warning");
-		}
-		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-		if (ImGui::BeginPopupModal("Delete Warning", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-		{
-			ImGui::Text("Are you sure? All trees will be removed!");
-			if (ImGui::Button("Yes, delete all!", ImVec2(120, 0))) {
-				TreeManager::DeleteAllTrees();
-				ImGui::CloseCurrentPopup();
+		ImGui::Spacing();
+		if (ImGui::CollapsingHeader("I/O", ImGuiTreeNodeFlags_DefaultOpen)) {
+			static char sceneOutputName[256] = {};
+			ImGui::InputText("File name", sceneOutputName, 255);
+			if (ImGui::Button(("Export scene as " + std::string(sceneOutputName) + ".obj").c_str())) {
+				TreeScene::ExportSceneAsOBJ(sceneOutputName);
 			}
-			ImGui::SetItemDefaultFocus();
-			ImGui::SameLine();
-			if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
-			ImGui::EndPopup();
-		}
-	}
-	ImGui::Separator();
-	ImGui::Spacing();
-	if (ImGui::CollapsingHeader("I/O", ImGuiTreeNodeFlags_DefaultOpen)) {
-		static char sceneOutputName[256] = {};
-		ImGui::InputText("File name", sceneOutputName, 255);
-		if (ImGui::Button(("Export scene as " + std::string(sceneOutputName) + ".obj").c_str())) {
-			TreeScene::ExportSceneAsOBJ(sceneOutputName);
 		}
 	}
 	ImGui::End();
