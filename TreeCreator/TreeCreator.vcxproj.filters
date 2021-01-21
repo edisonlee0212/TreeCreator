@@ -227,11 +227,11 @@
     <ClInclude Include="TreeReconstructionSystem.h">
       <Filter>Header Files\Systems</Filter>
     </ClInclude>
-    <ClInclude Include="TreeCollectionGenerationSystem.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="rapidcsv\rapidcsv.h">
       <Filter>Header Files\External</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeCollectionGenerationSystem.h">
+      <Filter>Header Files\Systems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
