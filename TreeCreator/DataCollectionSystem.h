@@ -87,7 +87,6 @@ namespace TreeUtilities {
 		bool _NeedEval = true;
 		bool _ExportOBJ = false;
 		bool _ExportGraph = false;
-		bool _ExportImages = true;
 		std::unique_ptr<RenderTarget> _SmallBranchFilter;
 		std::unique_ptr<GLProgram> _SmallBranchProgram;
 		std::unique_ptr<GLTexture2D> _SmallBranchBuffer;
