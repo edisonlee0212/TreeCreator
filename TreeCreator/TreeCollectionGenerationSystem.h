@@ -34,13 +34,7 @@ namespace TreeUtilities
 		std::string _StorePath = "./tree_perceptual/";
 		int _Counter = 0;
 		void OnGui();
-		bool _SceneReady = false;
 	public:
-#pragma region For Tomas
-		static float PredictedScore;
-#pragma endregion
-		void TakeSnapshot() const;
-		void PrepareScene();
 		void ImportCsv(const std::string& path);
 		void ImportCsv2(const std::string& path);
 		void LateUpdate() override;

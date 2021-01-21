@@ -1,7 +1,6 @@
 #include "TreeCollectionGenerationSystem.h"
 #include "rapidcsv/rapidcsv.h"
 using namespace UniEngine;
-float TreeCollectionGenerationSystem::PredictedScore = 0;
 void TreeCollectionGenerationSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
@@ -15,11 +14,6 @@ void TreeCollectionGenerationSystem::OnGui()
 					const std::string path = result.value();
 					if (!path.empty())
 					{
-						std::filesystem::remove_all(_StorePath);
-						std::filesystem::create_directory(_StorePath + "graph");
-						std::filesystem::create_directory(_StorePath + "image");
-						std::filesystem::create_directory(_StorePath + "parameters");
-						std::filesystem::create_directory(_StorePath + "snapshot");
 						ImportCsv2(path);
 						_Timer = Application::EngineTime();
 						_Generation = true;
@@ -34,39 +28,16 @@ void TreeCollectionGenerationSystem::OnGui()
 					const std::string path = result.value();
 					if (!path.empty())
 					{
-						std::filesystem::remove_all(_StorePath);
-						std::filesystem::create_directory(_StorePath + "graph");
-						std::filesystem::create_directory(_StorePath + "image");
-						std::filesystem::create_directory(_StorePath + "parameters");
-						std::filesystem::create_directory(_StorePath + "snapshot");
 						ImportCsv(path);
 						_Timer = Application::EngineTime();
 						_Generation = true;
 					}
 				}
 			}
-			if (ImGui::Button("Prepare scene"))
-			{
-				PrepareScene();
-			}
-			if (ImGui::Button("Take snapshot"))
-			{
-				if (_SceneReady) TakeSnapshot();
-				else Debug::Error("Prepare Scene first!");
-			}
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
 	}
-}
-
-void TreeCollectionGenerationSystem::TakeSnapshot() const
-{
-	Entity tree = EntityManager::GetPrivateComponentOwnersList<TreeData>()->front();
-	TreeManager::SerializeTreeGraph(_StorePath + "snapshot/graph", tree);
-	_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
-		_StorePath + "snapshot/tree.jpg"
-		, _CaptureResolution, _CaptureResolution, true);
 }
 
 void TreeCollectionGenerationSystem::ImportCsv(const std::string& path)
@@ -202,9 +173,40 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 	case TreeCollectionGenerationSystenStatus::Idle:
 		if (!_CreationQueue.empty())
 		{
-			PrepareScene();
+			_CurrentDegrees = 0;
+			_DataCollectionSystem->SetCameraPose(_Position, _Rotation);
 			auto treeParameters = _CreationQueue.front();
 			_CreationQueue.pop();
+			RenderManager::SetAmbientLight(0.3f);
+			float brightness = 6.0;
+			_DataCollectionSystem->_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 2.0f;
+			_DataCollectionSystem->_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->lightSize = 0.4f;
+			_DataCollectionSystem->_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->bias = 0.1f;
+			_DataCollectionSystem->_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = 0;
+			_DataCollectionSystem->_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = 0;
+			_DataCollectionSystem->_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 2.0f;
+			_DataCollectionSystem->_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuse = glm::vec3(1.0f);
+			_DataCollectionSystem->_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuse = glm::vec3(1.0f);
+			_DataCollectionSystem->_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuse = glm::vec3(1.0f);
+			_DataCollectionSystem->_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuse = glm::vec3(1.0f);
+			_DataCollectionSystem->_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->CastShadow = false;
+			_DataCollectionSystem->_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->CastShadow = false;
+			_DataCollectionSystem->_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->CastShadow = false;
+
+			glm::vec3 mainLightAngle = glm::vec3(150, 0, 0);
+			float lightFocus = 35;
+			_DataCollectionSystem->_LightTransform.SetEulerRotation(glm::radians(mainLightAngle));
+			_DataCollectionSystem->_LightTransform1.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -lightFocus, 0)));
+			_DataCollectionSystem->_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, lightFocus, 0)));
+
+			_DataCollectionSystem->_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -180, 0)));
+
+			_DataCollectionSystem->_DirectionalLightEntity.SetComponentData(_DataCollectionSystem->_LightTransform);
+			_DataCollectionSystem->_DirectionalLightEntity1.SetComponentData(_DataCollectionSystem->_LightTransform1);
+			_DataCollectionSystem->_DirectionalLightEntity2.SetComponentData(_DataCollectionSystem->_LightTransform2);
+			_DataCollectionSystem->_DirectionalLightEntity3.SetComponentData(_DataCollectionSystem->_LightTransform3);
+			_GroundEntity.SetEnabled(true);
+			
 			treeParameters.Seed = 0;
 			_DataCollectionSystem->_CurrentTree = _DataCollectionSystem->_PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
 			_DataCollectionSystem->_PlantSimulationSystem->ResumeGrowth();
@@ -219,7 +221,8 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 				Debug::Error("Can't open file!");
 			}
 
-
+			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
+			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<PostProcessing>()->SetEnableLayer("GreyScale", true);
 			_Status = TreeCollectionGenerationSystenStatus::Growing;
 		}else
 		{
@@ -289,44 +292,4 @@ void TreeCollectionGenerationSystem::SetDataCollectionSystem(DataCollectionSyste
 void TreeCollectionGenerationSystem::SetGroundEntity(Entity value)
 {
 	_GroundEntity = value;
-}
-
-void TreeCollectionGenerationSystem::PrepareScene()
-{
-	_SceneReady = true;
-	_CurrentDegrees = 0;
-	_DataCollectionSystem->SetCameraPose(_Position, _Rotation);
-	_DataCollectionSystem->_Background.SetEnabled(false);
-
-	RenderManager::SetAmbientLight(0.3f);
-	float brightness = 6.0;
-	_DataCollectionSystem->_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 2.0f;
-	_DataCollectionSystem->_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->lightSize = 0.4f;
-	_DataCollectionSystem->_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->bias = 0.1f;
-	_DataCollectionSystem->_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = 0;
-	_DataCollectionSystem->_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = 0;
-	_DataCollectionSystem->_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 2.0f;
-	_DataCollectionSystem->_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuse = glm::vec3(1.0f);
-	_DataCollectionSystem->_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuse = glm::vec3(1.0f);
-	_DataCollectionSystem->_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuse = glm::vec3(1.0f);
-	_DataCollectionSystem->_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuse = glm::vec3(1.0f);
-	_DataCollectionSystem->_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->CastShadow = false;
-	_DataCollectionSystem->_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->CastShadow = false;
-	_DataCollectionSystem->_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->CastShadow = false;
-
-	glm::vec3 mainLightAngle = glm::vec3(150, 0, 0);
-	float lightFocus = 35;
-	_DataCollectionSystem->_LightTransform.SetEulerRotation(glm::radians(mainLightAngle));
-	_DataCollectionSystem->_LightTransform1.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -lightFocus, 0)));
-	_DataCollectionSystem->_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, lightFocus, 0)));
-
-	_DataCollectionSystem->_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -180, 0)));
-
-	_DataCollectionSystem->_DirectionalLightEntity.SetComponentData(_DataCollectionSystem->_LightTransform);
-	_DataCollectionSystem->_DirectionalLightEntity1.SetComponentData(_DataCollectionSystem->_LightTransform1);
-	_DataCollectionSystem->_DirectionalLightEntity2.SetComponentData(_DataCollectionSystem->_LightTransform2);
-	_DataCollectionSystem->_DirectionalLightEntity3.SetComponentData(_DataCollectionSystem->_LightTransform3);
-	_GroundEntity.SetEnabled(true);
-	_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
-	_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<PostProcessing>()->SetEnableLayer("GreyScale", true);
 }

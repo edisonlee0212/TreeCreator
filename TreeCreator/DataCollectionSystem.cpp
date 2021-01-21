@@ -14,6 +14,7 @@
 #include "MaskProcessor.h"
 #include "Bloom.h"
 #include "SSAO.h"
+#include "GreyScale.h"
 void DataCollectionSystem::ResetCounter(int value, int startIndex, int endIndex, bool obj, bool graph)
 {
 	_Counter = value;
@@ -42,10 +43,74 @@ void DataCollectionSystem::PushImageCaptureSequence(ImageCaptureSequence sequenc
 	_ImageCaptureSequences.emplace_back(sequence, _PlantSimulationSystem->LoadParameters(sequence.ParamPath));
 }
 
+void DataCollectionSystem::ExportCakeTowerForRecon(int layer, int sector)
+{
+	auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
+	cakeTower->LayerAmount = layer;
+	cakeTower->SectorAmount = sector;
+	cakeTower->CalculateVolume();
+	std::string path = _ReconPath + "_" + std::to_string(layer) + "_" + std::to_string(sector) + ".ct";
+	const std::string data = cakeTower->Save();
+	std::ofstream ofs;
+	ofs.open(path.c_str(), std::ofstream::out | std::ofstream::trunc);
+	if (ofs.is_open())
+	{
+		ofs.write(data.c_str(), data.length());
+		ofs.flush();
+		ofs.close();
+	}
+	else
+	{
+		Debug::Error("Can't open file!");
+	}
+	/*
+	ofs.open((_ReconPath + ".csv").c_str(), std::ofstream::trunc);
+	if (ofs.is_open())
+	{
+		auto& kdop = _CurrentTree.GetPrivateComponent<KDop>()->DirectionalDistance;
+		std::string output;
+		for (int i = 0; i < kdop.size(); i++)
+		{
+			output += std::to_string(kdop[i]);
+			if (i < kdop.size() - 1) output += ",";
+		}
+		output += "\n";
+		ofs.write(output.c_str(), output.size());
+		ofs.flush();
+
+		ofs.close();
+		Debug::Log("Tree group saved: " + _ReconPath + ".csv");
+	}
+	else
+	{
+		Debug::Error("Can't open file!");
+	}
+	*/
+}
+
 void DataCollectionSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Learning Data Generation")) {
+			if (ImGui::Button("Load Street Views"))
+			{
+				_BackgroundTextures.clear();
+				int i = 1;
+				int amount = 1000;
+				while(i < amount)
+				{
+					
+					int index = i * 2;
+					auto texture = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() +
+						"Textures/StreetView/" + std::string(6 - std::to_string(index).length(), '0') + std::to_string(index) + "_2.jpg");
+					if(texture)_BackgroundTextures.push_back(texture);
+					else
+					{
+						amount++;
+					}
+					i++;
+				}
+			}
 			if (ImGui::Button("Create new data set...")) {
 				ImGui::OpenPopup("Data set wizard");
 			}
@@ -55,9 +120,14 @@ void DataCollectionSystem::OnGui()
 				ImGui::Text("Export options:");
 				ImGui::DragInt("Export Resolution", &_TargetResolution, 1, 1, _CaptureResolution);
 				ImGui::DragInt("Camera Resolution", &_CaptureResolution, 1, _TargetResolution, 5120);
+				ImGui::Separator();
 				ImGui::Checkbox("Generate OBJ", &_ExportOBJ);
 				ImGui::Checkbox("Generate graph", &_ExportGraph);
-
+				ImGui::Checkbox("Generate Images", &_ExportImages);
+				ImGui::Checkbox("Generate KDop", &_ExportKDop);
+				ImGui::Checkbox("Generate RBV", &_ExportCakeTower);
+				
+				ImGui::Separator();
 				ImGui::Text("Data set options:");
 				ImGui::Checkbox("Batched", &_Batched);
 				ImGui::Separator();
@@ -97,6 +167,8 @@ void DataCollectionSystem::OnGui()
 						std::filesystem::create_directory("tree_data/obj_train");
 						std::filesystem::create_directory("tree_data/rgb_train");
 						std::filesystem::create_directory("tree_data/white_train");
+						std::filesystem::create_directory("tree_data/rgb_branch_train");
+						std::filesystem::create_directory("tree_data/white_branch_train");
 
 						std::filesystem::create_directory("tree_data/branch_val");
 						std::filesystem::create_directory("tree_data/graph_val");
@@ -104,6 +176,14 @@ void DataCollectionSystem::OnGui()
 						std::filesystem::create_directory("tree_data/obj_val");
 						std::filesystem::create_directory("tree_data/rgb_val");
 						std::filesystem::create_directory("tree_data/white_val");
+						std::filesystem::create_directory("tree_data/rgb_branch_val");
+						std::filesystem::create_directory("tree_data/white_branch_val");
+						
+						std::filesystem::create_directory("tree_data/skeleton_recon");
+						std::filesystem::create_directory("tree_data/image_recon");
+						std::filesystem::create_directory("tree_data/graph_recon");
+						std::filesystem::create_directory("tree_data/obj_recon");
+						std::filesystem::create_directory("tree_data/volume_recon");
 					}
 					ResetCounter((_StartIndex - 1) * 7, _StartIndex, _EndIndex, _ExportOBJ, _ExportGraph);
 					_NeedEval = true;
@@ -135,10 +215,27 @@ void DataCollectionSystem::SetDirectionalLightEntity(Entity entity, Entity entit
 void DataCollectionSystem::ExportAllData()
 {
 	ExportParams(_StorePath + "params_" + (_IsTrain ? "train" : "val"));
-	ExportKDops(_StorePath + "kdops_" + (_IsTrain ? "train" : "val"));
-	ExportCakeTower(_StorePath + "cakes_" + (_IsTrain ? "train" : "val"));
+	if (_ExportCakeTower) {
+		ExportCakeTower(_StorePath + "rbv_", _IsTrain);
+		ExportCakeTowerPerSpecies(_StorePath + "rbv_species_", _IsTrain);
+		ExportCakeTowerGeneral(_StorePath + "rbv_general_", _IsTrain);
+	}
+	for (auto& i : _GeneralCakeTowersOutputList)
+	{
+		i.second.clear();
+	}
+	for (auto& i : _PerSpeciesCakeTowersOutputList)
+	{
+		i.second.clear();
+	}
+	for (auto& i : _CakeTowersOutputList)
+	{
+		i.second.clear();
+	}
+	if (_ExportKDop) {
+		ExportKDops(_StorePath + "kdops_" + (_IsTrain ? "train" : "val"));
+	}
 	_TreeParametersOutputList.clear();
-	_CakeTowersOutputList.clear();
 	_KDopsOutputList.clear();
 	const double spentTime = Application::EngineTime() - _Timer;
 	Debug::Log("Generation Finished. Used time: " + std::to_string(spentTime));
@@ -177,7 +274,7 @@ void DataCollectionSystem::ExportParams(const std::string& path) const
 			output += std::to_string(treeParameters.ApicalControlBase) + ",";
 			output += std::to_string(treeParameters.ApicalControlAgeFactor) + ",";
 			output += std::to_string(treeParameters.ApicalControlLevelFactor) + ",";
-			output += std::to_string(treeParameters.ApicalControlDistanceFactor) + ",";
+			output += std::to_string(0.0) + ",";
 			output += std::to_string(treeParameters.MaxBudAge) + ",";
 #pragma endregion
 #pragma region Environmental
@@ -242,41 +339,120 @@ void DataCollectionSystem::ExportKDops(const std::string& path) const
 	}
 }
 
-void TreeUtilities::DataCollectionSystem::ExportCakeTower(const std::string& path) const
+void TreeUtilities::DataCollectionSystem::ExportCakeTower(const std::string& path, bool isTrain) const
 {
-	std::ofstream ofs;
-	ofs.open((path + ".csv").c_str(), std::ofstream::out | (_Batched ? std::ofstream::app : std::ofstream::trunc));
-	if (ofs.is_open())
-	{
-		for (auto& instance : _CakeTowersOutputList) {
-			auto cakeTower = instance.data;
-			std::string output = "";
-			output += std::to_string(instance.Index) + ",";
-			output += instance.Name;
-			for (auto& tier : cakeTower)
-			{
-				for (auto& slice : tier)
+	for (auto& lists : _CakeTowersOutputList) {
+		std::ofstream ofs;
+		ofs.open((path + std::to_string(lists.first.first) + "_" + std::to_string(lists.first.second) + (isTrain ? "_train" : "_val") + ".csv").c_str(), std::ofstream::out | (_Batched ? std::ofstream::app : std::ofstream::trunc));
+		if (ofs.is_open())
+		{
+			for (auto& instance : lists.second) {
+				auto cakeTower = instance.data;
+				std::string output = "";
+				output += std::to_string(instance.Index) + ",";
+				output += instance.Name;
+				output += "," + std::to_string(instance._MaxHeight);
+				output += "," + std::to_string(instance._MaxRadius);
+				for (auto& tier : cakeTower)
 				{
-					output += "," + std::to_string(slice.MaxDistance);
+					for (auto& slice : tier)
+					{
+						output += "," + std::to_string(slice.MaxDistance / instance._MaxRadius);
+					}
 				}
+				output += "\n";
+				ofs.write(output.c_str(), output.size());
 			}
-			output += "\n";
-			ofs.write(output.c_str(), output.size());
 			ofs.flush();
+			ofs.close();
+			Debug::Log("Tree group saved: " + path + ".csv");
 		}
-		ofs.close();
-		Debug::Log("Tree group saved: " + path + ".csv");
-	}
-	else
-	{
-		Debug::Error("Can't open file!");
+		else
+		{
+			Debug::Error("Can't open file!");
+		}
 	}
 }
 
-void DataCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation)
+void DataCollectionSystem::ExportCakeTowerPerSpecies(const std::string& path, bool isTrain) const
+{
+	for (auto& lists : _PerSpeciesCakeTowersOutputList) {
+		std::ofstream ofs;
+		ofs.open((path + std::to_string(lists.first.first) + "_" + std::to_string(lists.first.second) + (isTrain ? "_train" : "_val") + ".csv").c_str(), std::ofstream::out | (_Batched ? std::ofstream::app : std::ofstream::trunc));
+		if (ofs.is_open())
+		{
+			for (auto& instance : lists.second) {
+				auto cakeTower = instance.data;
+				std::string output = "";
+				output += std::to_string(instance.Index) + ",";
+				output += instance.Name;
+				for (auto& tier : cakeTower)
+				{
+					for (auto& slice : tier)
+					{
+						output += "," + std::to_string(slice.MaxDistance / 30.0f);
+					}
+				}
+				output += "\n";
+				ofs.write(output.c_str(), output.size());
+				ofs.flush();
+			}
+			ofs.close();
+			Debug::Log("Tree group saved: " + path + ".csv");
+		}
+		else
+		{
+			Debug::Error("Can't open file!");
+		}
+	}
+}
+
+void DataCollectionSystem::ExportCakeTowerGeneral(const std::string& path, bool isTrain) const
+{
+	for (auto& lists : _GeneralCakeTowersOutputList) {
+		std::ofstream ofs;
+		ofs.open((path + std::to_string(lists.first.first) + "_" + std::to_string(lists.first.second) + (isTrain ? "_train" : "_val") + ".csv").c_str(), std::ofstream::out | (_Batched ? std::ofstream::app : std::ofstream::trunc));
+		if (ofs.is_open())
+		{
+			for (auto& instance : lists.second) {
+				auto cakeTower = instance.data;
+				std::string output = "";
+				output += std::to_string(instance.Index) + ",";
+				output += instance.Name;
+				for (auto& tier : cakeTower)
+				{
+					for (auto& slice : tier)
+					{
+						output += "," + std::to_string(slice.MaxDistance / 30.0f);
+					}
+				}
+				output += "\n";
+				ofs.write(output.c_str(), output.size());
+				ofs.flush();
+			}
+			ofs.close();
+			Debug::Log("Tree group saved: " + path + ".csv");
+		}
+		else
+		{
+			Debug::Error("Can't open file!");
+		}
+	}
+}
+
+void DataCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation, bool random)
 {
 	_CameraPosition = position;
-	_CameraEulerRotation = glm::radians(rotation);
+	_CameraEulerRotation = glm::radians(random ? rotation + glm::linearRand(glm::vec3(-6, -6, 0), glm::vec3(6, 6, 0)) : rotation);
+	if(random)
+	{
+		float fov = glm::linearRand(90, 100);
+		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = fov;
+		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = fov;
+	}else{
+		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = 90;
+		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = 90;
+	}
 	Transform transform;
 	transform.SetPosition(_CameraPosition);
 	transform.SetEulerRotation(_CameraEulerRotation);
@@ -305,6 +481,7 @@ void DataCollectionSystem::OnCreate()
 	auto postProcessing = std::make_unique<PostProcessing>();
 	postProcessing->PushLayer(std::make_unique<Bloom>());
 	postProcessing->PushLayer(std::make_unique<SSAO>());
+	postProcessing->PushLayer(std::make_unique<GreyScale>());
 	_ImageCameraEntity.SetPrivateComponent(std::move(postProcessing));
 	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->AllowAutoResize = false;
@@ -320,13 +497,6 @@ void DataCollectionSystem::OnCreate()
 	cameraComponent->ClearColor = glm::vec3(1.0f);
 	_SemanticMaskCameraEntity.SetName("Semantic Mask Camera");
 	_SemanticMaskCameraEntity.SetPrivateComponent(std::move(cameraComponent));
-
-	for (int i = 1; i < 4; i++)
-	{
-		int index = i * 4;
-		_BackgroundTextures.push_back(ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() +
-			"Textures/StreetView/" + std::string(6 - std::to_string(index).length(), '0') + std::to_string(index) + "_2.jpg"));
-	}
 
 	_BackgroundMaterial = std::make_shared<Material>();
 	_BackgroundMaterial->Shininess = 32.0f;
@@ -371,7 +541,7 @@ void DataCollectionSystem::OnCreate()
 	_SmallBranchCopyProgram = std::make_unique<GLProgram>(standardvert, standardfrag);
 
 	_SmallBranchFilter = std::make_unique<RenderTarget>(_TargetResolution, _TargetResolution);
-	_SmallBranchBuffer = std::make_unique<GLTexture2D>(1, GL_RGB32F, _TargetResolution, _TargetResolution, true);
+	_SmallBranchBuffer = std::make_unique<GLTexture2D>(0, GL_RGB32F, _TargetResolution, _TargetResolution, false);
 	_SmallBranchBuffer->SetInt(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	_SmallBranchBuffer->SetInt(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	_SmallBranchBuffer->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -438,7 +608,7 @@ void DataCollectionSystem::OnCreate()
 #pragma region MaskTrimmer
 	MaskProcessor::_ResolutionX = _TargetResolution;
 	MaskProcessor::_ResolutionY = _TargetResolution;
-	MaskProcessor::_CameraEntity = _SemanticMaskCameraEntity;
+	MaskProcessor::_CameraEntity = _ImageCameraEntity;
 	MaskProcessor::_Filter = std::make_unique<RenderTarget>(_TargetResolution, _TargetResolution);
 	MaskProcessor::_DepthStencilBuffer = std::make_unique<GLRenderBuffer>();
 	MaskProcessor::_DepthStencilBuffer->AllocateStorage(GL_DEPTH24_STENCIL8, _TargetResolution, _TargetResolution);
@@ -467,7 +637,12 @@ void DataCollectionSystem::OnCreate()
 	MaskProcessor::_MaskPreprocessProgram = std::make_unique<GLProgram>(vertShader, fragShader);
 
 #pragma endregion
-
+	for (int i = 1; i < 32; i *= 2)
+	{
+		_GeneralCakeTowersOutputList.push_back(std::move(std::make_pair(std::make_pair(i, i), std::vector<CakeTowerOutput>())));
+		_PerSpeciesCakeTowersOutputList.push_back(std::move(std::make_pair(std::make_pair(i, i), std::vector<CakeTowerOutput>())));
+		_CakeTowersOutputList.push_back(std::move(std::make_pair(std::make_pair(i, i), std::vector<CakeTowerOutput>())));
+	}
 	Enable();
 }
 
@@ -493,31 +668,45 @@ void DataCollectionSystem::LateUpdate()
 		if (_NeedExport) {
 			if (_StartIndex <= _EndIndex)
 			{
-				SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
+				if (_ExportImages) {
+					SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, true);
 
-				RenderManager::SetAmbientLight(0.3f);
-				float brightness = glm::linearRand(5.0f, 7.0f);
-				_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 2.0f;
-				_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 3.0f;
-				_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 3.0f;
-				_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 8.0f;
-				glm::vec3 mainLightAngle = glm::vec3(150 + glm::linearRand(-30, 30), glm::linearRand(0, 360), 0);
-				float lightFocus = 35;
-				_LightTransform.SetEulerRotation(glm::radians(mainLightAngle));
-				_LightTransform1.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -lightFocus, 0)));
-				_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, lightFocus, 0)));
+					RenderManager::SetAmbientLight(0.3f);
+					float brightness = glm::linearRand(5.0f, 7.0f);
+					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 2.0f;
+					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->lightSize = 1.0f;
+					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->bias = 0.3f;
+					_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 3.0f;
+					_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 3.0f;
+					_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 8.0f;
+					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+					_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+					_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+					_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
+					_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
+					_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
+					_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
 
-				_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -180, 0)));
+					glm::vec3 mainLightAngle = glm::vec3(150 + glm::linearRand(-30, 30), glm::linearRand(0, 360), 0);
+					float lightFocus = 35;
+					_LightTransform.SetEulerRotation(glm::radians(mainLightAngle));
+					_LightTransform1.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -lightFocus, 0)));
+					_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, lightFocus, 0)));
 
-				_DirectionalLightEntity.SetComponentData(_LightTransform);
-				_DirectionalLightEntity1.SetComponentData(_LightTransform1);
-				_DirectionalLightEntity2.SetComponentData(_LightTransform2);
-				_DirectionalLightEntity3.SetComponentData(_LightTransform3);
+					_LightTransform2.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -180, 0)));
 
-				_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
-				_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
+					_DirectionalLightEntity.SetComponentData(_LightTransform);
+					_DirectionalLightEntity1.SetComponentData(_LightTransform1);
+					_DirectionalLightEntity2.SetComponentData(_LightTransform2);
+					_DirectionalLightEntity3.SetComponentData(_LightTransform3);
 
-				treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
+
+					_SmallBranchBuffer->ReSize(0, GL_RGB32F, GL_RGB, GL_FLOAT, 0, _TargetResolution, _TargetResolution);
+					_SmallBranchFilter->SetResolution(_TargetResolution, _TargetResolution);
+					_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_TargetResolution, _TargetResolution);
+					_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
+				}
 				treeParameters.Seed = _StartIndex + (_IsTrain ? 0 : 9999);
 				_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
 				_PlantSimulationSystem->ResumeGrowth();
@@ -539,7 +728,9 @@ void DataCollectionSystem::LateUpdate()
 		}
 		else if (_Reconstruction)
 		{
-			SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot);
+			_SmallBranchBuffer->ReSize(0, GL_RGB32F, GL_RGB, GL_FLOAT, 0, _TargetResolution, _TargetResolution);
+			_SmallBranchFilter->SetResolution(_TargetResolution, _TargetResolution);
+			SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, false);
 			treeParameters = _PlantSimulationSystem->LoadParameters(imageCaptureSequence.ParamPath);
 			treeParameters.Seed = _Seed;
 			_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameters, glm::vec3(0.0f));
@@ -550,52 +741,107 @@ void DataCollectionSystem::LateUpdate()
 	case DataCollectionSystemStatus::Growing:
 		if (!_PlantSimulationSystem->_Growing)
 		{
+			if (_Reconstruction) {
+				Transform cameraTransform;
+				cameraTransform.SetPosition(glm::vec3(0, imageCaptureSequence.CameraPos.z * 1.5f, 0));
+				cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
+				_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
+			}
 			_Status = DataCollectionSystemStatus::Rendering;
 			_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 		}
 		break;
 	case DataCollectionSystemStatus::Rendering:
-		_Status = DataCollectionSystemStatus::CaptureOriginal;
+		if (_ExportImages) {
+			
+			_Status = DataCollectionSystemStatus::CaptureOriginal;
+		}else
+		{
+			_Status = DataCollectionSystemStatus::CollectData;
+		}
 		break;
 	case DataCollectionSystemStatus::CaptureOriginal:
 		if (!_Reconstruction) {
 			path = _StorePath + "white_" + (_IsTrain ? "train/" : "val/") +
 				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 				+ "_" + imageCaptureSequence.Name
-				+ ".jpg";
+				+ ".png";
 		}
 		else
 		{
-			path = _ReconPath + ".jpg";
+			path = _ReconPath + "_main.jpg";
 		}
-		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
-			path, _TargetResolution, _TargetResolution);
-
-		_Status = DataCollectionSystemStatus::CaptureRandom;
-		_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)]);
-		_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(true);
-		break;
-	case DataCollectionSystemStatus::CaptureRandom:
-		path = _StorePath + "rgb_" + (_IsTrain ? "train/" : "val/") +
-			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
-			+ "_" + imageCaptureSequence.Name
-			+ ".jpg";
-		if (!_Reconstruction)
+		if (!_Reconstruction) {
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
+				path, _TargetResolution, _TargetResolution, true);
+		}else
 		{
 			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 				path, _TargetResolution, _TargetResolution);
+			_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				_ReconPath + "_main_top.jpg", _TargetResolution, _TargetResolution);
+			SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, false);
 		}
+		_Status = DataCollectionSystemStatus::CaptureOriginalBranch;
+		SetEnableFoliage(false);
+		break;
+	case DataCollectionSystemStatus::CaptureOriginalBranch:
+		if (!_Reconstruction) {
+			path = _StorePath + "white_branch_" + (_IsTrain ? "train/" : "val/") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + imageCaptureSequence.Name
+				+ ".png";
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
+				path, _TargetResolution, _TargetResolution, true);
+		}else
+		{
+			path = _ReconPath + "_branch.jpg";
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _TargetResolution, _TargetResolution);
+		}
+		
+		if (!_BackgroundTextures.empty()) {
+			_BackgroundMaterial->SetTexture(_BackgroundTextures[glm::linearRand((size_t)0, _BackgroundTextures.size() - 1)]);
+		}
+		_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(true);
+		SetEnableFoliage(true);
+		_Status = DataCollectionSystemStatus::CaptureRandom;
+		break;
+	case DataCollectionSystemStatus::CaptureRandom:
+		if (!_Reconstruction)
+		{
+			path = _StorePath + "rgb_" + (_IsTrain ? "train/" : "val/") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + imageCaptureSequence.Name
+				+ ".jpg";
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _TargetResolution, _TargetResolution);
+		}
+		SetEnableFoliage(false);
+		_Status = DataCollectionSystemStatus::CaptureRandomBranch;
+		break;
+	case DataCollectionSystemStatus::CaptureRandomBranch:
+		if (!_Reconstruction) {
+			path = _StorePath + "rgb_branch_" + (_IsTrain ? "train/" : "val/") +
+				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
+				+ "_" + imageCaptureSequence.Name
+				+ ".jpg";
+
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _TargetResolution, _TargetResolution);
+		}
+		SetEnableFoliage(true);
 		_Status = DataCollectionSystemStatus::CaptureSemantic;
 		_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 		EnableSemantic();
 		break;
 	case DataCollectionSystemStatus::CaptureSemantic:
 		_SmallBranchFilter->AttachTexture(_SmallBranchBuffer.get(), GL_COLOR_ATTACHMENT0);
-		_SmallBranchFilter->Clear();
 		glDisable(GL_BLEND);
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 		_SmallBranchFilter->GetFrameBuffer()->DrawBuffer(GL_COLOR_ATTACHMENT0);
+		_SmallBranchFilter->Clear();
 		_SmallBranchFilter->Bind();
 		_SmallBranchProgram->Bind();
 		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->GetTexture()->Texture()->Bind(0);
@@ -621,11 +867,11 @@ void DataCollectionSystem::LateUpdate()
 			path = _ReconPath + ".png";
 		}
 		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToPng(
-			path, _TargetResolution, _TargetResolution);
-		HideFoliage();
-		_Status = DataCollectionSystemStatus::CaptureBranch;
+			path, _TargetResolution, _TargetResolution, false);
+		SetEnableFoliage(false);
+		_Status = DataCollectionSystemStatus::CaptureBranchMask;
 		break;
-	case DataCollectionSystemStatus::CaptureBranch:
+	case DataCollectionSystemStatus::CaptureBranchMask:
 		path = _StorePath + "branch_" + (_IsTrain ? "train/" : "val/") +
 			std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 			+ "_" + imageCaptureSequence.Name
@@ -646,57 +892,93 @@ void DataCollectionSystem::LateUpdate()
 				+ "_" + imageCaptureSequence.Name, true);
 		}
 		_TreeParametersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, treeParameters);
-		if (_CurrentTree.HasPrivateComponent<KDop>()) {
+		if (_ExportKDop && _CurrentTree.HasPrivateComponent<KDop>()) {
 			_CurrentTree.GetPrivateComponent<KDop>()->CalculateVolume();
 			_KDopsOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<KDop>());
 		}
-		_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume();
-		if (!_Reconstruction) {
-			_CakeTowersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
-		}
-		else
-		{
-			path = _ReconPath + ".ct";
-			const std::string data = _CurrentTree.GetPrivateComponent<CakeTower>()->Save();
-			std::ofstream ofs;
-			ofs.open(path.c_str(), std::ofstream::out | std::ofstream::trunc);
-			if (ofs.is_open())
-			{
-				ofs.write(data.c_str(), data.length());
-				ofs.flush();
-				ofs.close();
-			}
-			else
-			{
-				Debug::Error("Can't open file!");
-			}
-			ofs.open((_ReconPath + ".csv").c_str(), std::ofstream::trunc);
-			if (ofs.is_open())
-			{
-				auto& kdop = _CurrentTree.GetPrivateComponent<KDop>()->DirectionalDistance;
-				std::string output;
-				for (int i = 0; i < kdop.size(); i++)
-				{
-					output += std::to_string(kdop[i]);
-					if (i < kdop.size() - 1) output += ",";
+		if (_CurrentTree.HasPrivateComponent<CakeTower>()) {
+			if (_ExportCakeTower && !_Reconstruction) {
+				for (auto& i : _GeneralCakeTowersOutputList) {
+					_CurrentTree.GetPrivateComponent<CakeTower>()->LayerAmount = i.first.first;
+					_CurrentTree.GetPrivateComponent<CakeTower>()->SectorAmount = i.first.second;
+					_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume(36);
+					i.second.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
 				}
-				output += "\n";
-				ofs.write(output.c_str(), output.size());
-				ofs.flush();
-
-				ofs.close();
-				Debug::Log("Tree group saved: " + _ReconPath + ".csv");
 			}
-			else
+			if (_ExportCakeTower && !_Reconstruction) {
+				float height = 0;
+				switch (_CurrentSelectedSequenceIndex)
+				{
+				case 0:
+					height = 15;
+					break;
+				case 1:
+					height = 12.5;
+					break;
+				case 2:
+					height = 19;
+					break;
+				case 3:
+					height = 32;
+					break;
+				case 4:
+					height = 31;
+					break;
+				case 5:
+					height = 18.5;
+					break;
+				case 6:
+					height = 15;
+					break;
+				}
+				for (auto& i : _PerSpeciesCakeTowersOutputList) {
+					_CurrentTree.GetPrivateComponent<CakeTower>()->LayerAmount = i.first.first;
+					_CurrentTree.GetPrivateComponent<CakeTower>()->SectorAmount = i.first.second;
+					_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume(height);
+					i.second.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
+				}
+			}
+			if (_ExportCakeTower && !_Reconstruction) {
+				for (auto& i : _CakeTowersOutputList) {
+					_CurrentTree.GetPrivateComponent<CakeTower>()->LayerAmount = i.first.first;
+					_CurrentTree.GetPrivateComponent<CakeTower>()->SectorAmount = i.first.second;
+					_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume();
+					i.second.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
+				}
+			}
+			else if(_Reconstruction)
 			{
-				Debug::Error("Can't open file!");
+				ExportCakeTowerForRecon(6, 6);
+				ExportCakeTowerForRecon(10, 10);
 			}
 		}
-
+		if (_Reconstruction) {
+			Transform cameraTransform;
+			cameraTransform.SetPosition(glm::vec3(0, imageCaptureSequence.CameraPos.z * 1.5f, 0));
+			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
+			_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
+			
+			cameraTransform.SetPosition(glm::vec3(imageCaptureSequence.CameraPos.x, _CurrentTree.GetPrivateComponent<CakeTower>()->MaxHeight / 2.0f, imageCaptureSequence.CameraPos.z * 1.5f));
+			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(0, 0, 0)));
+			_ImageCameraEntity.SetComponentData(cameraTransform);
+			
+			_CurrentTree.GetPrivateComponent<CakeTower>()->FormEntity();
+			_CurrentTree.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
+			_Status = DataCollectionSystemStatus::CaptureCakeTower;
+		}
+		else _Status = DataCollectionSystemStatus::CleanUp;
+		break;
+	case DataCollectionSystemStatus::CaptureCakeTower:
 		_Status = DataCollectionSystemStatus::CleanUp;
 		break;
 	case DataCollectionSystemStatus::CleanUp:
-
+		if (_Reconstruction) {
+			path = _ReconPath + "_rbv_main_10_10.jpg";
+			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _TargetResolution, _TargetResolution);
+			_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				_ReconPath + "_rbv_main_10_10_top.jpg", _TargetResolution, _TargetResolution);
+		}
 		TreeManager::DeleteAllTrees();
 		if (!_Reconstruction) {
 			_CurrentSelectedSequenceIndex++;
@@ -767,7 +1049,7 @@ void DataCollectionSystem::EnableSemantic() const
 
 }
 
-void DataCollectionSystem::HideFoliage() const
+void DataCollectionSystem::SetEnableFoliage(bool enabled) const
 {
 	Entity foliageEntity;
 	EntityManager::ForEachChild(_CurrentTree, [&foliageEntity](Entity child)
@@ -809,11 +1091,11 @@ void DataCollectionSystem::HideFoliage() const
 	if (foliageEntity.HasPrivateComponent<MeshRenderer>())
 	{
 		auto& branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
-		branchletRenderer->SetEnabled(false);
+		branchletRenderer->SetEnabled(enabled);
 	}
 	if (foliageEntity.HasPrivateComponent<Particles>())
 	{
 		auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
-		leavesRenderer->SetEnabled(false);
+		leavesRenderer->SetEnabled(enabled);
 	}
 }

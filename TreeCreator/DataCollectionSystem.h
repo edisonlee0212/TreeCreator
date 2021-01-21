@@ -11,10 +11,13 @@ namespace TreeUtilities {
 		Growing,
 		Rendering,
 		CaptureOriginal,
+		CaptureOriginalBranch,
 		CaptureRandom,
+		CaptureRandomBranch,
 		CaptureSemantic,
-		CaptureBranch,
+		CaptureBranchMask,
 		CollectData,
+		CaptureCakeTower,
 		CleanUp
 	};
 
@@ -48,12 +51,16 @@ namespace TreeUtilities {
 	{
 		int Index;
 		std::string Name;
+		float _MaxRadius;
+		float _MaxHeight;
 		std::vector<std::vector<CakeSlice>> data;
 		CakeTowerOutput(int index, std::string& name, std::unique_ptr<CakeTower>& cakeTower)
 		{
 			Index = index;
 			Name = name;
 			data = cakeTower->CakeTiers;
+			_MaxHeight = cakeTower->MaxHeight;
+			_MaxRadius = cakeTower->MaxRadius;
 		}
 	};
 	
@@ -80,6 +87,7 @@ namespace TreeUtilities {
 		bool _IsTrain = true;
 		Entity _CurrentTree;
 		Entity _Background;
+		
 		bool _NeedExport = false;
 		int _TargetResolution = 1280;
 		int _CaptureResolution = 1280;
@@ -87,6 +95,9 @@ namespace TreeUtilities {
 		bool _NeedEval = true;
 		bool _ExportOBJ = false;
 		bool _ExportGraph = false;
+		bool _ExportImages = false;
+		bool _ExportKDop = false;
+		bool _ExportCakeTower = false;
 		std::unique_ptr<RenderTarget> _SmallBranchFilter;
 		std::unique_ptr<GLProgram> _SmallBranchProgram;
 		std::unique_ptr<GLTexture2D> _SmallBranchBuffer;
@@ -101,9 +112,10 @@ namespace TreeUtilities {
 		std::vector<std::pair<ImageCaptureSequence, TreeParameters>> _ImageCaptureSequences;
 		std::vector<ParamsOutput> _TreeParametersOutputList;
 		std::vector<KDopOutput> _KDopsOutputList;
-		std::vector<CakeTowerOutput> _CakeTowersOutputList;
+		std::vector<std::pair<std::pair<int, int>, std::vector<CakeTowerOutput>>> _GeneralCakeTowersOutputList;
+		std::vector<std::pair<std::pair<int, int>, std::vector<CakeTowerOutput>>> _PerSpeciesCakeTowersOutputList;
+		std::vector<std::pair<std::pair<int, int>, std::vector<CakeTowerOutput>>> _CakeTowersOutputList;
 		std::vector<std::shared_ptr<Texture2D>> _BackgroundTextures;
-
 		Entity _DirectionalLightEntity;
 		Entity _DirectionalLightEntity1;
 		Entity _DirectionalLightEntity2;
@@ -117,7 +129,7 @@ namespace TreeUtilities {
 		int _Index;
 		int _Seed;
 		std::string _ReconPath;
-		
+		void ExportCakeTowerForRecon(int layer, int sector);
 		void OnGui();
 	public:
 		void SetDirectionalLightEntity(Entity entity, Entity entity1, Entity entity2, Entity entity3);
@@ -128,13 +140,15 @@ namespace TreeUtilities {
 		void PushImageCaptureSequence(ImageCaptureSequence sequence);
 		void ExportParams(const std::string& path) const;
 		void ExportKDops(const std::string& path) const;
-		void ExportCakeTower(const std::string& path) const;
-		void SetCameraPose(glm::vec3 position, glm::vec3 rotation);
+		void ExportCakeTower(const std::string& path, bool isTrain) const;
+		void ExportCakeTowerPerSpecies(const std::string& path, bool isTrain) const;
+		void ExportCakeTowerGeneral(const std::string& path, bool isTrain) const;
+		void SetCameraPose(glm::vec3 position, glm::vec3 rotation, bool random = false);
 		void OnCreate() override;
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);
 		void Update() override;
 		void LateUpdate() override;
 		void EnableSemantic() const;
-		void HideFoliage() const;
+		void SetEnableFoliage(bool enabled) const;
 	};
 }
