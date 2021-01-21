@@ -34,7 +34,7 @@ namespace TreeUtilities
 		public SystemBase
 	{
 		int _GenerateAmount = 10;
-		int _ReconAmount = 7;
+		int _ReconAmount = 1;
 		int _Add = 0;
 		int _ControlLevel = 0;
 		int _EnableSpaceColonization = true;
@@ -42,7 +42,7 @@ namespace TreeUtilities
 		int _ReconSeed = 0;		//0	
 		int _ReconCounter = 0;	//0	1
 		int _ReconMainBranchInternodeLimit = 1000;
-
+		int _LearningIndex = 0;
 		rapidcsv::Document _TrainingDoc;
 		bool _FromTraining = false;
 		int _TrainingAmount;

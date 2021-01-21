@@ -948,9 +948,8 @@ void DataCollectionSystem::LateUpdate()
 			}
 			else if(_Reconstruction)
 			{
-				ExportCakeTowerForRecon(2, 2);
-				ExportCakeTowerForRecon(4, 4);
-				ExportCakeTowerForRecon(8, 8);
+				ExportCakeTowerForRecon(6, 6);
+				ExportCakeTowerForRecon(10, 10);
 			}
 		}
 		if (_Reconstruction) {
@@ -974,11 +973,11 @@ void DataCollectionSystem::LateUpdate()
 		break;
 	case DataCollectionSystemStatus::CleanUp:
 		if (_Reconstruction) {
-			path = _ReconPath + "_rbv_main_8_8.jpg";
+			path = _ReconPath + "_rbv_main_10_10.jpg";
 			_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 				path, _TargetResolution, _TargetResolution);
 			_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
-				_ReconPath + "_rbv_main__8_8_top.jpg", _TargetResolution, _TargetResolution);
+				_ReconPath + "_rbv_main_10_10_top.jpg", _TargetResolution, _TargetResolution);
 		}
 		TreeManager::DeleteAllTrees();
 		if (!_Reconstruction) {

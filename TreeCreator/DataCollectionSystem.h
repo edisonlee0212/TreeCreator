@@ -89,8 +89,8 @@ namespace TreeUtilities {
 		Entity _Background;
 		
 		bool _NeedExport = false;
-		int _TargetResolution = 960;
-		int _CaptureResolution = 960;
+		int _TargetResolution = 1280;
+		int _CaptureResolution = 1280;
 		double _Timer;
 		bool _NeedEval = true;
 		bool _ExportOBJ = false;
