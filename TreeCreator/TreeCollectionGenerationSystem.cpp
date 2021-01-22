@@ -1,11 +1,25 @@
 #include "TreeCollectionGenerationSystem.h"
 #include "rapidcsv/rapidcsv.h"
+
+#include <filesystem>
+
 using namespace UniEngine;
 void TreeCollectionGenerationSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Perception Tree Data Generation")) {
-			
+			if (ImGui::Button("Load csv...(Stava)"))
+			{
+				auto result = FileIO::OpenFile("Parameters list (*.csv)\0*.csv\0");
+				if (result.has_value())
+				{
+					const std::string path = result.value();
+					if (!path.empty())
+					{
+						ImportCsv(path);
+					}
+				}
+			}
 			if (ImGui::Button("Load csv..."))
 			{
 				auto result = FileIO::OpenFile("Parameters list (*.csv)\0*.csv\0");
@@ -18,16 +32,16 @@ void TreeCollectionGenerationSystem::OnGui()
 					}
 				}
 			}
-			if (ImGui::Button("Load csv (Old version - Stava)..."))
+			if (ImGui::Button("Load multiple csv..."))
 			{
 				auto result = FileIO::OpenFile("Parameters list (*.csv)\0*.csv\0");
 				if (result.has_value())
 				{
 					const std::string path = result.value();
-					if (!path.empty())
-					{
-						ImportCsv(path);
-					}
+                    for (const auto &file : std::filesystem::directory_iterator(std::filesystem::path{ path }.parent_path()))
+                    {
+						ImportCsv2(file.path().string());
+                    }
 				}
 			}
 			ImGui::EndMenu();
@@ -41,8 +55,35 @@ void TreeCollectionGenerationSystem::ImportCsv(const std::string& path)
 	rapidcsv::Document doc(path, rapidcsv::LabelParams(-1, -1));
 	std::vector<std::string> firstColumn = doc.GetColumn<std::string>(0);
 	Debug::Log("Count: " + std::to_string(firstColumn.size() - 1));
-	for(int i = 1; i < firstColumn.size(); i++)
+
+	CreationQueueSettings settings{ };
+
+	settings._StorePath = _BaseStorePath + std::filesystem::path(path).stem().string() + "/";
+	std::filesystem::create_directory(std::filesystem::path{ settings._StorePath });
+	std::filesystem::create_directory(std::filesystem::path{ settings._StorePath + "/graph/" });
+	std::filesystem::create_directory(std::filesystem::path{ settings._StorePath + "/image/" });
+	std::filesystem::create_directory(std::filesystem::path{ settings._StorePath + "/parameters/" });
+	Debug::Log("Storing results in: " + settings._StorePath);
+
+	const std::string checkPath{ settings._StorePath + "/graph/" };
+	// Start from 1 because we need to ignore the first row that contains the label.
+	int startIndex{ 1 };
+	for (const auto &file : std::filesystem::directory_iterator(checkPath))
 	{
+	    try
+	    {
+			const auto fileIndex{ std::stoi(std::filesystem::path(file).stem()) };
+			startIndex = std::max(startIndex, fileIndex + 1);
+	    } catch (std::exception &e)
+	    { /* Skip this file */ }
+	}
+
+	settings._Counter = startIndex - 1;
+	Debug::Log("Starting with index: " + std::to_string(startIndex));
+
+	for(int i = startIndex; i < firstColumn.size(); i++)
+	{
+		//TODO: Change the parsing here.
 		std::vector<float> values = doc.GetRow<float>(i);
 		TreeParameters treeParameters;
 		treeParameters.Seed = 0;
@@ -76,17 +117,45 @@ void TreeCollectionGenerationSystem::ImportCsv(const std::string& path)
 		treeParameters.LateralBudLightingFactor = values[29];
 		treeParameters.EndNodeThickness = values[30];
 		treeParameters.ThicknessControlFactor = values[31];
-		_CreationQueue.push(treeParameters);
+		//Once you push the parameter set into the queue, the system will try to load it and build the tree and save corresponding data
+		settings._CreationQueue.push(treeParameters);
 	}
+
+	_QueueSettings.push(std::move(settings));
 }
 
 void TreeCollectionGenerationSystem::ImportCsv2(const std::string& path)
 {
-	rapidcsv::Document doc(path, rapidcsv::LabelParams(-1, -1), rapidcsv::SeparatorParams(';'));
+	rapidcsv::Document doc(path, rapidcsv::LabelParams(-1, -1));
 	std::vector<std::string> firstColumn = doc.GetColumn<std::string>(0);
 	Debug::Log("Count: " + std::to_string(firstColumn.size() - 1));
-	//i start from 1 because we need to ignore the first row that contains the label.
-	for (int i = 1; i < firstColumn.size(); i++)
+
+	CreationQueueSettings settings{ };
+
+	settings._StorePath = _BaseStorePath + std::filesystem::path(path).stem().string() + "/";
+	std::filesystem::create_directory(std::filesystem::path{ settings._StorePath });
+	std::filesystem::create_directory(std::filesystem::path{ settings._StorePath + "/graph/" });
+	std::filesystem::create_directory(std::filesystem::path{ settings._StorePath + "/image/" });
+	std::filesystem::create_directory(std::filesystem::path{ settings._StorePath + "/parameters/" });
+	Debug::Log("Storing results in: " + settings._StorePath);
+
+	const std::string checkPath{ settings._StorePath + "/graph/" };
+	// Start from 1 because we need to ignore the first row that contains the label.
+	int startIndex{ 1 };
+	for (const auto &file : std::filesystem::directory_iterator(checkPath))
+	{
+	    try
+	    {
+			const auto fileIndex{ std::stoi(std::filesystem::path(file).stem()) };
+			startIndex = std::max(startIndex, fileIndex + 1);
+	    } catch (std::exception &e)
+	    { /* Skip this file */ }
+	}
+
+	settings._Counter = startIndex - 1;
+	Debug::Log("Starting with index: " + std::to_string(startIndex));
+
+	for (int i = startIndex; i < firstColumn.size(); i++)
 	{
 		//TODO: Change the parsing here.
 		std::vector<float> values = doc.GetRow<float>(i);
@@ -156,14 +225,26 @@ void TreeCollectionGenerationSystem::ImportCsv2(const std::string& path)
 		treeParameters.FoliageType = values[36];
 #pragma endregion
 		//Once you push the parameter set into the queue, the system will try to load it and build the tree and save corresponding data
-		_CreationQueue.push(treeParameters);
+		settings._CreationQueue.push(treeParameters);
 	}
-}
 
+	_QueueSettings.push(std::move(settings));
+}
 
 void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 {
 	if (!_DataCollectionSystem) return;
+
+	if (_QueueSettings.empty())
+	{ OnGui(); return; }
+
+    auto &_CreationQueue{ _QueueSettings.front()._CreationQueue };
+    auto &_StorePath{ _QueueSettings.front()._StorePath };
+    auto &_Counter{ _QueueSettings.front()._Counter };
+
+	if (_CreationQueue.empty() && _Status == TreeCollectionGenerationSystenStatus::Idle)
+	{ _QueueSettings.pop(); OnGui(); return; }
+
 	switch (_Status)
 	{
 	case TreeCollectionGenerationSystenStatus::Idle:
@@ -189,7 +270,7 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 			_DataCollectionSystem->_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->CastShadow = false;
 			_DataCollectionSystem->_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->CastShadow = false;
 
-			glm::vec3 mainLightAngle = glm::vec3(150, 0, 0);
+			glm::vec3 mainLightAngle = glm::vec3(150, -45, 0);
 			float lightFocus = 35;
 			_DataCollectionSystem->_LightTransform.SetEulerRotation(glm::radians(mainLightAngle));
 			_DataCollectionSystem->_LightTransform1.SetEulerRotation(glm::radians(mainLightAngle + glm::vec3(0, -lightFocus, 0)));
@@ -201,7 +282,16 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 			_DataCollectionSystem->_DirectionalLightEntity1.SetComponentData(_DataCollectionSystem->_LightTransform1);
 			_DataCollectionSystem->_DirectionalLightEntity2.SetComponentData(_DataCollectionSystem->_LightTransform2);
 			_DataCollectionSystem->_DirectionalLightEntity3.SetComponentData(_DataCollectionSystem->_LightTransform3);
-			_GroundEntity.SetEnabled(true);
+			
+			/*
+			_DataCollectionSystem->_CameraPosition = glm::vec3{ 0.0f, 2.0f, 25.0f };
+			_DataCollectionSystem->_CameraEulerRotation = glm::vec3{ 0.0f, 0.0f, 0.0f };
+            Transform transform;
+            transform.SetPosition(_DataCollectionSystem->_CameraPosition);
+            transform.SetEulerRotation(_DataCollectionSystem->_CameraEulerRotation);
+			_DataCollectionSystem->_ImageCameraEntity.SetComponentData(transform);
+			*/
+
 			//_DataCollectionSystem->_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 			//_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
 
@@ -219,13 +309,12 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 				Debug::Error("Can't open file!");
 			}
 
-			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(1280, 1280);
-			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<PostProcessing>()->SetEnableLayer("GreyScale", true);
+			//_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(1280, 1280);
+			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(1024, 1024);
+			
 			_Status = TreeCollectionGenerationSystenStatus::Growing;
 		}else
-		{
-			OnGui();
-		}
+		{ OnGui(); }
 
 		break;
 	case TreeCollectionGenerationSystenStatus::Growing:
@@ -240,9 +329,9 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 			_Internodes.resize(0);
 			const auto treeIndex = _DataCollectionSystem->_CurrentTree.GetComponentData<TreeIndex>();
 			TreeManager::GetInternodeQuery().ToEntityArray(treeIndex, _Internodes);
-			if (_Internodes.size() > 10000)
+			if (_Internodes.size() > 7500)
 			{
-				
+				Debug::Log("Reached maximum internode limit: " + std::to_string(_Internodes.size()));
 				_Status = TreeCollectionGenerationSystenStatus::Rendering;
 				_DataCollectionSystem->_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 			}
@@ -250,17 +339,85 @@ void TreeUtilities::TreeCollectionGenerationSystem::LateUpdate()
 		break;
 	case TreeCollectionGenerationSystenStatus::Rendering:
 	{
-		_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
-			_StorePath + "image/" +
-			std::string(7 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter) + ".jpg"
-			, 640, 640, true);
+        _Internodes.resize(0);
+        const auto treeIndex = _DataCollectionSystem->_CurrentTree.GetComponentData<TreeIndex>();
+        TreeManager::GetInternodeQuery().ToEntityArray(treeIndex, _Internodes);
+
+		Debug::Log("Internodes: " + std::to_string(_Internodes.size()));
+
+		glm::vec3 minPos{
+			std::numeric_limits<float>::max(),
+			std::numeric_limits<float>::max(),
+			std::numeric_limits<float>::max(),
+		};
+		glm::vec3 maxPos{
+			std::numeric_limits<float>::min(),
+			std::numeric_limits<float>::min(),
+			std::numeric_limits<float>::min(),
+		};
+
+		for (const auto &internode : _Internodes)
+		{
+			if (!internode.HasComponentData<InternodeInfo>())
+			{ continue; }
+
+			const auto& internodeInfo{ internode.GetComponentData<InternodeInfo>() };
+
+            minPos = glm::vec3{
+                std::min(minPos.x, internodeInfo.BranchStartPosition.x),
+                std::min(minPos.y, internodeInfo.BranchStartPosition.y),
+                std::min(minPos.z, internodeInfo.BranchStartPosition.z),
+            };
+            maxPos = glm::vec3{
+                std::max(maxPos.x, internodeInfo.BranchStartPosition.x),
+                std::max(maxPos.y, internodeInfo.BranchStartPosition.y),
+                std::max(maxPos.z, internodeInfo.BranchStartPosition.z),
+            };
+
+            minPos = glm::vec3{
+                std::min(minPos.x, internodeInfo.BranchEndPosition.x),
+                std::min(minPos.y, internodeInfo.BranchEndPosition.y),
+                std::min(minPos.z, internodeInfo.BranchEndPosition.z),
+            };
+            maxPos = glm::vec3{
+                std::max(maxPos.x, internodeInfo.BranchEndPosition.x),
+                std::max(maxPos.y, internodeInfo.BranchEndPosition.y),
+                std::max(maxPos.z, internodeInfo.BranchEndPosition.z),
+            };
+		}
+
+		//Debug::Log("Min: " + std::to_string(minPos.x) + " " + std::to_string(minPos.y) + " " + std::to_string(minPos.z));
+		//Debug::Log("Max: " + std::to_string(maxPos.x) + " " + std::to_string(maxPos.y) + " " + std::to_string(maxPos.z));
+
+        const auto size{ maxPos - minPos };
+		Debug::Log("Size: " + std::to_string(size.x) + " " + std::to_string(size.y) + " " + std::to_string(size.z));
+		const auto maxSize{ std::max(size.x, std::max(size.y, size.z)) };
+
+        glm::vec3 scale{ 1.0f, 1.0f, 1.0f };
+        if (size.y < 10.0f && size.y > 0.0f)
+        { scale *= 10.0f / size.y; }
+        else if (maxSize > 30.0f)
+        { scale *= 30.0f / maxSize; }
+		GlobalTransform transform{ _DataCollectionSystem->_CurrentTree.GetComponentData<GlobalTransform>() };
+		transform.SetScale(scale);
+        _DataCollectionSystem->_CurrentTree.SetComponentData<GlobalTransform>(transform);
+
+        TreeManager::GenerateSimpleMeshForTree(_DataCollectionSystem->_CurrentTree, 
+			PlantSimulationSystem::_MeshGenerationResolution, 
+			PlantSimulationSystem::_MeshGenerationSubdivision);
+
 		_Status = TreeCollectionGenerationSystenStatus::CollectData;
 	}
 		break;
 	case TreeCollectionGenerationSystenStatus::CollectData:
+		_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+			_StorePath + "image/" +
+			std::string(7 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter) + ".jpg"
+			, 1024, 1024, true);
 		TreeManager::SerializeTreeGraph(_StorePath + "graph/" +
 			std::string(7 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
-			, _DataCollectionSystem->_CurrentTree);
+			, _DataCollectionSystem->_CurrentTree, "tree");
+
 		_Status = TreeCollectionGenerationSystenStatus::CleanUp;
 		break;
 	case TreeCollectionGenerationSystenStatus::CleanUp:
@@ -279,9 +436,4 @@ void TreeCollectionGenerationSystem::OnCreate()
 void TreeCollectionGenerationSystem::SetDataCollectionSystem(DataCollectionSystem* value)
 {
 	_DataCollectionSystem = value;
-}
-
-void TreeCollectionGenerationSystem::SetGroundEntity(Entity value)
-{
-	_GroundEntity = value;
 }

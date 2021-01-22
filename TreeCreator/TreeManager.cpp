@@ -567,6 +567,15 @@ Entity TreeUtilities::TreeManager::CreateInternode(TreeIndex treeIndex, Entity p
 	auto internodeData = std::make_unique<InternodeData>();
 	EntityManager::SetComponentData(entity, treeIndex);
 	EntityManager::SetParent(entity, parentEntity);
+
+	/*
+	Debug::Error("Setting parent " + std::to_string(entity.Index) + " " + std::to_string(parentEntity.Index) + 
+		" parent " + std::to_string(EntityManager::GetParent(entity).Index)
+	);
+	for (const auto &ce : EntityManager::GetChildren(parentEntity))
+	{ Debug::Error(std::string("child : ") + std::to_string(ce.Index)); }
+	*/
+
 	EntityManager::SetComponentData(entity, _InternodeIndex);
 	EntityManager::SetPrivateComponent(entity, std::move(internodeData));
 	_InternodeIndex.Value++;
@@ -842,10 +851,10 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 		treeData->MeshGenerated = true;
 	}
 }
-void TreeManager::SerializeTreeGraph(std::string path, Entity tree)
+void TreeManager::SerializeTreeGraph(std::string path, Entity tree, const std::string &extension)
 {
 	std::ofstream ofs;
-	ofs.open((path + ".json").c_str(), std::ofstream::out | std::ofstream::trunc);
+	ofs.open((path + "." + extension).c_str(), std::ofstream::out | std::ofstream::trunc);
 	if (!ofs.is_open())
 	{
 		Debug::Error("Can't open file!");
@@ -865,33 +874,69 @@ void TreeManager::SerializeTreeGraph(std::string path, Entity tree)
 			return treeIndex.Value == compareIndex.Value;
 		}
 	);
+
+	/*
+	std::ofstream ofs2;
+	ofs2.open((path + ".txt").c_str(), std::ofstream::out | std::ofstream::trunc);
+
+	std::queue<Entity> es{ };
+	es.push(tree);
+	while (!es.empty())
+	{
+		const auto e{ es.front() }; es.pop();
+		ofs2 << e.GetName() << " " << e.Index << " parent: " << EntityManager::GetParent(e).Index << " children: [ ";
+		for (const auto &c : EntityManager::GetChildren(e))
+		{ ofs2 << c.Index << " "; es.push(c); }
+		ofs2 << " ]";
+		if (e.HasComponentData<TreeIndex>())
+		{ ofs2 << " TreeIndex: " << e.GetComponentData<TreeIndex>().Value; }
+		if (e.HasComponentData<InternodeInfo>())
+		{
+		    ofs2 << " InternodeInfo: " << e.GetComponentData<InternodeInfo>().GlobalTransform[3].x <<
+                 " " << e.GetComponentData<InternodeInfo>().GlobalTransform[3].y <<
+				 " " << e.GetComponentData<InternodeInfo>().GlobalTransform[3].z;
+		}
+		ofs2 << std::endl;
+	}
+	ofs2.close();
+	*/
+
 	rapidjson::StringBuffer buffer;
 	rapidjson::PrettyWriter<rapidjson::StringBuffer> writer(buffer);
 	buffer.Clear();
 	writer.StartObject();
 	writer.String("Count");
 	writer.Int(internodes.size());
+	writer.String("Root");
+	writer.Int(tree.Index);
 	writer.String("Internodes");
 	writer.StartArray();
-	for(size_t i = 0; i < internodes.size(); i++)
+	std::queue<Entity> es{ };
+	es.push(tree);
+	//for(size_t i = 0; i < internodes.size(); i++)
+	while (!es.empty())
 	{
+		const auto internode{ es.front() }; es.pop();
+		if (!internode.HasComponentData<InternodeInfo>())
+		{ for (const auto& c : EntityManager::GetChildren(internode)) { es.push(c); } continue; }
+		const auto internodeInfo{ internode.GetComponentData<InternodeInfo>() };
 		//Internode
 		writer.StartObject();
 		writer.String("Index");
-		writer.Int(internodes[i].Index);
+		writer.Int(internode.Index);
 		writer.String("Parent");
-		writer.Int(EntityManager::GetParent(internodes[i]).Index);
+		writer.Int(EntityManager::GetParent(internode).Index);
 		writer.String("Gravelius Order");
-		writer.Int(internodeInfos[i].Order);
+		writer.Int(internodeInfo.Order);
 		writer.String("Thickness");
-		writer.Double(internodeInfos[i].Thickness);
+		writer.Double(internodeInfo.Thickness);
 		writer.String("Level");
-		writer.Int(internodeInfos[i].Level);
+		writer.Int(internodeInfo.Level);
 		writer.String("Start Age");
-		writer.Int(internodeInfos[i].StartAge);
+		writer.Int(internodeInfo.StartAge);
 		//Position
 		writer.String("Position");
-		auto& transform = internodeInfos[i].GlobalTransform;
+		auto& transform = internodeInfo.GlobalTransform;
 		//xyz
 		writer.StartArray();
 		writer.Double(transform[3].x);
@@ -902,9 +947,10 @@ void TreeManager::SerializeTreeGraph(std::string path, Entity tree)
 		//End Position
 		writer.String("Children");
 		writer.StartArray();
-		for(auto& child : EntityManager::GetChildren(internodes[i]))
+		for(auto& child : EntityManager::GetChildren(internode))
 		{
 			writer.Int(child.Index);
+			es.push(child);
 		}
 		writer.EndArray();
 		writer.EndObject();
