@@ -36,7 +36,7 @@ namespace TreeUtilities {
 		int _MainBranchOrderProtection = 6;
 		void Trim(int& totalChild, int& trimmedChild, std::map<int, Entity>& map, Entity internode);
 	public:
-		float RemovalDistance = 0.5f;
+		float RemovalDistance = 0.7f;
 		float AttractionDistance = 1.0f;
 		void ClearAttractionPoints() const;
 		void PlaceAttractionPoints();

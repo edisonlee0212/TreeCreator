@@ -32,6 +32,7 @@ namespace TreeUtilities {
 
 	class DefaultFoliageGenerator : public FoliageGeneratorBase
 	{
+		friend class TreeReconstructionSystem;
 		DefaultFoliageInfo _DefaultFoliageInfo;
 		EntityArchetype _Archetype;
 		static std::shared_ptr<Texture2D> _LeafSurfaceTex;

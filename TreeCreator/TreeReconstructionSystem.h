@@ -20,10 +20,13 @@ namespace TreeUtilities
 	enum class TreeReconstructionSystemStatus
 	{
 		Idle,
+		CreateTree,
 		MainBranches,
 		NormalGrowth,
 		Render,
+		RenderBranch,
 		CollectData,
+		CaptureCakeTower,
 		CleanUp,
 		Reconstruction
 	};
@@ -31,13 +34,15 @@ namespace TreeUtilities
 		public SystemBase
 	{
 		int _GenerateAmount = 10;
-		int _ReconAmount = 10;
-
-		int _ReconIndex = 0;
-		int _ReconSeed = 0;
-		int _ReconCounter = 0;
+		int _ReconAmount = 1;
+		int _Add = 0;
+		int _ControlLevel = 0;
+		int _EnableSpaceColonization = true;
+		int _ReconIndex = 0;	//0	
+		int _ReconSeed = 0;		//0	
+		int _ReconCounter = 0;	//0	1
 		int _ReconMainBranchInternodeLimit = 1000;
-
+		int _LearningIndex = 0;
 		rapidcsv::Document _TrainingDoc;
 		bool _FromTraining = false;
 		int _TrainingAmount;
@@ -49,7 +54,6 @@ namespace TreeUtilities
 		TreeReconstructionSystemStatus _Status = TreeReconstructionSystemStatus::Idle;
 		std::unique_ptr<CakeTower> _TargetCakeTower;
 
-		std::unique_ptr<KDop> _TargetKDop;
 		
 		Entity _CurrentTree;
 		std::vector<Entity> _Internodes;
@@ -65,14 +69,17 @@ namespace TreeUtilities
 		TreeParameters _TargetTreeParameter;
 
 		std::string _Name = "Apple";
-		
+		std::string _Prefix = "_2_2";
 		int _MaxAge = 30;
 		bool _NeedExport = false;
+		bool _UseMask = false;
 		bool _Growing = false;
 		void OnGui();
 		std::vector<CakeTowerOutput> _CakeTowersOutputList;
 		void ExportAllData();
 		void TryGrowTree();
+		void SetEnableFoliage(bool enabled) const;
+		Entity FindFoliageEntity() const;
 		void PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW);
 	public:
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);
