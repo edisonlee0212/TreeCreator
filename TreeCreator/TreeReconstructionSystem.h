@@ -33,7 +33,7 @@ namespace TreeUtilities
 	class TreeReconstructionSystem :
 		public SystemBase
 	{
-		int _GenerateAmount = 10;
+		int _GenerateAmount = 1;
 		int _ReconAmount = 1;
 		int _Add = 0;
 		int _ControlLevel = 0;
@@ -69,7 +69,7 @@ namespace TreeUtilities
 		TreeParameters _TargetTreeParameter;
 
 		std::string _Name = "Apple";
-		std::string _Prefix = "_2_2";
+		std::string _Prefix = "_1_1";
 		int _MaxAge = 30;
 		bool _NeedExport = false;
 		bool _UseMask = false;

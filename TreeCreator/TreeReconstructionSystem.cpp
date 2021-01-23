@@ -105,7 +105,7 @@ void TreeUtilities::TreeReconstructionSystem::OnGui()
 				ImGui::Checkbox("Use volume for main branches", &_UseCakeTower);
 				if (ImGui::Button("Start Reconstruction"))
 				{
-					_Prefix = "_6_6";
+					_Prefix = "_1_1";
 					_UseMask = true;
 					_FromTraining = false;
 					_ReconCounter = -1;
@@ -288,10 +288,6 @@ void TreeReconstructionSystem::PushInternode(Entity internode, const GlobalTrans
 					const float sliceAngle = 360.0f / _TargetCakeTower->SectorAmount;
 					int range = 1;
 					float max = -1;
-					if(_Prefix == "_10_10")
-					{
-						range = 2;
-					}
 					for (int i = -range; i <= range; i++)
 					{
 						auto y = slice.y + i;
@@ -664,19 +660,26 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 				else
 				{
 					bool mask = false;
-					if (_Prefix._Equal("_6_6"))
+					if (_Prefix._Equal("_1_1"))
 					{
-						_Prefix = "_10_10";
+						_Prefix = "_2_2";
+					}else if (_Prefix._Equal("_2_2"))
+					{
+						_Prefix = "_4_4";
+					}
+					else if (_Prefix._Equal("_4_4"))
+					{
+						_Prefix = "_8_8";
 					}
 					else
 					{
 						mask = true;
 					}
 					if (mask) {
-						if (!_UseMask) {
-							_Prefix = "_6_6";
-							_UseMask = true;
-							_GenerateAmount = 5;
+						if (_UseMask) {
+							_Prefix = "_1_1";
+							_UseMask = false;
+							//_GenerateAmount = 5;
 							_FromTraining = false;
 							_ReconCounter = -1;
 							_ReconIndex = 0;
@@ -857,7 +860,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			ofs.flush();
 			ofs.close();
 		}
-		/*
+		
 		TreeManager::ExportTreeAsModel(_CurrentTree, _StorePath + (_FromTraining ? "obj_recon/" : "/obj/") + (_UseMask ? "mask/" : "no_mask/") +
 			(_FromTraining ? std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_" + _Name + "_" : "")
 			+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter) + _Prefix
@@ -867,9 +870,8 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			(_FromTraining ? std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_" + _Name + "_" : "")
 			+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter) + _Prefix
 			, _CurrentTree);
-		*/
-		if (_FromTraining || _Prefix._Equal("_10_10"))
 		{
+
 			SetEnableFoliage(false);
 
 			auto seq = _DataCollectionSystem->_ImageCaptureSequences[_FromTraining ? _LearningIndex : _ReconIndex];
@@ -883,14 +885,14 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			_CurrentTree.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 
 			_Status = TreeReconstructionSystemStatus::CaptureCakeTower;
+
 		}
-		else _Status = TreeReconstructionSystemStatus::CleanUp;
 		break;
 	case TreeReconstructionSystemStatus::CaptureCakeTower:
 		_Status = TreeReconstructionSystemStatus::CleanUp;
 		break;
 	case TreeReconstructionSystemStatus::CleanUp:
-		if (!_FromTraining && _Prefix._Equal("_10_10"))
+		if (!_FromTraining)
 		{
 			path = _StorePath + "/tower/" + (_UseMask ? "mask/" : "no_mask/")
 				+ std::string(5 - std::to_string(_ReconCounter).length(), '0') + std::to_string(_ReconCounter)

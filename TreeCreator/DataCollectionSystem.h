@@ -15,6 +15,11 @@ namespace TreeUtilities {
 		CaptureRandom,
 		CaptureRandomBranch,
 		CaptureSemantic,
+		CaptureSemantic0,
+		CaptureSemantic1,
+		CaptureSemantic2,
+		CaptureSemantic3,
+		CaptureSemantic4,
 		CaptureBranchMask,
 		CollectData,
 		CaptureCakeTower,
@@ -89,15 +94,17 @@ namespace TreeUtilities {
 		Entity _Background;
 		
 		bool _NeedExport = false;
-		int _TargetResolution = 1280;
-		int _CaptureResolution = 1280;
+		int _TargetResolution = 960;
+		int _CaptureResolution = 960;
 		double _Timer;
 		bool _NeedEval = true;
 		bool _ExportOBJ = false;
 		bool _ExportGraph = false;
-		bool _ExportImages = false;
+		bool _ExportImages = true;
 		bool _ExportKDop = false;
-		bool _ExportCakeTower = false;
+		bool _ExportCakeTower = true;
+		bool _EnableMultipleAngles = false;
+		bool _ExportBranchOnly = false;
 		std::unique_ptr<RenderTarget> _SmallBranchFilter;
 		std::unique_ptr<GLProgram> _SmallBranchProgram;
 		std::unique_ptr<GLTexture2D> _SmallBranchBuffer;
@@ -116,6 +123,7 @@ namespace TreeUtilities {
 		std::vector<std::pair<std::pair<int, int>, std::vector<CakeTowerOutput>>> _PerSpeciesCakeTowersOutputList;
 		std::vector<std::pair<std::pair<int, int>, std::vector<CakeTowerOutput>>> _CakeTowersOutputList;
 		std::vector<std::shared_ptr<Texture2D>> _BackgroundTextures;
+		std::vector<std::shared_ptr<Texture2D>> _BranchBarkTextures;
 		Entity _DirectionalLightEntity;
 		Entity _DirectionalLightEntity1;
 		Entity _DirectionalLightEntity2;
@@ -129,6 +137,7 @@ namespace TreeUtilities {
 		int _Index;
 		int _Seed;
 		std::string _ReconPath;
+		void CaptureSemantic(ImageCaptureSequence& imageCaptureSequence, int angle) const;
 		void ExportCakeTowerForRecon(int layer, int sector);
 		void OnGui();
 	public:
@@ -144,6 +153,7 @@ namespace TreeUtilities {
 		void ExportCakeTowerPerSpecies(const std::string& path, bool isTrain) const;
 		void ExportCakeTowerGeneral(const std::string& path, bool isTrain) const;
 		void SetCameraPose(glm::vec3 position, glm::vec3 rotation, bool random = false);
+		void SetCameraPoseMulti(glm::vec3 position, glm::vec3 rotation, int angle);
 		void OnCreate() override;
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);
 		void Update() override;
