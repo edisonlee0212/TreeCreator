@@ -10,7 +10,7 @@
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
 #include "CakeTower.h"
-#include "KDop.h"
+//#include "KDop.h"
 #include "MaskProcessor.h"
 #include "rapidjson/prettywriter.h"
 #include "Ray.h"
@@ -503,7 +503,6 @@ Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurf
 	
 	EntityManager::SetPrivateComponent(entity, std::make_unique<TreeData>());
 	EntityManager::SetPrivateComponent(entity, std::make_unique<CakeTower>());
-	EntityManager::SetPrivateComponent(entity, std::make_unique<KDop>());
 	EntityManager::SetPrivateComponent(entity, std::make_unique<MaskProcessor>());
 	EntityManager::SetComponentData(entity, _TreeIndex);
 	auto mmc = std::make_unique<MeshRenderer>();

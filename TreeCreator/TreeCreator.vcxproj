@@ -114,7 +114,6 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClCompile Include="InternodeSystem.cpp" />
     <ClCompile Include="BranchSystem.cpp" />
     <ClCompile Include="Curve.cpp" />
-    <ClCompile Include="KDop.cpp" />
     <ClCompile Include="LeafSegment.cpp" />
     <ClCompile Include="LightEstimator.cpp" />
     <ClCompile Include="MapleFoliageGenerator.cpp" />
@@ -145,7 +144,6 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClInclude Include="InternodeSystem.h" />
     <ClInclude Include="BranchSystem.h" />
     <ClInclude Include="Curve.h" />
-    <ClInclude Include="KDop.h" />
     <ClInclude Include="LeafSegment.h" />
     <ClInclude Include="LightEstimator.h" />
     <ClInclude Include="MapleFoliageGenerator.h" />

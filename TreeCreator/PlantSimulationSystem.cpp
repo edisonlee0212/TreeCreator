@@ -19,7 +19,7 @@
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
 #include "CakeTower.h"
-#include "KDop.h"
+//#include "KDop.h"
 
 #include "TreeVolume.h"
 #include "MaskProcessor.h"
@@ -122,8 +122,8 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 #pragma endregion
 #pragma region Update branch structure information
 	auto& cakeTower = treeEntity.GetPrivateComponent<CakeTower>();
-	auto& kdop = treeEntity.GetPrivateComponent<KDop>();
-	const bool enableSpaceColonization = cakeTower->EnableSpaceColonization || kdop->EnableSpaceColonization;
+	//auto& kdop = treeEntity.GetPrivateComponent<KDop>();
+	const bool enableSpaceColonization = cakeTower->EnableSpaceColonization;
 	bool anyRemoved = false;
 	if (!mainBranch) EvaluateRemoval(rootInternode, treeParameters, anyRemoved);
 #pragma region Space colonization prep.
@@ -208,7 +208,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 	const bool growed = mainBranch ?
 		GrowShootsSpaceColonization(rootInternode, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value)
 		:
-		GrowShoots(rootInternode, cakeTower->EnableSpaceColonization ? dynamic_cast<TreeVolume*>(cakeTower.get()) : dynamic_cast<TreeVolume*>(kdop.get()), treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value, enableSpaceColonization, _ControlLevel);
+		GrowShoots(rootInternode, dynamic_cast<TreeVolume*>(cakeTower.get()), treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.Value, enableSpaceColonization, _ControlLevel);
 	if (growed) {
 		UpdateDistanceToBranchEnd(rootInternode, treeParameters, treeAge.Value);
 		UpdateDistanceToBranchStart(rootInternode);

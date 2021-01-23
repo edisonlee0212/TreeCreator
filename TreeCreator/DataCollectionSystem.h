@@ -1,6 +1,5 @@
 #pragma once
 #include "CakeTower.h"
-#include "KDop.h"
 #include "PlantSimulationSystem.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
@@ -36,19 +35,6 @@ namespace TreeUtilities {
 			Index = index;
 			Name = name;
 			Parameters = params;
-		}
-	};
-
-	struct KDopOutput
-	{
-		int Index;
-		std::string Name;
-		std::vector<float> data;
-		KDopOutput(int index, std::string& name, std::unique_ptr<KDop>& kdop)
-		{
-			Index = index;
-			Name = name;
-			data = kdop->DirectionalDistance;
 		}
 	};
 
@@ -94,8 +80,8 @@ namespace TreeUtilities {
 		Entity _Background;
 		
 		bool _NeedExport = false;
-		int _TargetResolution = 960;
-		int _CaptureResolution = 960;
+		int _TargetResolution = 1280;
+		int _CaptureResolution = 1280;
 		double _Timer;
 		bool _NeedEval = true;
 		bool _ExportOBJ = false;
@@ -118,7 +104,6 @@ namespace TreeUtilities {
 		glm::vec3 _CameraEulerRotation = glm::radians(glm::vec3(15, 0, 0));
 		std::vector<std::pair<ImageCaptureSequence, TreeParameters>> _ImageCaptureSequences;
 		std::vector<ParamsOutput> _TreeParametersOutputList;
-		std::vector<KDopOutput> _KDopsOutputList;
 		std::vector<std::pair<std::pair<int, int>, std::vector<CakeTowerOutput>>> _GeneralCakeTowersOutputList;
 		std::vector<std::pair<std::pair<int, int>, std::vector<CakeTowerOutput>>> _PerSpeciesCakeTowersOutputList;
 		std::vector<std::pair<std::pair<int, int>, std::vector<CakeTowerOutput>>> _CakeTowersOutputList;
@@ -148,7 +133,6 @@ namespace TreeUtilities {
 		bool IsExport() const;
 		void PushImageCaptureSequence(ImageCaptureSequence sequence);
 		void ExportParams(const std::string& path) const;
-		void ExportKDops(const std::string& path) const;
 		void ExportCakeTower(const std::string& path, bool isTrain) const;
 		void ExportCakeTowerPerSpecies(const std::string& path, bool isTrain) const;
 		void ExportCakeTowerGeneral(const std::string& path, bool isTrain) const;

@@ -281,11 +281,7 @@ void DataCollectionSystem::ExportAllData()
 	{
 		i.second.clear();
 	}
-	if (_ExportKDop) {
-		ExportKDops(_StorePath + "kdops_" + (_IsTrain ? "train" : "val"));
-	}
 	_TreeParametersOutputList.clear();
-	_KDopsOutputList.clear();
 	const double spentTime = Application::EngineTime() - _Timer;
 	Debug::Log("Generation Finished. Used time: " + std::to_string(spentTime));
 }
@@ -359,34 +355,6 @@ void DataCollectionSystem::ExportParams(const std::string& path) const
 	}
 }
 
-void DataCollectionSystem::ExportKDops(const std::string& path) const
-{
-	if (_KDopsOutputList.empty()) return;
-	std::ofstream ofs;
-	ofs.open((path + ".csv").c_str(), std::ofstream::out | (_Batched ? std::ofstream::app : std::ofstream::trunc));
-	if (ofs.is_open())
-	{
-		for (auto& instance : _KDopsOutputList) {
-			auto& kdop = instance.data;
-			std::string output = "";
-			output += std::to_string(instance.Index) + ",";
-			output += instance.Name;
-			for (auto& i : kdop)
-			{
-				output += "," + std::to_string(i);
-			}
-			output += "\n";
-			ofs.write(output.c_str(), output.size());
-			ofs.flush();
-		}
-		ofs.close();
-		Debug::Log("Tree group saved: " + path + ".csv");
-	}
-	else
-	{
-		Debug::Error("Can't open file!");
-	}
-}
 
 void TreeUtilities::DataCollectionSystem::ExportCakeTower(const std::string& path, bool isTrain) const
 {
@@ -1014,10 +982,7 @@ void DataCollectionSystem::LateUpdate()
 		}
 		
 		_TreeParametersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, treeParameters);
-		if (_ExportKDop && _CurrentTree.HasPrivateComponent<KDop>()) {
-			_CurrentTree.GetPrivateComponent<KDop>()->CalculateVolume();
-			_KDopsOutputList.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<KDop>());
-		}
+
 		if (_CurrentTree.HasPrivateComponent<CakeTower>()) {
 			if (_ExportCakeTower && !_Reconstruction) {
 				for (auto& i : _GeneralCakeTowersOutputList) {

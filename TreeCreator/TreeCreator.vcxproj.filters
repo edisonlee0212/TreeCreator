@@ -123,9 +123,6 @@
     <ClCompile Include="TreeScene.cpp">
       <Filter>Source Files\Utilities</Filter>
     </ClCompile>
-    <ClCompile Include="KDop.cpp">
-      <Filter>Source Files\TreeVolume</Filter>
-    </ClCompile>
     <ClCompile Include="TreeVolume.cpp">
       <Filter>Source Files\TreeVolume</Filter>
     </ClCompile>
@@ -196,9 +193,6 @@
     </ClInclude>
     <ClInclude Include="TreeSystem.h">
       <Filter>Header Files\Systems</Filter>
-    </ClInclude>
-    <ClInclude Include="KDop.h">
-      <Filter>Header Files\TreeVolume</Filter>
     </ClInclude>
     <ClInclude Include="BezierCurve.h">
       <Filter>Header Files\Utilities</Filter>
