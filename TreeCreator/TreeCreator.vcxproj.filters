@@ -141,6 +141,9 @@
     <ClCompile Include="TreeCollectionGenerationSystem.cpp">
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
+    <ClCompile Include="RealTreeReconstructionSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SorghumReconstructionSystem.h">
@@ -226,6 +229,9 @@
     </ClInclude>
     <ClInclude Include="TreeCollectionGenerationSystem.h">
       <Filter>Header Files\Systems</Filter>
+    </ClInclude>
+    <ClInclude Include="RealTreeReconstructionSystem.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

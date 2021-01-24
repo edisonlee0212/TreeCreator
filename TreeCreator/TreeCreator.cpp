@@ -9,6 +9,7 @@
 #include "DataCollectionSystem.h"
 #include "TreeReconstructionSystem.h"
 #include "TreeCollectionGenerationSystem.h"
+#include "RealTreeReconstructionSystem.h"
 #include "Bloom.h"
 #include "SSAO.h"
 
@@ -22,6 +23,7 @@ DataCollectionSystem* InitImageCollectionSystem();
 TreeReconstructionSystem* InitTreeReconstructionSystem();
 SorghumReconstructionSystem* InitSorghumReconstructionSystem();
 TreeCollectionGenerationSystem* InitTreeCollectionGenerationSystem();
+RealTreeReconstructionSystem* InitRealTreeReconstructionSystem();
 void EngineSetup();
 void main()
 {
@@ -85,11 +87,13 @@ void main()
 	DataCollectionSystem* dcs = InitImageCollectionSystem();
 	TreeReconstructionSystem* trs = InitTreeReconstructionSystem();
 	TreeCollectionGenerationSystem* tcgs = InitTreeCollectionGenerationSystem();
+	RealTreeReconstructionSystem* rtr = InitRealTreeReconstructionSystem();
 	dcs->SetPlantSimulationSystem(pss);
 	trs->SetPlantSimulationSystem(pss);
 	dcs->SetDirectionalLightEntity(dle, dle1, dle2, dle3);
 	trs->SetDataCollectionSystem(dcs);
 	tcgs->SetDataCollectionSystem(dcs);
+	rtr->AttachDataCollectionSystem(dcs, pss, trs);
 	//tcgs->ImportCsv("./parameters.csv");
 	Entity ground = InitGround();
 	ground.SetEnabled(false);
@@ -221,6 +225,11 @@ SorghumReconstructionSystem* InitSorghumReconstructionSystem()
 TreeCollectionGenerationSystem* InitTreeCollectionGenerationSystem()
 {
 	return Application::GetCurrentWorld()->CreateSystem<TreeCollectionGenerationSystem>(SystemGroup::SimulationSystemGroup);
+}
+
+RealTreeReconstructionSystem* InitRealTreeReconstructionSystem()
+{
+	return Application::GetCurrentWorld()->CreateSystem<RealTreeReconstructionSystem>(SystemGroup::SimulationSystemGroup);
 }
 
 void EngineSetup()

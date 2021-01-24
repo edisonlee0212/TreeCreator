@@ -10,7 +10,7 @@ namespace TreeUtilities
 	{
 		friend class PlantSimulationSystem;
 	protected:
-		int _AttractionPointsCount = 2000;
+		int _AttractionPointsCount = 4000;
 		
 		glm::vec3 _Center;
 		float _SphereRadius;

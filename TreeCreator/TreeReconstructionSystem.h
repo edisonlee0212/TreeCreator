@@ -59,9 +59,10 @@ namespace TreeUtilities
 		std::vector<Entity> _Internodes;
 		std::string _MaskPath = "";
 		std::string _SkeletonPath = "";
-		std::shared_ptr<Texture2D> _TargetMask;
+		
 		std::string _TargetCakeTowerPath = "";
 		std::string _TargetKdopPath = "";
+		std::shared_ptr<Texture2D> _TargetMask;
 		std::shared_ptr<Texture2D> _TargetSkeleton;
 		int _MainBranchInternodeSize;
 		int _AgeForMainBranches = 4;
@@ -76,12 +77,13 @@ namespace TreeUtilities
 		bool _Growing = false;
 		void OnGui();
 		std::vector<CakeTowerOutput> _CakeTowersOutputList;
+		
+	public:
 		void ExportAllData();
 		void TryGrowTree();
 		void SetEnableFoliage(bool enabled) const;
 		Entity FindFoliageEntity() const;
 		void PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW);
-	public:
 		void SetPlantSimulationSystem(PlantSimulationSystem* value);
 		void SetDataCollectionSystem(DataCollectionSystem* value);
 		void Init();

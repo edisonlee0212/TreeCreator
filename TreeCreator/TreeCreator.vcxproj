@@ -123,6 +123,7 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClCompile Include="PlantSimulationSystem.cpp" />
     <ClCompile Include="pugixml\pugixml.cpp" />
     <ClCompile Include="InternodeRingSegment.cpp" />
+    <ClCompile Include="RealTreeReconstructionSystem.cpp" />
     <ClCompile Include="SorghumReconstructionSystem.cpp" />
     <ClCompile Include="TreeCollectionGenerationSystem.cpp" />
     <ClCompile Include="TreeCreator.cpp" />
@@ -155,6 +156,7 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClInclude Include="pugixml\pugixml.hpp" />
     <ClInclude Include="InternodeRingSegment.h" />
     <ClInclude Include="rapidcsv\rapidcsv.h" />
+    <ClInclude Include="RealTreeReconstructionSystem.h" />
     <ClInclude Include="SorghumReconstructionSystem.h" />
     <ClInclude Include="TreeCollectionGenerationSystem.h" />
     <ClInclude Include="TreeManager.h" />

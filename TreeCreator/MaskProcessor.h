@@ -11,6 +11,7 @@ namespace TreeUtilities {
 		
 		friend class DataCollectionSystem;
 		friend class TreeReconstructionSystem;
+		friend class RealTreeReconstructionSystem;
 		static Entity _CameraEntity;
 		static Entity _Background;
 		static unsigned _ResolutionX;

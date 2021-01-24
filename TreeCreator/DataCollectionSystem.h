@@ -66,7 +66,7 @@ namespace TreeUtilities {
 	{
 		friend class TreeReconstructionSystem;
 		friend class TreeCollectionGenerationSystem;
-		
+		friend class RealTreeReconstructionSystem;
 		DataCollectionSystemStatus _Status = DataCollectionSystemStatus::Idle;
 		int _CurrentSelectedSequenceIndex = 0;
 		int _Counter = 0;

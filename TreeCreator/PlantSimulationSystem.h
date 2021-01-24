@@ -15,6 +15,7 @@ namespace TreeUtilities {
 		public SystemBase
 	{
 		friend class DataCollectionSystem;
+		friend class RealTreeReconstructionSystem;
 		friend class TreeReconstructionSystem;
 		friend class MaskProcessor;
 		friend class TreeCollectionGenerationSystem;
