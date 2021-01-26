@@ -712,7 +712,8 @@ void DataCollectionSystem::LateUpdate()
 			if (_StartIndex <= _EndIndex)
 			{
 				if (_ExportImages || _EnableMultipleAngles) {
-					SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, true);
+					SetCameraPoseMulti(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, 3);
+					//SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, false);
 
 					RenderManager::SetAmbientLight(0.3f);
 					float brightness = glm::linearRand(5.0f, 7.0f);
@@ -827,7 +828,7 @@ void DataCollectionSystem::LateUpdate()
 			path = _StorePath + "white_" + (_IsTrain ? "train/" : "val/") +
 				std::string(5 - std::to_string(_Counter).length(), '0') + std::to_string(_Counter)
 				+ "_" + imageCaptureSequence.Name
-				+ ".png";
+				+ "_270.png";
 		}
 		else
 		{

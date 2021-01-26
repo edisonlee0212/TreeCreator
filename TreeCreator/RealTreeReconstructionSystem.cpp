@@ -7,6 +7,7 @@
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
 #include "MaskProcessor.h"
+#include "Ray.h"
 void TreeUtilities::RealTreeReconstructionSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
@@ -17,11 +18,11 @@ void TreeUtilities::RealTreeReconstructionSystem::OnGui()
 				std::filesystem::remove_all("tree_real/rbv_recon");
 				std::filesystem::create_directory("tree_real/image_recon");
 				std::filesystem::create_directory("tree_real/rbv_recon");
-				_TrainingDoc = rapidcsv::Document("./tree_real/023_rbv_photographs_predicted.csv", rapidcsv::LabelParams(-1, 1));
+				_TrainingDoc = rapidcsv::Document("./tree_real/045_rbv_photographs_predicted.csv", rapidcsv::LabelParams(-1, 1));
 
-				_ReconIndex = 0;
-				_SpecieIndex = -1;
-				_ReconAmount = 23;
+				_ReconIndex = 7;
+				_SpecieIndex = 2;
+				_ReconAmount = 12;
 				_NeedExport = true;
 			}
 			ImGui::EndMenu();
@@ -67,7 +68,7 @@ void RealTreeReconstructionSystem::CreateTree()
 	case 1:
 		_Name = "apple";
 		_AgeForMainBranches = 4;
-		_TargetCakeTower->MaxHeight = 12.5;
+		_TargetCakeTower->MaxHeight = 16.5;
 		_TargetInternodeSize = 1601;
 		_ReconMainBranchInternodeLimit = 1000;
 		break;
@@ -97,7 +98,7 @@ void RealTreeReconstructionSystem::CreateTree()
 		_Name = "oak";
 		_TargetCakeTower->MaxHeight = 18.5;
 		_AgeForMainBranches = 5;
-		_TargetInternodeSize = 4487;
+		_TargetInternodeSize = 8087;
 		_ReconMainBranchInternodeLimit = 1000;
 		break;
 	case 6:
@@ -110,7 +111,7 @@ void RealTreeReconstructionSystem::CreateTree()
 		_ReconMainBranchInternodeLimit = 0;
 		break;
 	}
-	
+	_ReconMainBranchInternodeLimit = 1000;
 	if (!_UseMask)
 	{
 		_AgeForMainBranches = 0;
@@ -120,8 +121,24 @@ void RealTreeReconstructionSystem::CreateTree()
 	auto& seq = _DataCollectionSystem->_ImageCaptureSequences[_SpecieIndex];
 	_DataCollectionSystem->SetCameraPose(seq.first.CameraPos, seq.first.CameraEulerDegreeRot);
 	auto treeParameter = seq.second;
-	_MaskPath = _StorePath + "mask_real_small/" + std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_tree.png";
-	_SkeletonPath = _StorePath + "skeleton_recon/" + std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_tree.png";
+
+#pragma region Slim
+	treeParameter.ThicknessControlFactor = 0.69;
+	//treeParameter.LowBranchPruningFactor = 0.7;
+	//treeParameter.Age = 8;
+#pragma endregion
+
+	
+	/*
+	treeParameter.ThicknessControlFactor = 0.69;
+	treeParameter.ApicalDominanceBase = 4;
+	treeParameter.GravityBendingStrength = 0.8;
+	//treeParameter.GravitropismLevelFactor = -0.08;
+	treeParameter.VarianceApicalAngle = 0.0f;
+	*/
+	if(_UseMask)treeParameter.Age = 200;
+	_MaskPath = _StorePath + "mask/" + std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_tree.bmp";
+	_SkeletonPath = _StorePath + "skeleton_recon/" + std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_tree.bmp";
 	_TargetMask = ResourceManager::LoadTexture(false, _MaskPath);
 	_TargetSkeleton = ResourceManager::LoadTexture(false, _SkeletonPath);
 
@@ -130,7 +147,9 @@ void RealTreeReconstructionSystem::CreateTree()
 	maskProcessor->_Skeleton = _TargetSkeleton;
 	maskProcessor->_Mask = _TargetMask;
 	maskProcessor->AttractionDistance = 1.0f;
+	maskProcessor->RemovalDistance = 0.7f;
 	maskProcessor->PlaceAttractionPoints();
+	//Disable();
 }
 
 void RealTreeReconstructionSystem::TryGrowTree()
@@ -164,11 +183,145 @@ void RealTreeReconstructionSystem::TryGrowTree()
 	auto id = glm::translate(glm::vec3(0.0f)) * glm::mat4_cast(glm::quat(glm::vec3(0.0f))) * glm::scale(glm::vec3(1.0f));
 	//_PlantSimulationSystem->UpdateLocalTransform(rootInternode, _TargetTreeParameter, id, treeLTW.Value, false);
 	//_PlantSimulationSystem->ApplyLocalTransform(_CurrentTree);
-	_TreeReconstructionSystem->PushInternode(rootInternode, cameraLTW, treeLTW);
+	PushInternode(rootInternode, cameraLTW, treeLTW);
 
 	_Internodes.resize(0);
 	TreeManager::GetInternodeQuery().ToEntityArray(treeIndex, _Internodes);
 	_MainBranchInternodeSize = _Internodes.size();
+}
+
+void RealTreeReconstructionSystem::PushInternode(Entity internode, const GlobalTransform& cameraTransform,
+	const GlobalTransform& treeLTW)
+{
+	auto info = internode.GetComponentData<InternodeInfo>();
+	if (info.DistanceToRoot > 19.0)
+	{
+		EntityManager::DeleteEntity(internode);
+		return;
+	}
+	auto parentLTW = info.GlobalTransform;
+	if (glm::any(glm::isnan(parentLTW[3])))
+	{
+		EntityManager::DeleteEntity(internode);
+		return;
+	}
+	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW, &parentLTW](Entity child)
+		{
+			auto internodeInfo = child.GetComponentData<InternodeInfo>();
+			glm::vec3 scale;
+			glm::vec3 skew;
+			glm::vec4 perspective;
+			glm::quat rotation;
+			glm::vec3 translation;
+			glm::decompose(parentLTW, scale, internodeInfo.ParentRotation, internodeInfo.ParentTranslation, skew, perspective);
+			glm::quat actualLocalRotation;
+
+			glm::decompose(treeLTW.Value, scale, rotation, translation, skew, perspective);
+			glm::quat newGlobalRotation = rotation * internodeInfo.ParentRotation * internodeInfo.DesiredLocalRotation;
+			GlobalTransform globalTransform;
+			globalTransform.Value = (treeLTW.Value * parentLTW * internodeInfo.LocalTransform);
+			Ray ray;
+			ray.Start = cameraTransform.GetPosition();
+			ray.Direction = globalTransform.GetPosition() - ray.Start;
+			ray.Length = glm::length(ray.Direction);
+			ray.Direction = glm::normalize(ray.Direction);
+			if (internodeInfo.IsMaxChild)
+			{
+				//Is max child, no rotation.
+				//glm::vec3 closestPointOnRay = glm::closestPointOnLine();
+				glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
+				glm::vec3 up = newGlobalRotation * glm::vec3(0, 1, 0);
+				up = glm::normalize(glm::cross(glm::cross(front, up), front));
+				newGlobalRotation = glm::quatLookAt(front, up);
+			}
+			else if (internodeInfo.DistanceToRoot < 10)
+			{
+				//1. Calculate the plane in 3d space.
+				glm::vec3 orig = internodeInfo.ParentTranslation;
+
+				glm::vec3 front = newGlobalRotation * glm::vec3(0, 0, -1);
+				auto test = orig + glm::vec3(front.x, 0, front.z) * 100.0f;
+				if (true) {
+					auto slice = _TargetCakeTower->SelectSlice(test);
+					//slice.x += 1;
+					if (slice.x >= _TargetCakeTower->LayerAmount) slice.x = _TargetCakeTower->LayerAmount - 1;
+					glm::vec3 weight = glm::vec3(0);
+					const float sliceAngle = 360.0f / _TargetCakeTower->SectorAmount;
+					int range = 1;
+					float max = -1;
+					for (int i = -range; i <= range; i++)
+					{
+						auto y = slice.y + i;
+						if (y < 0) y += _TargetCakeTower->SectorAmount;
+						if (y >= _TargetCakeTower->SectorAmount) y -= _TargetCakeTower->SectorAmount;
+
+						if (_TargetCakeTower->CakeTiers[slice.x][y].MaxDistance == 0) continue;
+
+						float currentAngle = sliceAngle * (static_cast<float>(y) + 0.5f);
+						if (currentAngle >= 360) currentAngle = 0;
+						float x = glm::abs(glm::tan(glm::radians(currentAngle)));
+						float z = 1.0f;
+						if (currentAngle >= 0 && currentAngle <= 90)
+						{
+							z *= -1;
+							x *= -1;
+						}
+						else if (currentAngle > 90 && currentAngle <= 180)
+						{
+							x *= -1;
+						}
+						else if (currentAngle > 270 && currentAngle <= 360)
+						{
+							z *= -1;
+						}
+						float distance = _TargetCakeTower->CakeTiers[slice.x][y].MaxDistance;
+						if (distance > max)
+						{
+							weight = glm::normalize(glm::vec3(x, 0.0f, z));
+							max = distance;
+						}
+					}
+					front = glm::normalize(weight);
+				}
+				else
+				{
+					front = glm::rotate(glm::vec3(front.x, 0, front.z), glm::radians(glm::linearRand(-10.0f, 10.0f)), glm::vec3(0, 1, 0));
+				}
+				glm::vec3 normal = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
+				float stored = ray.Length;
+				auto d = glm::dot(ray.Direction, normal);
+				ray.Length = glm::dot(orig - ray.Start, normal) / d;
+				if (glm::abs(stored - ray.Length) > 0.5f)
+				{
+					if (stored > ray.Length) ray.Length = stored - 0.5;
+					else ray.Length = stored + 0.5;
+				}
+				glm::vec3 target = ray.GetEnd();
+				front = target - internodeInfo.ParentTranslation;
+				glm::vec3 up = newGlobalRotation * glm::vec3(0, 1, 0);
+				internodeInfo.DistanceToParent = glm::length(front);
+				front = glm::normalize(front);
+				up = glm::normalize(glm::cross(glm::cross(front, up), front));
+				newGlobalRotation = glm::quatLookAt(front, up);
+			}
+			internodeInfo.MainChildRotation = newGlobalRotation;
+			actualLocalRotation = glm::inverse(rotation) * glm::inverse(internodeInfo.ParentRotation) * newGlobalRotation;
+			internodeInfo.DesiredLocalRotation = actualLocalRotation;
+			internodeInfo.LocalTransform = glm::translate(glm::mat4(1.0f), actualLocalRotation * glm::vec3(0, 0, -1)
+				* internodeInfo.DistanceToParent) * glm::mat4_cast(actualLocalRotation)
+				* glm::scale(glm::vec3(1.0f));
+			internodeInfo.GlobalTransform = parentLTW * internodeInfo.LocalTransform;
+			internodeInfo.StartAge = 0;
+			EntityManager::SetComponentData(child, internodeInfo);
+			globalTransform.Value = treeLTW.Value * internodeInfo.GlobalTransform * glm::scale(glm::vec3(0.3f));
+			EntityManager::SetComponentData(child, globalTransform);
+		}
+	);
+	EntityManager::ForEachChild(internode, [&cameraTransform, this, &treeLTW](Entity child)
+		{
+			PushInternode(child, cameraTransform, treeLTW);
+		}
+	);
 }
 
 
@@ -206,13 +359,20 @@ void TreeUtilities::RealTreeReconstructionSystem::Update()
 				_SpecieIndex = 0;
 				_ReconIndex++;
 			}
-			_Status = RealTreeReconstructionSystemStatus::CreateTree;
+			_Status = RealTreeReconstructionSystemStatus::Test;
+			CreateTree();
 		}
 		else OnGui();
 		break;
+	case RealTreeReconstructionSystemStatus::Test:
+		_Status = RealTreeReconstructionSystemStatus::CreateTree;
+		break;
 	case RealTreeReconstructionSystemStatus::CreateTree:
-		CreateTree();
-		if (_UseMask) _Status = RealTreeReconstructionSystemStatus::MainBranches;
+		
+		if (_UseMask) {
+			_Growing = true;
+			_Status = RealTreeReconstructionSystemStatus::MainBranches;
+		}
 		else {
 			auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
 			cakeTower->SetEnabled(true);
@@ -234,8 +394,33 @@ void TreeUtilities::RealTreeReconstructionSystem::Update()
 			//_CurrentTree.SetComponentData(age);
 			_Status = RealTreeReconstructionSystemStatus::NormalGrowth;
 		}
+		//Disable();
 		break;
 	case RealTreeReconstructionSystemStatus::MainBranches:
+		TryGrowTree();
+		
+		if (!_Growing)
+		{
+			auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
+			cakeTower->SetEnabled(true);
+			cakeTower->CakeTiers = _TargetCakeTower->CakeTiers;
+
+			cakeTower->LayerAmount = _TargetCakeTower->LayerAmount;
+			cakeTower->SectorAmount = _TargetCakeTower->SectorAmount;
+			cakeTower->MaxHeight = _TargetCakeTower->MaxHeight;
+			cakeTower->MaxRadius = _TargetCakeTower->MaxRadius;
+
+			cakeTower->GenerateMesh();
+			cakeTower->ClearAttractionPoints();
+			cakeTower->GenerateAttractionPoints(6000);
+			cakeTower->EnableSpaceColonization = _EnableSpaceColonization;
+			_PlantSimulationSystem->ResumeGrowth();
+			TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
+			age.Value = _AgeForMainBranches;
+			age.ToGrowIteration = 100 - _AgeForMainBranches;
+			//_CurrentTree.SetComponentData(age);
+			_Status = RealTreeReconstructionSystemStatus::NormalGrowth;
+		}
 		break;
 	case RealTreeReconstructionSystemStatus::NormalGrowth: {
 		_PlantSimulationSystem->_AutoGenerateMesh = true;
@@ -301,6 +486,10 @@ void TreeUtilities::RealTreeReconstructionSystem::Update()
 		break;
 	case RealTreeReconstructionSystemStatus::Render:
 		_Status = RealTreeReconstructionSystemStatus::CollectData;
+		if(true)
+		{
+			Disable();
+		}
 		break;
 	case RealTreeReconstructionSystemStatus::CollectData:
 		{
@@ -312,7 +501,11 @@ void TreeUtilities::RealTreeReconstructionSystem::Update()
 
 		}
 
-		if (_SpecieIndex == 0) {
+		if (true/*(_ReconIndex == 0 && _SpecieIndex == 0) ||
+			(_ReconIndex == 1 && _SpecieIndex == 5) ||
+			(_ReconIndex == 2 && _SpecieIndex == 4) ||
+			(_ReconIndex == 3 && _SpecieIndex == 1)*/
+			) {
 #pragma region CakeTower
 			Entity foliageEntity;
 			EntityManager::ForEachChild(_CurrentTree, [&foliageEntity](Entity child)
@@ -381,9 +574,16 @@ void TreeUtilities::RealTreeReconstructionSystem::Update()
 		_Status = RealTreeReconstructionSystemStatus::CleanUp;
 		break;
 	case RealTreeReconstructionSystemStatus::CleanUp:
-		if (_SpecieIndex == 0) {
+		
+		if (true/*(_ReconIndex == 0 && _SpecieIndex == 0) ||
+			(_ReconIndex == 1 && _SpecieIndex == 5) ||
+			(_ReconIndex == 2 && _SpecieIndex == 4) ||
+			(_ReconIndex == 3 && _SpecieIndex == 1)*/
+		){
 		std::string path = _StorePath + "rbv_recon/" +
-			std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_tree.png";
+			std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + 
+			std::string(5 - std::to_string(_SpecieIndex).length(), '0') + std::to_string(_SpecieIndex) +
+			"_tree.png";
 		_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
 			path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
 	}

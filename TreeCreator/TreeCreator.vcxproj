@@ -156,6 +156,10 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClInclude Include="pugixml\pugixml.hpp" />
     <ClInclude Include="InternodeRingSegment.h" />
     <ClInclude Include="rapidcsv\rapidcsv.h" />
+    <ClInclude Include="rapidxml.hpp" />
+    <ClInclude Include="rapidxml_iterators.hpp" />
+    <ClInclude Include="rapidxml_print.hpp" />
+    <ClInclude Include="rapidxml_utils.hpp" />
     <ClInclude Include="RealTreeReconstructionSystem.h" />
     <ClInclude Include="SorghumReconstructionSystem.h" />
     <ClInclude Include="TreeCollectionGenerationSystem.h" />

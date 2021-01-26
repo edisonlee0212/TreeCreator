@@ -57,13 +57,15 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
 	particleSys->Matrices.clear();
 	std::vector<InternodeInfo> internodeInfos;
+	std::vector<Entity> internodes;
 	std::mutex m;
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this, &internodes](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
 		{
 			if (info->AccumulatedLength > _DefaultFoliageInfo.LengthLimit || info->GlobalTransform[3].y < _DefaultFoliageInfo.HeightLimit) return;
 			if (ti.Value != index->Value) return;
 			std::lock_guard<std::mutex> lock(m);
 			internodeInfos.push_back(*info);
+			internodes.push_back(internode);
 		}
 	);
 	for (int i = 0; i < internodeInfos.size(); i++)
@@ -80,6 +82,9 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 		auto branchFront = rotation * glm::vec3(0, 0, -1);
 		auto branchUp = rotation * glm::vec3(0, 1, 0);
 		if (glm::abs(glm::dot(branchFront, glm::vec3(0.0f, 1.0f, 0.0f))) > 0.99f) continue;
+
+		auto& internodeData = internodes[i].GetPrivateComponent<InternodeData>();
+		internodeData->LeavesTransforms.clear();
 		for (int j = 0; j < _DefaultFoliageInfo.LeafAmount; j++)
 		{
 			glm::mat4 leafTransform;
@@ -92,6 +97,7 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 				(glm::translate(glm::mat4(1.0f), translation + position) * glm::mat4_cast(rotation) * glm::scale(ls));
 
 			particleSys->Matrices.push_back(leafTransform);
+			internodeData->LeavesTransforms.push_back(leafTransform);
 		}
 	}
 }

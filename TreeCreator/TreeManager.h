@@ -4,6 +4,7 @@
 #include "BranchSystem.h"
 #include "InternodeSystem.h"
 #include "LightEstimator.h"
+#include "rapidxml.hpp"
 
 #include "InternodeRingSegment.h"
 #include "BezierCurve.h"
@@ -42,6 +43,7 @@ namespace TreeUtilities {
 
 	class InternodeData : public PrivateComponentBase {
 	public:
+		std::vector<glm::mat4> LeavesTransforms;
 		std::mutex InternodeLock;
 		std::vector<glm::vec3> Points;
 		std::vector<Bud> Buds;
@@ -250,7 +252,8 @@ namespace TreeUtilities {
 		static InternodeIndex _InternodeIndex;
 
 		static bool _Ready;
-
+		static void WriteChain(int order, Entity internode, rapidxml::xml_node<>* chains, rapidxml::xml_document<>* doc);
+		static void ExportChains(int parentOrder, Entity internode, rapidxml::xml_node<>* chains, rapidxml::xml_document<>* doc);
 		static void SimpleMeshGenerator(Entity& internode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep = -1);
 	public:
 		static void SerializeTreeGraph(std::string path, Entity tree);
@@ -276,7 +279,11 @@ namespace TreeUtilities {
 		static Entity CreateAttractionPoint(const TreeIndex& treeIndex, const glm::vec3& position, const Entity& tree);
 
 		static void ExportTreeAsModel(Entity treeEntity, std::string filename, bool includeFoliage = false);
-		
+
+		static void ExportTreeAsXml(Entity treeEntity, std::string filename);
+
+
 		static LightEstimator* GetLightEstimator();
 	};
+
 }

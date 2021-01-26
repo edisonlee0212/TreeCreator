@@ -12,6 +12,7 @@ namespace  TreeUtilities
 	enum class RealTreeReconstructionSystemStatus
 	{
 		Idle,
+		Test,
 		CreateTree,
 		MainBranches,
 		NormalGrowth,
@@ -54,6 +55,7 @@ namespace  TreeUtilities
 		void CreateTree();
 		void TryGrowTree();
 	public:
+		void PushInternode(Entity internode, const GlobalTransform& cameraTransform, const GlobalTransform& treeLTW);
 		void AttachDataCollectionSystem(DataCollectionSystem* dc, PlantSimulationSystem* ps, TreeReconstructionSystem* trs);
 		void OnCreate() override;
 		void Update() override;

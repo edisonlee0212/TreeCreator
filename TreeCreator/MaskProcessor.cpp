@@ -259,8 +259,8 @@ void TreeUtilities::MaskProcessor::OnGui()
 		const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
 		std::vector<GlobalTransform> points;
 		TreeManager::GetAttractionPointQuery().ToComponentDataArray(treeIndex, points);
-		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 0.0f, 0.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), RemovalDistance / 2.0f);
-		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 1.0f, 1.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), AttractionDistance / 2.0f);
+		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 0.0f, 0.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), RemovalDistance / 4.0f);
+		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 1.0f, 1.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), AttractionDistance / 4.0f);
 		
 	}
 	if(ImGui::Button("Display mask"))

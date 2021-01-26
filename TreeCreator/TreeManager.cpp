@@ -14,6 +14,11 @@
 #include "MaskProcessor.h"
 #include "rapidjson/prettywriter.h"
 #include "Ray.h"
+
+#include "rapidxml_print.hpp"
+#include "rapidxml_utils.hpp"
+#include "rapidxml.hpp"
+
 using namespace TreeUtilities;
 
 LightEstimator* TreeUtilities::TreeManager::_LightEstimator;
@@ -45,13 +50,73 @@ void InternodeData::OnGui()
 	}
 }
 
-
-
 void TreeData::OnGui()
 {
 	ImGui::Text(("MeshGenerated: " + std::string(MeshGenerated ? "Yes" : "No")).c_str());
 	ImGui::Text(("FoliageGenerated: " + std::string(FoliageGenerated ? "Yes" : "No")).c_str());
 	ImGui::Text(("ActiveLength: " + std::to_string(ActiveLength)).c_str());
+
+	static char sceneOutputName[256] = {};
+	ImGui::InputText("File name", sceneOutputName, 255);
+	if (ImGui::Button(("Export tree as " + std::string(sceneOutputName) + ".obj").c_str())) {
+		TreeManager::ExportTreeAsModel(GetOwner(), sceneOutputName, true);
+	}
+
+	if (ImGui::Button(("Export tree as " + std::string(sceneOutputName) + ".xml").c_str()))
+	{
+		TreeManager::ExportTreeAsXml(GetOwner(), sceneOutputName);
+	}
+}
+
+void TreeManager::WriteChain(int order, Entity internode, rapidxml::xml_node<>* chains, rapidxml::xml_document<>* doc)
+{
+	Entity walker = internode;
+	rapidxml::xml_node<>* chain = doc->allocate_node(rapidxml::node_element, "Chain", "Node");
+	chain->append_attribute(doc->allocate_attribute("gravelius", doc->allocate_string(std::to_string(order + 1).c_str())));
+	chains->append_node(chain);
+	std::vector<rapidxml::xml_node<>*> nodes;
+	while (EntityManager::GetChildrenAmount(walker) != 0)
+	{
+		auto* node = doc->allocate_node(rapidxml::node_element, "Node");
+		node->append_attribute(doc->allocate_attribute("id", doc->allocate_string(std::to_string(walker.Index).c_str())));
+		nodes.push_back(node);
+		//chain->append_node(node);
+		Entity temp;
+		EntityManager::ForEachChild(walker, [&temp, order](Entity child)
+			{
+				if (child.GetComponentData<InternodeInfo>().Order == order)
+				{
+					temp = child;
+				}
+			}
+		);
+		walker = temp;
+	}
+	if(nodes.empty()) return;
+	for (int i = nodes.size() - 1; i >= 0; i--)
+	{
+		chain->append_node(nodes[i]);
+	}
+	if (EntityManager::GetParent(internode).HasComponentData<InternodeInfo>())
+	{
+		auto* node = doc->allocate_node(rapidxml::node_element, "Node");
+		node->append_attribute(doc->allocate_attribute("id", doc->allocate_string(std::to_string(EntityManager::GetParent(internode).Index).c_str())));
+		chain->append_node(node);
+	}
+}
+
+void TreeManager::ExportChains(int parentOrder, Entity internode, rapidxml::xml_node<>* chains, rapidxml::xml_document<>* doc)
+{
+	int order = internode.GetComponentData<InternodeInfo>().Order;
+	if (order != parentOrder)
+	{
+		WriteChain(order, internode, chains, doc);
+	}
+	EntityManager::ForEachChild(internode, [order, &chains, doc](Entity child)
+		{
+			ExportChains(order, child, chains, doc);
+		}
+	);
 }
 
 void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& internode, std::vector<Vertex>& vertices, std::vector<unsigned>& indices, glm::vec3 normal, float resolution, int parentStep)
@@ -190,7 +255,7 @@ void TreeUtilities::TreeManager::Init()
 	auto standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
 	standardfrag->Compile(fragShaderCode);
 	auto branchProgram = std::make_shared<GLProgram>(standardvert, standardfrag);
-	
+
 
 	vertShaderCode = std::string("#version 460 core\n")
 		+ *Default::ShaderIncludes::Uniform +
@@ -205,7 +270,7 @@ void TreeUtilities::TreeManager::Init()
 	standardfrag = std::make_shared<GLShader>(ShaderType::Fragment);
 	standardfrag->Compile(fragShaderCode);
 	auto leafProgram = std::make_shared<GLProgram>(standardvert, standardfrag);
-	
+
 	SemanticTreeBranchMaterial = std::make_shared<Material>();
 	SemanticTreeBranchMaterial->SetProgram(branchProgram);
 	SemanticTreeLeafMaterial = std::make_shared<Material>();
@@ -229,7 +294,7 @@ void TreeUtilities::TreeManager::Init()
 
 	_AttractionPointQuery = EntityManager::CreateEntityQuery();
 	_AttractionPointQuery.SetAllFilters(AttractionPointInfo());
-	
+
 	_InternodeQuery = EntityManager::CreateEntityQuery();
 	EntityManager::SetEntityQueryAllFilters(_InternodeQuery, GlobalTransform(), Connection(), Illumination(), InternodeIndex(), InternodeInfo(), TreeIndex());
 	_TreeQuery = EntityManager::CreateEntityQuery();
@@ -449,7 +514,7 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 {
 	std::vector<Entity> internodes;
 	_InternodeQuery.ToEntityArray(internodes);
-	
+
 	GetLightEstimator()->TakeSnapShot(true);
 	EntityManager::ForEach<Illumination, TreeIndex>(_InternodeQuery, [](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index)
 		{
@@ -500,7 +565,7 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters& treeParameters)
 {
 	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
-	
+
 	EntityManager::SetPrivateComponent(entity, std::make_unique<TreeData>());
 	EntityManager::SetPrivateComponent(entity, std::make_unique<CakeTower>());
 	EntityManager::SetPrivateComponent(entity, std::make_unique<MaskProcessor>());
@@ -583,7 +648,7 @@ Entity TreeManager::CreateAttractionPoint(const TreeIndex& treeIndex, const glm:
 	entity.SetComponentData(treeIndex);
 	Transform transform;
 	transform.SetPosition(position);
-	
+
 	EntityManager::SetParent(entity, tree);
 	entity.SetComponentData(transform);
 	return entity;
@@ -595,7 +660,7 @@ void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::strin
 	if (!mesh) return;
 	auto vertices = mesh->GetVerticesUnsafe();
 	auto indices = mesh->GetIndicesUnsafe();
-	
+
 	if (vertices.empty()) {
 		Debug::Log("Mesh not generated!");
 		return;
@@ -626,7 +691,7 @@ void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::strin
 		}
 #pragma endregion
 		size_t branchVertSize = vertices.size();
-		if(includeFoliage)
+		if (includeFoliage)
 		{
 			Entity foliageEntity;
 			EntityManager::ForEachChild(treeEntity, [&foliageEntity](Entity child)
@@ -666,7 +731,7 @@ void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::strin
 				}
 			);
 			size_t branchletVertSize = 0;
-			if(foliageEntity.HasPrivateComponent<MeshRenderer>())
+			if (foliageEntity.HasPrivateComponent<MeshRenderer>())
 			{
 				mesh = EntityManager::GetPrivateComponent<MeshRenderer>(foliageEntity)->Mesh;
 				vertices = mesh->GetVerticesUnsafe();
@@ -687,8 +752,8 @@ void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::strin
 				}
 #pragma endregion
 			}
-			
-			if(foliageEntity.HasPrivateComponent<Particles>())
+
+			if (foliageEntity.HasPrivateComponent<Particles>())
 			{
 				auto& particles = EntityManager::GetPrivateComponent<Particles>(foliageEntity);
 				mesh = particles->Mesh;
@@ -696,7 +761,7 @@ void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::strin
 				indices = mesh->GetIndicesUnsafe();
 				auto& matrices = particles->Matrices;
 				size_t offset = 0;
-				for(auto& matrix : matrices)
+				for (auto& matrix : matrices)
 				{
 					for (const auto& vertex : vertices) {
 						glm::vec3 position = matrix * glm::vec4(vertex.Position, 1);
@@ -751,6 +816,181 @@ void TreeUtilities::TreeManager::ExportTreeAsModel(Entity treeEntity, std::strin
 	{
 		Debug::Error("Can't open file!");
 	}
+}
+
+void TreeManager::ExportTreeAsXml(Entity treeEntity, std::string filename)
+{
+	std::ofstream ofs;
+	ofs.open((filename + ".xml").c_str(), std::ofstream::out | std::ofstream::trunc);
+	if (!ofs.is_open())
+	{
+		Debug::Error("Can't open file!");
+		return;
+	}
+	rapidxml::xml_document<> doc;
+	auto* doctype = doc.allocate_node(rapidxml::node_doctype, 0, "Tree");
+	doc.append_node(doctype);
+	auto* tree = doc.allocate_node(rapidxml::node_element, "Tree", "Textures");
+	doc.append_node(tree);
+
+	auto* textures = doc.allocate_node(rapidxml::node_element, "Textures", "Texture");
+	tree->append_node(textures);
+	auto* barkTex = doc.allocate_node(rapidxml::node_element, "Texture", "");
+	barkTex->append_attribute(doc.allocate_attribute("name", "Bark"));
+	barkTex->append_attribute(doc.allocate_attribute("path", "Data/Textures/Bark/UlmusLaevis.jpg"));
+	auto* leafTex = doc.allocate_node(rapidxml::node_element, "Texture", "");
+	leafTex->append_attribute(doc.allocate_attribute("name", "Leaf"));
+	leafTex->append_attribute(doc.allocate_attribute("path", "Data/Textures/Leaf/UlmusLaevis"));
+
+	textures->append_node(leafTex);
+	textures->append_node(barkTex);
+
+	auto* nodes = doc.allocate_node(rapidxml::node_element, "Nodes", "Node");
+	tree->append_node(nodes);
+
+	TreeIndex treeIndex = treeEntity.GetComponentData<TreeIndex>();
+	std::vector<InternodeInfo> internodeInfos;
+	std::vector<Entity> internodes;
+	_InternodeQuery.ToEntityArray<TreeIndex>(internodes, [treeIndex](Entity entity, TreeIndex& compareIndex)
+		{
+			return treeIndex.Value == compareIndex.Value;
+		}
+	);
+	_InternodeQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [treeIndex](TreeIndex& compareIndex)
+		{
+			return treeIndex.Value == compareIndex.Value;
+		}
+	);
+	Entity rootInternode;
+	unsigned rootNodeIndex = 0;
+	EntityManager::ForEachChild(treeEntity, [&rootNodeIndex, &rootInternode](Entity child)
+		{
+			if (child.HasComponentData<InternodeInfo>()) {
+				rootNodeIndex = child.Index - 1;
+				rootInternode = child;
+			}
+		});
+	rootNodeIndex = 0;
+	for (auto& i : internodes)
+	{
+		auto info = i.GetComponentData<InternodeInfo>();
+		auto* node = doc.allocate_node(rapidxml::node_element, "Node", "Position");
+		node->append_attribute(doc.allocate_attribute("id", doc.allocate_string(std::to_string(i.Index - rootNodeIndex).c_str())));
+		node->append_attribute(doc.allocate_attribute("additional", doc.allocate_string(std::to_string(0).c_str())));
+		nodes->append_node(node);
+		auto globalTransform = i.GetComponentData<GlobalTransform>().Value;
+		auto* position = doc.allocate_node(rapidxml::node_element, "Position");
+		position->append_attribute(doc.allocate_attribute("x", doc.allocate_string(std::to_string(globalTransform[3].x).c_str())));
+		position->append_attribute(doc.allocate_attribute("y", doc.allocate_string(std::to_string(globalTransform[3].y).c_str())));
+		position->append_attribute(doc.allocate_attribute("z", doc.allocate_string(std::to_string(globalTransform[3].z).c_str())));
+		node->append_node(position);
+
+		auto* distRoot = doc.allocate_node(rapidxml::node_element, "DistToRoot");
+		distRoot->append_attribute(doc.allocate_attribute("value", doc.allocate_string(std::to_string(info.DistanceToRoot).c_str())));
+		node->append_node(distRoot);
+
+		auto* thickness = doc.allocate_node(rapidxml::node_element, "Thickness");
+		thickness->append_attribute(doc.allocate_attribute("value", doc.allocate_string(std::to_string(info.Thickness).c_str())));
+		node->append_node(thickness);
+
+		auto* maxLength = doc.allocate_node(rapidxml::node_element, "MaxBranchLength");
+		maxLength->append_attribute(doc.allocate_attribute("value", doc.allocate_string(std::to_string(info.LongestDistanceToEnd).c_str())));
+		node->append_node(maxLength);
+
+		unsigned parentIndex = EntityManager::GetParent(i).Index;
+		float thicknessVal = 0;
+		if (parentIndex != treeEntity.Index)
+		{
+			thicknessVal = EntityManager::GetParent(i).GetComponentData<InternodeInfo>().Thickness;
+		}
+		else
+		{
+			auto* root = doc.allocate_node(rapidxml::node_element, "Root");
+			root->append_attribute(doc.allocate_attribute("value", "true"));
+			node->append_node(root);
+		}
+		auto* parent = doc.allocate_node(rapidxml::node_element, "Parent");
+		parent->append_attribute(doc.allocate_attribute("id", doc.allocate_string(std::to_string(parentIndex - rootNodeIndex).c_str())));
+		parent->append_attribute(doc.allocate_attribute("thickness", doc.allocate_string(std::to_string(thicknessVal).c_str())));
+		node->append_node(parent);
+		if (EntityManager::GetChildrenAmount(i) != 0) {
+			auto* children = doc.allocate_node(rapidxml::node_element, "Children", "Child");
+			node->append_node(children);
+
+			EntityManager::ForEachChild(i, [children, &doc, rootNodeIndex](Entity child)
+				{
+					auto* childNode = doc.allocate_node(rapidxml::node_element, "Child");
+					childNode->append_attribute(doc.allocate_attribute("id", doc.allocate_string(std::to_string(child.Index - rootNodeIndex).c_str())));
+					children->append_node(childNode);
+				}
+			);
+		}
+	}
+
+	auto* chains = doc.allocate_node(rapidxml::node_element, "Chains", "Chain");
+	tree->append_node(chains);
+
+	ExportChains(-1, rootInternode, chains, &doc);
+
+	auto* leaves = doc.allocate_node(rapidxml::node_element, "Leaves", "Leaf");
+	tree->append_node(leaves);
+	int counter = 0;
+	for (auto& i : internodes)
+	{
+		glm::vec3 nodePos = i.GetComponentData<GlobalTransform>().Value[3];
+		auto& internodeData = i.GetPrivateComponent<InternodeData>();
+		for (auto& leafTransform : internodeData->LeavesTransforms)
+		{
+			auto* leaf = doc.allocate_node(rapidxml::node_element, "Leaf");
+			leaf->append_attribute(doc.allocate_attribute("id", doc.allocate_string(std::to_string(counter).c_str())));
+			counter++;
+			leaves->append_node(leaf);
+
+			auto* nodeAtt = doc.allocate_node(rapidxml::node_element, "Node");
+			nodeAtt->append_attribute(doc.allocate_attribute("id", doc.allocate_string(std::to_string(i.Index).c_str())));
+			leaf->append_node(nodeAtt);
+
+			auto* posAtt = doc.allocate_node(rapidxml::node_element, "Center");
+			posAtt->append_attribute(doc.allocate_attribute("x", doc.allocate_string(std::to_string(nodePos.x).c_str())));
+			posAtt->append_attribute(doc.allocate_attribute("y", doc.allocate_string(std::to_string(nodePos.y).c_str())));
+			posAtt->append_attribute(doc.allocate_attribute("z", doc.allocate_string(std::to_string(nodePos.z).c_str())));
+			leaf->append_node(posAtt);
+
+			Transform transform;
+			transform.Value = leafTransform;
+			auto rotation = transform.GetRotation();
+
+			auto* frontAtt = doc.allocate_node(rapidxml::node_element, "Forward");
+			frontAtt->append_attribute(doc.allocate_attribute("x", doc.allocate_string(std::to_string((rotation * glm::vec3(0, 0, -1)).x).c_str())));
+			frontAtt->append_attribute(doc.allocate_attribute("y", doc.allocate_string(std::to_string((rotation * glm::vec3(0, 0, -1)).y).c_str())));
+			frontAtt->append_attribute(doc.allocate_attribute("z", doc.allocate_string(std::to_string((rotation * glm::vec3(0, 0, -1)).z).c_str())));
+			leaf->append_node(frontAtt);
+
+			auto* leftAtt = doc.allocate_node(rapidxml::node_element, "Left");
+			leftAtt->append_attribute(doc.allocate_attribute("x", doc.allocate_string(std::to_string((rotation * glm::vec3(1, 0, 0)).x).c_str())));
+			leftAtt->append_attribute(doc.allocate_attribute("y", doc.allocate_string(std::to_string((rotation * glm::vec3(1, 0, 0)).y).c_str())));
+			leftAtt->append_attribute(doc.allocate_attribute("z", doc.allocate_string(std::to_string((rotation * glm::vec3(1, 0, 0)).z).c_str())));
+			leaf->append_node(leftAtt);
+
+			auto* centerAtt = doc.allocate_node(rapidxml::node_element, "Position");
+			centerAtt->append_attribute(doc.allocate_attribute("x", doc.allocate_string(std::to_string(leafTransform[3].x).c_str())));
+			centerAtt->append_attribute(doc.allocate_attribute("y", doc.allocate_string(std::to_string(leafTransform[3].y).c_str())));
+			centerAtt->append_attribute(doc.allocate_attribute("z", doc.allocate_string(std::to_string(leafTransform[3].z).c_str())));
+			leaf->append_node(centerAtt);
+
+			auto* sizeAtt = doc.allocate_node(rapidxml::node_element, "Size");
+			sizeAtt->append_attribute(doc.allocate_attribute("x", doc.allocate_string(std::to_string(0.105).c_str())));
+			sizeAtt->append_attribute(doc.allocate_attribute("y", doc.allocate_string(std::to_string(0.1155).c_str())));
+			leaf->append_node(sizeAtt);
+
+			auto* distAtt = doc.allocate_node(rapidxml::node_element, "Dist");
+			distAtt->append_attribute(doc.allocate_attribute("value", doc.allocate_string(std::to_string(glm::distance(nodePos, glm::vec3(leafTransform[3]))).c_str())));
+			leaf->append_node(distAtt);
+		}
+	}
+	ofs << doc;
+	ofs.flush();
+	ofs.close();
 }
 
 LightEstimator* TreeUtilities::TreeManager::GetLightEstimator()
@@ -850,7 +1090,7 @@ void TreeManager::SerializeTreeGraph(std::string path, Entity tree)
 		Debug::Error("Can't open file!");
 		return;
 	}
-	
+
 	TreeIndex treeIndex = tree.GetComponentData<TreeIndex>();
 	std::vector<InternodeInfo> internodeInfos;
 	std::vector<Entity> internodes;
@@ -872,7 +1112,7 @@ void TreeManager::SerializeTreeGraph(std::string path, Entity tree)
 	writer.Int(internodes.size());
 	writer.String("Internodes");
 	writer.StartArray();
-	for(size_t i = 0; i < internodes.size(); i++)
+	for (size_t i = 0; i < internodes.size(); i++)
 	{
 		//Internode
 		writer.StartObject();
@@ -901,7 +1141,7 @@ void TreeManager::SerializeTreeGraph(std::string path, Entity tree)
 		//End Position
 		writer.String("Children");
 		writer.StartArray();
-		for(auto& child : EntityManager::GetChildren(internodes[i]))
+		for (auto& child : EntityManager::GetChildren(internodes[i]))
 		{
 			writer.Int(child.Index);
 		}

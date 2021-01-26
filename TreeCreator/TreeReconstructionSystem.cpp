@@ -105,13 +105,14 @@ void TreeUtilities::TreeReconstructionSystem::OnGui()
 				ImGui::Checkbox("Use volume for main branches", &_UseCakeTower);
 				if (ImGui::Button("Start Reconstruction"))
 				{
-					_Prefix = "_1_1";
+					_Prefix = "_8_8";
 					_UseMask = true;
 					_FromTraining = false;
 					_ReconCounter = -1;
 					_ReconIndex = 0;
 					_ReconSeed = 0;
 					Init();
+					
 					_NeedExport = true;
 					_Status = TreeReconstructionSystemStatus::Idle;
 					ImGui::CloseCurrentPopup();
@@ -127,6 +128,13 @@ void TreeUtilities::TreeReconstructionSystem::OnGui()
 		}
 		ImGui::EndMainMenuBar();
 	}
+}
+
+void TreeReconstructionSystem::Switch()
+{
+	_Paused = true;
+	_PreviousStatus = _Status;
+	Application::SetPlaying(false);
 }
 
 void TreeReconstructionSystem::ExportAllData()
@@ -592,6 +600,11 @@ void TreeUtilities::TreeReconstructionSystem::OnCreate()
 
 void TreeUtilities::TreeReconstructionSystem::Update()
 {
+	if(_Paused)
+	{
+		_Paused = false;
+		_Status = _PreviousStatus;
+	}
 	if (_PlantSimulationSystem == nullptr) return;
 	std::string path;
 	switch (_Status)
@@ -746,10 +759,13 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		_CurrentTree.GetPrivateComponent<MaskProcessor>()->AttractionDistance = 1.0f;
 		_CurrentTree.GetPrivateComponent<MaskProcessor>()->PlaceAttractionPoints();
 		_Status = TreeReconstructionSystemStatus::MainBranches;
-		_Growing = true; }
+		_Growing = true;
+		Application::SetPlaying(false);
+	}
 	break;
 	case TreeReconstructionSystemStatus::MainBranches:
 		TryGrowTree();
+
 		if (!_Growing)
 		{
 			_Status = TreeReconstructionSystemStatus::NormalGrowth;
@@ -773,12 +789,13 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			age.Value = _AgeForMainBranches;
 			age.ToGrowIteration = _TargetTreeParameter.Age - _AgeForMainBranches;
 			_CurrentTree.SetComponentData(age);
+			Application::SetPlaying(false);
 		}
 		break;
 	case TreeReconstructionSystemStatus::NormalGrowth:
 	{
-		_PlantSimulationSystem->_AutoGenerateMesh = _Status == TreeReconstructionSystemStatus::Reconstruction || _Status == TreeReconstructionSystemStatus::Idle;
-		_PlantSimulationSystem->_AutoGenerateLeaves = _Status == TreeReconstructionSystemStatus::Reconstruction || _Status == TreeReconstructionSystemStatus::Idle;
+		_PlantSimulationSystem->_AutoGenerateMesh = true; //_Status == TreeReconstructionSystemStatus::Reconstruction || _Status == TreeReconstructionSystemStatus::Idle;
+			_PlantSimulationSystem->_AutoGenerateLeaves = true;//_Status == TreeReconstructionSystemStatus::Reconstruction || _Status == TreeReconstructionSystemStatus::Idle;
 		bool stop = false;
 		_Internodes.resize(0);
 		const auto treeIndex = _CurrentTree.GetComponentData<TreeIndex>();
@@ -787,11 +804,13 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 		if (_Internodes.size() > _TargetInternodeSize + _MainBranchInternodeSize)
 		{
 			stop = true;
+			Debug::Log("Size");
 		}
 		if (!stop && !_PlantSimulationSystem->_Growing) {
-			if (age.ToGrowIteration != 0 || age.Value > _MaxAge)
+			if (age.ToGrowIteration == 0 && age.Value > _MaxAge)
 			{
 				stop = true;
+				Debug::Log("Age");
 			}
 			else
 			{
@@ -828,6 +847,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
 			_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
 			_Status = TreeReconstructionSystemStatus::Render;
+			Disable();
 			auto seq = _DataCollectionSystem->_ImageCaptureSequences[_LearningIndex];
 			Transform cameraTransform;
 			cameraTransform.SetPosition(glm::vec3(0, seq.first.CameraPos.z * 1.5f, 0));
@@ -991,9 +1011,22 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			_DataCollectionSystem->SetCameraPose(seq.first.CameraPos, seq.first.CameraEulerDegreeRot);
 
 		}
-
-		TreeManager::DeleteAllTrees();
+		Disable();
+		//TreeManager::DeleteAllTrees();
 		_Status = TreeReconstructionSystemStatus::Idle;
 		break;
+	}
+}
+
+void TreeReconstructionSystem::LateUpdate()
+{
+	//return;
+	if(_Status == TreeReconstructionSystemStatus::NormalGrowth || _Status == TreeReconstructionSystemStatus::MainBranches || _Status == TreeReconstructionSystemStatus::Render)
+	{
+		TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
+		_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
+		EditorManager::_SceneCamera->StoreToJpg(
+			"./video_seq/" + std::to_string(_Capture) + ".jpg", -1, -1);
+		_Capture++;
 	}
 }

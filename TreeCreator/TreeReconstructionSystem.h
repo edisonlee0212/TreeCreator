@@ -52,9 +52,10 @@ namespace TreeUtilities
 		PlantSimulationSystem* _PlantSimulationSystem = nullptr;
 		bool _UseCakeTower = true;
 		TreeReconstructionSystemStatus _Status = TreeReconstructionSystemStatus::Idle;
+		TreeReconstructionSystemStatus _PreviousStatus = TreeReconstructionSystemStatus::Idle;
 		std::unique_ptr<CakeTower> _TargetCakeTower;
 
-		
+		bool _Paused = false;
 		Entity _CurrentTree;
 		std::vector<Entity> _Internodes;
 		std::string _MaskPath = "";
@@ -68,7 +69,7 @@ namespace TreeUtilities
 		int _AgeForMainBranches = 4;
 		int _TargetInternodeSize = 1601;
 		TreeParameters _TargetTreeParameter;
-
+		int _Capture = 0;
 		std::string _Name = "Apple";
 		std::string _Prefix = "_1_1";
 		int _MaxAge = 30;
@@ -77,7 +78,7 @@ namespace TreeUtilities
 		bool _Growing = false;
 		void OnGui();
 		std::vector<CakeTowerOutput> _CakeTowersOutputList;
-		
+		void Switch();
 	public:
 		void ExportAllData();
 		void TryGrowTree();
@@ -90,6 +91,7 @@ namespace TreeUtilities
 		void ExportCakeTower(const std::string& path);
 		void OnCreate() override;
 		void Update() override;
+		void LateUpdate() override;
 	};
 }
 

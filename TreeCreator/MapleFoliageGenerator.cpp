@@ -55,10 +55,11 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 	}
 	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
 	particleSys->Matrices.clear();
+	std::vector<Entity> internodes;
 	std::vector<InternodeInfo> internodeInfos;
 	std::vector<Illumination> illuminations;
 	std::mutex m;
-	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, &illuminations, this](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, &illuminations, this, &internodes](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
 		{
 			if (info->Inhibitor > _DefaultFoliageInfo.InhibitorLimit) return;
 			if (illumination->Value < _DefaultFoliageInfo.IlluminationLimit) return;
@@ -66,6 +67,8 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 			std::lock_guard<std::mutex> lock(m);
 			internodeInfos.push_back(*info);
 			illuminations.push_back(*illumination);
+			internodes.push_back(internode);
+		
 		}
 	);
 	for (int i = 0; i < internodeInfos.size(); i++)
@@ -82,6 +85,9 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 		auto branchFront = rotation * glm::vec3(0, 0, -1);
 		auto branchUp = rotation * glm::vec3(0, 1, 0);
 		if (glm::abs(glm::dot(branchFront, glm::vec3(0.0f, 1.0f, 0.0f))) > 0.99f) continue;
+		auto& internodeData = internodes[i].GetPrivateComponent<InternodeData>();
+		internodeData->LeavesTransforms.clear();
+
 		for (int j = 0; j < _DefaultFoliageInfo.LeafAmount; j++)
 		{
 			glm::mat4 leafTransform;
@@ -96,6 +102,7 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 				(glm::translate(glm::mat4(1.0f), translation + position) * glm::mat4_cast(rotation) * glm::scale(ls));
 				
 			particleSys->Matrices.push_back(leafTransform);
+			internodeData->LeavesTransforms.push_back(leafTransform);
 		}
 
 	}

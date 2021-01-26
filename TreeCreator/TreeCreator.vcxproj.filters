@@ -55,6 +55,9 @@
     <Filter Include="Source Files\TreeVolume">
       <UniqueIdentifier>{bf1bf9fe-d6f9-4840-aae4-d7a515bd043b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\External\rapidxml">
+      <UniqueIdentifier>{57124a2d-ce1f-4dc9-802c-0f109b5b5ea0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TreeCreator.cpp">
@@ -142,7 +145,7 @@
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
     <ClCompile Include="RealTreeReconstructionSystem.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Systems</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -232,6 +235,18 @@
     </ClInclude>
     <ClInclude Include="RealTreeReconstructionSystem.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rapidxml.hpp">
+      <Filter>Header Files\External\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="rapidxml_iterators.hpp">
+      <Filter>Header Files\External\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="rapidxml_print.hpp">
+      <Filter>Header Files\External\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="rapidxml_utils.hpp">
+      <Filter>Header Files\External\rapidxml</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
