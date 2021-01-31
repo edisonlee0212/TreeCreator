@@ -852,7 +852,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, TreeVol
 					tempTrans.Value = newInternodeInfo.GlobalTransform;
 					//Stop growing if the distanceToGrow exceed the volume.
 					glm::vec3 targetPosition = tempTrans.GetPosition();
-					if (!treeVolume->InVolume(targetPosition) && treeAge.Value > 4) {
+					if (!treeVolume->InVolume(targetPosition)) {
 						break;
 					}
 				}

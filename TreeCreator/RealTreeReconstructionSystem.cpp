@@ -20,8 +20,8 @@ void TreeUtilities::RealTreeReconstructionSystem::OnGui()
 				std::filesystem::create_directory("tree_real/rbv_recon");
 				_TrainingDoc = rapidcsv::Document("./tree_real/045_rbv_photographs_predicted.csv", rapidcsv::LabelParams(-1, 1));
 
-				_ReconIndex = 7;
-				_SpecieIndex = 2;
+				_ReconIndex = 1;
+				_SpecieIndex = 4;
 				_ReconAmount = 12;
 				_NeedExport = true;
 			}
@@ -124,8 +124,8 @@ void RealTreeReconstructionSystem::CreateTree()
 
 #pragma region Slim
 	treeParameter.ThicknessControlFactor = 0.69;
-	//treeParameter.LowBranchPruningFactor = 0.7;
-	//treeParameter.Age = 8;
+	treeParameter.LowBranchPruningFactor = 0.7;
+	treeParameter.Age = 8;
 #pragma endregion
 
 	

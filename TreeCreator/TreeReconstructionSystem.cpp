@@ -846,8 +846,8 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			_PlantSimulationSystem->PauseGrowth();
 			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
 			_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
-			_Status = TreeReconstructionSystemStatus::Render;
-			Disable();
+			_Status = TreeReconstructionSystemStatus::Idle;
+			_NeedExport = false;
 			auto seq = _DataCollectionSystem->_ImageCaptureSequences[_LearningIndex];
 			Transform cameraTransform;
 			cameraTransform.SetPosition(glm::vec3(0, seq.first.CameraPos.z * 1.5f, 0));
@@ -1011,7 +1011,7 @@ void TreeUtilities::TreeReconstructionSystem::Update()
 			_DataCollectionSystem->SetCameraPose(seq.first.CameraPos, seq.first.CameraEulerDegreeRot);
 
 		}
-		Disable();
+		_NeedExport = false;
 		//TreeManager::DeleteAllTrees();
 		_Status = TreeReconstructionSystemStatus::Idle;
 		break;

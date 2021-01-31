@@ -200,6 +200,51 @@ std::string CakeTower::Save()
 	return output;
 }
 
+void CakeTower::ExportAsObj(const std::string& filename)
+{
+	if (!_MeshGenerated) CalculateVolume();
+	auto& meshes = _BoundMeshes;
+	
+	std::ofstream of;
+	of.open((filename + ".obj").c_str(), std::ofstream::out | std::ofstream::trunc);
+	if (of.is_open())
+	{
+		std::string o = "o ";
+		o += "RBV\n";
+		of.write(o.c_str(), o.size());
+		of.flush();
+		std::string data;
+		int offset = 1;
+#pragma region Data collection
+		for (auto& mesh : meshes) {
+			for (const auto& vertex : mesh->GetVerticesUnsafe()) {
+				data += "v " + std::to_string(vertex.Position.x)
+					+ " " + std::to_string(-vertex.Position.y)
+					+ " " + std::to_string(vertex.Position.z)
+					+ "\n";
+			}
+		}
+		for (auto& mesh : meshes)
+		{
+			data += "# List of indices for faces vertices, with (x, y, z).\n";
+			for (auto i = 0; i < mesh->GetIndicesUnsafe().size() / 3; i++) {
+				auto f1 = mesh->GetIndicesUnsafe().at(3l * i) + offset;
+				auto f2 = mesh->GetIndicesUnsafe().at(3l * i + 1) + offset;
+				auto f3 = mesh->GetIndicesUnsafe().at(3l * i + 2) + offset;
+				data += "f " + std::to_string(f1)
+					+ " " + std::to_string(f2)
+					+ " " + std::to_string(f3)
+					+ "\n";
+			}
+			offset += mesh->GetVerticesUnsafe().size();
+		}
+#pragma endregion
+		of.write(data.c_str(), data.size());
+		of.flush();
+	}
+	
+}
+
 void CakeTower::Load(const std::string& path)
 {
 	std::ifstream ifs;
@@ -387,6 +432,10 @@ bool CakeTower::InVolume(glm::vec3 position) const
 
 void CakeTower::OnGui()
 {
+	if(ImGui::Button("To OBJ"))
+	{
+		ExportAsObj("caketower");
+	}
 	ImGui::DragFloat("Remove Distance", &RemovalDistance, 0.01f, 0.0f, 10.0f);
 	ImGui::DragFloat("Attract Distance", &AttractionDistance, 0.01f, RemovalDistance, 10.0f);
 	ImGui::DragInt("AP Count", &_AttractionPointsCount);
@@ -401,7 +450,7 @@ void CakeTower::OnGui()
 		const auto treeIndex = GetOwner().GetComponentData<TreeIndex>();
 		std::vector<GlobalTransform> points;
 		TreeManager::GetAttractionPointQuery().ToComponentDataArray(treeIndex, points);
-		RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 0.0f, 0.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), RemovalDistance / 3.0f);
+		//RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 0.0f, 0.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), RemovalDistance / 3.0f);
 		//RenderManager::DrawGizmoPointInstanced(glm::vec4(1.0f, 1.0f, 1.0f, 0.2f), (glm::mat4*)(void*)points.data(), points.size(), glm::mat4(1.0f), AttractionDistance / 2.0f);
 	}
 	ImGui::Checkbox("Prune Buds", &_PruneBuds);

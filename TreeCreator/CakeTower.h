@@ -34,6 +34,7 @@ namespace TreeUtilities {
 		void FormEntity();
 		CakeTower();
 		std::string Save();
+		void ExportAsObj(const std::string& filename);
 		void Load(const std::string& path);
 		glm::vec4 DisplayColor = glm::vec4(0.5f);
 		float DisplayScale = 0.2f;
