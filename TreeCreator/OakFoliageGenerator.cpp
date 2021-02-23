@@ -64,12 +64,12 @@ void TreeUtilities::OakFoliageGenerator::Generate()
 	std::vector<InternodeInfo> internodeInfos;
 	std::mutex m;
 	std::vector<Entity> internodes;
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this, &internodes](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this, &internodes](int i, Entity internode, InternodeInfo& info, TreeIndex& index)
 		{
-			if (info->AccumulatedLength > _DefaultFoliageInfo.LengthLimit || info->DistanceToRoot < _DefaultFoliageInfo.DistanceLimit) return;
-			if (ti.Value != index->Value) return;
+			if (info.AccumulatedLength > _DefaultFoliageInfo.LengthLimit || info.DistanceToRoot < _DefaultFoliageInfo.DistanceLimit) return;
+			if (ti.Value != index.Value) return;
 			std::lock_guard<std::mutex> lock(m);
-			internodeInfos.push_back(*info);
+			internodeInfos.push_back(info);
 			internodes.push_back(internode);
 		}
 	);

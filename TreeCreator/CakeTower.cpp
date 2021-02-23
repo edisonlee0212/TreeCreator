@@ -277,7 +277,7 @@ void CakeTower::CalculateVolume()
 	EntityManager::SetEntityQueryAllFilters(internodeDataQuery, InternodeInfo());
 	std::vector<InternodeInfo> internodeInfos;
 	TreeIndex targetTreeIndex = tree.GetComponentData<TreeIndex>();
-	internodeDataQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [targetTreeIndex](TreeIndex& treeIndex)
+	internodeDataQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [targetTreeIndex](const TreeIndex& treeIndex)
 		{
 			return treeIndex.Value == targetTreeIndex.Value;
 		}
@@ -325,7 +325,7 @@ void CakeTower::CalculateVolume(float maxHeight)
 	EntityManager::SetEntityQueryAllFilters(internodeDataQuery, InternodeInfo());
 	std::vector<InternodeInfo> internodeInfos;
 	TreeIndex targetTreeIndex = tree.GetComponentData<TreeIndex>();
-	internodeDataQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [targetTreeIndex](TreeIndex& treeIndex)
+	internodeDataQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [targetTreeIndex](const TreeIndex& treeIndex)
 		{
 			return treeIndex.Value == targetTreeIndex.Value;
 		}

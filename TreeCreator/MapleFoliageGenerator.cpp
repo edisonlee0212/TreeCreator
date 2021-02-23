@@ -59,14 +59,14 @@ void TreeUtilities::MapleFoliageGenerator::Generate()
 	std::vector<InternodeInfo> internodeInfos;
 	std::vector<Illumination> illuminations;
 	std::mutex m;
-	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, &illuminations, this, &internodes](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, &illuminations, this, &internodes](int i, Entity internode, InternodeInfo& info, Illumination& illumination, TreeIndex& index)
 		{
-			if (info->Inhibitor > _DefaultFoliageInfo.InhibitorLimit) return;
-			if (illumination->Value < _DefaultFoliageInfo.IlluminationLimit) return;
-			if (ti.Value != index->Value) return;
+			if (info.Inhibitor > _DefaultFoliageInfo.InhibitorLimit) return;
+			if (illumination.Value < _DefaultFoliageInfo.IlluminationLimit) return;
+			if (ti.Value != index.Value) return;
 			std::lock_guard<std::mutex> lock(m);
-			internodeInfos.push_back(*info);
-			illuminations.push_back(*illumination);
+			internodeInfos.push_back(info);
+			illuminations.push_back(illumination);
 			internodes.push_back(internode);
 		
 		}

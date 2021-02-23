@@ -58,12 +58,12 @@ void TreeUtilities::BirchFoliageGenerator::Generate()
 	particleSys->Matrices.clear();
 	std::vector<InternodeInfo> internodeInfos;
 	std::mutex m;
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this](int i, Entity internode, InternodeInfo& info, TreeIndex& index)
 		{
-			if (info->DistanceToBranchEnd > _DefaultFoliageInfo.DistanceLimit) return;
-			if (ti.Value != index->Value) return;
+			if (info.DistanceToBranchEnd > _DefaultFoliageInfo.DistanceLimit) return;
+			if (ti.Value != index.Value) return;
 			std::lock_guard<std::mutex> lock(m);
-			internodeInfos.push_back(*info);
+			internodeInfos.push_back(info);
 		}
 	);
 	for (int i = 0; i < internodeInfos.size(); i++)

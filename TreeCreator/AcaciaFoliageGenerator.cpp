@@ -59,12 +59,12 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 	std::vector<InternodeInfo> internodeInfos;
 	std::vector<Entity> internodes;
 	std::mutex m;
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this, &internodes](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this, &internodes](int i, Entity internode, InternodeInfo& info, TreeIndex& index)
 		{
-			if (info->AccumulatedLength > _DefaultFoliageInfo.LengthLimit || info->GlobalTransform[3].y < _DefaultFoliageInfo.HeightLimit) return;
-			if (ti.Value != index->Value) return;
+			if (info.AccumulatedLength > _DefaultFoliageInfo.LengthLimit || info.GlobalTransform[3].y < _DefaultFoliageInfo.HeightLimit) return;
+			if (ti.Value != index.Value) return;
 			std::lock_guard<std::mutex> lock(m);
-			internodeInfos.push_back(*info);
+			internodeInfos.push_back(info);
 			internodes.push_back(internode);
 		}
 	);

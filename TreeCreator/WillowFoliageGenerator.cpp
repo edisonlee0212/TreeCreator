@@ -76,13 +76,13 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 	std::vector<Entity> internodes;
 	std::vector<Illumination> illuminations;
 	std::mutex m;
-	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodes, this, &illuminations](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodes, this, &illuminations](int i, Entity internode, InternodeInfo& info, Illumination& illumination, TreeIndex& index)
 		{
-			if (info->Inhibitor > _DefaultFoliageInfo.InhibitorLimit) return;
-			if (ti.Value != index->Value) return;
+			if (info.Inhibitor > _DefaultFoliageInfo.InhibitorLimit) return;
+			if (ti.Value != index.Value) return;
 			std::lock_guard<std::mutex> lock(m);
 			internodes.push_back(internode);
-			illuminations.push_back(*illumination);
+			illuminations.push_back(illumination);
 		}
 	);
 	if (internodes.empty()) return;

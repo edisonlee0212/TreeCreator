@@ -1025,7 +1025,7 @@ void TreeReconstructionSystem::LateUpdate()
 	{
 		TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
 		_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
-		EditorManager::_SceneCamera->StoreToJpg(
+		EditorManager::SceneCamera->StoreToJpg(
 			"./video_seq/" + std::to_string(_Capture) + ".jpg", -1, -1);
 		_Capture++;
 	}

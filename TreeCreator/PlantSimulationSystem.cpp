@@ -67,7 +67,7 @@ void TreeUtilities::PlantSimulationSystem::TryGrowAllTrees(std::vector<Entity>& 
 }
 bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mainBranch)
 {
-	if (!treeEntity.Enabled()) return false;
+	if (!treeEntity.IsEnabled()) return false;
 	Entity rootInternode = Entity();
 	EntityManager::ForEachChild(treeEntity, [&](Entity child)
 		{
@@ -140,12 +140,12 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 	_InternodeQuery.ToComponentDataArray(treeIndex, internodeTransforms);
 	std::vector<Entity> removeList;
 	std::mutex m;
-	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetAttractionPointQuery(), [&removeList, &m, treeIndex, &internodeTransforms, &internodes, removeDistance](int i, Entity entity, TreeIndex* index, GlobalTransform* globalTransform)
+	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetAttractionPointQuery(), [&removeList, &m, treeIndex, &internodeTransforms, &internodes, removeDistance](int i, Entity entity, TreeIndex& index, GlobalTransform& globalTransform)
 		{
-			if (treeIndex.Value != index->Value) return;
+			if (treeIndex.Value != index.Value) return;
 			for (const auto& i : internodeTransforms)
 			{
-				if (glm::distance(i.GetPosition(), globalTransform->GetPosition()) < removeDistance)
+				if (glm::distance(i.GetPosition(), globalTransform.GetPosition()) < removeDistance)
 				{
 					std::lock_guard<std::mutex> lock(m);
 					removeList.push_back(entity);
@@ -161,14 +161,14 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 	_InternodeQuery.ToComponentDataArray(treeIndex, internodeTransforms);
 #pragma endregion
 #pragma region Assign attraction points.
-	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetAttractionPointQuery(), [ &internodeTransforms, &internodes, attractDistance](int i, Entity entity, TreeIndex* index, GlobalTransform* globalTransform)
+	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetAttractionPointQuery(), [ &internodeTransforms, &internodes, attractDistance](int i, Entity entity, TreeIndex& index, GlobalTransform& globalTransform)
 		{
 			float minDistance = FLT_MAX;
 			int minIndex = -1;
 			for (int i = 0; i < internodes.size(); i++)
 			{
 				const auto internodePos = internodeTransforms[i].GetPosition();
-				const float distance = glm::distance(internodePos, globalTransform->GetPosition());
+				const float distance = glm::distance(internodePos, globalTransform.GetPosition());
 				if (distance < attractDistance && distance < minDistance)
 				{
 					minDistance = distance;
@@ -180,25 +180,25 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 				const auto internodePos = internodeTransforms[minIndex].GetPosition();
 				auto& data = internodes[minIndex].GetPrivateComponent<InternodeData>();
 				std::lock_guard<std::mutex> lock(data->InternodeLock);
-				data->Points.push_back(globalTransform->GetPosition() - internodePos);
+				data->Points.push_back(globalTransform.GetPosition() - internodePos);
 			}
 		}
 	);
 #pragma endregion
 #pragma region Calculate direction vector
 	float cone = glm::cos(glm::radians(treeParameters.VarianceApicalAngle / 2.0f));
-	EntityManager::ForEach<InternodeInfo, GlobalTransform>(_InternodeQuery, [cone](int i, Entity entity, InternodeInfo* info, GlobalTransform* globalTransform)
+	EntityManager::ForEach<InternodeInfo, GlobalTransform>(_InternodeQuery, [cone](int i, Entity entity, InternodeInfo& info, GlobalTransform& globalTransform)
 		{
 			auto& data = entity.GetPrivateComponent<InternodeData>();
-			info->DirectionVector = glm::vec3(0);
-			info->ApicalDirectionVector = glm::vec3(0);
+			info.DirectionVector = glm::vec3(0);
+			info.ApicalDirectionVector = glm::vec3(0);
 			for (const auto& pointPos : data->Points) {
-				info->DirectionVector += pointPos;
-				glm::vec3 front = globalTransform->GetRotation() * glm::vec3(0, 0, -1);
+				info.DirectionVector += pointPos;
+				glm::vec3 front = globalTransform.GetRotation() * glm::vec3(0, 0, -1);
 				const float angle = glm::dot(front, glm::normalize(pointPos));
 				if (angle > cone)
 				{
-					info->ApicalDirectionVector += pointPos;
+					info.ApicalDirectionVector += pointPos;
 				}
 			}
 		}
@@ -1062,11 +1062,11 @@ bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, s
 {
 	std::mutex growMutex;
 	bool growed = false;
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(_InternodeQuery, [&growed, &growMutex, this, &treeData, &treeParameters, &treeAge, &treeIndex, &treeTransform](int i, Entity internode, InternodeInfo* info, TreeIndex* currentTreeIndex)
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(_InternodeQuery, [&growed, &growMutex, this, &treeData, &treeParameters, &treeAge, &treeIndex, &treeTransform](int i, Entity internode, InternodeInfo& info, TreeIndex& currentTreeIndex)
 		{
-			if (currentTreeIndex->Value != treeIndex.Value) return;
-			const auto direction = info->DirectionVector;
-			const auto apicalDirection = info->ApicalDirectionVector;
+			if (currentTreeIndex.Value != treeIndex.Value) return;
+			const auto direction = info.DirectionVector;
+			const auto apicalDirection = info.ApicalDirectionVector;
 			if (direction != glm::vec3(0.0f))
 			{
 				bool isLateral = !EntityManager::GetChildrenAmount(internode) == 0;
@@ -1084,8 +1084,8 @@ bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, s
 					}
 				}
 #pragma region Compute total grow distance and internodes amount.
-				int order = info->Order;
-				int level = info->Level;
+				int order = info.Order;
+				int level = info.Level;
 				if (isLateral) {
 					order++;
 					level++;
@@ -1108,7 +1108,7 @@ bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, s
 				glm::quat rotation;
 				glm::vec3 skew;
 				glm::vec4 perspective;
-				glm::decompose(info->GlobalTransform, scale, rotation, trans, skew, perspective);
+				glm::decompose(info.GlobalTransform, scale, rotation, trans, skew, perspective);
 				prevInternodeRotation = rotation;
 				glm::vec3 prevInternodeTranslation = trans;
 
@@ -1194,12 +1194,12 @@ bool PlantSimulationSystem::GrowShootsSpaceColonization(Entity& rootInternode, s
 						if (internodeData->Buds[index].IsApical)
 						{
 							//internodeData->Buds.erase(internodeData->Buds.begin() + index);
-							info->ApicalBudExist = false;
+							info.ApicalBudExist = false;
 							break;
 						}
 					}
 				}
-				info->ActivatedBudsAmount = internodeData->Buds.size();
+				info.ActivatedBudsAmount = internodeData->Buds.size();
 #pragma endregion
 
 			}
@@ -1227,12 +1227,12 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 	std::vector<TreeIndex> internodesTreeIndices;
 	std::vector<TreeIndex> treeIndices;
 	std::vector<TreeParameters> treeParameters;
-	_InternodeQuery.ToComponentDataArray<GlobalTransform, InternodeInfo>(internodesLTWs, [detectionDistance](InternodeInfo& info)
+	_InternodeQuery.ToComponentDataArray<GlobalTransform, InternodeInfo>(internodesLTWs, [detectionDistance](const InternodeInfo& info)
 		{
 			return info.LongestDistanceToEnd <= detectionDistance;
 		}
 	);
-	_InternodeQuery.ToComponentDataArray<TreeIndex, InternodeInfo>(internodesTreeIndices, [detectionDistance](InternodeInfo& info)
+	_InternodeQuery.ToComponentDataArray<TreeIndex, InternodeInfo>(internodesTreeIndices, [detectionDistance](const InternodeInfo& info)
 		{
 			return info.LongestDistanceToEnd <= detectionDistance;
 		}
@@ -1240,13 +1240,13 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 
 	_TreeQuery.ToComponentDataArray(treeIndices);
 	_TreeQuery.ToComponentDataArray(treeParameters);
-	EntityManager::ForEach<GlobalTransform, InternodeInfo, TreeIndex>(_InternodeQuery, [detectionDistance, &treeIndices, &treeParameters, &internodesLTWs, &internodesTreeIndices, this](int i, Entity branchNode, GlobalTransform* ltw, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<GlobalTransform, InternodeInfo, TreeIndex>(_InternodeQuery, [detectionDistance, &treeIndices, &treeParameters, &internodesLTWs, &internodesTreeIndices, this](int i, Entity branchNode, GlobalTransform& ltw, InternodeInfo& info, TreeIndex& index)
 		{
-			if (info->Pruned) {
+			if (info.Pruned) {
 				return;
 			}
-			if (info->LongestDistanceToEnd > detectionDistance) {
-				info->CrownShyness = 1.0f;
+			if (info.LongestDistanceToEnd > detectionDistance) {
+				info.CrownShyness = 1.0f;
 				return;
 			}
 			//if (!info->IsEndNode) return;
@@ -1254,7 +1254,7 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 			float crownShynessFactor = 1.0f;
 			for (size_t ii = 0; ii < treeIndices.size(); ii++)
 			{
-				if (treeIndices[ii].Value == index->Value)
+				if (treeIndices[ii].Value == index.Value)
 				{
 					crownShynessBase = treeParameters[ii].CrownShynessBase;
 					crownShynessFactor = treeParameters[ii].CrownShynessFactor;
@@ -1265,9 +1265,9 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 			float minDistance = FLT_MAX;
 			for (size_t bi = 0; bi < internodesLTWs.size(); bi++)
 			{
-				if (internodesTreeIndices[bi].Value != index->Value)
+				if (internodesTreeIndices[bi].Value != index.Value)
 				{
-					auto position1 = glm::vec3(ltw->Value[3].x, ltw->Value[3].y, ltw->Value[3].z);
+					auto position1 = glm::vec3(ltw.Value[3].x, ltw.Value[3].y, ltw.Value[3].z);
 					auto position2 = glm::vec3(internodesLTWs[bi].Value[3].x, internodesLTWs[bi].Value[3].y, internodesLTWs[bi].Value[3].z);
 					float d = glm::distance(position1, position2);
 					if (minDistance > d) minDistance = d;
@@ -1275,7 +1275,7 @@ void PlantSimulationSystem::CalculateCrownShyness(float detectionDistance)
 			}
 			minDistance /= crownShynessBase;
 			if (minDistance < 1.0f) minDistance = 1.0f;
-			info->CrownShyness = glm::pow(1.0f - 1.0f / minDistance, crownShynessFactor);
+			info.CrownShyness = glm::pow(1.0f - 1.0f / minDistance, crownShynessFactor);
 		}
 	);
 }
@@ -1393,13 +1393,13 @@ void TreeUtilities::PlantSimulationSystem::ApplyLocalTransform(Entity& treeEntit
 	std::mutex heightMutex;
 	float treeHeight = 0.0f;
 	EntityManager::ForEach<TreeIndex, GlobalTransform, InternodeInfo>(_InternodeQuery,
-		[treeTransform, treeIndex, &treeHeight, &heightMutex, &internodeSize](int i, Entity internode, TreeIndex* index, GlobalTransform* ltw, InternodeInfo* info)
+		[treeTransform, treeIndex, &treeHeight, &heightMutex, &internodeSize](int i, Entity internode, TreeIndex& index, GlobalTransform& ltw, InternodeInfo& info)
 		{
-			if (index->Value == treeIndex) {
-				ltw->Value = treeTransform * info->GlobalTransform * glm::scale(glm::vec3(internodeSize));
-				if (info->GlobalTransform[3].y > treeHeight) {
+			if (index.Value == treeIndex) {
+				ltw.Value = treeTransform * info.GlobalTransform * glm::scale(glm::vec3(internodeSize));
+				if (info.GlobalTransform[3].y > treeHeight) {
 					std::lock_guard<std::mutex> lock(heightMutex);
-					treeHeight = info->GlobalTransform[3].y;
+					treeHeight = info.GlobalTransform[3].y;
 				}
 			}
 		}
@@ -1728,11 +1728,11 @@ void PlantSimulationSystem::PauseGrowth()
 void PlantSimulationSystem::SetAllInternodeActivated(Entity tree, bool value)
 {
 	TreeIndex treeIndex = tree.GetComponentData<TreeIndex>();
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [treeIndex, value](int i, Entity internode, InternodeInfo* info, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [treeIndex, value](int i, Entity internode, InternodeInfo& info, TreeIndex& index)
 		{
-			if (index->Value == treeIndex.Value)
+			if (index.Value == treeIndex.Value)
 			{
-				info->Activated = value;
+				info.Activated = value;
 			}
 		}
 	);
@@ -2346,17 +2346,17 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 		if (ImGui::CollapsingHeader("Tree Simulation", ImGuiTreeNodeFlags_DefaultOpen)) {
 			if (ImGui::Button("Enable nodes for all trees"))
 			{
-				EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity internode, InternodeInfo* info)
+				EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity internode, InternodeInfo& info)
 					{
-						info->Activated = true;
+						info.Activated = true;
 					}
 				);
 			}
 			if (ImGui::Button("Disable nodes for all trees"))
 			{
-				EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity internode, InternodeInfo* info)
+				EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [](int i, Entity internode, InternodeInfo& info)
 					{
-						info->Activated = false;
+						info.Activated = false;
 					}
 				);
 			}
@@ -2401,9 +2401,9 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 			ImGui::InputInt("Iterations", &_NewPushIteration);
 			if (ImGui::Button("Push iteration to all"))
 			{
-				EntityManager::ForEach<TreeAge>(_TreeQuery, [this](int i, Entity tree, TreeAge* age)
+				EntityManager::ForEach<TreeAge>(_TreeQuery, [this](int i, Entity tree, TreeAge& age)
 					{
-						age->ToGrowIteration += _NewPushIteration;
+						age.ToGrowIteration += _NewPushIteration;
 					});
 			}
 			if (!_Growing) {
@@ -2412,9 +2412,9 @@ inline void TreeUtilities::PlantSimulationSystem::OnGui()
 				}
 				if (ImGui::Button("Grow 1 iteration"))
 				{
-					EntityManager::ForEach<TreeAge>(_TreeQuery, [this](int i, Entity tree, TreeAge* age)
+					EntityManager::ForEach<TreeAge>(_TreeQuery, [this](int i, Entity tree, TreeAge& age)
 						{
-							age->ToGrowIteration += 1;
+							age.ToGrowIteration += 1;
 						});
 					ResumeGrowth();
 				}

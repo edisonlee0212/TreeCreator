@@ -45,10 +45,10 @@ void TreeUtilities::InternodeSystem::RaySelection()
 		if (InputManager::GetMousePosition(mousePos)) {
 			const Ray cameraRay = mainCamera->ScreenPointToRay(
 				cameraLtw, mousePos);
-			EntityManager::ForEach<GlobalTransform, InternodeInfo>(_InternodeQuery, [this, cameraLtw, &writeMutex, &minDistance, cameraRay](int i, Entity entity, GlobalTransform* ltw, InternodeInfo* info)
+			EntityManager::ForEach<GlobalTransform, InternodeInfo>(_InternodeQuery, [this, cameraLtw, &writeMutex, &minDistance, cameraRay](int i, Entity entity, GlobalTransform& ltw, InternodeInfo& info)
 				{
-					const float distance = glm::distance(glm::vec3(cameraLtw.Value[3]), glm::vec3(ltw->Value[3]));
-					if (cameraRay.Intersect(ltw->Value[3], 0.1f))
+					const float distance = glm::distance(glm::vec3(cameraLtw.Value[3]), glm::vec3(ltw.Value[3]));
+					if (cameraRay.Intersect(ltw.Value[3], 0.1f))
 					{
 						std::lock_guard<std::mutex> lock(writeMutex);
 						if (distance < minDistance)
@@ -117,25 +117,25 @@ void TreeUtilities::InternodeSystem::RefreshConnections() const
 	{
 		cameraPos = _CameraEntity.GetComponentData<GlobalTransform>().GetPosition();
 	}
-	EntityManager::ForEach<GlobalTransform, Connection, Ray, InternodeInfo>(_InternodeQuery, [lineWidth, cameraPos](int i, Entity entity, GlobalTransform* ltw, Connection* c, Ray* ray, InternodeInfo* info) {
+	EntityManager::ForEach<GlobalTransform, Connection, Ray, InternodeInfo>(_InternodeQuery, [lineWidth, cameraPos](int i, Entity entity, GlobalTransform& ltw, Connection& c, Ray& ray, InternodeInfo& info) {
 		glm::vec3 scale;
 		glm::quat rotation;
 		glm::vec3 translation;
 		glm::vec3 skew;
 		glm::vec4 perspective;
-		glm::decompose(ltw->Value, scale, rotation, translation, skew, perspective);
-		glm::vec3 parentTranslation = translation + (rotation * glm::vec3(0, 0, 1)) * info->DistanceToParent;
+		glm::decompose(ltw.Value, scale, rotation, translation, skew, perspective);
+		glm::vec3 parentTranslation = translation + (rotation * glm::vec3(0, 0, 1)) * info.DistanceToParent;
 		rotation *= glm::quat(glm::vec3(glm::radians(90.0f), 0.0f, 0.0f));
 		glm::mat4 rotationMat = glm::mat4_cast(rotation);
 		if (EntityManager::HasPrivateComponent<TreeData>(EntityManager::GetParent(entity))) {
-			c->Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(0.0f));
+			c.Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(0.0f));
 		}
 		else {
-			c->Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(info->Thickness * lineWidth, glm::distance(translation, parentTranslation) / 2.0f, info->Thickness * lineWidth));
+			c.Value = glm::translate((translation + parentTranslation) / 2.0f) * rotationMat * glm::scale(glm::vec3(info.Thickness * lineWidth, glm::distance(translation, parentTranslation) / 2.0f, info.Thickness * lineWidth));
 		}
-		ray->Start = translation;
-		ray->Direction = glm::normalize(cameraPos - translation);
-		ray->Length = glm::distance(cameraPos, translation);
+		ray.Start = translation;
+		ray.Direction = glm::normalize(cameraPos - translation);
+		ray.Length = glm::distance(cameraPos, translation);
 	}, false
 	);
 }

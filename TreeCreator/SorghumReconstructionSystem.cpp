@@ -141,7 +141,7 @@ void SorghumReconstruction::SorghumReconstructionSystem::GenerateMeshForAllPlant
 {
 	std::mutex meshMutex;
 	EntityManager::ForEach<GlobalTransform>(_SplineQuery, [&meshMutex, segmentAmount, step]
-	(int index, Entity entity, GlobalTransform* ltw)
+	(int index, Entity entity, GlobalTransform& ltw)
 		{
 			auto& spline = EntityManager::GetPrivateComponent<Spline>(entity);
 			spline->Nodes.clear();

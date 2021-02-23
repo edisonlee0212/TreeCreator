@@ -516,10 +516,10 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 	_InternodeQuery.ToEntityArray(internodes);
 
 	GetLightEstimator()->TakeSnapShot(true);
-	EntityManager::ForEach<Illumination, TreeIndex>(_InternodeQuery, [](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index)
+	EntityManager::ForEach<Illumination, TreeIndex>(_InternodeQuery, [](int i, Entity leafEntity, Illumination& illumination, TreeIndex& index)
 		{
-			illumination->LightDir = glm::vec3(0);
-			illumination->Value = 0;
+			illumination.LightDir = glm::vec3(0);
+			illumination.Value = 0;
 		}
 	);
 	if (internodes.empty()) return;
@@ -553,10 +553,10 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 		for (const auto& i : futures) i.wait();
 	}
 	_LightEstimator->SetMaxIllumination(maxIllumination);
-	EntityManager::ForEach<Illumination, TreeIndex>(_InternodeQuery, [maxIllumination](int i, Entity leafEntity, Illumination* illumination, TreeIndex* index)
+	EntityManager::ForEach<Illumination, TreeIndex>(_InternodeQuery, [maxIllumination](int i, Entity leafEntity, Illumination& illumination, TreeIndex& index)
 		{
-			illumination->LightDir = glm::normalize(illumination->LightDir);
-			illumination->Value /= maxIllumination;
+			illumination.LightDir = glm::normalize(illumination.LightDir);
+			illumination.Value /= maxIllumination;
 		}
 	);
 }
@@ -851,12 +851,12 @@ void TreeManager::ExportTreeAsXml(Entity treeEntity, std::string filename)
 	TreeIndex treeIndex = treeEntity.GetComponentData<TreeIndex>();
 	std::vector<InternodeInfo> internodeInfos;
 	std::vector<Entity> internodes;
-	_InternodeQuery.ToEntityArray<TreeIndex>(internodes, [treeIndex](Entity entity, TreeIndex& compareIndex)
+	_InternodeQuery.ToEntityArray<TreeIndex>(internodes, [treeIndex](Entity entity, const TreeIndex& compareIndex)
 		{
 			return treeIndex.Value == compareIndex.Value;
 		}
 	);
-	_InternodeQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [treeIndex](TreeIndex& compareIndex)
+	_InternodeQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [treeIndex](const TreeIndex& compareIndex)
 		{
 			return treeIndex.Value == compareIndex.Value;
 		}
@@ -1015,27 +1015,27 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	std::mutex creationM;
 	glm::mat4 treeTransform = EntityManager::GetComponentData<GlobalTransform>(treeEntity).Value;
 	//Prepare ring mesh.
-	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [&creationM, resolution, subdivision, treeTransform](int i, Entity internode, InternodeInfo* info)
+	EntityManager::ForEach<InternodeInfo>(_InternodeQuery, [&creationM, resolution, subdivision, treeTransform](int i, Entity internode, InternodeInfo& info)
 		{
 			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(internode))) return;
 			auto& list = EntityManager::GetPrivateComponent<InternodeData>(internode);
 
 			list->Rings.clear();
-			glm::quat parentRotation = info->ParentRotation;
-			glm::vec3 parentTranslation = info->ParentTranslation;
-			float parentThickness = info->ParentThickness;
+			glm::quat parentRotation = info.ParentRotation;
+			glm::vec3 parentTranslation = info.ParentTranslation;
+			float parentThickness = info.ParentThickness;
 
 			glm::vec3 scale;
 			glm::quat rotation;
 			glm::vec3 translation;
 			glm::vec3 skew;
 			glm::vec4 perspective;
-			glm::decompose(info->GlobalTransform, scale, rotation, translation, skew, perspective);
+			glm::decompose(info.GlobalTransform, scale, rotation, translation, skew, perspective);
 
 			glm::vec3 parentDir = parentRotation * glm::vec3(0, 0, -1);
 			glm::vec3 dir = rotation * glm::vec3(0, 0, -1);
-			glm::vec3 mainChildDir = info->MainChildRotation * glm::vec3(0, 0, -1);
-			glm::vec3 parentMainChildDir = info->ParentMainChildRotation * glm::vec3(0, 0, -1);
+			glm::vec3 mainChildDir = info.MainChildRotation * glm::vec3(0, 0, -1);
+			glm::vec3 parentMainChildDir = info.ParentMainChildRotation * glm::vec3(0, 0, -1);
 			glm::vec3 fromDir = (parentDir + parentMainChildDir) / 2.0f;
 			dir = (dir + mainChildDir) / 2.0f;
 #pragma region Subdivision internode here.
@@ -1045,12 +1045,12 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			if (step < 4) step = 4;
 			if (step % 2 != 0) step++;
 			list->step = step;
-			int amount = (int)(0.5f + distance / ((info->Thickness + parentThickness) / 2.0f) * subdivision);
+			int amount = (int)(0.5f + distance / ((info.Thickness + parentThickness) / 2.0f) * subdivision);
 			if (amount % 2 != 0) amount++;
 			BezierCurve curve = BezierCurve(parentTranslation, parentTranslation + distance / 3.0f * fromDir, translation - distance / 3.0f * dir, translation);
 			float posStep = 1.0f / (float)amount;
 			glm::vec3 dirStep = (dir - fromDir) / (float)amount;
-			float radiusStep = (info->Thickness - parentThickness) / (float)amount;
+			float radiusStep = (info.Thickness - parentThickness) / (float)amount;
 
 			//list->NormalDir = fromDir == dir ? glm::cross(dir, glm::vec3(0, 0, 1)) : glm::cross(fromDir, dir);
 
@@ -1060,8 +1060,8 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 					fromDir + (float)(i - 1) * dirStep, fromDir + (float)i * dirStep,
 					parentThickness + (float)(i - 1) * radiusStep, parentThickness + (float)i * radiusStep);
 			}
-			if (amount > 1)list->Rings.emplace_back(curve.GetPoint(1.0f - posStep), translation, dir - dirStep, dir, info->Thickness - radiusStep, info->Thickness);
-			else list->Rings.emplace_back(parentTranslation, translation, fromDir, dir, parentThickness, info->Thickness);
+			if (amount > 1)list->Rings.emplace_back(curve.GetPoint(1.0f - posStep), translation, dir - dirStep, dir, info.Thickness - radiusStep, info.Thickness);
+			else list->Rings.emplace_back(parentTranslation, translation, fromDir, dir, parentThickness, info.Thickness);
 #pragma endregion
 		}
 
@@ -1094,12 +1094,12 @@ void TreeManager::SerializeTreeGraph(std::string path, Entity tree)
 	TreeIndex treeIndex = tree.GetComponentData<TreeIndex>();
 	std::vector<InternodeInfo> internodeInfos;
 	std::vector<Entity> internodes;
-	_InternodeQuery.ToEntityArray<TreeIndex>(internodes, [treeIndex](Entity entity, TreeIndex& compareIndex)
+	_InternodeQuery.ToEntityArray<TreeIndex>(internodes, [treeIndex](Entity entity, const TreeIndex& compareIndex)
 		{
 			return treeIndex.Value == compareIndex.Value;
 		}
 	);
-	_InternodeQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [treeIndex](TreeIndex& compareIndex)
+	_InternodeQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [treeIndex](const TreeIndex& compareIndex)
 		{
 			return treeIndex.Value == compareIndex.Value;
 		}

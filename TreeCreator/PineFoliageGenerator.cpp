@@ -57,12 +57,12 @@ void TreeUtilities::PineFoliageGenerator::Generate()
 	particleSys->Matrices.clear();
 	std::vector<InternodeInfo> internodeInfos;
 	std::mutex m;
-	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this](int i, Entity internode, InternodeInfo* info, Illumination* illumination, TreeIndex* index)
+	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this](int i, Entity internode, InternodeInfo& info, Illumination& illumination, TreeIndex& index)
 		{
-			if (info->AccumulatedLength > _DefaultFoliageInfo.LengthLimit) return;
-			if (ti.Value != index->Value) return;
+			if (info.AccumulatedLength > _DefaultFoliageInfo.LengthLimit) return;
+			if (ti.Value != index.Value) return;
 			std::lock_guard<std::mutex> lock(m);
-			internodeInfos.push_back(*info);
+			internodeInfos.push_back(info);
 		}
 	);
 	for (int i = 0; i < internodeInfos.size(); i++)

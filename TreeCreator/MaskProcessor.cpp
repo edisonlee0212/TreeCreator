@@ -93,10 +93,10 @@ void TreeUtilities::MaskProcessor::ShotInternodes() const
 	std::vector<glm::mat4> matrices = std::vector<glm::mat4>();
 	std::vector<Entity> internodeEntities = std::vector<Entity>();
 	std::mutex m;
-	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetInternodeQuery(), [&m, targetTreeIndex, &matrices, &internodeEntities, this](int i, Entity entity, TreeIndex* index, GlobalTransform* globalTransform)
+	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetInternodeQuery(), [&m, targetTreeIndex, &matrices, &internodeEntities, this](int i, Entity entity, TreeIndex& index, GlobalTransform& globalTransform)
 		{
-			if (targetTreeIndex.Value != index->Value) return;
-			glm::vec3 position = globalTransform->GetPosition();
+			if (targetTreeIndex.Value != index.Value) return;
+			glm::vec3 position = globalTransform.GetPosition();
 			glm::mat4 input = glm::translate(position) * glm::scale(glm::vec3(_InternodeSize));
 			std::lock_guard<std::mutex> lock(m);
 			matrices.push_back(input);

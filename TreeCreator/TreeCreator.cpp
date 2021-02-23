@@ -239,7 +239,7 @@ void EngineSetup()
 	RenderManager::SetPCSSScaleFactor(1.0f);
 	RenderManager::SetAmbientLight(0.4f);
 	RenderManager::SetShadowMapResolution(8192);
-	RenderManager::SetStableFit(false);
+	RenderManager::StableFit = false;
 	RenderManager::SetSeamFixRatio(0.05f);
 	RenderManager::SetMaxShadowDistance(100);
 	RenderManager::SetSplitRatio(0.15f, 0.3f, 0.5f, 1.0f);
