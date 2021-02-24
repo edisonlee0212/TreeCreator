@@ -127,6 +127,10 @@ void TreeUtilities::TreeManager::SimpleMeshGenerator(Entity& internode, std::vec
 	//newNormalDir = glm::cross(glm::cross(dir, newNormalDir), dir);
 
 	auto& list = EntityManager::GetPrivateComponent<InternodeData>(internode);
+	if(list->Rings.empty())
+	{
+		return;
+	}
 	auto step = list->step;
 	//For stitching
 	int pStep = parentStep > 0 ? parentStep : step;
@@ -279,26 +283,24 @@ void TreeUtilities::TreeManager::Init()
 
 	_InternodeArchetype = EntityManager::CreateEntityArchetype(
 		"Internode",
-		GlobalTransform(), Connection(), Ray(),
+		Connection(), Ray(),
 		Illumination(),
 		InternodeIndex(), InternodeInfo(), TreeIndex()
 	);
 	_TreeArchetype = EntityManager::CreateEntityArchetype(
-		"Tree", Transform(),
-		GlobalTransform(),
+		"Tree", 
 		TreeIndex(), TreeInfo(), TreeAge(),
 		TreeParameters()
 	);
-	_AttractionPointArchetype = EntityManager::CreateEntityArchetype("Attraction Point", Transform(),
-		GlobalTransform(), TreeIndex(), AttractionPointInfo());
+	_AttractionPointArchetype = EntityManager::CreateEntityArchetype("Attraction Point", TreeIndex(), AttractionPointInfo());
 
 	_AttractionPointQuery = EntityManager::CreateEntityQuery();
 	_AttractionPointQuery.SetAllFilters(AttractionPointInfo());
 
 	_InternodeQuery = EntityManager::CreateEntityQuery();
-	EntityManager::SetEntityQueryAllFilters(_InternodeQuery, GlobalTransform(), Connection(), Illumination(), InternodeIndex(), InternodeInfo(), TreeIndex());
+	EntityManager::SetEntityQueryAllFilters(_InternodeQuery, Connection(), Illumination(), InternodeIndex(), InternodeInfo(), TreeIndex());
 	_TreeQuery = EntityManager::CreateEntityQuery();
-	EntityManager::SetEntityQueryAllFilters(_TreeQuery, TreeInfo(), TreeAge(), TreeIndex(), TreeParameters(), GlobalTransform());
+	EntityManager::SetEntityQueryAllFilters(_TreeQuery, TreeInfo(), TreeAge(), TreeIndex(), TreeParameters());
 
 	_TreeSystem = Application::GetCurrentWorld()->CreateSystem<TreeSystem>(SystemGroup::SimulationSystemGroup);
 	_InternodeSystem = Application::GetCurrentWorld()->CreateSystem<InternodeSystem>(SystemGroup::SimulationSystemGroup);
@@ -565,7 +567,7 @@ void TreeUtilities::TreeManager::CalculateInternodeIllumination()
 Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurfaceMaterial, TreeParameters& treeParameters)
 {
 	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
-
+	entity.SetStatic(true);
 	EntityManager::SetPrivateComponent(entity, std::make_unique<TreeData>());
 	EntityManager::SetPrivateComponent(entity, std::make_unique<CakeTower>());
 	EntityManager::SetPrivateComponent(entity, std::make_unique<MaskProcessor>());
@@ -630,7 +632,7 @@ Entity TreeUtilities::TreeManager::CreateInternode(TreeIndex treeIndex, Entity p
 	entity.SetName("Internode");
 	auto internodeData = std::make_unique<InternodeData>();
 	EntityManager::SetComponentData(entity, treeIndex);
-	EntityManager::SetParent(entity, parentEntity);
+	EntityManager::SetParent(entity, parentEntity, false);
 	EntityManager::SetComponentData(entity, _InternodeIndex);
 	EntityManager::SetPrivateComponent(entity, std::move(internodeData));
 	_InternodeIndex.Value++;
