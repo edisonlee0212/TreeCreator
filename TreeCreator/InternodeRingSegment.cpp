@@ -18,20 +18,20 @@ void TreeUtilities::InternodeRingSegment::AppendPoints(std::vector<Vertex>& vert
 	float angleStep = 360.0f / (float)(step);
 	Vertex archetype;
 	for (int i = 0; i < step; i++) {
-		archetype.Position = GetPoint(normalDir, angleStep * i, true);
+		archetype.m_position = GetPoint(normalDir, angleStep * i, true);
 		startRing.push_back(archetype);
 	}
 	for (int i = 0; i < step; i++) {
-		archetype.Position = GetPoint(normalDir, angleStep * i, false);
+		archetype.m_position = GetPoint(normalDir, angleStep * i, false);
 		endRing.push_back(archetype);
 	}
 	float textureXstep = 1.0f / step * 4;
 	for (int i = 0; i < step - 1; i++) {
 		float x = (i % step) * textureXstep;
-		startRing[i].TexCoords0 = glm::vec2(x, 0.0f);
-		startRing[i + 1].TexCoords0 = glm::vec2(x + textureXstep, 0.0f);
-		endRing[i].TexCoords0 = glm::vec2(x, 1.0f);
-		endRing[i + 1].TexCoords0 = glm::vec2(x + textureXstep, 1.0f);
+		startRing[i].m_texCoords0 = glm::vec2(x, 0.0f);
+		startRing[i + 1].m_texCoords0 = glm::vec2(x + textureXstep, 0.0f);
+		endRing[i].m_texCoords0 = glm::vec2(x, 1.0f);
+		endRing[i + 1].m_texCoords0 = glm::vec2(x + textureXstep, 1.0f);
 		vertices.push_back(startRing[i]);
 		vertices.push_back(startRing[i + 1]);
 		vertices.push_back(endRing[i]);
@@ -39,10 +39,10 @@ void TreeUtilities::InternodeRingSegment::AppendPoints(std::vector<Vertex>& vert
 		vertices.push_back(endRing[i]);
 		vertices.push_back(startRing[i + 1]);
 	}
-	startRing[step - 1].TexCoords0 = glm::vec2(1.0f - textureXstep, 0.0f);
-	startRing[0].TexCoords0 = glm::vec2(1.0f, 0.0f);
-	endRing[step - 1].TexCoords0 = glm::vec2(1.0f - textureXstep, 1.0f);
-	endRing[0].TexCoords0 = glm::vec2(1.0f, 1.0f);
+	startRing[step - 1].m_texCoords0 = glm::vec2(1.0f - textureXstep, 0.0f);
+	startRing[0].m_texCoords0 = glm::vec2(1.0f, 0.0f);
+	endRing[step - 1].m_texCoords0 = glm::vec2(1.0f - textureXstep, 1.0f);
+	endRing[0].m_texCoords0 = glm::vec2(1.0f, 1.0f);
 	vertices.push_back(startRing[step - 1]);
 	vertices.push_back(startRing[0]);
 	vertices.push_back(endRing[step - 1]);

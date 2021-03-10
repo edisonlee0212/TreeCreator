@@ -11,18 +11,18 @@ TreeUtilities::OakFoliageGenerator::OakFoliageGenerator()
 	_Archetype = EntityManager::CreateEntityArchetype("Oak Foliage", Transform(), GlobalTransform(), TreeIndex(), OakFoliageInfo());
 
 	_LeafMaterial = std::make_shared<Material>();
-	_LeafMaterial->Shininess = 32.0f;
+	_LeafMaterial->m_shininess = 32.0f;
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	_LeafMaterial->AlphaDiscardEnabled = true;
-	_LeafMaterial->AlphaDiscardOffset = 0.7f;
-	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
+	_LeafMaterial->m_alphaDiscardEnabled = true;
+	_LeafMaterial->m_alphaDiscardOffset = 0.7f;
+	_LeafMaterial->m_cullingMode = MaterialCullingMode::Off;
 	if (!_LeafSurfaceTex)_LeafSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Leaf/PrunusAvium/A/level0.png");
 	//_LeafMaterial->SetTexture(_LeafSurfaceTex);
 	float random = glm::linearRand(-30, 30);
-	_LeafMaterial->AlbedoColor = glm::normalize(glm::vec3((98.0f + random) / 256.0f, (140.0f - random) / 256.0f, 0.0f));
-	_LeafMaterial->Metallic = 0.0f;
-	_LeafMaterial->Roughness = 0.3f;
-	_LeafMaterial->AmbientOcclusion = glm::linearRand(0.4f, 0.8f);
+	_LeafMaterial->m_albedoColor = glm::normalize(glm::vec3((98.0f + random) / 256.0f, (140.0f - random) / 256.0f, 0.0f));
+	_LeafMaterial->m_metallic = 0.0f;
+	_LeafMaterial->m_roughness = 0.3f;
+	_LeafMaterial->m_ambientOcclusion = glm::linearRand(0.4f, 0.8f);
 
 }
 
@@ -48,11 +48,11 @@ void TreeUtilities::OakFoliageGenerator::Generate()
 		foliageEntity = EntityManager::CreateEntity(_Archetype, "Foliage");
 		EntityManager::SetParent(foliageEntity, tree);
 		auto particleSys = std::make_unique<Particles>();
-		particleSys->Material = _LeafMaterial;
-		particleSys->Mesh = Default::Primitives::Quad;
-		particleSys->ForwardRendering = false;
+		particleSys->m_material = _LeafMaterial;
+		particleSys->m_mesh = Default::Primitives::Quad;
+		particleSys->m_forwardRendering = false;
 		Transform ltp;
-		ltp.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
+		ltp.m_value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
 		foliageEntity.SetComponentData(ltp);
 		foliageEntity.SetComponentData(_DefaultFoliageInfo);
@@ -60,11 +60,11 @@ void TreeUtilities::OakFoliageGenerator::Generate()
 		
 	}
 	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
-	particleSys->Matrices.clear();
+	particleSys->m_matrices.clear();
 	std::vector<InternodeInfo> internodeInfos;
 	std::mutex m;
 	std::vector<Entity> internodes;
-	EntityManager::ForEach<InternodeInfo, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this, &internodes](int i, Entity internode, InternodeInfo& info, TreeIndex& index)
+	EntityManager::ForEach<InternodeInfo, TreeIndex>(JobManager::PrimaryWorkers(), TreeManager::GetInternodeQuery(), [&m, ti, &internodeInfos, this, &internodes](int i, Entity internode, InternodeInfo& info, TreeIndex& index)
 		{
 			if (info.AccumulatedLength > _DefaultFoliageInfo.LengthLimit || info.DistanceToRoot < _DefaultFoliageInfo.DistanceLimit) return;
 			if (ti.Value != index.Value) return;
@@ -80,8 +80,8 @@ void TreeUtilities::OakFoliageGenerator::Generate()
 		glm::vec3 scale;
 		glm::vec3 skew;
 		glm::vec4 perspective;
-		glm::decompose(treeTransform.Value * internodeInfos[i].GlobalTransform, scale, rotation, translation, skew, perspective);
-		glm::vec3 parentTranslation = treeTransform.Value * glm::vec4(internodeInfos[i].ParentTranslation, 1.0f);
+		glm::decompose(treeTransform.m_value * internodeInfos[i].GlobalTransform, scale, rotation, translation, skew, perspective);
+		glm::vec3 parentTranslation = treeTransform.m_value * glm::vec4(internodeInfos[i].ParentTranslation, 1.0f);
 		//x, ÏòÑôÖá£¬y: ºáÖá£¬z£ºroll
 		glm::vec3 ls = _DefaultFoliageInfo.LeafSize;
 		auto branchFront = rotation * glm::vec3(0, 0, -1);
@@ -96,10 +96,10 @@ void TreeUtilities::OakFoliageGenerator::Generate()
 			position += glm::ballRand(_DefaultFoliageInfo.GenerationRadius);
 			glm::quat rotation = glm::quat(glm::radians(glm::linearRand(glm::vec3(-180.0f), glm::vec3(180.0f))));
 			//glm::quat rotation = glm::quatLookAt(glm::sphericalRand(1.0f), -glm::gaussRand(illuminations[i].LightDir, glm::vec3(0.01f)));
-			leafTransform = glm::inverse(treeTransform.Value) *
+			leafTransform = glm::inverse(treeTransform.m_value) *
 				(glm::translate(glm::mat4(1.0f), translation + position) * glm::mat4_cast(rotation) * glm::scale(ls));
 
-			particleSys->Matrices.push_back(leafTransform);
+			particleSys->m_matrices.push_back(leafTransform);
 			internodeData->LeavesTransforms.push_back(leafTransform);
 		}
 	}

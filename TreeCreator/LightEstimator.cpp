@@ -165,25 +165,25 @@ void TreeUtilities::LightEstimator::TakeSnapShot(bool storeSnapshot)
 	mesh->Enable();
 
 	indicesBuffer.SetData((GLsizei)count * sizeof(Entity), internodeEntities.data(), GL_DYNAMIC_DRAW);
-	mesh->VAO()->EnableAttributeArray(11);
-	mesh->VAO()->SetAttributeIntPointer(11, 1, GL_UNSIGNED_INT, sizeof(Entity), (void*)0);
-	mesh->VAO()->SetAttributeDivisor(11, 1);
+	mesh->Vao()->EnableAttributeArray(11);
+	mesh->Vao()->SetAttributeIntPointer(11, 1, GL_UNSIGNED_INT, sizeof(Entity), (void*)0);
+	mesh->Vao()->SetAttributeDivisor(11, 1);
 
 	GLVBO matricesBuffer;
 	matricesBuffer.SetData((GLsizei)count * sizeof(glm::mat4), matrices.data(), GL_DYNAMIC_DRAW);
 
-	mesh->VAO()->EnableAttributeArray(12);
-	mesh->VAO()->SetAttributePointer(12, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
-	mesh->VAO()->EnableAttributeArray(13);
-	mesh->VAO()->SetAttributePointer(13, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
-	mesh->VAO()->EnableAttributeArray(14);
-	mesh->VAO()->SetAttributePointer(14, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
-	mesh->VAO()->EnableAttributeArray(15);
-	mesh->VAO()->SetAttributePointer(15, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
-	mesh->VAO()->SetAttributeDivisor(12, 1);
-	mesh->VAO()->SetAttributeDivisor(13, 1);
-	mesh->VAO()->SetAttributeDivisor(14, 1);
-	mesh->VAO()->SetAttributeDivisor(15, 1);
+	mesh->Vao()->EnableAttributeArray(12);
+	mesh->Vao()->SetAttributePointer(12, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+	mesh->Vao()->EnableAttributeArray(13);
+	mesh->Vao()->SetAttributePointer(13, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+	mesh->Vao()->EnableAttributeArray(14);
+	mesh->Vao()->SetAttributePointer(14, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+	mesh->Vao()->EnableAttributeArray(15);
+	mesh->Vao()->SetAttributePointer(15, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+	mesh->Vao()->SetAttributeDivisor(12, 1);
+	mesh->Vao()->SetAttributeDivisor(13, 1);
+	mesh->Vao()->SetAttributeDivisor(14, 1);
+	mesh->Vao()->SetAttributeDivisor(15, 1);
 
 	glm::mat4 model;
 	glm::mat4 translation = glm::translate(glm::identity<glm::mat4>(), glm::vec3(0.0f));
@@ -208,11 +208,11 @@ void TreeUtilities::LightEstimator::TakeSnapShot(bool storeSnapshot)
 		}
 	}
 	
-	mesh->VAO()->DisableAttributeArray(11);
-	mesh->VAO()->DisableAttributeArray(12);
-	mesh->VAO()->DisableAttributeArray(13);
-	mesh->VAO()->DisableAttributeArray(14);
-	mesh->VAO()->DisableAttributeArray(15);	
+	mesh->Vao()->DisableAttributeArray(11);
+	mesh->Vao()->DisableAttributeArray(12);
+	mesh->Vao()->DisableAttributeArray(13);
+	mesh->Vao()->DisableAttributeArray(14);
+	mesh->Vao()->DisableAttributeArray(15);
 	RenderTarget::BindDefault();
 }
 

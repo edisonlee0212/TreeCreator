@@ -63,9 +63,6 @@
     <ClCompile Include="TreeCreator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SorghumReconstructionSystem.cpp">
-      <Filter>Source Files\SorghumReconstruction</Filter>
-    </ClCompile>
     <ClCompile Include="LeafSegment.cpp">
       <Filter>Source Files\SorghumReconstruction</Filter>
     </ClCompile>
@@ -98,9 +95,6 @@
     </ClCompile>
     <ClCompile Include="TreeManager.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BranchSystem.cpp">
-      <Filter>Source Files\Systems</Filter>
     </ClCompile>
     <ClCompile Include="InternodeSystem.cpp">
       <Filter>Source Files\Systems</Filter>
@@ -149,9 +143,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="SorghumReconstructionSystem.h">
-      <Filter>Header Files\SorghumReconstruction</Filter>
-    </ClInclude>
     <ClInclude Include="LeafSegment.h">
       <Filter>Header Files\SorghumReconstruction</Filter>
     </ClInclude>
@@ -187,9 +178,6 @@
     </ClInclude>
     <ClInclude Include="TreeManager.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BranchSystem.h">
-      <Filter>Header Files\Systems</Filter>
     </ClInclude>
     <ClInclude Include="InternodeSystem.h">
       <Filter>Header Files\Systems</Filter>

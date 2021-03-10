@@ -464,11 +464,11 @@ void DataCollectionSystem::SetCameraPose(glm::vec3 position, glm::vec3 rotation,
 	if(random)
 	{
 		float fov = glm::linearRand(90, 100);
-		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = fov;
-		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = fov;
+		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->m_fov = fov;
+		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->m_fov = fov;
 	}else{
-		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = 90;
-		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->FOV = 90;
+		_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->m_fov = 90;
+		_SemanticMaskCameraEntity.GetPrivateComponent<CameraComponent>()->m_fov = 90;
 	}
 	Transform transform;
 	transform.SetPosition(_CameraPosition);
@@ -516,9 +516,9 @@ void DataCollectionSystem::OnCreate()
 	transform.SetEulerRotation(_CameraEulerRotation);
 	_ImageCameraEntity.SetComponentData(transform);
 	auto cameraComponent = std::make_unique<CameraComponent>();
-	cameraComponent->DrawSkyBox = false;
+	cameraComponent->m_drawSkyBox = false;
 
-	cameraComponent->ClearColor = glm::vec3(1.0f);
+	cameraComponent->m_clearColor = glm::vec3(1.0f);
 	_ImageCameraEntity.SetName("ImageCap Camera");
 	_ImageCameraEntity.SetPrivateComponent(std::move(cameraComponent));
 	auto postProcessing = std::make_unique<PostProcessing>();
@@ -527,7 +527,7 @@ void DataCollectionSystem::OnCreate()
 	postProcessing->PushLayer(std::make_unique<GreyScale>());
 	_ImageCameraEntity.SetPrivateComponent(std::move(postProcessing));
 	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->ResizeResolution(_CaptureResolution, _CaptureResolution);
-	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->AllowAutoResize = false;
+	_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->m_allowAutoResize = false;
 
 	_SemanticMaskCameraEntity = EntityManager::CreateEntity(archetype);
 	transform.SetPosition(_CameraPosition);
@@ -535,14 +535,14 @@ void DataCollectionSystem::OnCreate()
 	_SemanticMaskCameraEntity.SetComponentData(transform);
 	cameraComponent = std::make_unique<CameraComponent>();
 	cameraComponent->ResizeResolution(_TargetResolution, _TargetResolution);
-	cameraComponent->DrawSkyBox = false;
-	cameraComponent->AllowAutoResize = false;
-	cameraComponent->ClearColor = glm::vec3(1.0f);
+	cameraComponent->m_drawSkyBox = false;
+	cameraComponent->m_allowAutoResize = false;
+	cameraComponent->m_clearColor = glm::vec3(1.0f);
 	_SemanticMaskCameraEntity.SetName("Semantic Mask Camera");
 	_SemanticMaskCameraEntity.SetPrivateComponent(std::move(cameraComponent));
 
 	_BackgroundMaterial = std::make_shared<Material>();
-	_BackgroundMaterial->Shininess = 32.0f;
+	_BackgroundMaterial->m_shininess = 32.0f;
 	std::string vertShaderCode = std::string("#version 460 core\n")
 		+ *Default::ShaderIncludes::Uniform +
 		+"\n"
@@ -590,12 +590,12 @@ void DataCollectionSystem::OnCreate()
 	_SmallBranchBuffer->SetInt(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	_SmallBranchBuffer->SetInt(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	auto mmr = std::make_unique<MeshRenderer>();
-	mmr->Mesh = Default::Primitives::Quad;
-	mmr->ForwardRendering = true;
-	mmr->ReceiveShadow = false;
-	mmr->CastShadow = false;
-	mmr->Material = _BackgroundMaterial;
-	_BackgroundMaterial->CullingMode = MaterialCullingMode::OFF;
+	mmr->m_mesh = Default::Primitives::Quad;
+	mmr->m_forwardRendering = true;
+	mmr->m_receiveShadow = false;
+	mmr->m_castShadow = false;
+	mmr->m_material = _BackgroundMaterial;
+	_BackgroundMaterial->m_cullingMode = MaterialCullingMode::Off;
 	transform.SetPosition(glm::vec3(0, 17, -13));
 	transform.SetEulerRotation(glm::radians(glm::vec3(75, -0, -180)));
 	transform.SetScale(glm::vec3(30, 1, 30));
@@ -715,22 +715,22 @@ void DataCollectionSystem::LateUpdate()
 					SetCameraPoseMulti(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, 3);
 					//SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, false);
 
-					RenderManager::SetAmbientLight(0.3f);
+					RenderManager::GetInstance().m_lightSettings.m_ambientLight = (0.3f);
 					float brightness = glm::linearRand(5.0f, 7.0f);
-					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 2.0f;
-					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->lightSize = 1.0f;
-					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->bias = 0.3f;
-					_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 3.0f;
-					_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 3.0f;
-					_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuseBrightness = brightness / 8.0f;
-					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
-					_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
-					_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
-					_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
-					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
-					_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
-					_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
-					_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->CastShadow = true;
+					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->m_diffuseBrightness = brightness / 2.0f;
+					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->m_lightSize = 1.0f;
+					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->m_bias = 0.3f;
+					_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->m_diffuseBrightness = brightness / 3.0f;
+					_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->m_diffuseBrightness = brightness / 3.0f;
+					_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->m_diffuseBrightness = brightness / 8.0f;
+					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->m_diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+					_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->m_diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+					_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->m_diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+					_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->m_diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+					_DirectionalLightEntity.GetPrivateComponent<DirectionalLight>()->m_castShadow = true;
+					_DirectionalLightEntity1.GetPrivateComponent<DirectionalLight>()->m_castShadow = true;
+					_DirectionalLightEntity2.GetPrivateComponent<DirectionalLight>()->m_castShadow = true;
+					_DirectionalLightEntity3.GetPrivateComponent<DirectionalLight>()->m_castShadow = true;
 
 					glm::vec3 mainLightAngle = glm::vec3(150 + glm::linearRand(-30, 30), glm::linearRand(0, 360), 0);
 					float lightFocus = 35;
@@ -757,8 +757,8 @@ void DataCollectionSystem::LateUpdate()
 				if(!_BranchBarkTextures.empty()){
 					auto mat = std::make_shared<Material>();
 					mat->SetProgram(Default::GLPrograms::StandardProgram);
-					mat->Shininess = 32.0f;
-					mat->Metallic = 0.0f;
+					mat->m_shininess = 32.0f;
+					mat->m_metallic = 0.0f;
 					mat->SetTexture(_BranchBarkTextures [glm::linearRand((size_t)0, _BranchBarkTextures.size() - 1)]);
 					_CurrentTree = _PlantSimulationSystem->CreateTree(mat, tps, glm::vec3(0.0f), true);
 				}else
@@ -1124,18 +1124,18 @@ void DataCollectionSystem::EnableSemantic() const
 	if (foliageEntity.HasPrivateComponent<MeshRenderer>())
 	{
 		auto& branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
-		branchletRenderer->ForwardRendering = true;
-		branchletRenderer->Material = TreeManager::SemanticTreeBranchMaterial;
+		branchletRenderer->m_forwardRendering = true;
+		branchletRenderer->m_material = TreeManager::SemanticTreeBranchMaterial;
 	}
 	if (foliageEntity.HasPrivateComponent<Particles>())
 	{
 		auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
-		leavesRenderer->ForwardRendering = true;
-		leavesRenderer->Material = TreeManager::SemanticTreeLeafMaterial;
+		leavesRenderer->m_forwardRendering = true;
+		leavesRenderer->m_material = TreeManager::SemanticTreeLeafMaterial;
 	}
 	auto& branchRenderer = _CurrentTree.GetPrivateComponent<MeshRenderer>();
-	branchRenderer->ForwardRendering = true;
-	branchRenderer->Material = TreeManager::SemanticTreeBranchMaterial;
+	branchRenderer->m_forwardRendering = true;
+	branchRenderer->m_material = TreeManager::SemanticTreeBranchMaterial;
 
 }
 

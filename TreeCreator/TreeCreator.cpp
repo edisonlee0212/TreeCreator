@@ -5,7 +5,6 @@
 #include "CameraControlSystem.h"
 #include "PlantSimulationSystem.h"
 #include "TreeManager.h"
-#include "SorghumReconstructionSystem.h"
 #include "DataCollectionSystem.h"
 #include "TreeReconstructionSystem.h"
 #include "TreeCollectionGenerationSystem.h"
@@ -16,12 +15,10 @@
 #include "GreyScale.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
-using namespace SorghumReconstruction;
 Entity InitGround();
 PlantSimulationSystem* InitPlantSimulationSystem();
 DataCollectionSystem* InitImageCollectionSystem();
 TreeReconstructionSystem* InitTreeReconstructionSystem();
-SorghumReconstructionSystem* InitSorghumReconstructionSystem();
 TreeCollectionGenerationSystem* InitTreeCollectionGenerationSystem();
 RealTreeReconstructionSystem* InitRealTreeReconstructionSystem();
 void EngineSetup();
@@ -31,36 +28,36 @@ void main()
 	Transform transform;
 	
 #pragma region Lights
-	RenderManager::SetAmbientLight(0.1f);
+	RenderManager::GetInstance().m_lightSettings.m_ambientLight = (0.1f);
 	float brightness = 5.0f;
 	auto dlc = std::make_unique<DirectionalLight>();
-	dlc->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
-	dlc->diffuseBrightness = brightness / 2.0f;
-	dlc->bias = 0.3f;
-	dlc->normalOffset = 0.01f;
-	dlc->lightSize = 1.0;
-	dlc->CastShadow = true;
+	dlc->m_diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+	dlc->m_diffuseBrightness = brightness / 2.0f;
+	dlc->m_bias = 0.3f;
+	dlc->m_normalOffset = 0.01f;
+	dlc->m_lightSize = 1.0;
+	dlc->m_castShadow = true;
 	auto dlc1 = std::make_unique<DirectionalLight>();
-	dlc1->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
-	dlc1->diffuseBrightness = brightness / 3.0f;
-	dlc1->bias = 0.3f;
-	dlc1->normalOffset = 0.01f;
-	dlc1->lightSize = 1.0;
-	dlc->CastShadow = true;
+	dlc1->m_diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+	dlc1->m_diffuseBrightness = brightness / 3.0f;
+	dlc1->m_bias = 0.3f;
+	dlc1->m_normalOffset = 0.01f;
+	dlc1->m_lightSize = 1.0;
+	dlc->m_castShadow = true;
 	auto dlc2 = std::make_unique<DirectionalLight>();
-	dlc2->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
-	dlc2->diffuseBrightness = brightness / 3.0f;
-	dlc2->bias = 0.3f;
-	dlc2->normalOffset = 0.01f;
-	dlc2->lightSize = 1.0;
-	dlc->CastShadow = true;
+	dlc2->m_diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+	dlc2->m_diffuseBrightness = brightness / 3.0f;
+	dlc2->m_bias = 0.3f;
+	dlc2->m_normalOffset = 0.01f;
+	dlc2->m_lightSize = 1.0;
+	dlc->m_castShadow = true;
 	auto dlc3 = std::make_unique<DirectionalLight>();
-	dlc3->diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
-	dlc3->diffuseBrightness = brightness / 8.0f;
-	dlc3->bias = 0.3f;
-	dlc3->normalOffset = 0.01f;
-	dlc3->lightSize = 1.0;
-	dlc->CastShadow = true;
+	dlc3->m_diffuse = glm::normalize(glm::vec3(253.0 / 256.0, 251.0 / 256.0, 211.0 / 256.0));
+	dlc3->m_diffuseBrightness = brightness / 8.0f;
+	dlc3->m_bias = 0.3f;
+	dlc3->m_normalOffset = 0.01f;
+	dlc3->m_lightSize = 1.0;
+	dlc->m_castShadow = true;
 	
 	float angle = 30;
 	transform.SetEulerRotation(glm::radians(glm::vec3(150, angle, 0)));
@@ -81,8 +78,6 @@ void main()
 	EntityManager::SetComponentData(dle3, transform);
 	
 #pragma endregion
-	bool generateSorghum = false;
-	bool generateSorghumField = true;
 	PlantSimulationSystem* pss = InitPlantSimulationSystem();
 	DataCollectionSystem* dcs = InitImageCollectionSystem();
 	TreeReconstructionSystem* trs = InitTreeReconstructionSystem();
@@ -98,105 +93,6 @@ void main()
 	Entity ground = InitGround();
 	ground.SetEnabled(false);
 	tcgs->SetGroundEntity(ground);
-	if (generateSorghum) {
-		auto srSys = InitSorghumReconstructionSystem();
-		Entity plant1 = srSys->ImportPlant("skeleton_procedural_1.txt", 0.01f, "Sorghum 1");
-		Entity plant2 = srSys->ImportPlant("skeleton_procedural_2.txt", 0.01f, "Sorghum 2");
-		Entity plant3 = srSys->ImportPlant("skeleton_procedural_3.txt", 0.01f, "Sorghum 3");
-		Entity plant4 = srSys->ImportPlant("skeleton_procedural_4.txt", 0.01f, "Sorghum 4");
-		srSys->GenerateMeshForAllPlants(2, 3);
-		srSys->ExportPlant(plant1, "plant1");
-		srSys->ExportPlant(plant2, "plant2");
-		srSys->ExportPlant(plant3, "plant3");
-		srSys->ExportPlant(plant4, "plant4");
-		if (generateSorghumField) {
-			glm::vec2 radius = glm::vec2(53, 12);
-			glm::vec2 size = glm::vec2(0.565f, 2.7f);
-			std::vector<std::vector<glm::mat4>> matricesList;
-			matricesList.resize(4);
-			for (auto& i : matricesList)
-			{
-				i.clear();
-			}
-			float xStep = -radius.x * size.x * 2;
-
-			for (int i = -radius.x; i <= radius.x; i++)
-			{
-				if (i % 18 == 0) xStep += 2.0f * glm::gaussRand(1.0f, 0.2f);
-				xStep += size.x * 2 * glm::gaussRand(1.0f, 0.5f);
-				float yStep = -radius.y * size.y * 2;
-				for (int j = -radius.y; j <= radius.y; j++)
-				{
-					int index = glm::linearRand(0, (int)matricesList.size() - 1);
-					glm::vec3 translation;
-					glm::quat rotation;
-					float angle = glm::gaussRand(35.0, 4.0);
-					float change = 10.0f;
-					switch (index)
-					{
-					case 0:
-						angle = glm::gaussRand(42.0f, 5.0f) + glm::linearRand(-change, change);
-						break;
-					case 1:
-						angle = glm::gaussRand(30.0f, 5.0f) + glm::linearRand(-change, change);
-						break;
-					case 2:
-						angle = glm::gaussRand(40.0f, 5.0f) + glm::linearRand(-change, change);
-						break;
-					case 3:
-						angle = glm::gaussRand(-110.0f, 5.0f) + glm::linearRand(-change, change);
-						break;
-					default:
-						break;
-					}
-					float sway = 5.0f;
-					rotation = glm::quat(glm::vec3(glm::radians(-90.0f + glm::linearRand(-sway, sway)), glm::radians(angle), glm::radians(glm::linearRand(-sway, sway))));
-					translation = glm::vec3(xStep, 0.0f, yStep) + glm::gaussRand(glm::vec3(0.0f), glm::vec3(0.02f));
-					yStep += size.y * 2 * glm::gaussRand(1.0f, 0.05f);
-					glm::vec3 scale;
-					scale = glm::vec3(1.0f, 1.0f, 1.0f) * glm::gaussRand(1.0f, 0.05f);
-					glm::mat4 transform = glm::translate(glm::mat4(1.0f), translation) * glm::mat4_cast(rotation) * glm::scale(scale);
-					matricesList[index].push_back(transform);
-				}
-
-			}
-
-			Entity gridPlant1 = srSys->CreateGridPlant(plant1, matricesList[0]);
-			gridPlant1.SetName("Grid 1");
-			Entity gridPlant2 = srSys->CreateGridPlant(plant2, matricesList[1]);
-			gridPlant2.SetName("Grid 2");
-			Entity gridPlant3 = srSys->CreateGridPlant(plant3, matricesList[2]);
-			gridPlant3.SetName("Grid 3");
-			Entity gridPlant4 = srSys->CreateGridPlant(plant4, matricesList[3]);
-			gridPlant4.SetName("Grid 4");
-		}
-		Transform t1;
-		Transform t2;
-		Transform t3;
-		Transform t4;
-
-		t1.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
-		t2.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
-		t3.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
-		t4.SetScale(glm::vec3(1.0f, 1.0f, 1.0f));
-
-		t1.SetPosition(glm::vec3(-5.0f, 0.0, 0));
-		t2.SetPosition(glm::vec3(0.0f, 0.0, 0));
-		t3.SetPosition(glm::vec3(5.0f, 0.0, 0));
-		t4.SetPosition(glm::vec3(10.0f, 0.0, 0));
-
-		t1.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(42.0f), 0));
-		t2.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(30.0f), 0));
-		t3.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(40.0f), 0));
-		t4.SetEulerRotation(glm::vec3(glm::radians(-90.0f), glm::radians(-110.0f), 0));
-		EntityManager::SetComponentData(plant1, t1);
-
-		EntityManager::SetComponentData(plant2, t2);
-
-		EntityManager::SetComponentData(plant3, t3);
-
-		EntityManager::SetComponentData(plant4, t4);
-	}
 #pragma region Engine Loop
 	Application::Run();
 #pragma endregion
@@ -217,10 +113,6 @@ TreeReconstructionSystem* InitTreeReconstructionSystem()
 	return Application::GetCurrentWorld()->CreateSystem<TreeReconstructionSystem>(SystemGroup::SimulationSystemGroup);
 }
 
-SorghumReconstructionSystem* InitSorghumReconstructionSystem()
-{
-	return Application::GetCurrentWorld()->CreateSystem<SorghumReconstructionSystem>(SystemGroup::SimulationSystemGroup);
-}
 
 TreeCollectionGenerationSystem* InitTreeCollectionGenerationSystem()
 {
@@ -234,19 +126,19 @@ RealTreeReconstructionSystem* InitRealTreeReconstructionSystem()
 
 void EngineSetup()
 {
-#pragma region Engine Setup
-#pragma region Global light settings
-	RenderManager::SetPCSSScaleFactor(1.0f);
-	RenderManager::SetAmbientLight(0.4f);
-	RenderManager::SetShadowMapResolution(8192);
-	RenderManager::StableFit = false;
-	RenderManager::SetSeamFixRatio(0.05f);
-	RenderManager::SetMaxShadowDistance(100);
-	RenderManager::SetSplitRatio(0.15f, 0.3f, 0.5f, 1.0f);
-#pragma endregion
 	FileIO::SetProjectPath("../Resources/");
 	FileIO::SetResourcePath("../Submodules/UniEngine/Resources/");
 	Application::Init();
+#pragma region Engine Setup
+#pragma region Global light settings
+	RenderManager::GetInstance().m_lightSettings.m_scaleFactor = 1.0f;
+	RenderManager::SetShadowMapResolution(8192);
+	RenderManager::GetInstance().m_stableFit = false;
+	RenderManager::GetInstance().m_lightSettings.m_seamFixRatio = (0.05f);
+	RenderManager::GetInstance().m_maxShadowDistance = (100);
+	RenderManager::SetSplitRatio(0.15f, 0.3f, 0.5f, 1.0f);
+#pragma endregion
+	
 	Transform transform;
 	transform.SetEulerRotation(glm::radians(glm::vec3(150, 30, 0)));
 
@@ -268,8 +160,8 @@ void EngineSetup()
 	auto mainCamera = RenderManager::GetMainCamera();
 	if (mainCamera) {
 		mainCamera->GetOwner().SetComponentData(transform);
-		mainCamera->DrawSkyBox = false;
-		mainCamera->ClearColor = glm::vec3(1.0f);
+		mainCamera->m_drawSkyBox = false;
+		mainCamera->m_clearColor = glm::vec3(1.0f);
 		auto postProcessing = std::make_unique<PostProcessing>();
 		
 		postProcessing->PushLayer(std::make_unique<Bloom>());
@@ -320,28 +212,28 @@ Entity InitGround() {
 
 	auto mat = std::make_shared<Material>();
 	mat->SetProgram(Default::GLPrograms::StandardProgram);
-	const auto textureD = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-albedo.png", TextureType::ALBEDO);
+	const auto textureD = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-albedo.png", TextureType::Albedo);
 	//mat->SetTexture(Default::Textures::StandardTexture);
-	const auto textureN = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-normal-ogl.png", TextureType::NORMAL);
+	const auto textureN = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-normal-ogl.png", TextureType::Normal);
 	//mat->SetTexture(textureN);
-	const auto textureH = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-height.png", TextureType::DISPLACEMENT);
+	const auto textureH = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-height.png", TextureType::Displacement);
 	//mat->SetTexture(textureH);
-	const auto textureA = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-ao.png", TextureType::AO);
+	const auto textureA = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-ao.png", TextureType::Ao);
 	//mat->SetTexture(textureA);
-	const auto textureM = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-metallic.png", TextureType::METALLIC);
+	const auto textureM = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-metallic.png", TextureType::Metallic);
 	//mat->SetTexture(textureM);
-	const auto textureR = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-roughness.png", TextureType::ROUGHNESS);
+	const auto textureR = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/leafy-grass2-bl/leafy-grass2-roughness.png", TextureType::Roughness);
 	//mat->SetTexture(textureR);
-	mat->Shininess = 32.0f;
+	mat->m_shininess = 32.0f;
 	auto meshMaterial = std::make_unique<MeshRenderer>();
-	meshMaterial->Mesh = Default::Primitives::Quad;
-	meshMaterial->Material = mat;
-	meshMaterial->ReceiveShadow = true;
-	meshMaterial->ForwardRendering = false;
-	meshMaterial->Material->DisplacementMapScale = -0.02f;
-	meshMaterial->Material->Metallic = 0.0f;
-	meshMaterial->Material->Roughness = 0.0f;
-	meshMaterial->Material->AmbientOcclusion = 2.0f;
+	meshMaterial->m_mesh = Default::Primitives::Quad;
+	meshMaterial->m_material = mat;
+	meshMaterial->m_receiveShadow = true;
+	meshMaterial->m_forwardRendering = false;
+	meshMaterial->m_material->m_displacementMapScale = -0.02f;
+	meshMaterial->m_material->m_metallic = 0.0f;
+	meshMaterial->m_material->m_roughness = 0.0f;
+	meshMaterial->m_material->m_ambientOcclusion = 2.0f;
 	EntityManager::SetPrivateComponent<MeshRenderer>(entity, std::move(meshMaterial));
 	return entity;
 }

@@ -81,17 +81,17 @@ DefaultFoliageGenerator::DefaultFoliageGenerator()
 	_Archetype = EntityManager::CreateEntityArchetype("Pine Foliage", Transform(), GlobalTransform(), TreeIndex(), DefaultFoliageInfo());
 
 	_LeafMaterial = std::make_shared<Material>();
-	_LeafMaterial-> Shininess = 32.0f;
+	_LeafMaterial->m_shininess = 32.0f;
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
-	_LeafMaterial->AlphaDiscardEnabled = true;
-	_LeafMaterial->AlphaDiscardOffset = 0.1f;
-	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
+	_LeafMaterial->m_alphaDiscardEnabled = true;
+	_LeafMaterial->m_alphaDiscardOffset = 0.1f;
+	_LeafMaterial->m_cullingMode = MaterialCullingMode::Off;
 	if (!_LeafSurfaceTex) _LeafSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Leaf/Pine/level0.png");
 	//_LeafMaterial->SetTexture(_LeafSurfaceTex);
-	_LeafMaterial->AlbedoColor = glm::normalize(glm::vec3(60.0f / 256.0f, 140.0f / 256.0f, 0.0f));
-	_LeafMaterial->Metallic = 0.0f;
-	_LeafMaterial->Roughness = 0.3f;
-	_LeafMaterial->AmbientOcclusion = glm::linearRand(0.4f, 0.8f);
+	_LeafMaterial->m_albedoColor = glm::normalize(glm::vec3(60.0f / 256.0f, 140.0f / 256.0f, 0.0f));
+	_LeafMaterial->m_metallic = 0.0f;
+	_LeafMaterial->m_roughness = 0.3f;
+	_LeafMaterial->m_ambientOcclusion = glm::linearRand(0.4f, 0.8f);
 
 }
 
@@ -116,11 +116,11 @@ void TreeUtilities::DefaultFoliageGenerator::Generate()
 		foliageEntity = EntityManager::CreateEntity(_Archetype, "Foliage");
 		EntityManager::SetParent(foliageEntity, tree);
 		auto particleSys = std::make_unique<Particles>();
-		particleSys->Material = _LeafMaterial;
-		particleSys->Mesh = Default::Primitives::Quad;
-		particleSys->ForwardRendering = false;
+		particleSys->m_material = _LeafMaterial;
+		particleSys->m_mesh = Default::Primitives::Quad;
+		particleSys->m_forwardRendering = false;
 		Transform transform;
-		transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
+		transform.m_value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
 		foliageEntity.SetComponentData(transform);
 		foliageEntity.SetComponentData(_DefaultFoliageInfo);
@@ -128,8 +128,8 @@ void TreeUtilities::DefaultFoliageGenerator::Generate()
 		
 	}
 	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
-	particleSys->Matrices.clear();
-	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeTransform.Value, particleSys->Matrices, true);
+	particleSys->m_matrices.clear();
+	GenerateLeaves(EntityManager::GetChildren(tree)[0], treeTransform.m_value, particleSys->m_matrices, true);
 }
 
 void TreeUtilities::DefaultFoliageGenerator::OnGui()

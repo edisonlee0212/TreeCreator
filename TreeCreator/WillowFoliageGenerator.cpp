@@ -14,23 +14,23 @@ TreeUtilities::WillowFoliageGenerator::WillowFoliageGenerator()
 	_Archetype = EntityManager::CreateEntityArchetype("Willow Foliage", Transform(), GlobalTransform(), TreeIndex(), WillowFoliageInfo());
 
 	_BranchletMaterial = std::make_shared<Material>();
-	_BranchletMaterial->Shininess = 32.0f;
+	_BranchletMaterial->m_shininess = 32.0f;
 	_BranchletMaterial->SetProgram(Default::GLPrograms::StandardProgram);
 	if(!_BranchletSurfaceTex)_BranchletSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/BarkMaterial/Bark_Pine_baseColor.jpg");
 	_BranchletMaterial->SetTexture(_BranchletSurfaceTex);
 
 	_LeafMaterial = std::make_shared<Material>();
-	_LeafMaterial->Shininess = 32.0f;
-	_LeafMaterial->AlphaDiscardEnabled = true;
-	_LeafMaterial->AlphaDiscardOffset = 0.2f;
-	_LeafMaterial->CullingMode = MaterialCullingMode::OFF;
+	_LeafMaterial->m_shininess = 32.0f;
+	_LeafMaterial->m_alphaDiscardEnabled = true;
+	_LeafMaterial->m_alphaDiscardOffset = 0.2f;
+	_LeafMaterial->m_cullingMode = MaterialCullingMode::Off;
 	_LeafMaterial->SetProgram(Default::GLPrograms::StandardInstancedProgram);
 	if (!_LeafSurfaceTex)_LeafSurfaceTex = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() + "Textures/Leaf/Green.png");
 	//_LeafMaterial->SetTexture(_LeafSurfaceTex);
-	_LeafMaterial->AlbedoColor = glm::normalize(glm::vec3(60.0f / 256.0f, 140.0f / 256.0f, 0.0f));
-	_LeafMaterial->Metallic = 0.0f;
-	_LeafMaterial->Roughness = 0.3f;
-	_LeafMaterial->AmbientOcclusion = glm::linearRand(0.4f, 0.8f);
+	_LeafMaterial->m_albedoColor = glm::normalize(glm::vec3(60.0f / 256.0f, 140.0f / 256.0f, 0.0f));
+	_LeafMaterial->m_metallic = 0.0f;
+	_LeafMaterial->m_roughness = 0.3f;
+	_LeafMaterial->m_ambientOcclusion = glm::linearRand(0.4f, 0.8f);
 
 }
 
@@ -54,15 +54,15 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		foliageEntity = EntityManager::CreateEntity(_Archetype, "Foliage");
 		EntityManager::SetParent(foliageEntity, tree);
 		auto mmc = std::make_unique<MeshRenderer>();
-		mmc->Material = _BranchletMaterial;
-		mmc->ForwardRendering = true;
+		mmc->m_material = _BranchletMaterial;
+		mmc->m_forwardRendering = true;
 		
 		auto particleSys = std::make_unique<Particles>();
-		particleSys->Material = _LeafMaterial;
-		particleSys->Mesh = Default::Primitives::Quad;
-		particleSys->ForwardRendering = false;
+		particleSys->m_material = _LeafMaterial;
+		particleSys->m_mesh = Default::Primitives::Quad;
+		particleSys->m_forwardRendering = false;
 		Transform transform;
-		transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
+		transform.m_value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
 		foliageEntity.SetPrivateComponent(std::move(mmc));
 		foliageEntity.SetPrivateComponent(std::move(particleSys));
 		foliageEntity.SetComponentData(transform);
@@ -72,11 +72,11 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 	}
 	auto& mmc = foliageEntity.GetPrivateComponent<MeshRenderer>();
 	auto& particleSys = foliageEntity.GetPrivateComponent<Particles>();
-	particleSys->Matrices.clear();
+	particleSys->m_matrices.clear();
 	std::vector<Entity> internodes;
 	std::vector<Illumination> illuminations;
 	std::mutex m;
-	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(TreeManager::GetInternodeQuery(), [&m, ti, &internodes, this, &illuminations](int i, Entity internode, InternodeInfo& info, Illumination& illumination, TreeIndex& index)
+	EntityManager::ForEach<InternodeInfo, Illumination, TreeIndex>(JobManager::PrimaryWorkers(), TreeManager::GetInternodeQuery(), [&m, ti, &internodes, this, &illuminations](int i, Entity internode, InternodeInfo& info, Illumination& illumination, TreeIndex& index)
 		{
 			if (info.Inhibitor > _DefaultFoliageInfo.InhibitorLimit) return;
 			if (ti.Value != index.Value) return;
@@ -86,7 +86,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 		}
 	);
 	if (internodes.empty()) return;
-	glm::mat4 treeTransform = EntityManager::GetComponentData<GlobalTransform>(tree).Value;
+	glm::mat4 treeTransform = EntityManager::GetComponentData<GlobalTransform>(tree).m_value;
 	std::vector<Branchlet> branchlets;
 	branchlets.resize(internodes.size());
 	for(int i = 0; i < internodes.size(); i++)
@@ -149,7 +149,7 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 	}
 	for (int i = 0; i < internodes.size(); i++)
 	{
-		particleSys->Matrices.insert(particleSys->Matrices.end(), branchlets[i].LeafLocalTransforms.begin(), branchlets[i].LeafLocalTransforms.end());
+		particleSys->m_matrices.insert(particleSys->m_matrices.end(), branchlets[i].LeafLocalTransforms.begin(), branchlets[i].LeafLocalTransforms.end());
 	}
 	std::vector<Vertex> vertices;
 	std::vector<unsigned> indices;
@@ -159,8 +159,8 @@ void TreeUtilities::WillowFoliageGenerator::Generate()
 	{
 		SimpleMeshGenerator(branchlets[i], vertices, indices);
 	}
-	mmc->Mesh = std::make_shared<Mesh>();
-	mmc->Mesh->SetVertices(17, vertices, indices, true);
+	mmc->m_mesh = std::make_shared<Mesh>();
+	mmc->m_mesh->SetVertices(17, vertices, indices, true);
 }
 
 void TreeUtilities::WillowFoliageGenerator::SimpleMeshGenerator(Branchlet& branchlet, std::vector<Vertex>& vertices,
@@ -175,19 +175,19 @@ void TreeUtilities::WillowFoliageGenerator::SimpleMeshGenerator(Branchlet& branc
 	Vertex archetype;
 	float textureXstep = 1.0f / step * 4.0f;
 	for (int i = 0; i < step; i++) {
-		archetype.Position = rings.at(0).GetPoint(normal, angleStep * i, true);
+		archetype.m_position = rings.at(0).GetPoint(normal, angleStep * i, true);
 		float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
-		archetype.TexCoords0 = glm::vec2(x, 0.0f);
+		archetype.m_texCoords0 = glm::vec2(x, 0.0f);
 		vertices.push_back(archetype);
 	}
 	int ringSize = rings.size();
 	float textureYstep = 1.0f / ringSize * 2.0f;
 	for (int ringIndex = 0; ringIndex < ringSize; ringIndex++) {
 		for (int i = 0; i < step; i++) {
-			archetype.Position = rings.at(ringIndex).GetPoint(normal, angleStep * i, false);
+			archetype.m_position = rings.at(ringIndex).GetPoint(normal, angleStep * i, false);
 			float x = i < (step / 2) ? i * textureXstep : (step - i) * textureXstep;
 			float y = ringIndex < (ringSize / 2) ? (ringIndex + 1) * textureYstep : (ringSize - ringIndex - 1) * textureYstep;
-			archetype.TexCoords0 = glm::vec2(x, y);
+			archetype.m_texCoords0 = glm::vec2(x, y);
 			vertices.push_back(archetype);
 		}
 		for (int i = 0; i < step - 1; i++) {

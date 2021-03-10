@@ -21,7 +21,7 @@ void MaskProcessor::Trim(int& totalChild, int& trimmedChild, std::map<int, Entit
 	);
 	if (EntityManager::GetChildrenAmount(internode) == 0)
 	{
-		if (map.find(internode.Index) != map.end())
+		if (map.find(internode.m_index) != map.end())
 		{
 			trimmedChild++;
 			totalChild++;
@@ -29,7 +29,7 @@ void MaskProcessor::Trim(int& totalChild, int& trimmedChild, std::map<int, Entit
 		}
 	}
 	totalChild++;
-	if (internode.GetComponentData<InternodeInfo>().Order > _MainBranchOrderProtection && map.find(internode.Index) != map.end())
+	if (internode.GetComponentData<InternodeInfo>().Order > _MainBranchOrderProtection && map.find(internode.m_index) != map.end())
 	{
 		if (_TrimFactor == 0.0f || (float)trimmedChild / totalChild > _TrimFactor) {
 			EntityManager::DeleteEntity(internode);
@@ -61,8 +61,8 @@ void MaskProcessor::PlaceAttractionPoints()
 				GlobalTransform cameraTransform = _CameraEntity.GetComponentData<GlobalTransform>();
 				glm::vec3 position;
 				Ray cameraRay = _CameraEntity.GetPrivateComponent<CameraComponent>()->ScreenPointToRay(cameraTransform, glm::vec2((static_cast<float>(y) - static_cast<float>(resolutionY)) / (static_cast<float>(resolutionY) / _ResolutionY), (static_cast<float>(resolutionX) - x) / (static_cast<float>(resolutionX) / _ResolutionX)));
-				auto start = cameraRay.Start;
-				auto direction = glm::normalize(cameraRay.Direction);
+				auto start = cameraRay.m_start;
+				auto direction = glm::normalize(cameraRay.m_direction);
 				direction /= direction.z;
 				position = start - direction * start.z;
 				TreeManager::CreateAttractionPoint(treeIndex, position, GetOwner());
@@ -93,7 +93,7 @@ void TreeUtilities::MaskProcessor::ShotInternodes() const
 	std::vector<glm::mat4> matrices = std::vector<glm::mat4>();
 	std::vector<Entity> internodeEntities = std::vector<Entity>();
 	std::mutex m;
-	EntityManager::ForEach<TreeIndex, GlobalTransform>(TreeManager::GetInternodeQuery(), [&m, targetTreeIndex, &matrices, &internodeEntities, this](int i, Entity entity, TreeIndex& index, GlobalTransform& globalTransform)
+	EntityManager::ForEach<TreeIndex, GlobalTransform>(JobManager::PrimaryWorkers(), TreeManager::GetInternodeQuery(), [&m, targetTreeIndex, &matrices, &internodeEntities, this](int i, Entity entity, TreeIndex& index, GlobalTransform& globalTransform)
 		{
 			if (targetTreeIndex.Value != index.Value) return;
 			glm::vec3 position = globalTransform.GetPosition();
@@ -110,25 +110,25 @@ void TreeUtilities::MaskProcessor::ShotInternodes() const
 	mesh->Enable();
 
 	indicesBuffer.SetData((GLsizei)count * sizeof(Entity), internodeEntities.data(), GL_DYNAMIC_DRAW);
-	mesh->VAO()->EnableAttributeArray(11);
-	mesh->VAO()->SetAttributeIntPointer(11, 1, GL_UNSIGNED_INT, sizeof(Entity), (void*)0);
-	mesh->VAO()->SetAttributeDivisor(11, 1);
+	mesh->Vao()->EnableAttributeArray(11);
+	mesh->Vao()->SetAttributeIntPointer(11, 1, GL_UNSIGNED_INT, sizeof(Entity), (void*)0);
+	mesh->Vao()->SetAttributeDivisor(11, 1);
 
 	const GLVBO matricesBuffer;
 	matricesBuffer.SetData((GLsizei)count * sizeof(glm::mat4), matrices.data(), GL_DYNAMIC_DRAW);
 
-	mesh->VAO()->EnableAttributeArray(12);
-	mesh->VAO()->SetAttributePointer(12, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
-	mesh->VAO()->EnableAttributeArray(13);
-	mesh->VAO()->SetAttributePointer(13, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
-	mesh->VAO()->EnableAttributeArray(14);
-	mesh->VAO()->SetAttributePointer(14, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
-	mesh->VAO()->EnableAttributeArray(15);
-	mesh->VAO()->SetAttributePointer(15, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
-	mesh->VAO()->SetAttributeDivisor(12, 1);
-	mesh->VAO()->SetAttributeDivisor(13, 1);
-	mesh->VAO()->SetAttributeDivisor(14, 1);
-	mesh->VAO()->SetAttributeDivisor(15, 1);
+	mesh->Vao()->EnableAttributeArray(12);
+	mesh->Vao()->SetAttributePointer(12, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)0);
+	mesh->Vao()->EnableAttributeArray(13);
+	mesh->Vao()->SetAttributePointer(13, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(sizeof(glm::vec4)));
+	mesh->Vao()->EnableAttributeArray(14);
+	mesh->Vao()->SetAttributePointer(14, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(2 * sizeof(glm::vec4)));
+	mesh->Vao()->EnableAttributeArray(15);
+	mesh->Vao()->SetAttributePointer(15, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(3 * sizeof(glm::vec4)));
+	mesh->Vao()->SetAttributeDivisor(12, 1);
+	mesh->Vao()->SetAttributeDivisor(13, 1);
+	mesh->Vao()->SetAttributeDivisor(14, 1);
+	mesh->Vao()->SetAttributeDivisor(15, 1);
 
 	const glm::mat4 translation = glm::translate(glm::identity<glm::mat4>(), glm::vec3(0.0f));
 	const glm::mat4 scale = glm::scale(glm::identity<glm::mat4>(), glm::vec3(1.0f));
@@ -147,11 +147,11 @@ void TreeUtilities::MaskProcessor::ShotInternodes() const
 		glDrawElementsInstanced(GL_TRIANGLES, (GLsizei)mesh->Size(), GL_UNSIGNED_INT, 0, (GLsizei)count);
 	}
 
-	mesh->VAO()->DisableAttributeArray(11);
-	mesh->VAO()->DisableAttributeArray(12);
-	mesh->VAO()->DisableAttributeArray(13);
-	mesh->VAO()->DisableAttributeArray(14);
-	mesh->VAO()->DisableAttributeArray(15);
+	mesh->Vao()->DisableAttributeArray(11);
+	mesh->Vao()->DisableAttributeArray(12);
+	mesh->Vao()->DisableAttributeArray(13);
+	mesh->Vao()->DisableAttributeArray(14);
+	mesh->Vao()->DisableAttributeArray(15);
 	RenderTarget::BindDefault();
 }
 
@@ -216,7 +216,7 @@ void TreeUtilities::MaskProcessor::Trim()
 			Entity entity = EntityManager::GetEntity(i);
 			if (!entity.IsDeleted()) {
 				//EntityManager::DeleteEntity(entity);
-				_Candidates.insert({ entity.Index, entity });
+				_Candidates.insert({ entity.m_index, entity });
 			}
 		}
 	}
@@ -271,15 +271,15 @@ void TreeUtilities::MaskProcessor::OnGui()
 			GlobalTransform cameraTransform = _CameraEntity.GetComponentData<GlobalTransform>();
 			glm::vec3 position;
 			Ray cameraRay = _CameraEntity.GetPrivateComponent<CameraComponent>()->ScreenPointToRay(cameraTransform, glm::vec2(-(int)_ResolutionY / 2, _ResolutionX / 2));
-			auto start = cameraRay.Start;
-			auto direction = glm::normalize(cameraRay.Direction);
+			auto start = cameraRay.m_start;
+			auto direction = glm::normalize(cameraRay.m_direction);
 			direction /= direction.z;
 			position = start - direction * (start.z + 12.0f);
 			transform.SetPosition(position);
 			transform.SetScale(glm::vec3(15.0f));
 			transform.SetRotation(glm::lookAt(position, position + glm::vec3(0, 1, 0), direction));
 			_Background.SetComponentData(transform);
-			if(_Mask)_Background.GetPrivateComponent<MeshRenderer>()->Material->SetTexture(_Mask);
+			if(_Mask)_Background.GetPrivateComponent<MeshRenderer>()->m_material->SetTexture(_Mask);
 		}
 	}
 	ImGui::DragFloat("Internode size", &_InternodeSize, 0.001f, 0.02f, 1.0f);
@@ -306,16 +306,16 @@ void TreeUtilities::MaskProcessor::OnGui()
 	
 	if (_Skeleton) {
 		ImGui::Text("Skeleton: ");
-		ImGui::Image((ImTextureID)_Skeleton->Texture()->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
+		ImGui::Image((ImTextureID)_Skeleton->Texture()->Id(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
 	}
 	if (_Mask) {
 		ImGui::Text("Mask: ");
-		ImGui::Image((ImTextureID)_Mask->Texture()->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
+		ImGui::Image((ImTextureID)_Mask->Texture()->Id(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
 	}
 	ImGui::Text("Processed mask: ");
-	ImGui::Image((ImTextureID)_ProcessedMask->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image((ImTextureID)_ProcessedMask->Id(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::Text("Internode Capture: ");
-	ImGui::Image((ImTextureID)_InternodeCaptureResult->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image((ImTextureID)_InternodeCaptureResult->Id(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::Text("Filtered Result: ");
-	ImGui::Image((ImTextureID)_FilteredResult->ID(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
+	ImGui::Image((ImTextureID)_FilteredResult->Id(), ImVec2(160, 160), ImVec2(0, 1), ImVec2(1, 0));
 }

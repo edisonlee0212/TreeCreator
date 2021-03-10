@@ -39,7 +39,7 @@ void TreeUtilities::TreeSystem::OnGui()
 		if (ImGui::CollapsingHeader(title.c_str())) {
 			auto* ss = TreeManager::GetLightEstimator()->GetSnapShots();
 			for (auto i : *ss) {
-				ImGui::Image((ImTextureID)i->SnapShotTexture()->ID(), ImVec2(200, 200));
+				ImGui::Image((ImTextureID)i->SnapShotTexture()->Id(), ImVec2(200, 200));
 			}
 		}
 		ImGui::Separator();

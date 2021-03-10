@@ -59,17 +59,17 @@ void CakeTower::GenerateMesh()
 					}
 					glm::vec3 position = glm::normalize(glm::vec3(x, 0.0f, z)) * CakeTiers[tierIndex][sliceIndex].MaxDistance;
 					position.y = currentHeight;
-					vertices[levelStep * totalAngleStep * SectorAmount + actualAngleStep].Position = position;
-					vertices[levelStep * totalAngleStep * SectorAmount + actualAngleStep].TexCoords0 = glm::vec2((float)levelStep / (totalLevelStep - 1), (float)angleStep / (totalAngleStep - 1));
-					vertices[levelStep * totalAngleStep * SectorAmount + actualAngleStep].Normal = glm::normalize(position);
-					vertices[totalLevelStep * SectorAmount * totalAngleStep + levelStep * totalAngleStep * SectorAmount + actualAngleStep].Position = position;
-					vertices[totalLevelStep * SectorAmount * totalAngleStep + levelStep * totalAngleStep * SectorAmount + actualAngleStep].TexCoords0 = glm::vec2((float)levelStep / (totalLevelStep - 1), (float)angleStep / (totalAngleStep - 1));
-					vertices[totalLevelStep * SectorAmount * totalAngleStep + levelStep * totalAngleStep * SectorAmount + actualAngleStep].Normal = glm::vec3(0, levelStep == 0 ? -1 : 1, 0);
+					vertices[levelStep * totalAngleStep * SectorAmount + actualAngleStep].m_position = position;
+					vertices[levelStep * totalAngleStep * SectorAmount + actualAngleStep].m_texCoords0 = glm::vec2((float)levelStep / (totalLevelStep - 1), (float)angleStep / (totalAngleStep - 1));
+					vertices[levelStep * totalAngleStep * SectorAmount + actualAngleStep].m_normal = glm::normalize(position);
+					vertices[totalLevelStep * SectorAmount * totalAngleStep + levelStep * totalAngleStep * SectorAmount + actualAngleStep].m_position = position;
+					vertices[totalLevelStep * SectorAmount * totalAngleStep + levelStep * totalAngleStep * SectorAmount + actualAngleStep].m_texCoords0 = glm::vec2((float)levelStep / (totalLevelStep - 1), (float)angleStep / (totalAngleStep - 1));
+					vertices[totalLevelStep * SectorAmount * totalAngleStep + levelStep * totalAngleStep * SectorAmount + actualAngleStep].m_normal = glm::vec3(0, levelStep == 0 ? -1 : 1, 0);
 				}
 			}
-			vertices[vertices.size() - totalLevelStep + levelStep].Position = glm::vec3(0, currentHeight, 0);
-			vertices[vertices.size() - totalLevelStep + levelStep].Normal = glm::vec3(0, levelStep == 0 ? -1 : 1, 0);
-			vertices[vertices.size() - totalLevelStep + levelStep].TexCoords0 = glm::vec2(0.0f);
+			vertices[vertices.size() - totalLevelStep + levelStep].m_position = glm::vec3(0, currentHeight, 0);
+			vertices[vertices.size() - totalLevelStep + levelStep].m_normal = glm::vec3(0, levelStep == 0 ? -1 : 1, 0);
+			vertices[vertices.size() - totalLevelStep + levelStep].m_texCoords0 = glm::vec2(0.0f);
 		}
 		for (int levelStep = 0; levelStep < totalLevelStep - 1; levelStep++)
 		{
@@ -135,8 +135,8 @@ void CakeTower::FormEntity()
 	children.clear();
 	Transform transform;
 	GlobalTransform globalTransform;
-	transform.Value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
-	globalTransform.Value = transform.Value;
+	transform.m_value = glm::translate(glm::vec3(0.0f)) * glm::scale(glm::vec3(1.0f));
+	globalTransform.m_value = transform.m_value;
 	const auto targetEntity = EntityManager::CreateEntity(_CakeTowerArchetype, "CakeTowers");
 	targetEntity.SetComponentData(transform);
 	targetEntity.SetComponentData(globalTransform);
@@ -146,9 +146,9 @@ void CakeTower::FormEntity()
 	{
 		auto slice = EntityManager::CreateEntity(_CakeTowerArchetype, "CakeTower" + std::to_string(i));
 		auto mmc = std::make_unique<MeshRenderer>();
-		mmc->Material = _CakeTowerMaterial;
-		mmc->ForwardRendering = true;
-		mmc->Mesh = _BoundMeshes[i];
+		mmc->m_material = _CakeTowerMaterial;
+		mmc->m_forwardRendering = true;
+		mmc->m_mesh = _BoundMeshes[i];
 		slice.SetPrivateComponent(std::move(mmc));
 		slice.SetComponentData(transform);
 		slice.SetComponentData(globalTransform);
@@ -218,9 +218,9 @@ void CakeTower::ExportAsObj(const std::string& filename)
 #pragma region Data collection
 		for (auto& mesh : meshes) {
 			for (const auto& vertex : mesh->GetVerticesUnsafe()) {
-				data += "v " + std::to_string(vertex.Position.x)
-					+ " " + std::to_string(-vertex.Position.y)
-					+ " " + std::to_string(vertex.Position.z)
+				data += "v " + std::to_string(vertex.m_position.x)
+					+ " " + std::to_string(-vertex.m_position.y)
+					+ " " + std::to_string(vertex.m_position.z)
 					+ "\n";
 			}
 		}
@@ -348,7 +348,7 @@ void CakeTower::CalculateVolume(float maxHeight)
 			slice.MaxDistance = 0.0f;
 		}
 	}
-	const auto threadsAmount = JobManager::GetThreadPool().Size();
+	const auto threadsAmount = JobManager::GetInstance().PrimaryWorkers().Size();
 	std::vector<std::vector<std::vector<CakeSlice>>> tempCakeTowers;
 	tempCakeTowers.resize(threadsAmount);
 	for (int i = 0; i < threadsAmount; i++)
@@ -366,7 +366,7 @@ void CakeTower::CalculateVolume(float maxHeight)
 	std::vector<std::shared_future<void>> results;
 	for (int threadIndex = 0; threadIndex < threadsAmount; threadIndex++)
 	{
-		results.push_back(JobManager::GetThreadPool().Push([&tempCakeTowers, threadIndex, &internodeInfos, this](int id)
+		results.push_back(JobManager::GetInstance().PrimaryWorkers().Push([&tempCakeTowers, threadIndex, &internodeInfos, this](int id)
 			{
 				auto& cakeTower = tempCakeTowers[threadIndex];
 				for (auto& i : internodeInfos)
@@ -497,7 +497,7 @@ void CakeTower::OnGui()
 	if (_Display && _MeshGenerated)
 	{
 		for (auto& i : _BoundMeshes) {
-			RenderManager::DrawGizmoMesh(i.get(), DisplayColor, GetOwner().GetComponentData<GlobalTransform>().Value);
+			RenderManager::DrawGizmoMesh(i.get(), DisplayColor, GetOwner().GetComponentData<GlobalTransform>().m_value);
 		}
 	}
 }

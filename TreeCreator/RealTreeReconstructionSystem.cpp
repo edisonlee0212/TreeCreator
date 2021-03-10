@@ -216,15 +216,15 @@ void RealTreeReconstructionSystem::PushInternode(Entity internode, const GlobalT
 			glm::decompose(parentLTW, scale, internodeInfo.ParentRotation, internodeInfo.ParentTranslation, skew, perspective);
 			glm::quat actualLocalRotation;
 
-			glm::decompose(treeLTW.Value, scale, rotation, translation, skew, perspective);
+			glm::decompose(treeLTW.m_value, scale, rotation, translation, skew, perspective);
 			glm::quat newGlobalRotation = rotation * internodeInfo.ParentRotation * internodeInfo.DesiredLocalRotation;
 			GlobalTransform globalTransform;
-			globalTransform.Value = (treeLTW.Value * parentLTW * internodeInfo.LocalTransform);
+			globalTransform.m_value = (treeLTW.m_value * parentLTW * internodeInfo.LocalTransform);
 			Ray ray;
-			ray.Start = cameraTransform.GetPosition();
-			ray.Direction = globalTransform.GetPosition() - ray.Start;
-			ray.Length = glm::length(ray.Direction);
-			ray.Direction = glm::normalize(ray.Direction);
+			ray.m_start = cameraTransform.GetPosition();
+			ray.m_direction = globalTransform.GetPosition() - ray.m_start;
+			ray.m_length = glm::length(ray.m_direction);
+			ray.m_direction = glm::normalize(ray.m_direction);
 			if (internodeInfo.IsMaxChild)
 			{
 				//Is max child, no rotation.
@@ -288,13 +288,13 @@ void RealTreeReconstructionSystem::PushInternode(Entity internode, const GlobalT
 					front = glm::rotate(glm::vec3(front.x, 0, front.z), glm::radians(glm::linearRand(-10.0f, 10.0f)), glm::vec3(0, 1, 0));
 				}
 				glm::vec3 normal = glm::normalize(glm::cross(front, glm::vec3(0, 1, 0)));
-				float stored = ray.Length;
-				auto d = glm::dot(ray.Direction, normal);
-				ray.Length = glm::dot(orig - ray.Start, normal) / d;
-				if (glm::abs(stored - ray.Length) > 0.5f)
+				float stored = ray.m_length;
+				auto d = glm::dot(ray.m_direction, normal);
+				ray.m_length = glm::dot(orig - ray.m_start, normal) / d;
+				if (glm::abs(stored - ray.m_length) > 0.5f)
 				{
-					if (stored > ray.Length) ray.Length = stored - 0.5;
-					else ray.Length = stored + 0.5;
+					if (stored > ray.m_length) ray.m_length = stored - 0.5;
+					else ray.m_length = stored + 0.5;
 				}
 				glm::vec3 target = ray.GetEnd();
 				front = target - internodeInfo.ParentTranslation;
@@ -313,7 +313,7 @@ void RealTreeReconstructionSystem::PushInternode(Entity internode, const GlobalT
 			internodeInfo.GlobalTransform = parentLTW * internodeInfo.LocalTransform;
 			internodeInfo.StartAge = 0;
 			EntityManager::SetComponentData(child, internodeInfo);
-			globalTransform.Value = treeLTW.Value * internodeInfo.GlobalTransform * glm::scale(glm::vec3(0.3f));
+			globalTransform.m_value = treeLTW.m_value * internodeInfo.GlobalTransform * glm::scale(glm::vec3(0.3f));
 			EntityManager::SetComponentData(child, globalTransform);
 		}
 	);

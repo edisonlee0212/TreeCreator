@@ -112,7 +112,6 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClCompile Include="FoliageGeneratorBase.cpp" />
     <ClCompile Include="DataCollectionSystem.cpp" />
     <ClCompile Include="InternodeSystem.cpp" />
-    <ClCompile Include="BranchSystem.cpp" />
     <ClCompile Include="Curve.cpp" />
     <ClCompile Include="LeafSegment.cpp" />
     <ClCompile Include="LightEstimator.cpp" />
@@ -124,7 +123,6 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClCompile Include="pugixml\pugixml.cpp" />
     <ClCompile Include="InternodeRingSegment.cpp" />
     <ClCompile Include="RealTreeReconstructionSystem.cpp" />
-    <ClCompile Include="SorghumReconstructionSystem.cpp" />
     <ClCompile Include="TreeCollectionGenerationSystem.cpp" />
     <ClCompile Include="TreeCreator.cpp" />
     <ClCompile Include="TreeManager.cpp" />
@@ -143,7 +141,6 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClInclude Include="FoliageGeneratorBase.h" />
     <ClInclude Include="DataCollectionSystem.h" />
     <ClInclude Include="InternodeSystem.h" />
-    <ClInclude Include="BranchSystem.h" />
     <ClInclude Include="Curve.h" />
     <ClInclude Include="LeafSegment.h" />
     <ClInclude Include="LightEstimator.h" />
@@ -161,7 +158,6 @@ xcopy /y /d "..\Submodules\UniEngine\external\PhysX\r\*.dll" "$(OutDir)" </Comma
     <ClInclude Include="rapidxml_print.hpp" />
     <ClInclude Include="rapidxml_utils.hpp" />
     <ClInclude Include="RealTreeReconstructionSystem.h" />
-    <ClInclude Include="SorghumReconstructionSystem.h" />
     <ClInclude Include="TreeCollectionGenerationSystem.h" />
     <ClInclude Include="TreeManager.h" />
     <ClInclude Include="TreeReconstructionSystem.h" />
