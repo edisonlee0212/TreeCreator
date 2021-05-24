@@ -20,8 +20,8 @@ namespace TreeUtilities
 		TreeVolumeType _Type = TreeVolumeType::Default;
 		void GenerateAttractionPoints(glm::vec3 min, glm::vec3 max, int amount) const;
 	public:
-		float RemovalDistance = 1.0f;
-		float AttractionDistance = 6.0f;
+		float RemovalDistance = 0.5f;
+		float AttractionDistance = 2.0f;
 
 		bool EnableSpaceColonization = false;
 		void ClearAttractionPoints() const;

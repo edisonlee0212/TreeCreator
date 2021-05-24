@@ -68,6 +68,7 @@ void TreeUtilities::AcaciaFoliageGenerator::Generate()
 			internodes.push_back(internode);
 		}
 	);
+	
 	for (int i = 0; i < internodeInfos.size(); i++)
 	{
 		glm::vec3 translation;

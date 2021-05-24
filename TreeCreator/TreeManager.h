@@ -38,6 +38,7 @@ namespace TreeUtilities {
 		bool IsActive;
 		bool IsApical;
 		glm::vec3 EulerAngles;
+		float m_branchingAngles;
 	};
 
 	class InternodeData : public PrivateComponentBase {
@@ -127,6 +128,11 @@ namespace TreeUtilities {
 #pragma region Space Colonization
 		glm::vec3 DirectionVector;
 		glm::vec3 ApicalDirectionVector;
+#pragma endregion
+		
+#pragma region Stat
+		float m_branchingAngle = 0;
+		bool m_isBranchingPoint = false;
 #pragma endregion
 
 	};
@@ -280,7 +286,7 @@ namespace TreeUtilities {
 		static void ExportTreeAsModel(Entity treeEntity, std::string filename, bool includeFoliage = false);
 
 		static void ExportTreeAsXml(Entity treeEntity, std::string filename);
-
+		static void ExportTreeBranchingAngle(Entity treeEntity, std::string filename);
 
 		static LightEstimator* GetLightEstimator();
 	};

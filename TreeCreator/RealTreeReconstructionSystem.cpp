@@ -8,22 +8,69 @@
 #include "BirchFoliageGenerator.h"
 #include "MaskProcessor.h"
 #include "Ray.h"
+
+void RealTreeReconstructionSystem::ToNormalGrowth()
+{
+	auto& cakeTower = _CurrentTree.GetPrivateComponent<RBV>();
+	cakeTower->SetEnabled(true);
+	cakeTower->CakeTiers = _TargetCakeTower->CakeTiers;
+	cakeTower->SetPruneBuds(_TargetCakeTower->PruneBuds());
+	cakeTower->LayerAmount = _TargetCakeTower->LayerAmount;
+	cakeTower->SectorAmount = _TargetCakeTower->SectorAmount;
+	cakeTower->MaxHeight = _TargetCakeTower->MaxHeight;
+	cakeTower->MaxRadius = _TargetCakeTower->MaxRadius;
+	
+	cakeTower->GenerateMesh();
+	cakeTower->ClearAttractionPoints();
+	cakeTower->GenerateAttractionPoints(12000);
+	cakeTower->EnableSpaceColonization = _EnableSpaceColonization;
+	_PlantSimulationSystem->ResumeGrowth();
+	TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
+	age.Value = _AgeForMainBranches;
+	age.ToGrowIteration = _TargetTreeParameter.Age - _AgeForMainBranches;
+	_CurrentTree.SetComponentData(age);
+	_Status = RealTreeReconstructionSystemStatus::NormalGrowth;
+}
+
 void TreeUtilities::RealTreeReconstructionSystem::OnGui()
 {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Real Tree Reconstruction")) {
+			if(ImGui::Button("RBV rendering"))
+			{
+				_OnlyRenderRBV = true;
+				_NeedExport = true;
+				_ReconIndex = -1;
+				_ReconAmount = 1;
+				_Status = RealTreeReconstructionSystemStatus::Idle;
+				_StartTime = Application::EngineTime();
+				_TrainingDoc = rapidcsv::Document("./tree_real/005_rbv_predicted_fig7.csv", rapidcsv::LabelParams(-1, 1));
+				std::filesystem::remove_all("tree_real/rbv_recon");
+				std::filesystem::create_directory("tree_real/rbv_recon");
+			}
+			
+			ImGui::DragInt("Start Index", &_GeneralIndex, 1, 0, 2800);
 			if (ImGui::Button("Reconstruct"))
 			{
-				std::filesystem::remove_all("tree_real/image_recon");
-				std::filesystem::remove_all("tree_real/rbv_recon");
-				std::filesystem::create_directory("tree_real/image_recon");
-				std::filesystem::create_directory("tree_real/rbv_recon");
-				_TrainingDoc = rapidcsv::Document("./tree_real/045_rbv_photographs_predicted.csv", rapidcsv::LabelParams(-1, 1));
+				if (_GeneralIndex == 0) {
+					std::filesystem::remove_all("tree_real/image_recon");
+					std::filesystem::remove_all("tree_real/rbv_recon");
+					std::filesystem::remove_all("tree_real/graph_recon");
+					std::filesystem::remove_all("tree_real/obj_recon");
 
-				_ReconIndex = 1;
-				_SpecieIndex = 4;
-				_ReconAmount = 12;
+					std::filesystem::create_directory("tree_real/image_recon");
+					std::filesystem::create_directory("tree_real/rbv_recon");
+					std::filesystem::create_directory("tree_real/graph_recon");
+					std::filesystem::create_directory("tree_real/obj_recon");
+				}
+				_TrainingDoc = rapidcsv::Document("./tree_real/rbv_species_8_8_val.csv", rapidcsv::LabelParams(-1, 1));
+				//_TrainingDoc = rapidcsv::Document("./tree_real/074_rbv_predicted_val_segmentation.csv", rapidcsv::LabelParams(-1, 1));
+				_StartTime = Application::EngineTime();
+				_ReconIndex = -1;//0 to _ReconAmount
+				_ReconAmount = 3; //How many recon per instance
 				_NeedExport = true;
+				_OnlyRenderRBV = false;
+				_Status = RealTreeReconstructionSystemStatus::Idle;
 			}
 			ImGui::EndMenu();
 		}
@@ -31,14 +78,254 @@ void TreeUtilities::RealTreeReconstructionSystem::OnGui()
 	}
 }
 
+void TreeUtilities::RealTreeReconstructionSystem::Update()
+{
+	if (_DataCollectionSystem == nullptr) return;
+	switch (_Status)
+	{
+	case RealTreeReconstructionSystemStatus::Idle:
+		if (_NeedExport)
+		{
+			if (_GeneralIndex < _GeneralTotal) {
+				if (_ReconIndex < _ReconAmount - 1)
+				{
+					_ReconIndex++;
+				}
+				else
+				{
+					_GeneralIndex++;
+					_ReconIndex = 0;
+					_Add = 0;
+					if (_GeneralIndex == _GeneralTotal)
+					{
+						_NeedExport = false;
+						Debug::Log("Reconstruction finished in " + std::to_string(Application::EngineTime() - _StartTime) + " s.");
+						break;
+					}
+				}
+				_Status = RealTreeReconstructionSystemStatus::Test;
+				CreateTree();
+			}
+		}
+		else OnGui();
+		break;
+	case RealTreeReconstructionSystemStatus::Test:
+		if(_OnlyRenderRBV)
+		{
+			auto& cakeTower = _CurrentTree.GetPrivateComponent<RBV>();
+			cakeTower->SetEnabled(true);
+			cakeTower->CakeTiers = _TargetCakeTower->CakeTiers;
+			cakeTower->SetPruneBuds(_TargetCakeTower->PruneBuds());
+			cakeTower->LayerAmount = _TargetCakeTower->LayerAmount;
+			cakeTower->SectorAmount = _TargetCakeTower->SectorAmount;
+			cakeTower->MaxHeight = _TargetCakeTower->MaxHeight;
+			cakeTower->MaxRadius = _TargetCakeTower->MaxRadius;
+
+			cakeTower->GenerateMesh();
+			_Status = RealTreeReconstructionSystemStatus::CollectData;
+		}
+		else _Status = RealTreeReconstructionSystemStatus::CreateTree;
+		break;
+	case RealTreeReconstructionSystemStatus::CreateTree:
+		if (_UseMask) {
+			_Growing = true;
+			_Status = RealTreeReconstructionSystemStatus::MainBranches;
+		}
+		else {
+			ToNormalGrowth();
+		}
+		break;
+	case RealTreeReconstructionSystemStatus::MainBranches:
+		TryGrowTree();
+		if (!_Growing)
+		{
+			ToNormalGrowth();
+		}
+		break;
+	case RealTreeReconstructionSystemStatus::NormalGrowth:
+	{
+		_PlantSimulationSystem->_AutoGenerateMesh = false;
+		_PlantSimulationSystem->_AutoGenerateLeaves = false;
+		bool stop = false;
+		_Internodes.resize(0);
+		const auto treeIndex = _CurrentTree.GetComponentData<TreeIndex>();
+		TreeManager::GetInternodeQuery().ToEntityArray(treeIndex, _Internodes);
+		TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
+		if (_UseMask) _MainBranchInternodeSize = 0;
+		if (_Internodes.size() > _TargetInternodeSize + _MainBranchInternodeSize)
+		{
+			stop = true;
+			Debug::Log("Size reached max");
+		}
+		if (age.Value > _MaxAge)
+		{
+			stop = true;
+			Debug::Log("Age reached max");
+		}
+		if (!stop && !_PlantSimulationSystem->_Growing) {
+			if (age.ToGrowIteration == 0 && age.Value > _MaxAge)
+			{
+				stop = true;
+				Debug::Log("Age reached max and still growing");
+			}
+			else
+			{
+				_PlantSimulationSystem->_Growing = true;
+				age.ToGrowIteration++;
+				_CurrentTree.SetComponentData(age);
+			}
+		}
+		if (stop)
+		{
+			if (_Internodes.size() < 10)
+			{
+				_Add++;
+				if (_Add < 100)
+				{
+					TreeManager::DeleteAllTrees();
+					auto parameters = _TargetTreeParameter;
+
+					parameters.Seed = _SpecieIndex + _ReconAmount + 1 + _Add;
+					parameters.Age = 200;
+					_PlantSimulationSystem->_ControlLevel = 2;
+					_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
+
+					_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Skeleton = _TargetSkeleton;
+					//_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Mask = _TargetMask;
+					_CurrentTree.GetPrivateComponent<MaskProcessor>()->AttractionDistance = 1.0f;
+					_CurrentTree.GetPrivateComponent<MaskProcessor>()->PlaceAttractionPoints();
+					_Status = RealTreeReconstructionSystemStatus::MainBranches;
+					_Growing = true;
+					break;
+				}
+			}
+			_PlantSimulationSystem->PauseGrowth();
+			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
+			_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
+			_Status = RealTreeReconstructionSystemStatus::Render;
+			auto& [fst, snd] = _DataCollectionSystem->_ImageCaptureSequences[_SpecieIndex];
+			Transform cameraTransform;
+			cameraTransform.SetPosition(glm::vec3(0, fst.CameraPos.z * 1.5f, 0));
+			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
+			_DataCollectionSystem->_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
+		}
+	}
+	break;
+	case RealTreeReconstructionSystemStatus::Render:
+		_Status = RealTreeReconstructionSystemStatus::CollectData;
+		break;
+	case RealTreeReconstructionSystemStatus::CollectData:
+	if(!_OnlyRenderRBV){
+		std::string path = _StorePath + "image_recon/" +
+			std::string(5 - std::to_string(_GeneralIndex).length(), '0') + std::to_string(_GeneralIndex) +
+			"_" + _Name + "_" + std::to_string(_ReconIndex) + ".png";
+		_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+			path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
+		path = _StorePath + "graph_recon/" +
+			std::string(5 - std::to_string(_GeneralIndex).length(), '0') + std::to_string(_GeneralIndex) +
+			"_" + _Name + "_" + std::to_string(_ReconIndex);
+		TreeManager::SerializeTreeGraph(path, _CurrentTree);
+
+		path = _StorePath + "obj_recon/" +
+			std::string(5 - std::to_string(_GeneralIndex).length(), '0') + std::to_string(_GeneralIndex) +
+			"_" + _Name + "_" + std::to_string(_ReconIndex);
+		TreeManager::ExportTreeAsModel(_CurrentTree, path, true);
+
+		_TargetCakeTower->ExportAsObj(path);
+	}else
+	{
+		std::string path = _StorePath + "obj_recon/" +
+			std::string(5 - std::to_string(_GeneralIndex).length(), '0') + std::to_string(_GeneralIndex) +
+			"_" + _Name + "_" + std::to_string(_ReconIndex);
+		_TargetCakeTower->GenerateMesh();
+		_TargetCakeTower->ExportAsObj(path);
+	}
+	if (true) {
+		
+#pragma region CakeTower
+		Entity foliageEntity;
+		EntityManager::ForEachChild(_CurrentTree, [&foliageEntity](Entity child)
+			{
+				if (child.HasComponentData<WillowFoliageInfo>())
+				{
+					foliageEntity = child;
+				}
+				else if (child.HasComponentData<AppleFoliageInfo>())
+				{
+					foliageEntity = child;
+				}
+				else if (child.HasComponentData<AcaciaFoliageInfo>())
+				{
+					foliageEntity = child;
+				}
+				else if (child.HasComponentData<BirchFoliageInfo>())
+				{
+					foliageEntity = child;
+				}
+				else if (child.HasComponentData<OakFoliageInfo>())
+				{
+					foliageEntity = child;
+				}
+				else if (child.HasComponentData<MapleFoliageInfo>())
+				{
+					foliageEntity = child;
+				}
+				else if (child.HasComponentData<DefaultFoliageInfo>())
+				{
+					foliageEntity = child;
+				}
+				else if (child.HasComponentData<PineFoliageInfo>())
+				{
+					foliageEntity = child;
+				}
+			}
+		);
+		if (foliageEntity.HasPrivateComponent<MeshRenderer>())
+		{
+			auto& branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
+			branchletRenderer->SetEnabled(false);
+		}
+		if (foliageEntity.HasPrivateComponent<Particles>())
+		{
+			auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
+			leavesRenderer->SetEnabled(false);
+		}
+		auto seq = _DataCollectionSystem->_ImageCaptureSequences[_SpecieIndex];
+		_DataCollectionSystem->SetCameraPose(seq.first.CameraPos, seq.first.CameraEulerDegreeRot, false);
+		_CurrentTree.GetPrivateComponent<RBV>()->FormEntity();
+		_CurrentTree.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
+		_Status = RealTreeReconstructionSystemStatus::CaptureCakeTower;
+#pragma endregion
+	}
+	else
+	{
+		_Status = RealTreeReconstructionSystemStatus::CleanUp;
+	}
+	break;
+	case RealTreeReconstructionSystemStatus::CaptureCakeTower:
+		_Status = RealTreeReconstructionSystemStatus::CleanUp;
+		break;
+	case RealTreeReconstructionSystemStatus::CleanUp:
+		if (true) {
+			std::string path = _StorePath + "rbv_recon/" +
+				std::string(5 - std::to_string(_GeneralIndex).length(), '0') + std::to_string(_GeneralIndex) +
+				+"_" + _Name + "_" + std::to_string(_ReconIndex) + ".png";
+			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
+				path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
+		}
+		TreeManager::DeleteAllTrees();
+		_Status = RealTreeReconstructionSystemStatus::Idle;
+		break;
+	}
+}
+
 void RealTreeReconstructionSystem::CreateTree()
 {
 	_EnableSpaceColonization = true;
-	_ControlLevel = 0;
 
 
-	_TargetCakeTower = std::make_unique<CakeTower>();
-	std::vector<float> rbv = _TrainingDoc.GetRow<float>(_ReconIndex);
+	_TargetCakeTower = std::make_unique<RBV>();
+	std::vector<float> rbv = _TrainingDoc.GetRow<float>(_GeneralIndex);
 
 	_TargetCakeTower->CakeTiers.resize(8);
 	for (int i = 0; i < 8; i++)
@@ -53,24 +340,35 @@ void RealTreeReconstructionSystem::CreateTree()
 	_TargetCakeTower->SectorAmount = 8;
 
 	_TargetCakeTower->MaxRadius = 30;
-	_TargetCakeTower->GenerateMesh();
+	_UseMask = true;
+	_SpecieIndex = _GeneralIndex % static_cast<int>(_DataCollectionSystem->_ImageCaptureSequences.size());
+	_StorePath = "./tree_real/";
+	_TargetCakeTower->SetPruneBuds(true);
+	
+	auto& seq = _DataCollectionSystem->_ImageCaptureSequences[_SpecieIndex];
+	_DataCollectionSystem->SetCameraPose(seq.first.CameraPos, seq.first.CameraEulerDegreeRot);
+	_TargetTreeParameter = seq.second;
 
 	
-	_StorePath = "./tree_real/";
 	switch (_SpecieIndex) {
 	case 0:
 		_Name = "acacia";
-		_AgeForMainBranches = 4;
+		_AgeForMainBranches = 3;
 		_TargetCakeTower->MaxHeight = 15;
-		_TargetInternodeSize = 2260;
-		_ReconMainBranchInternodeLimit = 1000;
+		_TargetInternodeSize = 2360;
+		_ReconMainBranchInternodeLimit = 100;
+
+		_TargetTreeParameter.EndNodeThickness = 0.007f;
 		break;
 	case 1:
 		_Name = "apple";
+		_TargetCakeTower->SetPruneBuds(false);
 		_AgeForMainBranches = 4;
-		_TargetCakeTower->MaxHeight = 16.5;
+		_TargetCakeTower->MaxHeight = 12.5;
 		_TargetInternodeSize = 1601;
-		_ReconMainBranchInternodeLimit = 1000;
+		_ReconMainBranchInternodeLimit = 50;
+
+		_TargetTreeParameter.EndNodeThickness = 0.012f;
 		break;
 	case 2:
 		_Name = "willow";
@@ -81,75 +379,73 @@ void RealTreeReconstructionSystem::CreateTree()
 		break;
 	case 3:
 		_Name = "maple";
-		_ControlLevel = 1;
-		_TargetCakeTower->MaxHeight = 32;
-		_AgeForMainBranches = 1;
-		_TargetInternodeSize = 7995;
+		_UseMask = false;
+		_EnableSpaceColonization = false;
+		_TargetCakeTower->MaxHeight = 31;
+		_TargetInternodeSize = 6000;
 		_ReconMainBranchInternodeLimit = 0;
+		
+		_TargetTreeParameter.InternodeLengthBase = glm::gaussRand(0.92f, 0.1f);
+		_TargetTreeParameter.EndNodeThickness = glm::gaussRand(0.009f, 0.001f);
 		break;
 	case 4:
 		_Name = "birch";
+		_UseMask = false;
+		_EnableSpaceColonization = false;
 		_TargetCakeTower->MaxHeight = 31;
-		_AgeForMainBranches = 1;
 		_TargetInternodeSize = 5120;
 		_ReconMainBranchInternodeLimit = 0;
+
+		_TargetTreeParameter.InternodeLengthBase = glm::gaussRand(0.92f, 0.1f);
+		_TargetTreeParameter.EndNodeThickness = glm::gaussRand(0.009f, 0.001f);
 		break;
 	case 5:
 		_Name = "oak";
-		_TargetCakeTower->MaxHeight = 18.5;
+		_TargetCakeTower->SetPruneBuds(false);
+		_TargetCakeTower->MaxHeight = 18;
 		_AgeForMainBranches = 5;
-		_TargetInternodeSize = 8087;
-		_ReconMainBranchInternodeLimit = 1000;
+		_TargetInternodeSize = 4600;
+		_ReconMainBranchInternodeLimit = 25;
 		break;
 	case 6:
+		_UseMask = false;
 		_Name = "pine";
 		_TargetCakeTower->MaxHeight = 15;
 		_EnableSpaceColonization = false;
-		_ControlLevel = 0;
 		_AgeForMainBranches = 0;
 		_TargetInternodeSize = 8538;
 		_ReconMainBranchInternodeLimit = 0;
+
+		_TargetTreeParameter.InternodeLengthBase = glm::gaussRand(0.4f, 0.07f);
 		break;
 	}
-	_ReconMainBranchInternodeLimit = 1000;
 	if (!_UseMask)
 	{
 		_AgeForMainBranches = 0;
 		_ReconMainBranchInternodeLimit = 0;
 	}
-	
-	auto& seq = _DataCollectionSystem->_ImageCaptureSequences[_SpecieIndex];
-	_DataCollectionSystem->SetCameraPose(seq.first.CameraPos, seq.first.CameraEulerDegreeRot);
-	auto treeParameter = seq.second;
-
-#pragma region Slim
-	treeParameter.ThicknessControlFactor = 0.69;
-	treeParameter.LowBranchPruningFactor = 0.7;
-	treeParameter.Age = 8;
-#pragma endregion
-
-	
-	/*
-	treeParameter.ThicknessControlFactor = 0.69;
-	treeParameter.ApicalDominanceBase = 4;
-	treeParameter.GravityBendingStrength = 0.8;
-	//treeParameter.GravitropismLevelFactor = -0.08;
-	treeParameter.VarianceApicalAngle = 0.0f;
-	*/
-	if(_UseMask)treeParameter.Age = 200;
-	_MaskPath = _StorePath + "mask/" + std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_tree.bmp";
-	_SkeletonPath = _StorePath + "skeleton_recon/" + std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + "_tree.bmp";
-	_TargetMask = ResourceManager::LoadTexture(false, _MaskPath);
-	_TargetSkeleton = ResourceManager::LoadTexture(false, _SkeletonPath);
-
-	_CurrentTree = _PlantSimulationSystem->CreateTree(treeParameter, glm::vec3(0.0f));
+	else {
+		_TargetTreeParameter.Age = 200;
+	}
+	if(_OnlyRenderRBV)
+	{
+		_SpecieIndex = 4;
+		_TargetCakeTower->MaxHeight = 15;
+	}
+	_TargetTreeParameter.Seed = _SpecieIndex + _ReconIndex;
+	if (_ReconIndex == 0) {
+		_MaskPath = _StorePath + "mask/" + std::string(5 - std::to_string(_GeneralIndex).length(), '0') + std::to_string(_GeneralIndex) + "_" + _Name + "_0.png";
+		_SkeletonPath = _StorePath + "skeleton/" + std::string(5 - std::to_string(_GeneralIndex).length(), '0') + std::to_string(_GeneralIndex) + "_" + _Name + "_0.png";
+		//_TargetMask = ResourceManager::LoadTexture(false, _MaskPath);
+		_TargetSkeleton = ResourceManager::LoadTexture(false, _SkeletonPath);
+	}
+	_CurrentTree = _PlantSimulationSystem->CreateTree(_TargetTreeParameter, glm::vec3(0.0f));
 	auto& maskProcessor = _CurrentTree.GetPrivateComponent<MaskProcessor>();
 	maskProcessor->_Skeleton = _TargetSkeleton;
 	maskProcessor->_Mask = _TargetMask;
-	maskProcessor->AttractionDistance = 1.0f;
-	maskProcessor->RemovalDistance = 0.7f;
+	maskProcessor->AttractionDistance = 0.1f;
+	maskProcessor->RemovalDistance = 0.05f;
 	maskProcessor->PlaceAttractionPoints();
-	//Disable();
 }
 
 void RealTreeReconstructionSystem::TryGrowTree()
@@ -164,6 +460,7 @@ void RealTreeReconstructionSystem::TryGrowTree()
 	{
 		_Growing = false;
 	}
+	if (age.Value > 200) _Growing = false;
 	if (_Growing) {
 		_Growing = _PlantSimulationSystem->GrowTree(_CurrentTree, true);
 	}
@@ -194,7 +491,7 @@ void RealTreeReconstructionSystem::PushInternode(Entity internode, const GlobalT
 	const GlobalTransform& treeLTW)
 {
 	auto info = internode.GetComponentData<InternodeInfo>();
-	if (info.DistanceToRoot > 19.0)
+	if (info.DistanceToRoot > 6.0)
 	{
 		EntityManager::DeleteEntity(internode);
 		return;
@@ -337,258 +634,3 @@ void TreeUtilities::RealTreeReconstructionSystem::OnCreate()
 	Enable();
 }
 
-void TreeUtilities::RealTreeReconstructionSystem::Update()
-{
-	if (_DataCollectionSystem == nullptr) return;
-	switch (_Status)
-	{
-	case RealTreeReconstructionSystemStatus::Idle:
-		if (_NeedExport)
-		{
-			_SpecieIndex++;
-			if (_ReconIndex == _ReconAmount - 1 && _SpecieIndex == _DataCollectionSystem->_ImageCaptureSequences.size())
-			{
-				_NeedExport = false;
-				_SpecieIndex = 0;
-				_ReconIndex = 0;
-				break;
-			}
-			
-			if (_SpecieIndex == _DataCollectionSystem->_ImageCaptureSequences.size())
-			{
-				_SpecieIndex = 0;
-				_ReconIndex++;
-			}
-			_Status = RealTreeReconstructionSystemStatus::Test;
-			CreateTree();
-		}
-		else OnGui();
-		break;
-	case RealTreeReconstructionSystemStatus::Test:
-		_Status = RealTreeReconstructionSystemStatus::CreateTree;
-		break;
-	case RealTreeReconstructionSystemStatus::CreateTree:
-		
-		if (_UseMask) {
-			_Growing = true;
-			_Status = RealTreeReconstructionSystemStatus::MainBranches;
-		}
-		else {
-			auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
-			cakeTower->SetEnabled(true);
-			cakeTower->CakeTiers = _TargetCakeTower->CakeTiers;
-
-			cakeTower->LayerAmount = _TargetCakeTower->LayerAmount;
-			cakeTower->SectorAmount = _TargetCakeTower->SectorAmount;
-			cakeTower->MaxHeight = _TargetCakeTower->MaxHeight;
-			cakeTower->MaxRadius = _TargetCakeTower->MaxRadius;
-
-			cakeTower->GenerateMesh();
-			cakeTower->ClearAttractionPoints();
-			cakeTower->GenerateAttractionPoints(6000);
-			cakeTower->EnableSpaceColonization = _EnableSpaceColonization;
-			_PlantSimulationSystem->ResumeGrowth();
-			TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
-			age.Value = _AgeForMainBranches;
-			age.ToGrowIteration = 100 - _AgeForMainBranches;
-			//_CurrentTree.SetComponentData(age);
-			_Status = RealTreeReconstructionSystemStatus::NormalGrowth;
-		}
-		//Disable();
-		break;
-	case RealTreeReconstructionSystemStatus::MainBranches:
-		TryGrowTree();
-		
-		if (!_Growing)
-		{
-			auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
-			cakeTower->SetEnabled(true);
-			cakeTower->CakeTiers = _TargetCakeTower->CakeTiers;
-
-			cakeTower->LayerAmount = _TargetCakeTower->LayerAmount;
-			cakeTower->SectorAmount = _TargetCakeTower->SectorAmount;
-			cakeTower->MaxHeight = _TargetCakeTower->MaxHeight;
-			cakeTower->MaxRadius = _TargetCakeTower->MaxRadius;
-
-			cakeTower->GenerateMesh();
-			cakeTower->ClearAttractionPoints();
-			cakeTower->GenerateAttractionPoints(6000);
-			cakeTower->EnableSpaceColonization = _EnableSpaceColonization;
-			_PlantSimulationSystem->ResumeGrowth();
-			TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
-			age.Value = _AgeForMainBranches;
-			age.ToGrowIteration = 100 - _AgeForMainBranches;
-			//_CurrentTree.SetComponentData(age);
-			_Status = RealTreeReconstructionSystemStatus::NormalGrowth;
-		}
-		break;
-	case RealTreeReconstructionSystemStatus::NormalGrowth: {
-		_PlantSimulationSystem->_AutoGenerateMesh = true;
-		_PlantSimulationSystem->_AutoGenerateLeaves = true;
-		bool stop = false;
-		_Internodes.resize(0);
-		const auto treeIndex = _CurrentTree.GetComponentData<TreeIndex>();
-		TreeManager::GetInternodeQuery().ToEntityArray(treeIndex, _Internodes);
-		TreeAge age = _CurrentTree.GetComponentData<TreeAge>();
-		if (_UseMask) _MainBranchInternodeSize = 0;
-		if (_Internodes.size() > _TargetInternodeSize + _MainBranchInternodeSize)
-		{
-			stop = true;
-		}
-		if (!stop && !_PlantSimulationSystem->_Growing) {
-			if (age.ToGrowIteration == 0 || age.Value > _MaxAge)
-			{
-				stop = true;
-			}
-			else
-			{
-				_PlantSimulationSystem->_Growing = true;
-				age.ToGrowIteration++;
-				_CurrentTree.SetComponentData(age);
-			}
-		}
-		if (stop)
-		{
-			/*
-			if (_Internodes.size() < 10)
-			{
-				_Add++;
-				if (_Add < 100)
-				{
-					TreeManager::DeleteAllTrees();
-					auto parameters = _TargetTreeParameter;
-
-					parameters.Seed = _ReconCounter + 1 + _Add;
-					parameters.Age = 200;
-					_PlantSimulationSystem->_ControlLevel = 2;
-					_CurrentTree = _PlantSimulationSystem->CreateTree(parameters, glm::vec3(0.0f));
-
-					_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Skeleton = _TargetSkeleton;
-					_CurrentTree.GetPrivateComponent<MaskProcessor>()->_Mask = _TargetMask;
-					_CurrentTree.GetPrivateComponent<MaskProcessor>()->AttractionDistance = 1.0f;
-					_CurrentTree.GetPrivateComponent<MaskProcessor>()->PlaceAttractionPoints();
-					_Status = TreeReconstructionSystemStatus::MainBranches;
-					_Growing = true;
-					break;
-				}
-			}*/
-			_PlantSimulationSystem->PauseGrowth();
-			TreeManager::GenerateSimpleMeshForTree(_CurrentTree, PlantSimulationSystem::_MeshGenerationResolution, PlantSimulationSystem::_MeshGenerationSubdivision);
-			_PlantSimulationSystem->GenerateLeaves(_CurrentTree);
-			_Status = RealTreeReconstructionSystemStatus::Render;
-			auto& [fst, snd] = _DataCollectionSystem->_ImageCaptureSequences[_SpecieIndex];
-			Transform cameraTransform;
-			cameraTransform.SetPosition(glm::vec3(0, fst.CameraPos.z * 1.5f, 0));
-			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
-			_DataCollectionSystem->_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
-		}
-	}
-		break;
-	case RealTreeReconstructionSystemStatus::Render:
-		_Status = RealTreeReconstructionSystemStatus::CollectData;
-		if(true)
-		{
-			Disable();
-		}
-		break;
-	case RealTreeReconstructionSystemStatus::CollectData:
-		{
-			std::string path = _StorePath + "image_recon/" +
-				std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) +
-				"_" + _Name + ".png";
-			_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
-				path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
-
-		}
-
-		if (true/*(_ReconIndex == 0 && _SpecieIndex == 0) ||
-			(_ReconIndex == 1 && _SpecieIndex == 5) ||
-			(_ReconIndex == 2 && _SpecieIndex == 4) ||
-			(_ReconIndex == 3 && _SpecieIndex == 1)*/
-			) {
-#pragma region CakeTower
-			Entity foliageEntity;
-			EntityManager::ForEachChild(_CurrentTree, [&foliageEntity](Entity child)
-				{
-					if (child.HasComponentData<WillowFoliageInfo>())
-					{
-						foliageEntity = child;
-					}
-					else if (child.HasComponentData<AppleFoliageInfo>())
-					{
-						foliageEntity = child;
-					}
-					else if (child.HasComponentData<AcaciaFoliageInfo>())
-					{
-						foliageEntity = child;
-					}
-					else if (child.HasComponentData<BirchFoliageInfo>())
-					{
-						foliageEntity = child;
-					}
-					else if (child.HasComponentData<OakFoliageInfo>())
-					{
-						foliageEntity = child;
-					}
-					else if (child.HasComponentData<MapleFoliageInfo>())
-					{
-						foliageEntity = child;
-					}
-					else if (child.HasComponentData<DefaultFoliageInfo>())
-					{
-						foliageEntity = child;
-					}
-					else if (child.HasComponentData<PineFoliageInfo>())
-					{
-						foliageEntity = child;
-					}
-				}
-			);
-			if (foliageEntity.HasPrivateComponent<MeshRenderer>())
-			{
-				auto& branchletRenderer = foliageEntity.GetPrivateComponent<MeshRenderer>();
-				branchletRenderer->SetEnabled(false);
-			}
-			if (foliageEntity.HasPrivateComponent<Particles>())
-			{
-				auto& leavesRenderer = foliageEntity.GetPrivateComponent<Particles>();
-				leavesRenderer->SetEnabled(false);
-			}
-			auto seq = _DataCollectionSystem->_ImageCaptureSequences[_SpecieIndex];
-			Transform cameraTransform;
-
-			cameraTransform.SetPosition(glm::vec3(seq.first.CameraPos.x, _CurrentTree.GetPrivateComponent<CakeTower>()->MaxHeight / 2.0f, seq.first.CameraPos.z * 1.5f));
-			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(0, 0, 0)));
-			_DataCollectionSystem->_ImageCameraEntity.SetComponentData(cameraTransform);
-
-			_CurrentTree.GetPrivateComponent<CakeTower>()->FormEntity();
-			_CurrentTree.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
-			_Status = RealTreeReconstructionSystemStatus::CaptureCakeTower;
-#pragma endregion
-		}else
-		{
-			_Status = RealTreeReconstructionSystemStatus::CleanUp;
-		}
-		break;
-	case RealTreeReconstructionSystemStatus::CaptureCakeTower:
-		_Status = RealTreeReconstructionSystemStatus::CleanUp;
-		break;
-	case RealTreeReconstructionSystemStatus::CleanUp:
-		
-		if (true/*(_ReconIndex == 0 && _SpecieIndex == 0) ||
-			(_ReconIndex == 1 && _SpecieIndex == 5) ||
-			(_ReconIndex == 2 && _SpecieIndex == 4) ||
-			(_ReconIndex == 3 && _SpecieIndex == 1)*/
-		){
-		std::string path = _StorePath + "rbv_recon/" +
-			std::string(5 - std::to_string(_ReconIndex).length(), '0') + std::to_string(_ReconIndex) + 
-			std::string(5 - std::to_string(_SpecieIndex).length(), '0') + std::to_string(_SpecieIndex) +
-			"_tree.png";
-		_DataCollectionSystem->_ImageCameraEntity.GetPrivateComponent<CameraComponent>()->StoreToJpg(
-			path, _DataCollectionSystem->_TargetResolution, _DataCollectionSystem->_TargetResolution);
-	}
-	TreeManager::DeleteAllTrees();
-	_Status = RealTreeReconstructionSystemStatus::Idle;
-	break;
-	}
-}

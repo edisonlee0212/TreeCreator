@@ -18,7 +18,7 @@
 #include "AppleFoliageGenerator.h"
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
-#include "CakeTower.h"
+#include "RBV.h"
 //#include "KDop.h"
 
 #include "TreeVolume.h"
@@ -121,7 +121,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 	}
 #pragma endregion
 #pragma region Update branch structure information
-	auto& cakeTower = treeEntity.GetPrivateComponent<CakeTower>();
+	auto& cakeTower = treeEntity.GetPrivateComponent<RBV>();
 	//auto& kdop = treeEntity.GetPrivateComponent<KDop>();
 	const bool enableSpaceColonization = cakeTower->EnableSpaceColonization;
 	bool anyRemoved = false;
@@ -209,7 +209,7 @@ bool TreeUtilities::PlantSimulationSystem::GrowTree(Entity& treeEntity, bool mai
 		GrowShootsSpaceColonization(rootInternode, treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.m_value)
 		:
 		GrowShoots(rootInternode, dynamic_cast<TreeVolume*>(cakeTower.get()), treeData, treeAge, treeParameters, treeIndex, treeLocalToWorld.m_value, enableSpaceColonization, _ControlLevel);
-	if (growed) {
+	if (true) {
 		UpdateDistanceToBranchEnd(rootInternode, treeParameters, treeAge.Value);
 		UpdateDistanceToBranchStart(rootInternode);
 		CalculatePhysics(treeEntity, ! mainBranch);
@@ -786,6 +786,23 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, TreeVol
 			int internodesToGrow = isLateral ? lateralInternodesToGrow : apicalInternodesToGrow;
 			float internodeLength = distanceToGrow / static_cast<float>(internodesToGrow);
 			internodeLength *= treeParameters.InternodeLengthBase * glm::pow(treeParameters.InternodeLengthAgeFactor, treeAge.Value);
+			if (!isLateral) {
+				if (treeParameters.FoliageType == 3)
+				{
+					//Pine
+					internodeLength *= glm::gaussRand(1.0f, 0.1f);
+				}
+				else if (treeParameters.FoliageType == 4)
+				{
+					//Maple
+					internodeLength *= glm::gaussRand(1.0f, 0.1f);
+				}
+				else if (treeParameters.FoliageType == 7)
+				{
+					//Birch
+					internodeLength *= glm::gaussRand(1.0f, 0.1f);
+				}
+			}
 			glm::vec3 prevEulerAngle = bud.EulerAngles;
 			glm::quat prevInternodeRotation;
 			glm::vec3 scale;
@@ -816,6 +833,16 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, TreeVol
 				newInternodeInfo.StartAge = treeAge.Value;
 				newInternodeInfo.ParentInhibitorFactor = glm::pow(treeParameters.ApicalDominanceDistanceFactor, newInternodeInfo.DistanceToParent);
 				newInternodeInfo.ParentTranslation = prevInternodeTranslation;
+
+				if(selectedNewNodeIndex == 0 && isLateral)
+				{
+					newInternodeInfo.m_branchingAngle = bud.m_branchingAngles;
+					newInternodeInfo.m_isBranchingPoint = true;
+				}else
+				{
+					newInternodeInfo.m_branchingAngle = 0;
+					newInternodeInfo.m_isBranchingPoint = false;
+				}
 #pragma endregion
 #pragma region Transforms for internode
 				newInternodeInfo.DesiredLocalRotation = glm::quat(prevEulerAngle);
@@ -876,8 +903,8 @@ bool TreeUtilities::PlantSimulationSystem::GrowShoots(Entity& internode, TreeVol
 				for (int selectedNewBudIndex = 0; selectedNewBudIndex < treeParameters.LateralBudPerNode; selectedNewBudIndex++) {
 					Bud newLateralBud;
 					float rollAngle = 360.0f * (selectedNewBudIndex + 1) / treeParameters.LateralBudPerNode + treeParameters.BranchingAngleVariance * glm::linearRand(-1, 1);
-					float branchAngle = glm::gaussRand(treeParameters.BranchingAngleMean, treeParameters.BranchingAngleVariance);
-					newLateralBud.EulerAngles = glm::vec3(glm::radians(branchAngle), 0.0f, glm::radians(rollAngle));
+					newLateralBud.m_branchingAngles = glm::gaussRand(treeParameters.BranchingAngleMean, treeParameters.BranchingAngleVariance);
+					newLateralBud.EulerAngles = glm::vec3(glm::radians(newLateralBud.m_branchingAngles), 0.0f, glm::radians(rollAngle));
 					newLateralBud.IsActive = true;
 					newLateralBud.IsApical = false;
 					newInternodeData->Buds.push_back(newLateralBud);

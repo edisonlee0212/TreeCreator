@@ -38,7 +38,8 @@ namespace TreeUtilities
 		int _Add = 0;
 		int _ControlLevel = 0;
 		int _EnableSpaceColonization = true;
-		int _ReconIndex = 0;	//0	
+		int _ReconIndex = 0;	//0
+		int _ReconStartSeed = 0;
 		int _ReconSeed = 0;		//0	
 		int _ReconCounter = 0;	//0	1
 		int _ReconMainBranchInternodeLimit = 1000;
@@ -53,7 +54,7 @@ namespace TreeUtilities
 		bool _UseCakeTower = true;
 		TreeReconstructionSystemStatus _Status = TreeReconstructionSystemStatus::Idle;
 		TreeReconstructionSystemStatus _PreviousStatus = TreeReconstructionSystemStatus::Idle;
-		std::unique_ptr<CakeTower> _TargetCakeTower;
+		std::unique_ptr<RBV> _TargetCakeTower;
 
 		bool _Paused = false;
 		Entity _CurrentTree;
@@ -68,6 +69,7 @@ namespace TreeUtilities
 		int _MainBranchInternodeSize;
 		int _AgeForMainBranches = 4;
 		int _TargetInternodeSize = 1601;
+
 		TreeParameters _TargetTreeParameter;
 		int _Capture = 0;
 		std::string _Name = "Apple";

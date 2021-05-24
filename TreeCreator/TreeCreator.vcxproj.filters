@@ -126,7 +126,7 @@
     <ClCompile Include="DataCollectionSystem.cpp">
       <Filter>Source Files\Systems</Filter>
     </ClCompile>
-    <ClCompile Include="CakeTower.cpp">
+    <ClCompile Include="RBV.cpp">
       <Filter>Source Files\TreeVolume</Filter>
     </ClCompile>
     <ClCompile Include="TreeReconstructionSystem.cpp">
@@ -203,7 +203,7 @@
     <ClInclude Include="LightEstimator.h">
       <Filter>Header Files\Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="CakeTower.h">
+    <ClInclude Include="RBV.h">
       <Filter>Header Files\TreeVolume</Filter>
     </ClInclude>
     <ClInclude Include="DataCollectionSystem.h">

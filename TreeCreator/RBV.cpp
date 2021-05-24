@@ -1,6 +1,6 @@
-#include "CakeTower.h"
+#include "RBV.h"
 
-glm::ivec2 CakeTower::SelectSlice(glm::vec3 position) const
+glm::ivec2 RBV::SelectSlice(glm::vec3 position) const
 {
 	glm::ivec2 retVal = glm::ivec2(0);
 	const float heightLevel = MaxHeight / LayerAmount;
@@ -15,7 +15,7 @@ glm::ivec2 CakeTower::SelectSlice(glm::vec3 position) const
 	return retVal;
 }
 
-void CakeTower::GenerateMesh()
+void RBV::GenerateMesh()
 {
 	_BoundMeshes.clear();
 	if (CakeTiers.empty()) return;
@@ -26,7 +26,7 @@ void CakeTower::GenerateMesh()
 		std::vector<unsigned> indices;
 
 		const float sliceAngle = 360.0f / SectorAmount;
-		const int totalAngleStep = 3;
+		const int totalAngleStep = 15;
 		const int totalLevelStep = 2;
 		const float stepAngle = sliceAngle / (totalAngleStep - 1);
 		const float heightLevel = MaxHeight / LayerAmount;
@@ -123,7 +123,7 @@ void CakeTower::GenerateMesh()
 	_MeshGenerated = true;
 }
 
-void CakeTower::FormEntity()
+void RBV::FormEntity()
 {
 	if (!_MeshGenerated) CalculateVolume();
 	if (!_MeshGenerated) return;
@@ -156,7 +156,7 @@ void CakeTower::FormEntity()
 	}
 }
 
-CakeTower::CakeTower()
+RBV::RBV()
 {
 	_CakeTowerArchetype = EntityManager::CreateEntityArchetype("CakeTower", Transform(), GlobalTransform(), CakeTowerInfo());
 	_CakeTowerMaterial = std::make_shared<Material>();
@@ -164,7 +164,7 @@ CakeTower::CakeTower()
 	SetEnabled(true);
 }
 
-std::string CakeTower::Save()
+std::string RBV::Save()
 {
 	if (!_MeshGenerated) CalculateVolume();
 	std::string output;
@@ -200,7 +200,7 @@ std::string CakeTower::Save()
 	return output;
 }
 
-void CakeTower::ExportAsObj(const std::string& filename)
+void RBV::ExportAsObj(const std::string& filename)
 {
 	if (!_MeshGenerated) CalculateVolume();
 	auto& meshes = _BoundMeshes;
@@ -245,7 +245,7 @@ void CakeTower::ExportAsObj(const std::string& filename)
 	
 }
 
-void CakeTower::Load(const std::string& path)
+void RBV::Load(const std::string& path)
 {
 	std::ifstream ifs;
 	ifs.open(path.c_str());
@@ -270,7 +270,7 @@ void CakeTower::Load(const std::string& path)
 
 }
 
-void CakeTower::CalculateVolume()
+void RBV::CalculateVolume()
 {
 	Entity tree = GetOwner();
 	EntityQuery internodeDataQuery = EntityManager::CreateEntityQuery();
@@ -278,6 +278,12 @@ void CakeTower::CalculateVolume()
 	std::vector<InternodeInfo> internodeInfos;
 	TreeIndex targetTreeIndex = tree.GetComponentData<TreeIndex>();
 	internodeDataQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [targetTreeIndex](const TreeIndex& treeIndex)
+		{
+			return treeIndex.Value == targetTreeIndex.Value;
+		}
+	);
+	std::vector<Entity> internodes;
+	internodeDataQuery.ToEntityArray<TreeIndex>(internodes, [targetTreeIndex](const Entity& entity, const TreeIndex& treeIndex)
 		{
 			return treeIndex.Value == targetTreeIndex.Value;
 		}
@@ -301,6 +307,27 @@ void CakeTower::CalculateVolume()
 			slice.MaxDistance = 0.0f;
 		}
 	}
+	for (auto& internode : internodes)
+	{
+		const auto info = internode.GetComponentData<InternodeInfo>();
+		const glm::vec3 currentNodePosition = info.GlobalTransform[3];
+		const glm::vec3 parentNodePosition = EntityManager::GetParent(internode).GetComponentData<InternodeInfo>().GlobalTransform[3];
+		const int segments = 3;
+		for (int i = 0; i < segments; i++) {
+			const glm::vec3 position = currentNodePosition + (parentNodePosition - currentNodePosition) * (float)i / (float)segments;
+			const auto sliceIndex = SelectSlice(position);
+			const float currentDistance = glm::length(glm::vec2(position.x, position.z));
+			if (currentDistance <= info.Thickness)
+			{
+				for (auto& slice : CakeTiers[sliceIndex.x])
+				{
+					if (slice.MaxDistance < currentDistance + info.Thickness) slice.MaxDistance = currentDistance + info.Thickness;
+				}
+			}
+			else if (CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance < currentDistance) CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance = currentDistance;
+		}
+	}
+	/*
 	for (auto& i : internodeInfos)
 	{
 		const glm::vec3 position = i.GlobalTransform[3];
@@ -314,11 +341,11 @@ void CakeTower::CalculateVolume()
 			}
 		}
 		else if (CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance < currentDistance) CakeTiers[sliceIndex.x][sliceIndex.y].MaxDistance = currentDistance;
-	}
+	}*/
 	GenerateMesh();
 }
 
-void CakeTower::CalculateVolume(float maxHeight)
+void RBV::CalculateVolume(float maxHeight)
 {
 	Entity tree = GetOwner();
 	EntityQuery internodeDataQuery = EntityManager::CreateEntityQuery();
@@ -419,7 +446,7 @@ void CakeTower::CalculateVolume(float maxHeight)
 	GenerateMesh();
 }
 
-bool CakeTower::InVolume(glm::vec3 position) const
+bool RBV::InVolume(glm::vec3 position) const
 {
 	if (glm::any(glm::isnan(position))) return true;
 	if (_MeshGenerated) {
@@ -430,7 +457,7 @@ bool CakeTower::InVolume(glm::vec3 position) const
 	return true;
 }
 
-void CakeTower::OnGui()
+void RBV::OnGui()
 {
 	if(ImGui::Button("To OBJ"))
 	{
@@ -502,12 +529,12 @@ void CakeTower::OnGui()
 	}
 }
 
-void CakeTower::GenerateAttractionPoints()
+void RBV::GenerateAttractionPoints()
 {
 	GenerateAttractionPoints(_AttractionPointsCount);
 }
 
-void CakeTower::GenerateAttractionPoints(int amount)
+void RBV::GenerateAttractionPoints(int amount)
 {
 	if (!_MeshGenerated) CalculateVolume();
 	glm::vec3 min = glm::vec3(-MaxRadius, 0, -MaxRadius);

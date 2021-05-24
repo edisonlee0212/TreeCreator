@@ -84,7 +84,7 @@ void DataCollectionSystem::CaptureSemantic(ImageCaptureSequence& imageCaptureSeq
 
 void DataCollectionSystem::ExportCakeTowerForRecon(int layer, int sector)
 {
-	auto& cakeTower = _CurrentTree.GetPrivateComponent<CakeTower>();
+	auto& cakeTower = _CurrentTree.GetPrivateComponent<RBV>();
 	cakeTower->LayerAmount = layer;
 	cakeTower->SectorAmount = sector;
 	cakeTower->CalculateVolume();
@@ -138,7 +138,7 @@ void DataCollectionSystem::OnGui()
 				int amount = 950;
 				while(j < amount)
 				{
-					int index = j * 2;
+					int index = j * 8;
 					auto texture = ResourceManager::LoadTexture(false, FileIO::GetAssetFolderPath() +
 						"Textures/StreetView/" + std::string(6 - std::to_string(index).length(), '0') + std::to_string(index) + "_2.jpg");
 					if(texture)_BackgroundTextures.push_back(texture);
@@ -712,8 +712,8 @@ void DataCollectionSystem::LateUpdate()
 			if (_StartIndex <= _EndIndex)
 			{
 				if (_ExportImages || _EnableMultipleAngles) {
-					SetCameraPoseMulti(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, 3);
-					//SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, false);
+					//SetCameraPoseMulti(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, 3);
+					SetCameraPose(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, false);
 
 					RenderManager::GetInstance().m_lightSettings.m_ambientLight = (0.3f);
 					float brightness = glm::linearRand(5.0f, 7.0f);
@@ -753,6 +753,23 @@ void DataCollectionSystem::LateUpdate()
 				}
 				treeParameters.Seed = _StartIndex + (_IsTrain ? 0 : 9999);
 				TreeParameters tps = treeParameters;
+				/*
+				 				if (treeParameters.FoliageType == 3)
+					{
+						//Pine
+						tps.Age += glm::linearRand(-1, 1);
+					}
+					else if (treeParameters.FoliageType == 4)
+					{
+						//Pine
+						tps.Age += glm::linearRand(-1, 1);
+					}
+					else if (treeParameters.FoliageType == 7)
+					{
+						//Pine
+						tps.Age += glm::linearRand(-1, 1);
+					}
+				*/
 				//tps.EndNodeThickness = tps.EndNodeThickness + tps.EndNodeThickness * glm::linearRand(-0.5f, 0.5f);
 				if(!_BranchBarkTextures.empty()){
 					auto mat = std::make_shared<Material>();
@@ -894,9 +911,18 @@ void DataCollectionSystem::LateUpdate()
 			_Status = DataCollectionSystemStatus::CaptureRandomBranch;
 		}else
 		{
-			_Status = DataCollectionSystemStatus::CaptureSemantic;
-			_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
-			EnableSemantic();
+			if (_EnableMultipleAngles)
+			{
+				SetCameraPoseMulti(imageCaptureSequence.CameraPos, imageCaptureSequence.CameraEulerDegreeRot, 0);
+				_Status = DataCollectionSystemStatus::CaptureSemantic0;
+				_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
+				EnableSemantic();
+			}
+			else {
+				_Status = DataCollectionSystemStatus::CaptureSemantic;
+				_Background.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
+				EnableSemantic();
+			}
 		}
 		break;
 	case DataCollectionSystemStatus::CaptureRandomBranch:
@@ -984,13 +1010,13 @@ void DataCollectionSystem::LateUpdate()
 		
 		_TreeParametersOutputList.emplace_back(_Counter, imageCaptureSequence.Name, treeParameters);
 
-		if (_CurrentTree.HasPrivateComponent<CakeTower>()) {
+		if (_CurrentTree.HasPrivateComponent<RBV>()) {
 			if (_ExportCakeTower && !_Reconstruction) {
 				for (auto& i : _GeneralCakeTowersOutputList) {
-					_CurrentTree.GetPrivateComponent<CakeTower>()->LayerAmount = i.first.first;
-					_CurrentTree.GetPrivateComponent<CakeTower>()->SectorAmount = i.first.second;
-					_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume(36);
-					i.second.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
+					_CurrentTree.GetPrivateComponent<RBV>()->LayerAmount = i.first.first;
+					_CurrentTree.GetPrivateComponent<RBV>()->SectorAmount = i.first.second;
+					_CurrentTree.GetPrivateComponent<RBV>()->CalculateVolume(36);
+					i.second.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<RBV>());
 				}
 			}
 			if (_ExportCakeTower && !_Reconstruction) {
@@ -1020,18 +1046,18 @@ void DataCollectionSystem::LateUpdate()
 					break;
 				}
 				for (auto& i : _PerSpeciesCakeTowersOutputList) {
-					_CurrentTree.GetPrivateComponent<CakeTower>()->LayerAmount = i.first.first;
-					_CurrentTree.GetPrivateComponent<CakeTower>()->SectorAmount = i.first.second;
-					_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume(height);
-					i.second.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
+					_CurrentTree.GetPrivateComponent<RBV>()->LayerAmount = i.first.first;
+					_CurrentTree.GetPrivateComponent<RBV>()->SectorAmount = i.first.second;
+					_CurrentTree.GetPrivateComponent<RBV>()->CalculateVolume(height);
+					i.second.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<RBV>());
 				}
 			}
 			if (_ExportCakeTower && !_Reconstruction) {
 				for (auto& i : _CakeTowersOutputList) {
-					_CurrentTree.GetPrivateComponent<CakeTower>()->LayerAmount = i.first.first;
-					_CurrentTree.GetPrivateComponent<CakeTower>()->SectorAmount = i.first.second;
-					_CurrentTree.GetPrivateComponent<CakeTower>()->CalculateVolume();
-					i.second.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<CakeTower>());
+					_CurrentTree.GetPrivateComponent<RBV>()->LayerAmount = i.first.first;
+					_CurrentTree.GetPrivateComponent<RBV>()->SectorAmount = i.first.second;
+					_CurrentTree.GetPrivateComponent<RBV>()->CalculateVolume();
+					i.second.emplace_back(_Counter, imageCaptureSequence.Name, _CurrentTree.GetPrivateComponent<RBV>());
 				}
 			}
 			else if(_Reconstruction)
@@ -1040,6 +1066,7 @@ void DataCollectionSystem::LateUpdate()
 				ExportCakeTowerForRecon(2, 2);
 				ExportCakeTowerForRecon(4, 4);
 				ExportCakeTowerForRecon(8, 8);
+				ExportCakeTowerForRecon(16, 16);
 			}
 		}
 		if (_Reconstruction) {
@@ -1048,11 +1075,11 @@ void DataCollectionSystem::LateUpdate()
 			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(-90, 0, 0)));
 			_SemanticMaskCameraEntity.SetComponentData(cameraTransform);
 			
-			cameraTransform.SetPosition(glm::vec3(imageCaptureSequence.CameraPos.x, _CurrentTree.GetPrivateComponent<CakeTower>()->MaxHeight / 2.0f, imageCaptureSequence.CameraPos.z * 1.5f));
+			cameraTransform.SetPosition(glm::vec3(imageCaptureSequence.CameraPos.x, _CurrentTree.GetPrivateComponent<RBV>()->MaxHeight / 2.0f, imageCaptureSequence.CameraPos.z * 1.5f));
 			cameraTransform.SetEulerRotation(glm::radians(glm::vec3(0, 0, 0)));
 			_ImageCameraEntity.SetComponentData(cameraTransform);
 			
-			_CurrentTree.GetPrivateComponent<CakeTower>()->FormEntity();
+			_CurrentTree.GetPrivateComponent<RBV>()->FormEntity();
 			_CurrentTree.GetPrivateComponent<MeshRenderer>()->SetEnabled(false);
 			_Status = DataCollectionSystemStatus::CaptureCakeTower;
 		}

@@ -1,5 +1,5 @@
 #pragma once
-#include "CakeTower.h"
+#include "RBV.h"
 #include "PlantSimulationSystem.h"
 using namespace UniEngine;
 using namespace TreeUtilities;
@@ -45,7 +45,7 @@ namespace TreeUtilities {
 		float _MaxRadius;
 		float _MaxHeight;
 		std::vector<std::vector<CakeSlice>> data;
-		CakeTowerOutput(int index, std::string& name, std::unique_ptr<CakeTower>& cakeTower)
+		CakeTowerOutput(int index, std::string& name, std::unique_ptr<RBV>& cakeTower)
 		{
 			Index = index;
 			Name = name;

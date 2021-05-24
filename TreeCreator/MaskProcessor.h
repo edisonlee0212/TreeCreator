@@ -38,7 +38,7 @@ namespace TreeUtilities {
 		void Trim(int& totalChild, int& trimmedChild, std::map<int, Entity>& map, Entity internode);
 	public:
 		float RemovalDistance = 0.7f;
-		float AttractionDistance = 1.0f;
+		float AttractionDistance = 0.9f;
 		void ClearAttractionPoints() const;
 		void PlaceAttractionPoints();
 		void PreprocessMask() const;

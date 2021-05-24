@@ -165,7 +165,7 @@ void TreeUtilities::MaskProcessor::Filter() const
 	_Filter->Bind();
 	_FilterProgram->Bind();
 	_InternodeCaptureResult->Bind(0);
-	_ProcessedMask->Bind(1);
+	_Mask->Texture()->Bind(1);
 	_FilterProgram->SetInt("InputTex", 0);
 	_FilterProgram->SetInt("MaskTex", 1);
 	_FilterProgram->SetFloat("IgnoreMaxHeight", _IgnoreMaxHeight);

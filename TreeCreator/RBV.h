@@ -16,7 +16,7 @@ namespace TreeUtilities {
 		float MaxDistance;
 	};
 	
-	class CakeTower :
+	class RBV :
 		public TreeVolume
 	{
 		
@@ -32,7 +32,7 @@ namespace TreeUtilities {
 		float MaxRadius = 0.0f;
 		void GenerateMesh();
 		void FormEntity();
-		CakeTower();
+		RBV();
 		std::string Save();
 		void ExportAsObj(const std::string& filename);
 		void Load(const std::string& path);

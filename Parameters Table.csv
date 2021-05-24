@@ -1,0 +1,30 @@
+Params.,Name,Description
+G_NLB,Number of lateral buds,The number of lateral buds created per internode during growth.
+G_AAV,Apical angle variance,The variance of the angle between the direction of parent shoot and the direction of apical bud.
+G_BAM,Branching angle mean,The mean of angle between the direction of parent shoot and the direction of lateral bud.
+G_BAV,Branching angle variance,The variance of angle between the direction of parent shoot and the direction of lateral bud.
+G_RAM,Roll angle mean,The mean of orientation angle between two lateral buds created with the same internode.
+G_RAV,Roll angle variance,The variance of orientation angle between two lateral buds created with the same internode.
+F_AKP,Apical bud kill probability,The probability that a given apical bud will die during a growth cycle
+F_LKP,Lateral bud kill probability,The probability that a given lateral bud will die during a growth cycle
+F_ALF,Apical bud lighting factor,The influence of the lighting condition on the growth probility of a apical bud.
+F_LLF,Lateral bud lighting factor,The influence of the lighting condition on the growth probility of a lateral bud.
+F_ADB,Apical dominance base,The base level of auxin produced to inhibit parent shoots from growing.
+F_ADF,Apical dominance distance factor,The reduction of auxin due to the transimission along parent shoots.
+F_AAF,Apical dominance age factor,The reduction of auxin due to increasing age of the tree.
+F_GR,Growth rate,The expected number of internodes generated along the branch during a growth cycle.
+F_ILB,Internode length base,The base distance between two adjacent internodes on the same shoot.
+F_IAF,Internode length age factor,The relation between internode length and age of the tree.
+F_ACB,Apical control base,The impact of the branch level on the growth rate.
+F_AAF,Apical control age factor,The relation of the apical control to the tree age.
+F_ALF,Apical control level factor,The relation of the apical control to the branch level.
+F_MBA,Max bud age,The maximum life time of a bud before forming a new shoot.
+E_LBF,Light blocking factor,How much light will be blocked by branches and leaves.
+E_PHO,Phototropism,The impact of the average growth direction of incoming light.
+E_GGB,Gravitropism base,The impact of the average growth direction of the gravity.
+E_GLF,Gravitropism level factor,The relation of the gravitropism and branch level.
+E_PPF,Pruning factor,The impact of the amount of incoming light on the shedding of branches
+E_LPF,Low branch pruning factor,The height below which all lateral branches are pruned.
+E_GBS,Gravity bending strength,The impact of gravity on branch structural bending.
+E_GAF,Gravity bending angle factor,The relation of gravity bending related to the thickness of the branch.
+t,Desired age,The expected age of the tree.

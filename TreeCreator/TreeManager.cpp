@@ -9,7 +9,7 @@
 #include "AppleFoliageGenerator.h"
 #include "OakFoliageGenerator.h"
 #include "BirchFoliageGenerator.h"
-#include "CakeTower.h"
+#include "RBV.h"
 //#include "KDop.h"
 #include "MaskProcessor.h"
 #include "rapidjson/prettywriter.h"
@@ -50,6 +50,7 @@ void InternodeData::OnGui()
 	}
 }
 
+
 void TreeData::OnGui()
 {
 	ImGui::Text(("MeshGenerated: " + std::string(MeshGenerated ? "Yes" : "No")).c_str());
@@ -65,6 +66,11 @@ void TreeData::OnGui()
 	if (ImGui::Button(("Export tree as " + std::string(sceneOutputName) + ".xml").c_str()))
 	{
 		TreeManager::ExportTreeAsXml(GetOwner(), sceneOutputName);
+	}
+
+	if(ImGui::Button("Export branching angle to csv"))
+	{
+		TreeManager::ExportTreeBranchingAngle(GetOwner(), sceneOutputName);
 	}
 }
 
@@ -569,7 +575,7 @@ Entity TreeUtilities::TreeManager::CreateTree(std::shared_ptr<Material> treeSurf
 	const auto entity = EntityManager::CreateEntity(_TreeArchetype);
 	entity.SetStatic(true);
 	EntityManager::SetPrivateComponent(entity, std::make_unique<TreeData>());
-	EntityManager::SetPrivateComponent(entity, std::make_unique<CakeTower>());
+	EntityManager::SetPrivateComponent(entity, std::make_unique<RBV>());
 	EntityManager::SetPrivateComponent(entity, std::make_unique<MaskProcessor>());
 	EntityManager::SetComponentData(entity, _TreeIndex);
 	auto mmc = std::make_unique<MeshRenderer>();
@@ -650,9 +656,12 @@ Entity TreeManager::CreateAttractionPoint(const TreeIndex& treeIndex, const glm:
 	entity.SetComponentData(treeIndex);
 	Transform transform;
 	transform.SetPosition(position);
+	GlobalTransform globalTransform;
+	globalTransform.SetPosition(position);
 
 	EntityManager::SetParent(entity, tree);
 	entity.SetComponentData(transform);
+	entity.SetComponentData(globalTransform);
 	return entity;
 }
 
@@ -995,6 +1004,32 @@ void TreeManager::ExportTreeAsXml(Entity treeEntity, std::string filename)
 	ofs.close();
 }
 
+void TreeManager::ExportTreeBranchingAngle(Entity treeEntity, std::string filename)
+{
+	std::ofstream of;
+	of.open((filename + ".csv").c_str(), std::ofstream::out | std::ofstream::trunc);
+	TreeIndex treeIndex = treeEntity.GetComponentData<TreeIndex>();
+	std::vector<InternodeInfo> internodeInfos;
+	_InternodeQuery.ToComponentDataArray<InternodeInfo, TreeIndex>(internodeInfos, [treeIndex](const TreeIndex& compareIndex)
+		{
+			return treeIndex.Value == compareIndex.Value;
+		}
+	);
+	std::string results;
+	for(const auto& info : internodeInfos)
+	{
+		if(info.m_isBranchingPoint)
+		{
+			results.append(std::to_string(info.m_branchingAngle));
+			results += ",";
+		}
+	}
+
+	of.write(results.c_str(), results.size());
+	of.flush();
+	of.close();
+}
+
 LightEstimator* TreeUtilities::TreeManager::GetLightEstimator()
 {
 	return _LightEstimator;
@@ -1019,13 +1054,16 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 	//Prepare ring mesh.
 	EntityManager::ForEach<InternodeInfo>(JobManager::PrimaryWorkers(), _InternodeQuery, [&creationM, resolution, subdivision, treeTransform](int i, Entity internode, InternodeInfo& info)
 		{
-			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(internode))) return;
+			auto parent = EntityManager::GetParent(internode);
+			if (EntityManager::HasComponentData<TreeInfo>(parent)) return;
 			auto& list = EntityManager::GetPrivateComponent<InternodeData>(internode);
+			bool isRootInternode = false;
+			if (EntityManager::HasComponentData<TreeInfo>(EntityManager::GetParent(parent))) isRootInternode = true;
 
 			list->Rings.clear();
 			glm::quat parentRotation = info.ParentRotation;
 			glm::vec3 parentTranslation = info.ParentTranslation;
-			float parentThickness = info.ParentThickness;
+			float parentThickness = isRootInternode ? info.Thickness : info.ParentThickness;
 
 			glm::vec3 scale;
 			glm::quat rotation;
@@ -1034,11 +1072,11 @@ void TreeUtilities::TreeManager::GenerateSimpleMeshForTree(Entity treeEntity, fl
 			glm::vec4 perspective;
 			glm::decompose(info.GlobalTransform, scale, rotation, translation, skew, perspective);
 
-			glm::vec3 parentDir = parentRotation * glm::vec3(0, 0, -1);
+			glm::vec3 parentDir = isRootInternode ? glm::vec3(0, 1, 0) : parentRotation * glm::vec3(0, 0, -1);
 			glm::vec3 dir = rotation * glm::vec3(0, 0, -1);
 			glm::vec3 mainChildDir = info.MainChildRotation * glm::vec3(0, 0, -1);
 			glm::vec3 parentMainChildDir = info.ParentMainChildRotation * glm::vec3(0, 0, -1);
-			glm::vec3 fromDir = (parentDir + parentMainChildDir) / 2.0f;
+			glm::vec3 fromDir = isRootInternode ? parentDir : (parentDir + parentMainChildDir) / 2.0f;
 			dir = (dir + mainChildDir) / 2.0f;
 #pragma region Subdivision internode here.
 			auto distance = glm::distance(parentTranslation, translation);
